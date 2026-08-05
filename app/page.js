@@ -6,7 +6,7 @@ export default function Home() {
           <div className="rate-badge"><span className="dot"></span> One flat 10% fee. Nothing else.</div>
           <h1>A home base for your freelance work.</h1>
           <p>
-            Lancenest connects clients with vetted freelancers. No subscriptions,
+            LanceNest connects clients with vetted freelancers. No subscriptions,
             no bidding wars, no hidden markups — just a single 10% fee taken when
             a job is paid out, and a profile that's actually yours.
           </p>
@@ -31,7 +31,7 @@ export default function Home() {
           </div>
           <div className="card">
             <h3>3. Get paid</h3>
-            <p className="meta">Client pays through Lancenest. We take 10%, you keep the rest — paid straight to your bank.</p>
+            <p className="meta">Client pays through LanceNest. We take 10%, you keep the rest — paid straight to your bank.</p>
           </div>
         </div>
       </section>
