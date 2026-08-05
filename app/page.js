@@ -41,7 +41,7 @@ export default function Home() {
         <section className="plain-surface feature-row">
           <div className="feature-row-title">
             <h2>Why LanceNest</h2>
-            <p>Built on transparency, not tricks</p>
+            <p>Built on transparency, designed for trust</p>
           </div>
           <div className="feature-grid">
             <div className="feature-item">
