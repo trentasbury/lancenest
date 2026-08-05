@@ -1,4 +1,4 @@
-# Lancenest — setup, exact steps
+# LanceNest — setup, exact steps
 
 10% flat commission, charged automatically at payout via Stripe Connect.
 
