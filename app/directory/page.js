@@ -19,7 +19,7 @@ export default async function Directory() {
         {freelancers?.map((f) => (
           <a href={`/profile/${f.id}`} key={f.id} className="card">
             <h3>{f.full_name}</h3>
-            <p className="meta">{f.headline || 'Freelancer on Lancenest'}</p>
+            <p className="meta">{f.headline || 'Freelancer on LanceNest'}</p>
             {f.hourly_rate && <p className="rate">${f.hourly_rate}/hr</p>}
             <div style={{ marginTop: 10 }}>
               {f.skills?.slice(0, 4).map((s) => (
