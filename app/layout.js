@@ -2,7 +2,7 @@ import './globals.css';
 
 export const metadata = {
   title: 'LanceNest — Hire independents. Keep it simple.',
-  description: 'A freelance marketplace with one flat 10% fee. No subscriptions, no surprises.',
+  description: 'A freelance marketplace with transparent, flat fees. No hidden markups.',
 };
 
 function Logo() {
@@ -27,6 +27,7 @@ export default function RootLayout({ children }) {
             </a>
             <div className="nav-links-plain">
               <a href="/directory">Find talent</a>
+              <a href="/listings">Jobs</a>
               <a href="/login">Log in</a>
             </div>
             <a href="/signup" className="wood-pill">Sign up</a>
