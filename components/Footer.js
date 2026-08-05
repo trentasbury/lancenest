@@ -1,9 +1,9 @@
-function FooterCrest() {
+function FooterLogo() {
   return (
-    <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="20" cy="20" r="19" stroke="#D4AF37" strokeWidth="1.2" />
-      <circle cx="20" cy="20" r="16" stroke="#D4AF37" strokeWidth="0.5" opacity="0.5" />
-      <text x="20" y="27" textAnchor="middle" fontFamily="Cormorant Garamond, serif" fontStyle="italic" fontSize="16" fontWeight="600" fill="#D4AF37">LN</text>
+    <svg width="22" height="22" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 21 Q16 9 29 21" stroke="#D4AF37" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+      <path d="M7 23 Q16 15 25 23" stroke="#D4AF37" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+      <circle cx="16" cy="17" r="2.4" fill="#D4AF37" />
     </svg>
   );
 }
@@ -13,7 +13,7 @@ export default function Footer() {
     <footer className="footer">
       <div className="footer-inner">
         <div className="footer-brand">
-          <FooterCrest />
+          <FooterLogo />
           <span className="footer-tag">LanceNest — Est. 2026</span>
         </div>
         <div className="footer-links">
