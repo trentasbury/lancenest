@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
   --ink: #1a1815;
@@ -40,7 +40,7 @@ h1, h2, h3 {
 }
 
 .eyebrow {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.16em;
@@ -58,7 +58,7 @@ h1, h2, h3 {
 /* ---------- Marble surface (organic, hand-drawn veins) — used only for hero + footer bookends ---------- */
 .marble-surface {
   background-color: var(--marble);
-  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%201600%201000%22%3E%0A%3Crect%20width%3D%221600%22%20height%3D%221000%22%20fill%3D%22%23f7f4ee%22/%3E%0A%3Cellipse%20cx%3D%22280%22%20cy%3D%22220%22%20rx%3D%22380%22%20ry%3D%22180%22%20fill%3D%22%23e9e4d8%22%20opacity%3D%220.5%22/%3E%0A%3Cellipse%20cx%3D%221200%22%20cy%3D%22680%22%20rx%3D%22420%22%20ry%3D%22220%22%20fill%3D%22%23ece7db%22%20opacity%3D%220.45%22/%3E%0A%3Cellipse%20cx%3D%22900%22%20cy%3D%22150%22%20rx%3D%22300%22%20ry%3D%22140%22%20fill%3D%22%23efe9dc%22%20opacity%3D%220.4%22/%3E%0A%3Cellipse%20cx%3D%22450%22%20cy%3D%22800%22%20rx%3D%22350%22%20ry%3D%22170%22%20fill%3D%22%23e6e0d2%22%20opacity%3D%220.4%22/%3E%0A%3Cpath%20d%3D%22M%20-50%20320%20C%20250%20180%2C%20480%20420%2C%20720%20260%20S%201180%20140%2C%201650%20300%22%20stroke%3D%22%23b6afa0%22%20strokeWidth%3D%222.2%22%20fill%3D%22none%22%20opacity%3D%220.55%22/%3E%0A%3Cpath%20d%3D%22M%20-50%20340%20C%20260%20210%2C%20500%20440%2C%20730%20290%20S%201190%20170%2C%201650%20330%22%20stroke%3D%22%23c7c0af%22%20strokeWidth%3D%221%22%20fill%3D%22none%22%20opacity%3D%220.4%22/%3E%0A%3Cpath%20d%3D%22M%20100%20-20%20C%20260%20200%2C%20180%20420%2C%20380%20560%20S%20620%20780%2C%20560%201020%22%20stroke%3D%22%23aca594%22%20strokeWidth%3D%221.6%22%20fill%3D%22none%22%20opacity%3D%220.5%22/%3E%0A%3Cpath%20d%3D%22M%201650%20100%20C%201400%20260%2C%201450%20480%2C%201180%20580%20S%20820%20700%2C%20900%201000%22%20stroke%3D%22%23b6afa0%22%20strokeWidth%3D%221.8%22%20fill%3D%22none%22%20opacity%3D%220.45%22/%3E%0A%3Cpath%20d%3D%22M%20-50%20700%20C%20300%20620%2C%20520%20780%2C%20850%20680%20S%201300%20560%2C%201650%20660%22%20stroke%3D%22%23c2bba9%22%20strokeWidth%3D%221.4%22%20fill%3D%22none%22%20opacity%3D%220.4%22/%3E%0A%3Cpath%20d%3D%22M%20250%20-30%20C%20320%20160%2C%20260%20300%2C%20420%20380%20S%20560%20440%2C%20520%20620%22%20stroke%3D%22%23c9a05c%22%20strokeWidth%3D%221.1%22%20fill%3D%22none%22%20opacity%3D%220.5%22/%3E%0A%3Cpath%20d%3D%22M%201100%20-20%20C%201050%20180%2C%201180%20320%2C%201020%20460%20S%20880%20560%2C%20950%20780%22%20stroke%3D%22%23c9a05c%22%20strokeWidth%3D%220.9%22%20fill%3D%22none%22%20opacity%3D%220.4%22/%3E%0A%3Cpath%20d%3D%22M%20-50%20500%20C%20220%20460%2C%20380%20560%2C%20640%20500%20S%201000%20420%2C%201300%20480%20S%201550%20520%2C%201650%20500%22%20stroke%3D%22%23a39c8a%22%20strokeWidth%3D%221.2%22%20fill%3D%22none%22%20opacity%3D%220.35%22/%3E%0A%3Cpath%20d%3D%22M%20700%20-30%20C%20660%20140%2C%20760%20260%2C%20700%20420%20S%20620%20620%2C%20700%20820%22%20stroke%3D%22%23b6afa0%22%20strokeWidth%3D%221%22%20fill%3D%22none%22%20opacity%3D%220.35%22/%3E%0A%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%201600%201000%22%3E%0A%3Cdefs%3E%0A%3Cfilter%20id%3D%22soft%22%20x%3D%22-20%25%22%20y%3D%22-20%25%22%20width%3D%22140%25%22%20height%3D%22140%25%22%3E%0A%3CfeGaussianBlur%20stdDeviation%3D%227%22/%3E%0A%3C/filter%3E%0A%3Cfilter%20id%3D%22soft2%22%20x%3D%22-20%25%22%20y%3D%22-20%25%22%20width%3D%22140%25%22%20height%3D%22140%25%22%3E%0A%3CfeGaussianBlur%20stdDeviation%3D%223%22/%3E%0A%3C/filter%3E%0A%3C/defs%3E%0A%3Crect%20width%3D%221600%22%20height%3D%221000%22%20fill%3D%22%23f7f4ee%22/%3E%0A%0A%3Cellipse%20cx%3D%22280%22%20cy%3D%22220%22%20rx%3D%22420%22%20ry%3D%22220%22%20fill%3D%22%23e5dfd0%22%20opacity%3D%220.55%22%20filter%3D%22url%28%23soft%29%22/%3E%0A%3Cellipse%20cx%3D%221200%22%20cy%3D%22680%22%20rx%3D%22460%22%20ry%3D%22260%22%20fill%3D%22%23e8e1d1%22%20opacity%3D%220.5%22%20filter%3D%22url%28%23soft%29%22/%3E%0A%3Cellipse%20cx%3D%22900%22%20cy%3D%22120%22%20rx%3D%22320%22%20ry%3D%22170%22%20fill%3D%22%23ece5d5%22%20opacity%3D%220.45%22%20filter%3D%22url%28%23soft%29%22/%3E%0A%3Cellipse%20cx%3D%22450%22%20cy%3D%22820%22%20rx%3D%22380%22%20ry%3D%22200%22%20fill%3D%22%23e2dccb%22%20opacity%3D%220.45%22%20filter%3D%22url%28%23soft%29%22/%3E%0A%3Cellipse%20cx%3D%221350%22%20cy%3D%22200%22%20rx%3D%22260%22%20ry%3D%22150%22%20fill%3D%22%23e9e2d2%22%20opacity%3D%220.4%22%20filter%3D%22url%28%23soft%29%22/%3E%0A%3Cellipse%20cx%3D%22150%22%20cy%3D%22650%22%20rx%3D%22300%22%20ry%3D%22180%22%20fill%3D%22%23e5ded0%22%20opacity%3D%220.4%22%20filter%3D%22url%28%23soft%29%22/%3E%0A%0A%3Cg%20filter%3D%22url%28%23soft2%29%22%20opacity%3D%220.55%22%3E%0A%3Cpath%20d%3D%22M%20-50%20320%20C%20250%20180%2C%20480%20420%2C%20720%20260%20S%201180%20140%2C%201650%20300%22%20stroke%3D%22%23a49c8a%22%20strokeWidth%3D%226%22%20fill%3D%22none%22/%3E%0A%3Cpath%20d%3D%22M%20100%20-20%20C%20260%20200%2C%20180%20420%2C%20380%20560%20S%20620%20780%2C%20560%201020%22%20stroke%3D%22%23a49c8a%22%20strokeWidth%3D%225%22%20fill%3D%22none%22/%3E%0A%3Cpath%20d%3D%22M%201650%20100%20C%201400%20260%2C%201450%20480%2C%201180%20580%20S%20820%20700%2C%20900%201000%22%20stroke%3D%22%23a49c8a%22%20strokeWidth%3D%225.5%22%20fill%3D%22none%22/%3E%0A%3Cpath%20d%3D%22M%20-50%20700%20C%20300%20620%2C%20520%20780%2C%20850%20680%20S%201300%20560%2C%201650%20660%22%20stroke%3D%22%23b0a894%22%20strokeWidth%3D%224.5%22%20fill%3D%22none%22/%3E%0A%3Cpath%20d%3D%22M%20-50%20500%20C%20220%20460%2C%20380%20560%2C%20640%20500%20S%201000%20420%2C%201300%20480%20S%201550%20520%2C%201650%20500%22%20stroke%3D%22%23a49c8a%22%20strokeWidth%3D%224%22%20fill%3D%22none%22/%3E%0A%3C/g%3E%0A%0A%3Cg%20opacity%3D%220.5%22%3E%0A%3Cpath%20d%3D%22M%20-50%20330%20C%20260%20195%2C%20490%20430%2C%20730%20270%20S%201190%20150%2C%201650%20310%22%20stroke%3D%22%238f8672%22%20strokeWidth%3D%221%22%20fill%3D%22none%22/%3E%0A%3Cpath%20d%3D%22M%20110%20-20%20C%20270%20205%2C%20190%20425%2C%20390%20565%20S%20630%20785%2C%20570%201020%22%20stroke%3D%22%238f8672%22%20strokeWidth%3D%220.8%22%20fill%3D%22none%22/%3E%0A%3C/g%3E%0A%0A%3Cg%20opacity%3D%220.6%22%3E%0A%3Cpath%20d%3D%22M%20250%20-30%20C%20320%20160%2C%20260%20300%2C%20420%20380%20S%20560%20440%2C%20520%20620%22%20stroke%3D%22%23b8874a%22%20strokeWidth%3D%221.4%22%20fill%3D%22none%22/%3E%0A%3Cpath%20d%3D%22M%201100%20-20%20C%201050%20180%2C%201180%20320%2C%201020%20460%20S%20880%20560%2C%20950%20780%22%20stroke%3D%22%23b8874a%22%20strokeWidth%3D%221.1%22%20fill%3D%22none%22/%3E%0A%3Cpath%20d%3D%22M%20700%20-30%20C%20660%20140%2C%20760%20260%2C%20700%20420%20S%20620%20620%2C%20700%20820%22%20stroke%3D%22%23b8874a%22%20strokeWidth%3D%220.9%22%20fill%3D%22none%22/%3E%0A%3C/g%3E%0A%3C/svg%3E");
   background-size: cover;
   background-position: center;
 }
@@ -94,7 +94,7 @@ h1, h2, h3 {
 
 .wordmark {
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 23px;
+  font-size: 26px;
   font-weight: 600;
   color: var(--ink);
 }
@@ -102,9 +102,10 @@ h1, h2, h3 {
 .nav-links-plain { display: flex; gap: 32px; }
 
 .nav-links-plain a {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 11.5px;
-  letter-spacing: 0.06em;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--slate);
 }
@@ -115,10 +116,11 @@ h1, h2, h3 {
   background: var(--wood);
   color: var(--white);
   border-radius: 999px;
-  padding: 13px 24px;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 11.5px;
-  letter-spacing: 0.06em;
+  padding: 13px 26px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   transition: background 0.25s ease;
 }
@@ -130,7 +132,7 @@ h1, h2, h3 {
   display: inline-block;
   padding: 14px 28px;
   border-radius: 2px;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.08em;
@@ -143,6 +145,9 @@ h1, h2, h3 {
 .btn-primary { background: var(--wood); color: var(--white); }
 .btn-primary:hover { background: var(--wood-deep); }
 
+.btn-brass { background: var(--gold-vein); color: var(--white); }
+.btn-brass:hover { background: var(--wood-deep); }
+
 .btn-outline { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
 .btn-outline:hover { background: var(--ink); color: var(--white); }
 
@@ -154,7 +159,7 @@ h1, h2, h3 {
   color: var(--white);
   border-radius: 999px;
   padding: 15px 28px;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 12px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -213,7 +218,7 @@ h1, h2, h3 {
   border: none;
   border-radius: 999px;
   padding: 13px 26px;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 11.5px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -232,7 +237,7 @@ h1, h2, h3 {
 }
 
 .chip {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 11px;
   letter-spacing: 0.03em;
   color: var(--slate);
@@ -257,7 +262,7 @@ h1, h2, h3 {
 }
 
 .feature-row-title p {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -271,8 +276,10 @@ h1, h2, h3 {
   gap: 48px;
   max-width: 900px;
   margin: 0 auto;
-  text-align: left;
+  text-align: center;
 }
+
+.feature-item { display: flex; flex-direction: column; align-items: center; }
 
 .feature-item h3 {
   font-size: 22px;
@@ -365,7 +372,7 @@ h1, h2, h3 {
 .card h3 { font-size: 19px; margin-bottom: 6px; }
 .card .meta { color: var(--slate); font-size: 13.5px; margin-bottom: 12px; }
 .card .rate {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-weight: 500;
   color: var(--wood);
   font-size: 13px;
@@ -373,7 +380,7 @@ h1, h2, h3 {
 
 .skill-tag {
   display: inline-block;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 11px;
   letter-spacing: 0.03em;
   color: var(--slate);
@@ -387,7 +394,7 @@ form { max-width: 440px; margin: 0 auto; }
 
 label {
   display: block;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -411,7 +418,7 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--w
 textarea { min-height: 100px; resize: vertical; }
 
 .section-title {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.1em;
@@ -425,7 +432,7 @@ textarea { min-height: 100px; resize: vertical; }
   padding: 72px 40px;
   text-align: center;
   color: var(--slate);
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 13px;
 }
 
@@ -444,7 +451,7 @@ textarea { min-height: 100px; resize: vertical; }
 .footer-brand { display: flex; align-items: center; gap: 9px; }
 
 .footer-tag {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -454,7 +461,7 @@ textarea { min-height: 100px; resize: vertical; }
 .footer-links { display: flex; gap: 26px; flex-wrap: wrap; justify-content: center; }
 
 .footer-links a {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -468,7 +475,7 @@ textarea { min-height: 100px; resize: vertical; }
   margin: 6px auto 0;
   padding-top: 22px;
   border-top: 1px solid var(--line);
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 10.5px;
   letter-spacing: 0.04em;
   color: var(--slate-light);
