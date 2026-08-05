@@ -1,10 +1,19 @@
 import Footer from '../components/Footer';
 import Reveal from '../components/Reveal';
 
+function CheckIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" stroke="#8A5A34" strokeWidth="1.4" />
+      <path d="M8 12.5L10.5 15L16 9" stroke="#8A5A34" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export default function Home() {
   return (
     <main>
-      <section className="search-hero">
+      <section className="marble-surface search-hero">
         <div className="search-hero-inner">
           <span className="eyebrow">A marketplace built on trust</span>
           <h1>
@@ -26,23 +35,38 @@ export default function Home() {
         </div>
       </section>
 
+      <hr className="section-divider" />
+
       <Reveal>
-        <section className="logo-row">
-          <div className="logo-row-title">
-            <h2>A trusted marketplace</h2>
+        <section className="plain-surface feature-row">
+          <div className="feature-row-title">
+            <h2>Why LanceNest</h2>
             <p>Built on transparency, not subscriptions</p>
           </div>
-          <div className="logo-row-marks">
-            <span className="logo-mark">Stripe Secured</span>
-            <span className="logo-mark">No Listing Fees</span>
-            <span className="logo-mark">Direct Payouts</span>
-            <span className="logo-mark">Verified Profiles</span>
+          <div className="feature-grid">
+            <div className="feature-item">
+              <CheckIcon />
+              <h3>Stripe secured</h3>
+              <p>Every payment is processed and protected through Stripe — we never hold your funds.</p>
+            </div>
+            <div className="feature-item">
+              <CheckIcon />
+              <h3>No listing fees</h3>
+              <p>Creating a profile, applying, and browsing the directory costs nothing.</p>
+            </div>
+            <div className="feature-item">
+              <CheckIcon />
+              <h3>Direct payouts</h3>
+              <p>Money moves straight from client to freelancer's bank — no holding period.</p>
+            </div>
           </div>
         </section>
       </Reveal>
 
+      <hr className="section-divider" />
+
       <Reveal>
-        <section className="welcome">
+        <section className="plain-surface welcome">
           <div className="welcome-inner">
             <span className="eyebrow">Welcome to</span>
             <h2>LanceNest</h2>
@@ -51,17 +75,19 @@ export default function Home() {
               spend their energy on the craft than on chasing invoices.
             </p>
             <p>
-              Every profile is yours to keep, and every payment moves straight
-              to your bank. Our full fee structure is always visible on our
+              Every profile is yours to keep. Our full fee structure is always
+              visible on our
               <a href="/pricing" style={{ color: 'var(--wood)', textDecoration: 'underline' }}> pricing page</a>.
             </p>
           </div>
         </section>
       </Reveal>
 
-      <section className="process">
+      <hr className="section-divider" />
+
+      <section className="plain-surface process">
         <span className="eyebrow">How it works</span>
-        <div className="process-grid" style={{ marginTop: 40 }}>
+        <div className="process-grid" style={{ marginTop: 48 }}>
           <Reveal className="process-item">
             <span className="process-numeral">I.</span>
             <h3>Build a profile</h3>
@@ -81,13 +107,15 @@ export default function Home() {
       </section>
 
       <Reveal>
-        <section className="statement">
+        <section className="marble-surface statement">
           <span className="eyebrow">Built for the work</span>
           <h2>A profile that's actually yours. <em>Payments that land where they should.</em></h2>
         </section>
       </Reveal>
 
-      <Footer />
+      <div className="marble-surface">
+        <Footer />
+      </div>
     </main>
   );
 }
