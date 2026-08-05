@@ -8,9 +8,9 @@ export const metadata = {
 function Crest({ size = 34 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="20" cy="20" r="19" stroke="#C6A15B" strokeWidth="1" />
-      <circle cx="20" cy="20" r="16" stroke="#C6A15B" strokeWidth="0.5" opacity="0.5" />
-      <text x="20" y="26" textAnchor="middle" fontFamily="Fraunces, serif" fontSize="15" fontWeight="600" fill="#0E0E10">LN</text>
+      <circle cx="20" cy="20" r="19" stroke="#D4AF37" strokeWidth="1.2" />
+      <circle cx="20" cy="20" r="16" stroke="#D4AF37" strokeWidth="0.5" opacity="0.5" />
+      <text x="20" y="27" textAnchor="middle" fontFamily="Cormorant Garamond, serif" fontStyle="italic" fontSize="16" fontWeight="600" fill="#D4AF37">LN</text>
     </svg>
   );
 }
