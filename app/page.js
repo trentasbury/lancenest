@@ -1,78 +1,51 @@
 import Footer from '../components/Footer';
 import Reveal from '../components/Reveal';
 
-function Gem() {
-  return (
-    <svg viewBox="0 0 240 300" width="100%" height="100%" style={{ maxWidth: 200 }}>
-      <polygon points="120,20 180,70 160,140 120,290 80,140 60,70" fill="none" stroke="#D4AF37" strokeWidth="1.4" />
-      <polygon points="120,20 180,70 120,110 60,70" fill="#D4AF37" opacity="0.1" stroke="#D4AF37" strokeWidth="1" />
-      <polygon points="60,70 120,110 100,180 30,140" fill="#D4AF37" opacity="0.06" stroke="#D4AF37" strokeWidth="0.8" />
-      <polygon points="180,70 210,140 140,180 120,110" fill="#D4AF37" opacity="0.13" stroke="#D4AF37" strokeWidth="0.8" />
-      <polygon points="100,180 120,110 140,180 120,290" fill="#D4AF37" opacity="0.16" stroke="#D4AF37" strokeWidth="0.8" />
-      <line x1="120" y1="20" x2="120" y2="110" stroke="#D4AF37" strokeWidth="0.6" opacity="0.5" />
-      <line x1="60" y1="70" x2="100" y2="180" stroke="#D4AF37" strokeWidth="0.6" opacity="0.5" />
-      <line x1="180" y1="70" x2="140" y2="180" stroke="#D4AF37" strokeWidth="0.6" opacity="0.5" />
-    </svg>
-  );
-}
-
-function SpinBadge() {
-  return (
-    <div className="spin-badge">
-      <svg viewBox="0 0 100 100">
-        <defs>
-          <path id="circlePath" d="M 50, 50 m -38, 0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0" />
-        </defs>
-        <text fontFamily="IBM Plex Mono, monospace" fontSize="7.2" letterSpacing="1.5" fill="#0A0A0A">
-          <textPath href="#circlePath">
-            ONE FLAT FEE · TEN PERCENT · ONE FLAT FEE · TEN PERCENT ·
-          </textPath>
-        </text>
-      </svg>
-      <div className="arrow">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <path d="M7 17L17 7M17 7H9M17 7V15" stroke="#0A0A0A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </div>
-    </div>
-  );
-}
-
 export default function Home() {
   return (
     <main>
-      <section className="split-hero">
-        <div className="split-hero-grid">
-          <div className="split-hero-left">
+      <section className="stone marble-hero">
+        <div className="marble-hero-inner">
+          <div>
             <span className="eyebrow">A marketplace built on trust</span>
-            <h1>A home for independent work.</h1>
+            <h1>
+              <span className="line-gold">Independent</span>
+              <span className="line-white">Work, Done Right</span>
+            </h1>
             <p>
               LanceNest connects clients with vetted freelancers — no subscriptions,
               no bidding wars, no hidden markups. Just a straightforward fee and
               a profile that's actually yours.
             </p>
-            <a href="/signup?role=client" className="pill-btn">Hire talent →</a>
-            <SpinBadge />
+            <a href="/directory" className="pill-btn">Find talent →</a>
           </div>
-          <div className="split-hero-image stone">
-            <Gem />
+
+          <div className="quote-card">
+            <span className="eyebrow">Get started</span>
+            <h3>Join LanceNest today</h3>
+            <div className="quote-card-toggle">
+              <a href="/signup?role=client">I'm hiring</a>
+              <a href="/signup?role=freelancer">I'm a freelancer</a>
+            </div>
+            <a href="/signup" className="pill-btn">Create account</a>
           </div>
         </div>
       </section>
 
-      <div className="stone-light trust-bar" style={{ marginTop: 60 }}>
-        <div className="trust-bar-inner">
-          <div className="trust-item" style={{ color: 'var(--body-light)' }}>
-            <strong>10%</strong>Flat platform fee
+      <Reveal>
+        <section className="stone-light logo-row">
+          <div className="logo-row-title">
+            <h2>A trusted marketplace</h2>
+            <p>Built on transparency, not subscriptions</p>
           </div>
-          <div className="trust-item" style={{ color: 'var(--body-light)' }}>
-            <strong>0</strong>Listing or profile fees
+          <div className="logo-row-marks">
+            <span className="logo-mark">Flat 10% Fee</span>
+            <span className="logo-mark">Stripe Secured</span>
+            <span className="logo-mark">No Listing Fees</span>
+            <span className="logo-mark">Direct Payouts</span>
           </div>
-          <div className="trust-item" style={{ color: 'var(--body-light)' }}>
-            <strong>100%</strong>Yours — profile, portfolio, payouts
-          </div>
-        </div>
-      </div>
+        </section>
+      </Reveal>
 
       <Reveal>
         <section className="stone-light welcome">
