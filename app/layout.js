@@ -5,12 +5,12 @@ export const metadata = {
   description: 'A freelance marketplace with one flat 10% fee. No subscriptions, no surprises.',
 };
 
-function Crest({ size = 34 }) {
+function Logo() {
   return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="20" cy="20" r="19" stroke="#D4AF37" strokeWidth="1.2" />
-      <circle cx="20" cy="20" r="16" stroke="#D4AF37" strokeWidth="0.5" opacity="0.5" />
-      <text x="20" y="27" textAnchor="middle" fontFamily="Cormorant Garamond, serif" fontStyle="italic" fontSize="16" fontWeight="600" fill="#D4AF37">LN</text>
+    <svg width="24" height="24" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 21 Q16 9 29 21" stroke="#A9822A" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+      <path d="M7 23 Q16 15 25 23" stroke="#A9822A" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+      <circle cx="16" cy="17" r="2.4" fill="#A9822A" />
     </svg>
   );
 }
@@ -19,17 +19,17 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <nav className="nav">
-          <a href="/" className="brand">
-            <Crest />
-            <span className="wordmark">LanceNest</span>
+        <div className="pill-nav-wrap">
+          <a href="/" className="brand" style={{ gap: 8 }}>
+            <Logo />
+            <span className="wordmark" style={{ color: 'var(--ink)', fontSize: 20 }}>LanceNest</span>
           </a>
-          <div className="nav-links">
+          <div className="pill-nav-links">
             <a href="/directory">Find talent</a>
             <a href="/login">Log in</a>
-            <a href="/signup" className="btn btn-primary">Sign up</a>
           </div>
-        </nav>
+          <a href="/signup" className="pill-btn" style={{ padding: '13px 22px' }}>Sign up</a>
+        </div>
         {children}
       </body>
     </html>
