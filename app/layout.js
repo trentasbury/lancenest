@@ -18,7 +18,7 @@ function Logo() {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="marble-surface">
+      <body>
         <div className="nav-overlay">
           <div className="nav-overlay-inner">
             <a href="/" className="brand">
