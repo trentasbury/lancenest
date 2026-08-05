@@ -71,6 +71,18 @@ export default function FreelancerDashboard() {
         )}
       </div>
 
+      <div className="card" style={{ margin: '20px 0' }}>
+        <h3>{profile.is_pro ? 'LanceNest Pro' : 'Get seen first'}</h3>
+        <p className="meta">
+          {profile.is_pro
+            ? 'You\'re a Pro member — your profile shows first in the directory.'
+            : 'Upgrade to Pro for priority placement in the directory, $15/month. Same 10% fee either way.'}
+        </p>
+        {!profile.is_pro && (
+          <a href="/upgrade" className="btn btn-brass">Upgrade to Pro</a>
+        )}
+      </div>
+
       <form onSubmit={saveProfile}>
         <label>Headline</label>
         <input
