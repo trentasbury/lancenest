@@ -1,95 +1,40 @@
-'use client';
-
-import { Suspense, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { supabase } from '../../lib/supabaseClient';
-
-function SignupForm() {
-  const params = useSearchParams();
-  const router = useRouter();
-  const [role, setRole] = useState(params.get('role') === 'client' ? 'client' : 'freelancer');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
-
-    if (signUpError) {
-      setError(signUpError.message);
-      setLoading(false);
-      return;
-    }
-
-    // Create the profile row. If email confirmation is on, data.user still exists.
-    if (data.user) {
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: data.user.id,
-        email,
-        full_name: fullName,
-        role,
-      });
-      if (profileError) {
-        setError(profileError.message);
-        setLoading(false);
-        return;
-      }
-    }
-
-    router.push(role === 'freelancer' ? '/dashboard/freelancer' : '/directory');
-  }
-
+export default function Home() {
   return (
-    <main className="container" style={{ padding: '48px 24px' }}>
-      <h1 style={{ fontSize: 28 }}>Create your account</h1>
+    <main>
+      <section className="hero">
+        <div className="container">
+          <div className="rate-badge"><span className="dot"></span> One flat 10% fee. Nothing else.</div>
+          <h1>A home base for your freelance work.</h1>
+          <p>
+            Lancenest connects clients with vetted freelancers. No subscriptions,
+            no bidding wars, no hidden markups — just a single 10% fee taken when
+            a job is paid out, and a profile that's actually yours.
+          </p>
+          <a href="/signup?role=client" className="btn btn-primary" style={{ marginRight: 12 }}>
+            Hire talent
+          </a>
+          <a href="/signup?role=freelancer" className="btn btn-outline">
+            Join as a freelancer
+          </a>
+        </div>
+      </section>
 
-      <div style={{ display: 'flex', gap: 10, margin: '16px 0 8px' }}>
-        <button
-          type="button"
-          className={role === 'freelancer' ? 'btn btn-primary' : 'btn btn-outline'}
-          onClick={() => setRole('freelancer')}
-        >
-          I'm a freelancer
-        </button>
-        <button
-          type="button"
-          className={role === 'client' ? 'btn btn-primary' : 'btn btn-outline'}
-          onClick={() => setRole('client')}
-        >
-          I'm hiring
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit}>
-        <label>Full name</label>
-        <input value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-
-        <label>Email</label>
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-
-        <label>Password</label>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required />
-
-        {error && <p style={{ color: '#b3261e', fontSize: 14, marginTop: 12 }}>{error}</p>}
-
-        <button type="submit" className="btn btn-primary" style={{ marginTop: 20 }} disabled={loading}>
-          {loading ? 'Creating account...' : 'Create account'}
-        </button>
-      </form>
+      <section className="container" style={{ padding: '48px 24px' }}>
+        <div className="grid" style={{ padding: 0, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          <div className="card">
+            <h3>1. Build a profile</h3>
+            <p className="meta">Portfolio, skills, and rate — live in minutes.</p>
+          </div>
+          <div className="card">
+            <h3>2. Get hired</h3>
+            <p className="meta">Clients find you in the public directory or message you directly.</p>
+          </div>
+          <div className="card">
+            <h3>3. Get paid</h3>
+            <p className="meta">Client pays through Lancenest. We take 10%, you keep the rest — paid straight to your bank.</p>
+          </div>
+        </div>
+      </section>
     </main>
-  );
-}
-
-export default function Signup() {
-  return (
-    <Suspense fallback={null}>
-      <SignupForm />
-    </Suspense>
   );
 }
