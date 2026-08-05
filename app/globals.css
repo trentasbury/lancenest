@@ -21,12 +21,12 @@ html { scroll-behavior: smooth; }
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--marble);
+  background: var(--marble-dim);
   color: var(--ink);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  line-height: 1.65;
+  line-height: 1.7;
   -webkit-font-smoothing: antialiased;
-  font-size: 16px;
+  font-size: 18px;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -55,7 +55,7 @@ h1, h2, h3 {
   padding: 0 40px;
 }
 
-/* ---------- Marble surface (organic, hand-drawn veins) ---------- */
+/* ---------- Marble surface (organic, hand-drawn veins) — used only for hero + footer bookends ---------- */
 .marble-surface {
   background-color: var(--marble);
   background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%201600%201000%22%3E%0A%3Crect%20width%3D%221600%22%20height%3D%221000%22%20fill%3D%22%23f7f4ee%22/%3E%0A%3Cellipse%20cx%3D%22280%22%20cy%3D%22220%22%20rx%3D%22380%22%20ry%3D%22180%22%20fill%3D%22%23e9e4d8%22%20opacity%3D%220.5%22/%3E%0A%3Cellipse%20cx%3D%221200%22%20cy%3D%22680%22%20rx%3D%22420%22%20ry%3D%22220%22%20fill%3D%22%23ece7db%22%20opacity%3D%220.45%22/%3E%0A%3Cellipse%20cx%3D%22900%22%20cy%3D%22150%22%20rx%3D%22300%22%20ry%3D%22140%22%20fill%3D%22%23efe9dc%22%20opacity%3D%220.4%22/%3E%0A%3Cellipse%20cx%3D%22450%22%20cy%3D%22800%22%20rx%3D%22350%22%20ry%3D%22170%22%20fill%3D%22%23e6e0d2%22%20opacity%3D%220.4%22/%3E%0A%3Cpath%20d%3D%22M%20-50%20320%20C%20250%20180%2C%20480%20420%2C%20720%20260%20S%201180%20140%2C%201650%20300%22%20stroke%3D%22%23b6afa0%22%20strokeWidth%3D%222.2%22%20fill%3D%22none%22%20opacity%3D%220.55%22/%3E%0A%3Cpath%20d%3D%22M%20-50%20340%20C%20260%20210%2C%20500%20440%2C%20730%20290%20S%201190%20170%2C%201650%20330%22%20stroke%3D%22%23c7c0af%22%20strokeWidth%3D%221%22%20fill%3D%22none%22%20opacity%3D%220.4%22/%3E%0A%3Cpath%20d%3D%22M%20100%20-20%20C%20260%20200%2C%20180%20420%2C%20380%20560%20S%20620%20780%2C%20560%201020%22%20stroke%3D%22%23aca594%22%20strokeWidth%3D%221.6%22%20fill%3D%22none%22%20opacity%3D%220.5%22/%3E%0A%3Cpath%20d%3D%22M%201650%20100%20C%201400%20260%2C%201450%20480%2C%201180%20580%20S%20820%20700%2C%20900%201000%22%20stroke%3D%22%23b6afa0%22%20strokeWidth%3D%221.8%22%20fill%3D%22none%22%20opacity%3D%220.45%22/%3E%0A%3Cpath%20d%3D%22M%20-50%20700%20C%20300%20620%2C%20520%20780%2C%20850%20680%20S%201300%20560%2C%201650%20660%22%20stroke%3D%22%23c2bba9%22%20strokeWidth%3D%221.4%22%20fill%3D%22none%22%20opacity%3D%220.4%22/%3E%0A%3Cpath%20d%3D%22M%20250%20-30%20C%20320%20160%2C%20260%20300%2C%20420%20380%20S%20560%20440%2C%20520%20620%22%20stroke%3D%22%23c9a05c%22%20strokeWidth%3D%221.1%22%20fill%3D%22none%22%20opacity%3D%220.5%22/%3E%0A%3Cpath%20d%3D%22M%201100%20-20%20C%201050%20180%2C%201180%20320%2C%201020%20460%20S%20880%20560%2C%20950%20780%22%20stroke%3D%22%23c9a05c%22%20strokeWidth%3D%220.9%22%20fill%3D%22none%22%20opacity%3D%220.4%22/%3E%0A%3Cpath%20d%3D%22M%20-50%20500%20C%20220%20460%2C%20380%20560%2C%20640%20500%20S%201000%20420%2C%201300%20480%20S%201550%20520%2C%201650%20500%22%20stroke%3D%22%23a39c8a%22%20strokeWidth%3D%221.2%22%20fill%3D%22none%22%20opacity%3D%220.35%22/%3E%0A%3Cpath%20d%3D%22M%20700%20-30%20C%20660%20140%2C%20760%20260%2C%20700%20420%20S%20620%20620%2C%20700%20820%22%20stroke%3D%22%23b6afa0%22%20strokeWidth%3D%221%22%20fill%3D%22none%22%20opacity%3D%220.35%22/%3E%0A%3C/svg%3E");
@@ -63,10 +63,23 @@ h1, h2, h3 {
   background-position: center;
 }
 
+/* Plain, calm surface for content sections — no texture fighting with text */
+.plain-surface {
+  background: var(--marble);
+}
+
+.section-divider {
+  max-width: 1120px;
+  margin: 0 auto;
+  border: none;
+  border-top: 1px solid var(--line);
+}
+
 /* ---------- Nav ---------- */
 .nav-overlay {
   padding: 26px 40px;
   border-bottom: 1px solid var(--line);
+  background: var(--marble);
 }
 
 .nav-overlay-inner {
@@ -165,10 +178,10 @@ h1, h2, h3 {
 .search-hero h1 {
   font-family: 'Cormorant Garamond', serif;
   font-weight: 600;
-  font-size: 58px;
-  line-height: 1.12;
+  font-size: 66px;
+  line-height: 1.15;
   color: var(--ink);
-  margin: 18px 0 30px;
+  margin: 22px 0 34px;
 }
 
 .search-hero h1 em { font-style: italic; color: var(--wood); }
@@ -231,61 +244,67 @@ h1, h2, h3 {
 
 .chip:hover { border-color: var(--wood); color: var(--wood); }
 
-/* ---------- Trust / logo row ---------- */
-.logo-row { padding: 64px 40px; text-align: center; }
+/* ---------- Feature row (replaces fake "logo row") ---------- */
+.feature-row { padding: 90px 40px; text-align: center; }
 
-.logo-row-title h2 {
+.feature-row-title h2 {
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
   font-weight: 500;
-  font-size: 30px;
+  font-size: 36px;
   color: var(--ink);
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 
-.logo-row-title p {
+.feature-row-title p {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 11.5px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--slate-light);
-  margin: 0 0 40px;
+  margin: 0 0 56px;
 }
 
-.logo-row-marks {
-  display: flex;
-  justify-content: center;
-  gap: 56px;
-  flex-wrap: wrap;
-  align-items: center;
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 48px;
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: left;
 }
 
-.logo-mark {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+.feature-item h3 {
+  font-size: 22px;
+  margin: 16px 0 8px;
+  color: var(--ink);
+}
+
+.feature-item p {
   color: var(--slate);
+  font-size: 15.5px;
+  line-height: 1.7;
+  margin: 0;
 }
 
 /* ---------- Welcome section ---------- */
-.welcome { padding: 100px 40px; text-align: center; }
+.welcome { padding: 110px 40px; text-align: center; }
 
-.welcome-inner { max-width: 680px; margin: 0 auto; }
+.welcome-inner { max-width: 700px; margin: 0 auto; }
 
 .welcome h2 {
   font-style: italic;
-  font-size: 42px;
+  font-size: 46px;
   font-weight: 500;
   color: var(--ink);
-  margin-bottom: 22px;
+  margin-bottom: 26px;
 }
 
 .welcome p {
   color: var(--slate);
-  font-size: 16.5px;
+  font-size: 18px;
   line-height: 1.85;
-  margin: 0 0 16px;
+  margin: 0 0 18px;
 }
 
 /* ---------- Process ---------- */
@@ -313,19 +332,19 @@ h1, h2, h3 {
   margin-bottom: 16px;
 }
 
-.process-item h3 { font-size: 21px; margin-bottom: 10px; color: var(--ink); }
-.process-item p { color: var(--slate); font-size: 15.5px; line-height: 1.7; margin: 0; }
+.process-item h3 { font-size: 23px; margin-bottom: 12px; color: var(--ink); }
+.process-item p { color: var(--slate); font-size: 17px; line-height: 1.75; margin: 0; }
 
 /* ---------- Statement band ---------- */
 .statement { padding: 100px 40px; text-align: center; }
 
 .statement h2 {
   color: var(--ink);
-  font-size: 38px;
+  font-size: 42px;
   font-weight: 500;
-  max-width: 680px;
-  margin: 20px auto 0;
-  line-height: 1.42;
+  max-width: 700px;
+  margin: 22px auto 0;
+  line-height: 1.45;
 }
 
 .statement h2 em { font-style: italic; color: var(--wood); font-weight: 500; }
