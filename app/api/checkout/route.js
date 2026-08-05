@@ -50,15 +50,13 @@ export async function POST(req) {
     return NextResponse.json({ error: jobError.message }, { status: 500 });
   }
 
-  // Destination charge: client pays full amount, platform keeps commissionCents,
-  // the rest flows automatically to the freelancer's connected Stripe account.
   const checkoutSession = await stripe.checkout.sessions.create({
     mode: 'payment',
     line_items: [
       {
         price_data: {
           currency: 'usd',
-          product_data: { name: title, description: `Payment to ${freelancer.full_name} via Lancenest` },
+          product_data: { name: title, description: `Payment to ${freelancer.full_name} via LanceNest` },
           unit_amount: amountCents,
         },
         quantity: 1,
