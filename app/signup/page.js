@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabaseClient';
 
-export default function Signup() {
+function SignupForm() {
   const params = useSearchParams();
   const router = useRouter();
   const [role, setRole] = useState(params.get('role') === 'client' ? 'client' : 'freelancer');
@@ -27,7 +27,6 @@ export default function Signup() {
       return;
     }
 
-    // Create the profile row. If email confirmation is on, data.user still exists.
     if (data.user) {
       const { error: profileError } = await supabase.from('profiles').insert({
         id: data.user.id,
@@ -83,5 +82,13 @@ export default function Signup() {
         </button>
       </form>
     </main>
+  );
+}
+
+export default function Signup() {
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
   );
 }
