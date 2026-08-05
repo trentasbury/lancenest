@@ -92,3 +92,10 @@ export default function Signup() {
     </Suspense>
   );
 }
+export default function Signup() {
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
+  );
+}
