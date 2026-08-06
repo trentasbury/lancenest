@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { stripe, COMMISSION_PERCENT } from '../../../lib/stripe';
+import { stripe, COMMISSION_PERCENT_FREE, COMMISSION_PERCENT_PRO } from '../../../lib/stripe';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 
 export async function POST(req) {
@@ -19,7 +19,7 @@ export async function POST(req) {
 
   const { data: freelancer } = await supabaseAdmin
     .from('profiles')
-    .select('stripe_account_id, stripe_onboarded, full_name')
+    .select('stripe_account_id, stripe_onboarded, full_name, is_pro')
     .eq('id', freelancerId)
     .single();
 
@@ -30,8 +30,9 @@ export async function POST(req) {
     );
   }
 
+  const commissionPercent = freelancer.is_pro ? COMMISSION_PERCENT_PRO : COMMISSION_PERCENT_FREE;
   const amountCents = Math.round(amountDollars * 100);
-  const commissionCents = Math.round((amountCents * COMMISSION_PERCENT) / 100);
+  const commissionCents = Math.round((amountCents * commissionPercent) / 100);
 
   const { data: job, error: jobError } = await supabaseAdmin
     .from('jobs')
