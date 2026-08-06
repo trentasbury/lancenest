@@ -17,8 +17,8 @@ export default function Footer() {
           <span className="wordmark" style={{ fontSize: 20 }}>LanceNest</span>
         </div>
         <div className="footer-links">
-          <a href="/directory">Find talent</a>
-          <a href="/listings">Jobs</a>
+          <a href="/directory">Hire freelancers</a>
+          <a href="/listings">Projects</a>
           <a href="/pricing">Pricing</a>
         </div>
         <div className="footer-bottom">
