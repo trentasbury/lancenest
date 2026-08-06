@@ -1,45 +1,60 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { supabase } from '../../lib/supabaseClient';
 
 export default function Directory() {
+  const searchParams = useSearchParams();
+  const query = searchParams.get('q') || '';
   const [freelancers, setFreelancers] = useState(null);
   const [authed, setAuthed] = useState(null);
+  const [counts, setCounts] = useState(null);
 
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
+
       if (!user) {
         setAuthed(false);
+        const { data } = await supabase.rpc('get_platform_counts');
+        setCounts(data?.[0] || null);
         return;
       }
       setAuthed(true);
 
-      const { data } = await supabase
+      let q = supabase
         .from('profiles')
         .select('id, full_name, headline, skills, hourly_rate, is_pro')
         .eq('role', 'freelancer')
         .order('is_pro', { ascending: false })
         .order('created_at', { ascending: false });
 
+      const { data } = await q;
       setFreelancers(data || []);
     }
     load();
-  }, []);
+  }, [query]);
 
   if (authed === null) return null;
 
   if (authed === false) {
+    const count = counts?.freelancer_count;
     return (
       <main className="plain-surface container" style={{ padding: '80px 40px', textAlign: 'center' }}>
         <span className="eyebrow">Members only</span>
-        <h1 style={{ fontSize: 32, margin: '14px 0 16px' }}>Log in to browse talent</h1>
+        <h1 style={{ fontSize: 32, margin: '14px 0 16px' }}>
+          {typeof count === 'number' && count > 0
+            ? `${count} freelancer${count === 1 ? '' : 's'} waiting to be found`
+            : 'Log in to browse talent'}
+        </h1>
         <p style={{ color: 'var(--slate)', marginBottom: 28 }}>
-          The freelancer directory is available to logged-in members.
+          {query
+            ? `Log in to see who matches "${query}".`
+            : 'Create a free account to browse the full directory — takes under a minute.'}
         </p>
         <a href="/login" className="btn btn-primary" style={{ marginRight: 10 }}>Log in</a>
-        <a href="/signup" className="btn btn-outline">Create an account</a>
+        <a href="/signup" className="btn btn-outline">Create a free account</a>
       </main>
     );
   }
