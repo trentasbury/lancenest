@@ -1,67 +1,79 @@
-'use client';
-
-import { useState } from 'react';
-
-function Logo() {
-  return (
-    <svg width="30" height="30" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-      <path d="M3 21 Q16 9 29 21" stroke="#8A5A34" strokeWidth="1.8" fill="none" strokeLinecap="round" />
-      <path d="M7 23 Q16 15 25 23" stroke="#8A5A34" strokeWidth="1.8" fill="none" strokeLinecap="round" />
-      <circle cx="16" cy="17" r="2.4" fill="#8A5A34" />
-    </svg>
-  );
-}
-
-export default function NavBar() {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="nav-overlay" style={{ background: 'var(--marble)' }}>
-      <div className="nav-overlay-inner">
-        <a href="/" className="brand">
-          <Logo />
-          <span className="wordmark">LanceNest</span>
-        </a>
-
-        <div className="nav-links-plain nav-desktop-only">
-          <a href="/directory">Hire freelancers</a>
-          <a href="/listings">Projects</a>
-          <a href="/messages">Messages</a>
-        </div>
-        <div className="nav-desktop-only" style={{ display: 'flex', gap: 10 }}>
-          <a href="/login" className="btn btn-outline" style={{ borderRadius: 999, padding: '13px 26px' }}>Log in</a>
-          <a href="/signup" className="wood-pill">Sign up</a>
-        </div>
-
-        <button
-          className="nav-mobile-only"
-          onClick={() => setOpen(!open)}
-          aria-label="Menu"
-          style={{ background: 'none', border: 'none', padding: 8, cursor: 'pointer' }}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            {open ? (
-              <path d="M6 6L18 18M6 18L18 6" stroke="#1A1815" strokeWidth="1.8" strokeLinecap="round" />
-            ) : (
-              <>
-                <path d="M4 7H20" stroke="#1A1815" strokeWidth="1.8" strokeLinecap="round" />
-                <path d="M4 12H20" stroke="#1A1815" strokeWidth="1.8" strokeLinecap="round" />
-                <path d="M4 17H20" stroke="#1A1815" strokeWidth="1.8" strokeLinecap="round" />
-              </>
-            )}
-          </svg>
-        </button>
-      </div>
-
-      {open && (
-        <div className="nav-mobile-menu">
-          <a href="/directory" onClick={() => setOpen(false)}>Hire talent</a>
-          <a href="/listings" onClick={() => setOpen(false)}>Find work</a>
-          <a href="/messages" onClick={() => setOpen(false)}>Messages</a>
-          <a href="/login" onClick={() => setOpen(false)}>Log in</a>
-          <a href="/signup" className="wood-pill" style={{ textAlign: 'center' }} onClick={() => setOpen(false)}>Sign up</a>
-        </div>
-      )}
-    </div>
-  );
-}
+09:43:45.802 Running build in Washington, D.C., USA (East) – iad1
+09:43:45.803 Build machine configuration: 4 cores, 8 GB
+09:43:45.941 Cloning github.com/trentasbury/lancenest (Branch: main, Commit: da5e0fe)
+09:43:46.394 Cloning completed: 453.000ms
+09:43:46.981 Restored build cache from previous deployment (61bi658nFiaFLBJkFf1W6nDSWZBX)
+09:43:47.211 Running "vercel build"
+09:43:47.224 Vercel CLI 58.1.0
+09:43:48.082 Installing dependencies...
+09:43:50.178 
+09:43:50.178 up to date in 2s
+09:43:50.178 
+09:43:50.178 15 packages are looking for funding
+09:43:50.178   run `npm fund` for details
+09:43:50.211 Detected Next.js version: 14.2.5
+09:43:50.221 Running "npm run build"
+09:43:50.332 
+09:43:50.332 > lancenest@0.1.0 build
+09:43:50.332 > next build
+09:43:50.332 
+09:43:51.061   ▲ Next.js 14.2.5
+09:43:51.062 
+09:43:51.082    Creating an optimized production build ...
+09:43:56.297 <w> [webpack.cache.PackFileCacheStrategy] Skipped not serializable cache item 'Compilation/modules|/vercel/path0/node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[2]!/vercel/path0/node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[3]!/vercel/path0/app/globals.css': No serializer registered for PostCSSSyntaxError
+09:43:56.298 <w> while serializing webpack/lib/cache/PackFileCacheStrategy.PackContentItems -> webpack/lib/NormalModule -> webpack/lib/ModuleBuildError -> PostCSSSyntaxError
+09:43:56.438 Failed to compile.
+09:43:56.438 
+09:43:56.439 ./app/globals.css:1:1
+09:43:56.439 Syntax error: /vercel/path0/app/globals.css Unknown word
+09:43:56.439 
+09:43:56.439 > 1 | 'use client';
+09:43:56.439     | ^
+09:43:56.439   2 | 
+09:43:56.439   3 | import { useState } from 'react';
+09:43:56.439 
+09:43:56.439 ./app/globals.css
+09:43:56.439 Syntax error: /vercel/path0/app/globals.css Unknown word (1:1)
+09:43:56.439 
+09:43:56.439 > 1 | 'use client';
+09:43:56.440     | ^
+09:43:56.440   2 | 
+09:43:56.440   3 | import { useState } from 'react';
+09:43:56.440 
+09:43:56.440     at tryRunOrWebpackError (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:312989)
+09:43:56.440     at __webpack_require_module__ (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:131165)
+09:43:56.440     at __nested_webpack_require_153728__ (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:130607)
+09:43:56.440     at /vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:131454
+09:43:56.440     at symbolIterator (/vercel/path0/node_modules/next/dist/compiled/neo-async/async.js:1:14444)
+09:43:56.440     at done (/vercel/path0/node_modules/next/dist/compiled/neo-async/async.js:1:14824)
+09:43:56.440     at Hook.eval [as callAsync] (eval at create (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:13:28858), <anonymous>:15:1)
+09:43:56.441     at Hook.CALL_ASYNC_DELEGATE [as _callAsync] (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:13:26012)
+09:43:56.441     at /vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:130328
+09:43:56.441     at symbolIterator (/vercel/path0/node_modules/next/dist/compiled/neo-async/async.js:1:14402)
+09:43:56.441 -- inner error --
+09:43:56.441 Syntax error: /vercel/path0/app/globals.css Unknown word (1:1)
+09:43:56.441 
+09:43:56.441 > 1 | 'use client';
+09:43:56.441     | ^
+09:43:56.441   2 | 
+09:43:56.441   3 | import { useState } from 'react';
+09:43:56.441 
+09:43:56.441     at Object.<anonymous> (/vercel/path0/node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[2]!/vercel/path0/node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[3]!/vercel/path0/app/globals.css:1:7)
+09:43:56.441     at /vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:922493
+09:43:56.441     at Hook.eval [as call] (eval at create (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:13:28636), <anonymous>:7:1)
+09:43:56.441     at Hook.CALL_DELEGATE [as _call] (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:13:25906)
+09:43:56.442     at /vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:131198
+09:43:56.442     at tryRunOrWebpackError (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:312943)
+09:43:56.442     at __webpack_require_module__ (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:131165)
+09:43:56.442     at __nested_webpack_require_153728__ (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:130607)
+09:43:56.442     at /vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:131454
+09:43:56.442     at symbolIterator (/vercel/path0/node_modules/next/dist/compiled/neo-async/async.js:1:14444)
+09:43:56.442 
+09:43:56.442 Generated code for /vercel/path0/node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[2]!/vercel/path0/node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[3]!/vercel/path0/app/globals.css
+09:43:56.442 
+09:43:56.442 Import trace for requested module:
+09:43:56.442 ./app/globals.css
+09:43:56.442 
+09:43:56.450 
+09:43:56.451 > Build failed because of webpack errors
+09:43:56.474 Error: Command "npm run build" exited with 1
