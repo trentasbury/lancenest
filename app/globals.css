@@ -1,79 +1,594 @@
-09:43:45.802 Running build in Washington, D.C., USA (East) – iad1
-09:43:45.803 Build machine configuration: 4 cores, 8 GB
-09:43:45.941 Cloning github.com/trentasbury/lancenest (Branch: main, Commit: da5e0fe)
-09:43:46.394 Cloning completed: 453.000ms
-09:43:46.981 Restored build cache from previous deployment (61bi658nFiaFLBJkFf1W6nDSWZBX)
-09:43:47.211 Running "vercel build"
-09:43:47.224 Vercel CLI 58.1.0
-09:43:48.082 Installing dependencies...
-09:43:50.178 
-09:43:50.178 up to date in 2s
-09:43:50.178 
-09:43:50.178 15 packages are looking for funding
-09:43:50.178   run `npm fund` for details
-09:43:50.211 Detected Next.js version: 14.2.5
-09:43:50.221 Running "npm run build"
-09:43:50.332 
-09:43:50.332 > lancenest@0.1.0 build
-09:43:50.332 > next build
-09:43:50.332 
-09:43:51.061   ▲ Next.js 14.2.5
-09:43:51.062 
-09:43:51.082    Creating an optimized production build ...
-09:43:56.297 <w> [webpack.cache.PackFileCacheStrategy] Skipped not serializable cache item 'Compilation/modules|/vercel/path0/node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[2]!/vercel/path0/node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[3]!/vercel/path0/app/globals.css': No serializer registered for PostCSSSyntaxError
-09:43:56.298 <w> while serializing webpack/lib/cache/PackFileCacheStrategy.PackContentItems -> webpack/lib/NormalModule -> webpack/lib/ModuleBuildError -> PostCSSSyntaxError
-09:43:56.438 Failed to compile.
-09:43:56.438 
-09:43:56.439 ./app/globals.css:1:1
-09:43:56.439 Syntax error: /vercel/path0/app/globals.css Unknown word
-09:43:56.439 
-09:43:56.439 > 1 | 'use client';
-09:43:56.439     | ^
-09:43:56.439   2 | 
-09:43:56.439   3 | import { useState } from 'react';
-09:43:56.439 
-09:43:56.439 ./app/globals.css
-09:43:56.439 Syntax error: /vercel/path0/app/globals.css Unknown word (1:1)
-09:43:56.439 
-09:43:56.439 > 1 | 'use client';
-09:43:56.440     | ^
-09:43:56.440   2 | 
-09:43:56.440   3 | import { useState } from 'react';
-09:43:56.440 
-09:43:56.440     at tryRunOrWebpackError (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:312989)
-09:43:56.440     at __webpack_require_module__ (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:131165)
-09:43:56.440     at __nested_webpack_require_153728__ (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:130607)
-09:43:56.440     at /vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:131454
-09:43:56.440     at symbolIterator (/vercel/path0/node_modules/next/dist/compiled/neo-async/async.js:1:14444)
-09:43:56.440     at done (/vercel/path0/node_modules/next/dist/compiled/neo-async/async.js:1:14824)
-09:43:56.440     at Hook.eval [as callAsync] (eval at create (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:13:28858), <anonymous>:15:1)
-09:43:56.441     at Hook.CALL_ASYNC_DELEGATE [as _callAsync] (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:13:26012)
-09:43:56.441     at /vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:130328
-09:43:56.441     at symbolIterator (/vercel/path0/node_modules/next/dist/compiled/neo-async/async.js:1:14402)
-09:43:56.441 -- inner error --
-09:43:56.441 Syntax error: /vercel/path0/app/globals.css Unknown word (1:1)
-09:43:56.441 
-09:43:56.441 > 1 | 'use client';
-09:43:56.441     | ^
-09:43:56.441   2 | 
-09:43:56.441   3 | import { useState } from 'react';
-09:43:56.441 
-09:43:56.441     at Object.<anonymous> (/vercel/path0/node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[2]!/vercel/path0/node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[3]!/vercel/path0/app/globals.css:1:7)
-09:43:56.441     at /vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:922493
-09:43:56.441     at Hook.eval [as call] (eval at create (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:13:28636), <anonymous>:7:1)
-09:43:56.441     at Hook.CALL_DELEGATE [as _call] (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:13:25906)
-09:43:56.442     at /vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:131198
-09:43:56.442     at tryRunOrWebpackError (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:312943)
-09:43:56.442     at __webpack_require_module__ (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:131165)
-09:43:56.442     at __nested_webpack_require_153728__ (/vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:130607)
-09:43:56.442     at /vercel/path0/node_modules/next/dist/compiled/webpack/bundle5.js:28:131454
-09:43:56.442     at symbolIterator (/vercel/path0/node_modules/next/dist/compiled/neo-async/async.js:1:14444)
-09:43:56.442 
-09:43:56.442 Generated code for /vercel/path0/node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[2]!/vercel/path0/node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[3]!/vercel/path0/app/globals.css
-09:43:56.442 
-09:43:56.442 Import trace for requested module:
-09:43:56.442 ./app/globals.css
-09:43:56.442 
-09:43:56.450 
-09:43:56.451 > Build failed because of webpack errors
-09:43:56.474 Error: Command "npm run build" exited with 1
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --ink: #1a1815;
+  --marble: #f7f4ee;
+  --marble-dim: #efeade;
+  --line: #ddd6c7;
+  --wood: #8a5a34;
+  --wood-deep: #6b4226;
+  --wood-light: #a9784f;
+  --gold-vein: #b8874a;
+  --slate: #5c574e;
+  --slate-light: #8a8476;
+  --white: #ffffff;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--marble-dim);
+  color: var(--ink);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  font-size: 18px;
+}
+
+a { color: inherit; text-decoration: none; }
+
+h1, h2, h3 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 600;
+  letter-spacing: 0;
+  margin: 0;
+  color: var(--ink);
+}
+
+.eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--wood);
+  display: block;
+}
+
+.container {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+/* ---------- Marble surface (organic, hand-drawn veins) — used only for hero + footer bookends ---------- */
+.marble-surface {
+  background-color: var(--marble);
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%201600%201000%22%3E%0A%3Cdefs%3E%0A%3Cfilter%20id%3D%22soft%22%20x%3D%22-30%25%22%20y%3D%22-30%25%22%20width%3D%22160%25%22%20height%3D%22160%25%22%3E%0A%3CfeGaussianBlur%20stdDeviation%3D%2218%22/%3E%0A%3C/filter%3E%0A%3Cfilter%20id%3D%22soft2%22%20x%3D%22-30%25%22%20y%3D%22-30%25%22%20width%3D%22160%25%22%20height%3D%22160%25%22%3E%0A%3CfeGaussianBlur%20stdDeviation%3D%2212%22/%3E%0A%3C/filter%3E%0A%3C/defs%3E%0A%3Crect%20width%3D%221600%22%20height%3D%221000%22%20fill%3D%22%23f5f2eb%22/%3E%0A%0A%3Cellipse%20cx%3D%22280%22%20cy%3D%22220%22%20rx%3D%22500%22%20ry%3D%22280%22%20fill%3D%22%23ddd5c2%22%20opacity%3D%220.6%22%20filter%3D%22url%28%23soft%29%22/%3E%0A%3Cellipse%20cx%3D%221200%22%20cy%3D%22680%22%20rx%3D%22540%22%20ry%3D%22320%22%20fill%3D%22%23e2dac6%22%20opacity%3D%220.55%22%20filter%3D%22url%28%23soft%29%22/%3E%0A%3Cellipse%20cx%3D%22900%22%20cy%3D%22120%22%20rx%3D%22380%22%20ry%3D%22220%22%20fill%3D%22%23e6ded0%22%20opacity%3D%220.5%22%20filter%3D%22url%28%23soft%29%22/%3E%0A%3Cellipse%20cx%3D%22450%22%20cy%3D%22850%22%20rx%3D%22440%22%20ry%3D%22250%22%20fill%3D%22%23d8cfb9%22%20opacity%3D%220.5%22%20filter%3D%22url%28%23soft%29%22/%3E%0A%3Cellipse%20cx%3D%221400%22%20cy%3D%22200%22%20rx%3D%22320%22%20ry%3D%22200%22%20fill%3D%22%23e2dac6%22%20opacity%3D%220.45%22%20filter%3D%22url%28%23soft%29%22/%3E%0A%3Cellipse%20cx%3D%22120%22%20cy%3D%22650%22%20rx%3D%22360%22%20ry%3D%22230%22%20fill%3D%22%23ddd5c2%22%20opacity%3D%220.45%22%20filter%3D%22url%28%23soft%29%22/%3E%0A%3Cellipse%20cx%3D%22800%22%20cy%3D%22500%22%20rx%3D%22520%22%20ry%3D%22260%22%20fill%3D%22%23e8e1d3%22%20opacity%3D%220.35%22%20filter%3D%22url%28%23soft%29%22/%3E%0A%0A%3C%21--%20darker%20shadow%20smudges%20for%20depth%2C%20like%20real%20stone%20shading%20--%3E%0A%3Cellipse%20cx%3D%22500%22%20cy%3D%22400%22%20rx%3D%22260%22%20ry%3D%22140%22%20fill%3D%22%23a89f8c%22%20opacity%3D%220.28%22%20filter%3D%22url%28%23soft%29%22/%3E%0A%3Cellipse%20cx%3D%221050%22%20cy%3D%22450%22%20rx%3D%22300%22%20ry%3D%22160%22%20fill%3D%22%239c9382%22%20opacity%3D%220.24%22%20filter%3D%22url%28%23soft%29%22/%3E%0A%3Cellipse%20cx%3D%22700%22%20cy%3D%22750%22%20rx%3D%22280%22%20ry%3D%22150%22%20fill%3D%22%23a89f8c%22%20opacity%3D%220.22%22%20filter%3D%22url%28%23soft%29%22/%3E%0A%0A%3Cg%20filter%3D%22url%28%23soft2%29%22%20opacity%3D%220.6%22%3E%0A%3Cpath%20d%3D%22M%20-50%20320%20C%20250%20180%2C%20480%20420%2C%20720%20260%20S%201180%20140%2C%201650%20300%22%20stroke%3D%22%238f8672%22%20strokeWidth%3D%2212%22%20fill%3D%22none%22/%3E%0A%3Cpath%20d%3D%22M%20100%20-20%20C%20260%20200%2C%20180%20420%2C%20380%20560%20S%20620%20780%2C%20560%201020%22%20stroke%3D%22%238f8672%22%20strokeWidth%3D%2211%22%20fill%3D%22none%22/%3E%0A%3Cpath%20d%3D%22M%201650%20100%20C%201400%20260%2C%201450%20480%2C%201180%20580%20S%20820%20700%2C%20900%201000%22%20stroke%3D%22%238f8672%22%20strokeWidth%3D%2211%22%20fill%3D%22none%22/%3E%0A%3Cpath%20d%3D%22M%20-50%20700%20C%20300%20620%2C%20520%20780%2C%20850%20680%20S%201300%20560%2C%201650%20660%22%20stroke%3D%22%239c9382%22%20strokeWidth%3D%229%22%20fill%3D%22none%22/%3E%0A%3Cpath%20d%3D%22M%20-50%20500%20C%20220%20460%2C%20380%20560%2C%20640%20500%20S%201000%20420%2C%201300%20480%20S%201550%20520%2C%201650%20500%22%20stroke%3D%22%238f8672%22%20strokeWidth%3D%228%22%20fill%3D%22none%22/%3E%0A%3Cpath%20d%3D%22M%20250%20-30%20C%20320%20160%2C%20260%20300%2C%20420%20380%20S%20560%20440%2C%20520%20620%22%20stroke%3D%22%23b8874a%22%20strokeWidth%3D%226%22%20fill%3D%22none%22%20opacity%3D%220.4%22/%3E%0A%3Cpath%20d%3D%22M%201100%20-20%20C%201050%20180%2C%201180%20320%2C%201020%20460%20S%20880%20560%2C%20950%20780%22%20stroke%3D%22%23b8874a%22%20strokeWidth%3D%225.5%22%20fill%3D%22none%22%20opacity%3D%220.35%22/%3E%0A%3C/g%3E%0A%3C/svg%3E");
+  background-size: cover;
+  background-position: center;
+}
+
+/* Plain, calm surface for content sections — no texture fighting with text */
+.plain-surface {
+  background: var(--marble);
+}
+
+.section-divider {
+  max-width: 1120px;
+  margin: 0 auto;
+  border: none;
+  border-top: 1px solid var(--line);
+}
+
+/* ---------- Nav ---------- */
+.nav-overlay {
+  padding: 26px 40px;
+  border-bottom: 1px solid var(--line);
+  background: var(--marble);
+}
+
+.nav-overlay-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand { display: flex; align-items: center; gap: 9px; }
+
+.wordmark {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.nav-links-plain { display: flex; gap: 32px; }
+
+.nav-links-plain a {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--slate);
+}
+
+.nav-links-plain a:hover { color: var(--wood); }
+
+.wood-pill {
+  background: var(--wood);
+  color: var(--white);
+  border-radius: 999px;
+  padding: 13px 26px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: background 0.25s ease;
+}
+
+.wood-pill:hover { background: var(--wood-deep); }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-block;
+  padding: 14px 28px;
+  border-radius: 2px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.25s ease;
+}
+
+.btn-primary { background: var(--wood); color: var(--white); }
+.btn-primary:hover { background: var(--wood-deep); }
+
+.btn-brass { background: var(--gold-vein); color: var(--white); }
+.btn-brass:hover { background: var(--wood-deep); }
+
+.btn-outline { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
+.btn-outline:hover { background: var(--ink); color: var(--white); }
+
+.pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--wood);
+  color: var(--white);
+  border-radius: 999px;
+  padding: 15px 28px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  width: fit-content;
+  transition: all 0.25s ease;
+}
+
+.pill-btn:hover { background: var(--wood-deep); transform: translateY(-1px); }
+
+/* ---------- Search hero (Upwork/Freelancer.com-style) ---------- */
+.search-hero {
+  padding: 90px 40px 44px;
+  text-align: center;
+}
+
+.search-hero-inner {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.search-hero h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  font-size: 66px;
+  line-height: 1.15;
+  color: var(--ink);
+  margin: 22px 0 34px;
+}
+
+.search-hero h1 em { font-style: italic; color: var(--wood); }
+
+.search-bar {
+  display: flex;
+  max-width: 560px;
+  margin: 0 auto 22px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 6px 6px 24px;
+  align-items: center;
+  box-shadow: 0 12px 30px rgba(26, 24, 21, 0.06);
+}
+
+.search-bar input {
+  border: none;
+  padding: 12px 0;
+  font-size: 14.5px;
+  flex: 1;
+}
+
+.search-bar input:focus { outline: none; }
+
+.search-bar button {
+  background: var(--wood);
+  color: var(--white);
+  border: none;
+  border-radius: 999px;
+  padding: 13px 26px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.search-bar button:hover { background: var(--wood-deep); }
+
+.chip-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.chip {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: var(--slate);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 16px;
+  background: var(--white);
+}
+
+.chip:hover { border-color: var(--wood); color: var(--wood); }
+
+/* ---------- Feature row (replaces fake "logo row") ---------- */
+.feature-row { padding: 56px 40px 90px; text-align: center; }
+
+.feature-row-title h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 36px;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+
+.feature-row-title p {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--slate-light);
+  margin: 0 0 56px;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 48px;
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.feature-item { display: flex; flex-direction: column; align-items: center; }
+
+.feature-item h3 {
+  font-size: 22px;
+  margin: 16px 0 8px;
+  color: var(--ink);
+}
+
+.feature-item p {
+  color: var(--slate);
+  font-size: 15.5px;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* ---------- Welcome section ---------- */
+.welcome { padding: 110px 40px; text-align: center; }
+
+.welcome-inner { max-width: 700px; margin: 0 auto; }
+
+.welcome h2 {
+  font-style: italic;
+  font-size: 46px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 26px;
+}
+
+.welcome p {
+  color: var(--slate);
+  font-size: 18px;
+  line-height: 1.85;
+  margin: 0 0 18px;
+}
+
+/* ---------- Process ---------- */
+.process { padding: 96px 40px; text-align: center; }
+.process > .eyebrow { text-align: center; }
+
+.process-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 56px;
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.process-item { text-align: center; display: flex; flex-direction: column; align-items: center; }
+
+.process-numeral {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 44px;
+  color: var(--wood);
+  display: block;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.process-item h3 { font-size: 23px; margin-bottom: 12px; color: var(--ink); }
+.process-item p { color: var(--slate); font-size: 17px; line-height: 1.75; margin: 0; }
+
+/* ---------- Statement band ---------- */
+.statement { padding: 100px 40px; text-align: center; }
+
+.statement h2 {
+  color: var(--ink);
+  font-size: 42px;
+  font-weight: 500;
+  max-width: 700px;
+  margin: 22px auto 0;
+  line-height: 1.45;
+}
+
+.statement h2 em { font-style: italic; color: var(--wood); font-weight: 500; }
+
+/* ---------- Directory grid ---------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  padding: 1px;
+  margin: 40px auto;
+  max-width: 1120px;
+}
+
+.card { background: var(--marble); padding: 30px 26px; transition: background 0.2s ease; }
+.card:hover { background: var(--white); }
+.card h3 { font-size: 19px; margin-bottom: 6px; }
+.card .meta { color: var(--slate); font-size: 13.5px; margin-bottom: 12px; }
+.card .rate {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  color: var(--wood);
+  font-size: 13px;
+}
+
+.skill-tag {
+  display: inline-block;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: var(--slate);
+  border: 1px solid var(--line);
+  padding: 4px 9px;
+  margin: 0 6px 6px 0;
+}
+
+/* ---------- Forms ---------- */
+form { max-width: 440px; margin: 0 auto; }
+
+label {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin: 20px 0 8px;
+  text-align: left;
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  font-size: 15px;
+  font-family: 'Inter', sans-serif;
+  background: var(--white);
+  color: var(--ink);
+}
+
+input:focus, textarea:focus, select:focus { outline: none; border-color: var(--wood); }
+textarea { min-height: 100px; resize: vertical; }
+
+.section-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--slate);
+  padding: 0 40px;
+  text-align: center;
+}
+
+.empty {
+  padding: 72px 40px;
+  text-align: center;
+  color: var(--slate);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+}
+
+/* ---------- Footer ---------- */
+.footer { padding: 56px 40px 36px; text-align: center; border-top: 1px solid var(--line); }
+
+.footer-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+
+.footer-brand { display: flex; align-items: center; gap: 9px; }
+
+.footer-tag {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--slate);
+}
+
+.footer-links { display: flex; gap: 26px; flex-wrap: wrap; justify-content: center; }
+
+.footer-links a {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--slate);
+}
+
+.footer-links a:hover { color: var(--wood); }
+
+.footer-bottom {
+  max-width: 1120px;
+  margin: 6px auto 0;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--slate-light);
+  text-align: center;
+}
+
+/* ---------- Motion ---------- */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.search-hero .eyebrow { animation: fadeUp 0.7s ease both; }
+.search-hero h1 { animation: fadeUp 0.8s ease 0.12s both; }
+.search-bar { animation: fadeUp 0.8s ease 0.24s both; }
+.chip-row { animation: fadeUp 0.7s ease 0.34s both; }
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.reveal.is-visible { opacity: 1; transform: translateY(0); }
+.reveal:nth-child(2) { transition-delay: 0.1s; }
+.reveal:nth-child(3) { transition-delay: 0.2s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .search-hero .eyebrow, .search-hero h1, .search-bar, .chip-row, .reveal {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .search-hero { padding: 56px 24px 40px; }
+  .search-hero h1 { font-size: 32px; margin: 16px 0 24px; }
+  .search-bar { flex-direction: column; border-radius: 16px; padding: 12px; gap: 8px; }
+  .search-bar button { width: 100%; }
+  .feature-row { padding: 56px 24px; }
+  .feature-grid { grid-template-columns: 1fr; gap: 36px; }
+  .welcome { padding: 64px 24px; }
+  .welcome h2 { font-size: 34px; }
+  .process { padding: 56px 24px; }
+  .process-grid { grid-template-columns: 1fr; gap: 36px; text-align: center; }
+  .process-item { text-align: center; }
+  .statement { padding: 64px 24px; }
+  .statement h2 { font-size: 26px; }
+  .nav-overlay { padding: 18px 20px; }
+  .nav-overlay-inner { flex-wrap: wrap; gap: 12px; justify-content: center; text-align: center; }
+  .nav-links-plain { gap: 20px; }
+  .footer { padding: 40px 24px 28px; }
+  .container { padding: 0 24px; }
+}
+
+/* ---------- Mobile nav toggle ---------- */
+.nav-mobile-only { display: none; }
+
+@media (max-width: 720px) {
+  .nav-desktop-only { display: none !important; }
+  .nav-mobile-only { display: block !important; }
+  .nav-mobile-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px 20px 20px;
+    border-top: 1px solid var(--line);
+    margin-top: 14px;
+  }
+  .nav-mobile-menu a {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: var(--ink);
+    padding: 10px 0;
+  }
+  .nav-mobile-menu .wood-pill { margin-top: 8px; }
+}
+
+/* ---------- Hero refinements ---------- */
+.hero-subline {
+  font-family: 'Inter', sans-serif;
+  font-size: 15.5px;
+  color: var(--slate);
+  max-width: 460px;
+  margin: 0 auto 28px;
+  line-height: 1.6;
+}
+
+.chip-muted {
+  color: var(--wood);
+  border-color: var(--wood);
+  font-weight: 500;
+}
+
+.hero-trust-line {
+  font-family: 'Inter', sans-serif;
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+  color: var(--slate-light);
+  margin: 22px 0 4px;
+}
+
+.hero-audience-line {
+  font-family: 'Inter', sans-serif;
+  font-size: 12.5px;
+  color: var(--slate-light);
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .hero-subline { font-size: 14px; margin-bottom: 22px; }
+  .hero-trust-line, .hero-audience-line { font-size: 11.5px; }
+}
