@@ -1,19 +1,53 @@
-import { supabaseAdmin } from '../../lib/supabaseAdmin';
+'use client';
 
-export const revalidate = 60;
+import { useEffect, useState } from 'react';
+import { supabase } from '../../lib/supabaseClient';
 
-export default async function Directory() {
-  const { data: freelancers } = await supabaseAdmin
-    .from('profiles')
-    .select('id, full_name, headline, skills, hourly_rate, avatar_url, is_pro')
-    .eq('role', 'freelancer')
-    .order('is_pro', { ascending: false })
-    .order('created_at', { ascending: false });
+export default function Directory() {
+  const [freelancers, setFreelancers] = useState(null);
+  const [authed, setAuthed] = useState(null);
+
+  useEffect(() => {
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setAuthed(false);
+        return;
+      }
+      setAuthed(true);
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, full_name, headline, skills, hourly_rate, is_pro')
+        .eq('role', 'freelancer')
+        .order('is_pro', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      setFreelancers(data || []);
+    }
+    load();
+  }, []);
+
+  if (authed === null) return null;
+
+  if (authed === false) {
+    return (
+      <main className="plain-surface container" style={{ padding: '80px 40px', textAlign: 'center' }}>
+        <span className="eyebrow">Members only</span>
+        <h1 style={{ fontSize: 32, margin: '14px 0 16px' }}>Log in to browse talent</h1>
+        <p style={{ color: 'var(--slate)', marginBottom: 28 }}>
+          The freelancer directory is available to logged-in members.
+        </p>
+        <a href="/login" className="btn btn-primary" style={{ marginRight: 10 }}>Log in</a>
+        <a href="/signup" className="btn btn-outline">Create an account</a>
+      </main>
+    );
+  }
 
   return (
-    <main>
+    <main className="plain-surface">
       <div className="section-title" style={{ paddingTop: 32 }}>Find talent</div>
-      {(!freelancers || freelancers.length === 0) && (
+      {freelancers && freelancers.length === 0 && (
         <div className="empty">No freelancers yet — be the first to create a profile.</div>
       )}
       <div className="grid">
@@ -24,15 +58,17 @@ export default async function Directory() {
               {f.is_pro && (
                 <span
                   style={{
-                    fontFamily: 'IBM Plex Mono, monospace',
-                    fontSize: 9,
-                    letterSpacing: '0.06em',
-                    color: 'var(--ink)',
-                    background: 'var(--gold)',
-                    padding: '2px 6px',
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: 10,
+                    fontWeight: 600,
+                    letterSpacing: '0.04em',
+                    color: 'var(--white)',
+                    background: 'var(--wood)',
+                    padding: '2px 7px',
+                    borderRadius: 3,
                   }}
                 >
-                  PRO
+                  VERIFIED
                 </span>
               )}
             </div>
