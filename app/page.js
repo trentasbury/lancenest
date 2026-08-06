@@ -15,27 +15,31 @@ export default function Home() {
     <main>
       <section className="marble-surface search-hero">
         <div className="search-hero-inner">
-          <span className="eyebrow">A marketplace built on trust</span>
+          <span className="eyebrow">Trusted freelancers for web design, branding & Shopify</span>
           <h1>
-            Find the right person for your <em>next project</em>
+            Hire vetted freelancers for your <em>next launch</em>
           </h1>
+          <p className="hero-subline">
+            Every freelancer vetted for quality, communication, and transparency —
+            no bidding wars, no hidden fees.
+          </p>
 
           <form action="/directory" method="get" className="search-bar">
-            <input type="text" placeholder="Try 'Shopify developer' or 'brand designer'" />
+            <input type="text" placeholder="Try 'Shopify developer', 'brand designer', or 'local SEO'" />
             <button type="submit">Search</button>
           </form>
 
           <div className="chip-row">
-            <a href="/directory" className="chip">Web design</a>
-            <a href="/directory" className="chip">Development</a>
-            <a href="/directory" className="chip">Branding</a>
-            <a href="/directory" className="chip">Writing</a>
-            <a href="/directory" className="chip">Marketing</a>
+            <a href="/directory" className="chip">Web design & UX</a>
+            <a href="/directory" className="chip">Branding & identity</a>
+            <a href="/directory" className="chip">Shopify & ecommerce</a>
+            <a href="/directory" className="chip chip-muted">More categories →</a>
           </div>
+
+          <p className="hero-trust-line">Vetted freelancers · Secure payments · Clear project scopes</p>
+          <p className="hero-audience-line">Designed for founders, agencies, and local service businesses.</p>
         </div>
       </section>
-
-      <hr className="section-divider" />
 
       <Reveal>
         <section className="plain-surface feature-row">
@@ -71,7 +75,8 @@ export default function Home() {
             <span className="eyebrow">Welcome to</span>
             <h2>LanceNest</h2>
             <p>
-              A home base for independent work — built for people who'd rather
+              Your nest for reliable talent and long-term partnerships — built
+              for people who'd rather
               spend their energy on the craft than on chasing invoices.
             </p>
             <p>
