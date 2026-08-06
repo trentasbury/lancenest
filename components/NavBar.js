@@ -23,7 +23,6 @@ export default function NavBar() {
           <span className="wordmark">LanceNest</span>
         </a>
 
-        {/* Desktop links */}
         <div className="nav-links-plain nav-desktop-only">
           <a href="/directory">Hire freelancers</a>
           <a href="/listings">Projects</a>
@@ -34,7 +33,6 @@ export default function NavBar() {
           <a href="/signup" className="wood-pill">Sign up</a>
         </div>
 
-        {/* Mobile: hamburger */}
         <button
           className="nav-mobile-only"
           onClick={() => setOpen(!open)}
