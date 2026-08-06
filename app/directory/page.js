@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '../../lib/supabaseClient';
 
-export default function Directory() {
+function DirectoryContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
   const [freelancers, setFreelancers] = useState(null);
@@ -23,14 +23,13 @@ export default function Directory() {
       }
       setAuthed(true);
 
-      let q = supabase
+      const { data } = await supabase
         .from('profiles')
         .select('id, full_name, headline, skills, hourly_rate, is_pro')
         .eq('role', 'freelancer')
         .order('is_pro', { ascending: false })
         .order('created_at', { ascending: false });
 
-      const { data } = await q;
       setFreelancers(data || []);
     }
     load();
@@ -98,5 +97,13 @@ export default function Directory() {
         ))}
       </div>
     </main>
+  );
+}
+
+export default function Directory() {
+  return (
+    <Suspense fallback={null}>
+      <DirectoryContent />
+    </Suspense>
   );
 }
