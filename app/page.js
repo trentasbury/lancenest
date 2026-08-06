@@ -25,7 +25,7 @@ export default function Home() {
           </p>
 
           <form action="/directory" method="get" className="search-bar">
-            <input type="text" placeholder="Try 'Shopify developer', 'brand designer', or 'local SEO'" />
+            <input type="text" name="q" placeholder="Try 'Shopify developer', 'brand designer', or 'local SEO'" />
             <button type="submit">Search</button>
           </form>
 
