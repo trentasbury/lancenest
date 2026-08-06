@@ -111,14 +111,14 @@ export default function Home() {
         </div>
       </section>
 
-      <Reveal>
-        <section className="marble-surface statement">
-          <span className="eyebrow">Built for the work</span>
-          <h2>A profile that's actually yours. <em>Payments that land where they should.</em></h2>
-        </section>
-      </Reveal>
-
       <div className="marble-surface">
+        <Reveal>
+          <section className="statement">
+            <span className="eyebrow">Built for the work</span>
+            <h2>A profile that's actually yours. <em>Payments that land where they should.</em></h2>
+          </section>
+        </Reveal>
+
         <Footer />
       </div>
     </main>
