@@ -1,13 +1,55 @@
-import { supabaseAdmin } from '../../lib/supabaseAdmin';
+'use client';
 
-export const revalidate = 30;
+import { useEffect, useState } from 'react';
+import { supabase } from '../../lib/supabaseClient';
 
-export default async function Listings() {
-  const { data: listings } = await supabaseAdmin
-    .from('job_listings')
-    .select('id, title, description, budget_cents, skills, created_at, profiles(full_name)')
-    .eq('status', 'open')
-    .order('created_at', { ascending: false });
+export default function Listings() {
+  const [listings, setListings] = useState(null);
+  const [authed, setAuthed] = useState(null);
+  const [counts, setCounts] = useState(null);
+
+  useEffect(() => {
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setAuthed(false);
+        const { data } = await supabase.rpc('get_platform_counts');
+        setCounts(data?.[0] || null);
+        return;
+      }
+      setAuthed(true);
+
+      const { data } = await supabase
+        .from('job_listings')
+        .select('id, title, description, budget_cents, skills, created_at, profiles(full_name)')
+        .eq('status', 'open')
+        .order('created_at', { ascending: false });
+
+      setListings(data || []);
+    }
+    load();
+  }, []);
+
+  if (authed === null) return null;
+
+  if (authed === false) {
+    const count = counts?.open_listing_count;
+    return (
+      <main className="plain-surface container" style={{ padding: '80px 40px', textAlign: 'center' }}>
+        <span className="eyebrow">Members only</span>
+        <h1 style={{ fontSize: 32, margin: '14px 0 16px' }}>
+          {typeof count === 'number' && count > 0
+            ? `${count} open job${count === 1 ? '' : 's'} right now`
+            : 'Log in to browse jobs'}
+        </h1>
+        <p style={{ color: 'var(--slate)', marginBottom: 28 }}>
+          Create a free account to see and apply to open work — takes under a minute.
+        </p>
+        <a href="/login" className="btn btn-primary" style={{ marginRight: 10 }}>Log in</a>
+        <a href="/signup" className="btn btn-outline">Create a free account</a>
+      </main>
+    );
+  }
 
   return (
     <main className="plain-surface" style={{ minHeight: '60vh' }}>
@@ -19,7 +61,7 @@ export default async function Listings() {
         <a href="/listings/new" className="pill-btn">Post a job</a>
       </div>
 
-      {(!listings || listings.length === 0) && (
+      {listings && listings.length === 0 && (
         <div className="empty">No open listings yet — be the first to post one.</div>
       )}
 
