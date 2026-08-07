@@ -91,6 +91,10 @@ function LoginForm() {
           style={{ marginTop: 20 }}
         />
 
+        <p style={{ fontSize: 12, color: captchaToken ? 'green' : '#b3261e', marginTop: 8 }}>
+          Verification status: {captchaToken ? `✓ Verified (token length: ${captchaToken.length})` : '✗ Not yet verified'}
+        </p>
+
         {error && <p style={{ color: '#b3261e', fontSize: 14, marginTop: 12 }}>{error}</p>}
 
         <button type="submit" className="btn btn-primary" style={{ marginTop: 20 }} disabled={loading}>
