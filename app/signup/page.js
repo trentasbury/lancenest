@@ -37,6 +37,7 @@ function SignupForm() {
       options: {
         data: { full_name: fullName, role },
         captchaToken,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/login?confirmEmail=true`,
       },
     });
 
@@ -80,6 +81,43 @@ function SignupForm() {
       </div>
 
       <form onSubmit={handleSubmit}>
+        <label>Full name</label>
+        <input value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+
+        <label>Email</label>
+        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+
+        <label>Password</label>
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required />
+
+        <div
+          className="cf-turnstile"
+          data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+          data-callback="onTurnstileSuccess"
+          style={{ marginTop: 20 }}
+        />
+
+        {error && <p style={{ color: '#b3261e', fontSize: 14, marginTop: 12 }}>{error}</p>}
+
+        <button type="submit" className="btn btn-primary" style={{ marginTop: 20 }} disabled={loading}>
+          {loading ? 'Creating account...' : 'Create account'}
+        </button>
+      </form>
+
+      <p style={{ marginTop: 24, fontSize: 13, color: 'var(--slate)' }}>
+        Curious about pricing? <a href="/pricing" style={{ color: 'var(--wood)', textDecoration: 'underline' }}>View our pricing page</a>.
+      </p>
+    </main>
+  );
+}
+
+export default function Signup() {
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
+  );
+}      <form onSubmit={handleSubmit}>
         <label>Full name</label>
         <input value={fullName} onChange={(e) => setFullName(e.target.value)} required />
 
