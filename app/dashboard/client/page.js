@@ -22,7 +22,12 @@ export default function ClientDashboard() {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
+
+      if (!profileData) {
+        setLoading(false);
+        return;
+      }
       setProfile(profileData);
 
       const { data: listingData } = await supabase
@@ -56,6 +61,15 @@ export default function ClientDashboard() {
   }
 
   if (loading) return <main className="plain-surface container" style={{ padding: 56 }}>Loading...</main>;
+
+  if (!profile) {
+    return (
+      <main className="plain-surface container" style={{ padding: 48, textAlign: 'center' }}>
+        <p>We couldn't find your profile. Try logging out and back in — if this keeps happening, contact support.</p>
+        <a href="/login" className="btn btn-primary" style={{ marginTop: 16 }}>Back to login</a>
+      </main>
+    );
+  }
 
   return (
     <main className="plain-surface" style={{ minHeight: '70vh' }}>
