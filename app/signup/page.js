@@ -1,157 +1,132 @@
-'use client';
+import Footer from '../components/Footer';
+import Reveal from '../components/Reveal';
 
-import { Suspense, useEffect, useState } from 'react';
-import Script from 'next/script';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { supabase } from '../../lib/supabaseClient';
-
-function SignupForm() {
-  const params = useSearchParams();
-  const router = useRouter();
-  const [role, setRole] = useState(params.get('role') === 'client' ? 'client' : 'freelancer');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState('');
-
-  useEffect(() => {
-    window.onTurnstileSuccess = (token) => setCaptchaToken(token);
-  }, []);
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    if (!captchaToken) {
-      setError('Please complete the verification check.');
-      setLoading(false);
-      return;
-    }
-
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName, role },
-        captchaToken,
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/login?confirmEmail=true`,
-      },
-    });
-
-    if (signUpError) {
-      setError(signUpError.message);
-      setLoading(false);
-      if (window.turnstile) window.turnstile.reset();
-      setCaptchaToken('');
-      return;
-    }
-
-    if (!data.session) {
-      router.push('/login?confirmEmail=true');
-      return;
-    }
-
-    router.push(role === 'freelancer' ? '/dashboard/freelancer' : '/dashboard/client');
-  }
-
+function CheckIcon() {
   return (
-    <main className="plain-surface container" style={{ padding: '48px 24px' }}>
-      <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" stroke="#8A5A34" strokeWidth="1.4" />
+      <path d="M8 12.5L10.5 15L16 9" stroke="#8A5A34" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
-      <h1 style={{ fontSize: 28 }}>Create your account</h1>
+export default function Home() {
+  return (
+    <main>
+      <section className="marble-surface search-hero">
+        <div className="search-hero-inner">
+          <span className="eyebrow">Trusted freelancers for every kind of work</span>
+          <h1>
+            Hire vetted freelancers for your <em>next project</em>
+          </h1>
+          <p className="hero-subline">
+            Every freelancer vetted for quality, communication, and transparency —
+            no bidding wars, no hidden fees.
+          </p>
 
-      <div style={{ display: 'flex', gap: 10, margin: '16px 0 8px' }}>
-        <button
-          type="button"
-          className={role === 'freelancer' ? 'btn btn-primary' : 'btn btn-outline'}
-          onClick={() => setRole('freelancer')}
-        >
-          I'm a freelancer
-        </button>
-        <button
-          type="button"
-          className={role === 'client' ? 'btn btn-primary' : 'btn btn-outline'}
-          onClick={() => setRole('client')}
-        >
-          I'm hiring
-        </button>
+          <form action="/directory" method="get" className="search-bar">
+            <input type="text" name="q" placeholder="Try 'Shopify developer', 'copywriter', or 'video editor'" />
+            <button type="submit">Search</button>
+          </form>
+
+          <div className="chip-row">
+            <a href="/directory" className="chip">Web design</a>
+            <a href="/directory" className="chip">Development</a>
+            <a href="/directory" className="chip">Branding</a>
+            <a href="/directory" className="chip">Writing</a>
+            <a href="/directory" className="chip">Marketing</a>
+            <a href="/directory" className="chip">Video &amp; audio</a>
+            <a href="/directory" className="chip chip-muted">Browse all →</a>
+          </div>
+          <p style={{ fontSize: 12, color: 'var(--slate-light)', marginTop: 6 }}>
+            Any skill, any project — if it's freelance work, it belongs here.
+          </p>
+
+          <p className="hero-trust-line">Vetted freelancers · Secure payments · Clear project scopes</p>
+          <p className="hero-audience-line">Designed for founders, agencies, and local service businesses.</p>
+        </div>
+      </section>
+
+      <Reveal>
+        <section className="plain-surface feature-row">
+          <div className="feature-row-title">
+            <h2>Why LanceNest</h2>
+            <p>Built on transparency, designed for trust</p>
+          </div>
+          <div className="feature-grid">
+            <div className="feature-item">
+              <CheckIcon />
+              <h3>Stripe secured</h3>
+              <p>Every payment is processed and protected through Stripe — we never hold your funds.</p>
+            </div>
+            <div className="feature-item">
+              <CheckIcon />
+              <h3>No listing fees</h3>
+              <p>Creating a profile, applying, and browsing the directory costs nothing.</p>
+            </div>
+            <div className="feature-item">
+              <CheckIcon />
+              <h3>Direct payouts</h3>
+              <p>Money moves straight from client to freelancer's bank — no holding period.</p>
+            </div>
+          </div>
+        </section>
+      </Reveal>
+
+      <hr className="section-divider" />
+
+      <Reveal>
+        <section className="plain-surface welcome">
+          <div className="welcome-inner">
+            <span className="eyebrow">Welcome to</span>
+            <h2>LanceNest</h2>
+            <p>
+              Your nest for reliable talent and long-term partnerships — built
+              for people who'd rather
+              spend their energy on the craft than on chasing invoices.
+            </p>
+            <p>
+              Every profile is yours to keep. Our full fee structure is always
+              visible on our
+              <a href="/pricing" style={{ color: 'var(--wood)', textDecoration: 'underline' }}> pricing page</a>.
+            </p>
+          </div>
+        </section>
+      </Reveal>
+
+      <hr className="section-divider" />
+
+      <section className="plain-surface process">
+        <span className="eyebrow">How it works</span>
+        <div className="process-grid" style={{ marginTop: 48 }}>
+          <Reveal className="process-item">
+            <span className="process-numeral">I.</span>
+            <h3>Build a profile</h3>
+            <p>Portfolio, skills, and rate — live in minutes.</p>
+          </Reveal>
+          <Reveal className="process-item">
+            <span className="process-numeral">II.</span>
+            <h3>Get hired</h3>
+            <p>Clients find you in the public directory or message you directly.</p>
+          </Reveal>
+          <Reveal className="process-item">
+            <span className="process-numeral">III.</span>
+            <h3>Get paid</h3>
+            <p>Client pays through LanceNest, straight to your bank.</p>
+          </Reveal>
+        </div>
+      </section>
+
+      <div className="marble-surface">
+        <Reveal>
+          <section className="statement">
+            <span className="eyebrow">Built for the work</span>
+            <h2>A profile that's actually yours. <em>Payments that land where they should.</em></h2>
+          </section>
+        </Reveal>
+
+        <Footer />
       </div>
-
-      <form onSubmit={handleSubmit}>
-        <label>Full name</label>
-        <input value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-
-        <label>Email</label>
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-
-        <label>Password</label>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required />
-
-        <div
-          className="cf-turnstile"
-          data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-          data-callback="onTurnstileSuccess"
-          style={{ marginTop: 20 }}
-        />
-
-        {error && <p style={{ color: '#b3261e', fontSize: 14, marginTop: 12 }}>{error}</p>}
-
-        <button type="submit" className="btn btn-primary" style={{ marginTop: 20 }} disabled={loading}>
-          {loading ? 'Creating account...' : 'Create account'}
-        </button>
-      </form>
-
-      <p style={{ marginTop: 24, fontSize: 13, color: 'var(--slate)' }}>
-        Curious about pricing? <a href="/pricing" style={{ color: 'var(--wood)', textDecoration: 'underline' }}>View our pricing page</a>.
-      </p>
     </main>
-  );
-}
-
-export default function Signup() {
-  return (
-    <Suspense fallback={null}>
-      <SignupForm />
-    </Suspense>
-  );
-}      <form onSubmit={handleSubmit}>
-        <label>Full name</label>
-        <input value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-
-        <label>Email</label>
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-
-        <label>Password</label>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required />
-
-        <div
-          className="cf-turnstile"
-          data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-          data-callback="onTurnstileSuccess"
-          style={{ marginTop: 20 }}
-        />
-
-        {error && <p style={{ color: '#b3261e', fontSize: 14, marginTop: 12 }}>{error}</p>}
-
-        <button type="submit" className="btn btn-primary" style={{ marginTop: 20 }} disabled={loading}>
-          {loading ? 'Creating account...' : 'Create account'}
-        </button>
-      </form>
-
-      <p style={{ marginTop: 24, fontSize: 13, color: 'var(--slate)' }}>
-        Curious about pricing? <a href="/pricing" style={{ color: 'var(--wood)', textDecoration: 'underline' }}>View our pricing page</a>.
-      </p>
-    </main>
-  );
-}
-
-export default function Signup() {
-  return (
-    <Suspense fallback={null}>
-      <SignupForm />
-    </Suspense>
   );
 }
