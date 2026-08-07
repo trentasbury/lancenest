@@ -30,32 +30,38 @@ function LoginForm() {
       return;
     }
 
-    const { data, error: loginError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-      options: { captchaToken },
-    });
+    try {
+      const { data, error: loginError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+        options: { captchaToken },
+      });
 
-    if (loginError) {
-      setError(loginError.message);
+      if (loginError) {
+        setError(loginError.message);
+        if (window.turnstile) window.turnstile.reset();
+        setCaptchaToken('');
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .maybeSingle();
+
+      if (profile?.role === 'freelancer') {
+        router.push('/dashboard/freelancer');
+      } else if (profile?.role === 'client') {
+        router.push('/dashboard/client');
+      } else {
+        router.push('/directory');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Something went wrong. Please try again.');
+    } finally {
       setLoading(false);
-      if (window.turnstile) window.turnstile.reset();
-      setCaptchaToken('');
-      return;
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', data.user.id)
-      .maybeSingle();
-
-    if (profile?.role === 'freelancer') {
-      router.push('/dashboard/freelancer');
-    } else if (profile?.role === 'client') {
-      router.push('/dashboard/client');
-    } else {
-      router.push('/directory');
     }
   }
 
