@@ -1,5 +1,6 @@
 import './globals.css';
 import NavBar from '../components/NavBar';
+import ChatWidget from '../components/ChatWidget';
 
 export const metadata = {
   title: 'LanceNest — Hire independents. Keep it simple.',
@@ -12,6 +13,7 @@ export default function RootLayout({ children }) {
       <body>
         <NavBar />
         {children}
+        <ChatWidget />
       </body>
     </html>
   );
