@@ -48,7 +48,7 @@ function LoginForm() {
       .from('profiles')
       .select('role')
       .eq('id', data.user.id)
-      .single();
+      .maybeSingle();
 
     if (profile?.role === 'freelancer') {
       router.push('/dashboard/freelancer');
@@ -91,6 +91,10 @@ function LoginForm() {
           {loading ? 'Logging in...' : 'Log in'}
         </button>
       </form>
+
+      <p style={{ marginTop: 20, fontSize: 13 }}>
+        <a href="/forgot-password" style={{ color: 'var(--wood)', textDecoration: 'underline' }}>Forgot password?</a>
+      </p>
     </main>
   );
 }
