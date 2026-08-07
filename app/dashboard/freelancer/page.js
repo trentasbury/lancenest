@@ -18,7 +18,11 @@ export default function FreelancerDashboard() {
         window.location.href = '/login';
         return;
       }
-      const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+      const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
+      if (!data) {
+        setLoading(false);
+        return;
+      }
       setProfile(data);
       setLoading(false);
     }
@@ -79,6 +83,15 @@ export default function FreelancerDashboard() {
   }
 
   if (loading) return <main className="plain-surface container" style={{ padding: 48 }}>Loading...</main>;
+
+  if (!profile) {
+    return (
+      <main className="plain-surface container" style={{ padding: 48, textAlign: 'center' }}>
+        <p>We couldn't find your profile. Try logging out and back in — if this keeps happening, contact support.</p>
+        <a href="/login" className="btn btn-primary" style={{ marginTop: 16 }}>Back to login</a>
+      </main>
+    );
+  }
 
   return (
     <main className="plain-surface container" style={{ padding: '40px 24px', maxWidth: 480 }}>
