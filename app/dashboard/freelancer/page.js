@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
 
 export default function FreelancerDashboard() {
@@ -8,6 +8,8 @@ export default function FreelancerDashboard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [connecting, setConnecting] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     async function load() {
@@ -39,6 +41,31 @@ export default function FreelancerDashboard() {
     setSaving(false);
   }
 
+  async function handlePhotoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingPhoto(true);
+    const filePath = `${profile.id}/avatar.${file.name.split('.').pop()}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      alert(uploadError.message);
+      setUploadingPhoto(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
+    const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
+    await supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', profile.id);
+    setProfile({ ...profile, avatar_url: avatarUrl });
+    setUploadingPhoto(false);
+  }
+
   async function connectStripe() {
     setConnecting(true);
     const { data: { session } } = await supabase.auth.getSession();
@@ -51,11 +78,39 @@ export default function FreelancerDashboard() {
     setConnecting(false);
   }
 
-  if (loading) return <main className="container" style={{ padding: 48 }}>Loading...</main>;
+  if (loading) return <main className="plain-surface container" style={{ padding: 48 }}>Loading...</main>;
 
   return (
-    <main className="container" style={{ padding: '40px 24px', maxWidth: 480 }}>
+    <main className="plain-surface container" style={{ padding: '40px 24px', maxWidth: 480 }}>
       <h1 style={{ fontSize: 26 }}>Your profile</h1>
+
+      <div className="card" style={{ margin: '20px 0', textAlign: 'center' }}>
+        <div
+          style={{
+            width: 88,
+            height: 88,
+            borderRadius: '50%',
+            margin: '0 auto 12px',
+            background: profile.avatar_url ? `url(${profile.avatar_url}) center/cover` : 'var(--marble-dim)',
+            border: '1px solid var(--line)',
+          }}
+        />
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          onChange={handlePhotoUpload}
+          style={{ display: 'none' }}
+        />
+        <button
+          type="button"
+          className="btn btn-outline"
+          onClick={() => fileInputRef.current.click()}
+          disabled={uploadingPhoto}
+        >
+          {uploadingPhoto ? 'Uploading...' : profile.avatar_url ? 'Change photo' : 'Add a photo'}
+        </button>
+      </div>
 
       <div className="card" style={{ margin: '20px 0' }}>
         <h3>Payouts</h3>
@@ -75,8 +130,8 @@ export default function FreelancerDashboard() {
         <h3>{profile.is_pro ? 'LanceNest Pro' : 'Get seen first'}</h3>
         <p className="meta">
           {profile.is_pro
-            ? 'You\'re a Pro member — your profile shows first in the directory.'
-            : 'Upgrade to Pro for priority placement in the directory, $15/month. Same 10% fee either way.'}
+            ? "You're a Pro member — 10% fee and priority placement."
+            : 'Pro lowers your fee from 15% to 10% and adds priority placement — $20/month.'}
         </p>
         {!profile.is_pro && (
           <a href="/upgrade" className="btn btn-brass">Upgrade to Pro</a>
@@ -118,6 +173,10 @@ export default function FreelancerDashboard() {
 
       <p style={{ marginTop: 24 }}>
         <a href={`/profile/${profile.id}`} className="btn btn-outline">View public profile</a>
+      </p>
+
+      <p style={{ marginTop: 12 }}>
+        <a href="/wallet" className="btn btn-outline">View wallet →</a>
       </p>
     </main>
   );
