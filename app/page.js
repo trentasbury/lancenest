@@ -15,9 +15,9 @@ export default function Home() {
     <main>
       <section className="marble-surface search-hero">
         <div className="search-hero-inner">
-          <span className="eyebrow">Trusted freelancers for web design, branding & Shopify</span>
+          <span className="eyebrow">Trusted freelancers for every kind of work</span>
           <h1>
-            Hire vetted freelancers for your <em>next launch</em>
+            Hire vetted freelancers for your <em>next project</em>
           </h1>
           <p className="hero-subline">
             Every freelancer vetted for quality, communication, and transparency —
@@ -25,16 +25,22 @@ export default function Home() {
           </p>
 
           <form action="/directory" method="get" className="search-bar">
-            <input type="text" name="q" placeholder="Try 'Shopify developer', 'brand designer', or 'local SEO'" />
+            <input type="text" name="q" placeholder="Try 'Shopify developer', 'copywriter', or 'video editor'" />
             <button type="submit">Search</button>
           </form>
 
           <div className="chip-row">
-            <a href="/directory" className="chip">Web design & UX</a>
-            <a href="/directory" className="chip">Branding & identity</a>
-            <a href="/directory" className="chip">Shopify & ecommerce</a>
-            <a href="/directory" className="chip chip-muted">More categories →</a>
+            <a href="/directory" className="chip">Web design</a>
+            <a href="/directory" className="chip">Development</a>
+            <a href="/directory" className="chip">Branding</a>
+            <a href="/directory" className="chip">Writing</a>
+            <a href="/directory" className="chip">Marketing</a>
+            <a href="/directory" className="chip">Video &amp; audio</a>
+            <a href="/directory" className="chip chip-muted">Browse all →</a>
           </div>
+          <p style={{ fontSize: 12, color: 'var(--slate-light)', marginTop: 6 }}>
+            Any skill, any project — if it's freelance work, it belongs here.
+          </p>
 
           <p className="hero-trust-line">Vetted freelancers · Secure payments · Clear project scopes</p>
           <p className="hero-audience-line">Designed for founders, agencies, and local service businesses.</p>
