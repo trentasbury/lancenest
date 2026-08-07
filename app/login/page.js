@@ -1,6 +1,7 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import Script from 'next/script';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -12,17 +13,34 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState('');
+
+  useEffect(() => {
+    window.onTurnstileSuccessLogin = (token) => setCaptchaToken(token);
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
     setError('');
 
+    if (!captchaToken) {
+      setError('Please complete the verification check.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const { data, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error: loginError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+        options: { captchaToken },
+      });
 
       if (loginError) {
         setError(loginError.message);
+        if (window.turnstile) window.turnstile.reset();
+        setCaptchaToken('');
         return;
       }
 
@@ -49,7 +67,9 @@ function LoginForm() {
 
   return (
     <main className="plain-surface container" style={{ padding: '48px 24px' }}>
-      <h1 style={{ fontSize: 28 }}>Log in (TEST — no captcha)</h1>
+      <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
+
+      <h1 style={{ fontSize: 28 }}>Log in</h1>
 
       {confirmEmail && (
         <p style={{ background: 'var(--marble-dim)', border: '1px solid var(--line)', borderRadius: 6, padding: '12px 16px', fontSize: 14, marginTop: 16, maxWidth: 440 }}>
@@ -64,12 +84,23 @@ function LoginForm() {
         <label>Password</label>
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
 
+        <div
+          className="cf-turnstile"
+          data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+          data-callback="onTurnstileSuccessLogin"
+          style={{ marginTop: 20 }}
+        />
+
         {error && <p style={{ color: '#b3261e', fontSize: 14, marginTop: 12 }}>{error}</p>}
 
         <button type="submit" className="btn btn-primary" style={{ marginTop: 20 }} disabled={loading}>
           {loading ? 'Logging in...' : 'Log in'}
         </button>
       </form>
+
+      <p style={{ marginTop: 20, fontSize: 13 }}>
+        <a href="/forgot-password" style={{ color: 'var(--wood)', textDecoration: 'underline' }}>Forgot password?</a>
+      </p>
     </main>
   );
 }
