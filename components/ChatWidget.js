@@ -12,6 +12,10 @@ export default function ChatWidget() {
   const [otherName, setOtherName] = useState('');
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
+  const [showNewChat, setShowNewChat] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -43,6 +47,7 @@ export default function ChatWidget() {
   async function openConversation(id, name) {
     setActiveId(id);
     setOtherName(name);
+    setShowNewChat(false);
 
     const { data: { session } } = await supabase.auth.getSession();
     const res = await fetch(`/api/messages/${id}`, {
@@ -50,6 +55,44 @@ export default function ChatWidget() {
     });
     const data = await res.json();
     setMessages(data.messages || []);
+  }
+
+  async function searchPeople(query) {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    setSearching(true);
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, full_name, headline, role')
+      .neq('id', user.id)
+      .ilike('full_name', `%${query}%`)
+      .limit(8);
+    setSearchResults(data || []);
+    setSearching(false);
+  }
+
+  async function startNewChat(otherUserId, name) {
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch('/api/messages/start', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ otherUserId }),
+    });
+    const data = await res.json();
+    if (data.conversationId) {
+      setSearchQuery('');
+      setSearchResults([]);
+      await loadConversations();
+      openConversation(data.conversationId, name);
+    } else if (data.error) {
+      alert(data.error);
+    }
   }
 
   async function sendMessage(e) {
@@ -104,11 +147,20 @@ export default function ChatWidget() {
         >
           <div style={{ background: 'var(--wood)', color: 'var(--white)', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: 18 }}>
-              {activeId ? otherName : 'Messages'}
+              {activeId ? otherName : showNewChat ? 'New message' : 'Messages'}
             </span>
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              {activeId && (
-                <button onClick={() => setActiveId(null)} style={{ background: 'none', border: 'none', color: 'var(--white)', cursor: 'pointer', fontSize: 12 }}>
+              {!activeId && !showNewChat && (
+                <button
+                  onClick={() => setShowNewChat(true)}
+                  style={{ background: 'none', border: '1px solid rgba(255,255,255,0.5)', borderRadius: 6, color: 'var(--white)', cursor: 'pointer', fontSize: 16, width: 26, height: 26, lineHeight: 1 }}
+                  aria-label="New message"
+                >
+                  +
+                </button>
+              )}
+              {(activeId || showNewChat) && (
+                <button onClick={() => { setActiveId(null); setShowNewChat(false); setSearchQuery(''); setSearchResults([]); }} style={{ background: 'none', border: 'none', color: 'var(--white)', cursor: 'pointer', fontSize: 12 }}>
                   ← Back
                 </button>
               )}
@@ -118,11 +170,45 @@ export default function ChatWidget() {
             </div>
           </div>
 
-          {!activeId ? (
+          {showNewChat ? (
+            <div style={{ flex: 1, overflowY: 'auto', padding: 12 }}>
+              <input
+                value={searchQuery}
+                onChange={(e) => searchPeople(e.target.value)}
+                placeholder="Search by name..."
+                style={{ marginBottom: 10 }}
+                autoFocus
+              />
+              {searching && <p style={{ fontSize: 12, color: 'var(--slate)' }}>Searching...</p>}
+              {searchResults.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => startNewChat(p.id, p.full_name)}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '10px 8px',
+                    border: 'none',
+                    borderBottom: '1px solid var(--line)',
+                    background: 'none',
+                    cursor: 'pointer',
+                    fontSize: 13.5,
+                  }}
+                >
+                  <strong>{p.full_name}</strong>
+                  <div style={{ fontSize: 11, color: 'var(--slate)' }}>{p.headline || (p.role === 'client' ? 'Company' : 'Freelancer')}</div>
+                </button>
+              ))}
+              {searchQuery && !searching && searchResults.length === 0 && (
+                <p style={{ fontSize: 12, color: 'var(--slate)' }}>No one found.</p>
+              )}
+            </div>
+          ) : !activeId ? (
             <div style={{ flex: 1, overflowY: 'auto', padding: 8 }}>
               {conversations.length === 0 && (
                 <p style={{ fontSize: 13, color: 'var(--slate)', padding: 16, textAlign: 'center' }}>
-                  No conversations yet. Message someone from their profile or a job listing.
+                  No conversations yet. Tap + to message someone.
                 </p>
               )}
               {conversations.map((c) => (
@@ -148,6 +234,7 @@ export default function ChatWidget() {
           ) : (
             <>
               <div style={{ flex: 1, overflowY: 'auto', padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {messages.length === 0 && <p style={{ fontSize: 12, color: 'var(--slate)' }}>Say hello — no messages yet.</p>}
                 {messages.map((m) => (
                   <div
                     key={m.id}
