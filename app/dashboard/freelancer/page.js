@@ -5,11 +5,16 @@ import { supabase } from '../../../lib/supabaseClient';
 
 export default function FreelancerDashboard() {
   const [profile, setProfile] = useState(null);
+  const [portfolio, setPortfolio] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [addingWork, setAddingWork] = useState(false);
+  const [newWork, setNewWork] = useState({ title: '', description: '', link_url: '' });
   const fileInputRef = useRef(null);
+  const coverInputRef = useRef(null);
 
   useEffect(() => {
     async function load() {
@@ -24,6 +29,14 @@ export default function FreelancerDashboard() {
         return;
       }
       setProfile(data);
+
+      const { data: workData } = await supabase
+        .from('portfolio_items')
+        .select('*')
+        .eq('profile_id', session.user.id)
+        .order('created_at', { ascending: false });
+      setPortfolio(workData || []);
+
       setLoading(false);
     }
     load();
@@ -70,6 +83,62 @@ export default function FreelancerDashboard() {
     setUploadingPhoto(false);
   }
 
+  async function handleCoverUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingCover(true);
+    const filePath = `${profile.id}/cover.${file.name.split('.').pop()}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      alert(uploadError.message);
+      setUploadingCover(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
+    const coverUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
+    await supabase.from('profiles').update({ cover_url: coverUrl }).eq('id', profile.id);
+    setProfile({ ...profile, cover_url: coverUrl });
+    setUploadingCover(false);
+  }
+
+  async function addWorkItem(e) {
+    e.preventDefault();
+    if (!newWork.title.trim()) return;
+
+    const { data, error } = await supabase
+      .from('portfolio_items')
+      .insert({
+        profile_id: profile.id,
+        title: newWork.title,
+        description: newWork.description,
+        link_url: newWork.link_url || null,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    setPortfolio([data, ...portfolio]);
+    setNewWork({ title: '', description: '', link_url: '' });
+    setAddingWork(false);
+  }
+
+  async function deleteWorkItem(id) {
+    if (!confirm('Remove this from your work?')) return;
+    await supabase.from('portfolio_items').delete().eq('id', id);
+    setPortfolio(portfolio.filter((p) => p.id !== id));
+  }
+
   async function connectStripe() {
     setConnecting(true);
     const { data: { session } } = await supabase.auth.getSession();
@@ -94,35 +163,56 @@ export default function FreelancerDashboard() {
   }
 
   return (
-    <main className="plain-surface container" style={{ padding: '40px 24px', maxWidth: 480 }}>
-      <h1 style={{ fontSize: 26 }}>Your profile</h1>
+    <main className="plain-surface container" style={{ padding: '40px 24px', maxWidth: 560 }}>
+      <h1 style={{ fontSize: 26, marginBottom: 24 }}>Your profile</h1>
 
-      <div className="card" style={{ margin: '20px 0', textAlign: 'center' }}>
-        <div
-          style={{
-            width: 88,
-            height: 88,
-            borderRadius: '50%',
-            margin: '0 auto 12px',
-            background: profile.avatar_url ? `url(${profile.avatar_url}) center/cover` : 'var(--marble-dim)',
-            border: '1px solid var(--line)',
-          }}
-        />
-        <input
-          type="file"
-          accept="image/*"
-          ref={fileInputRef}
-          onChange={handlePhotoUpload}
-          style={{ display: 'none' }}
-        />
+      {/* Cover photo */}
+      <div
+        style={{
+          height: 140,
+          borderRadius: 10,
+          marginBottom: -44,
+          background: profile.cover_url ? `url(${profile.cover_url}) center/cover` : 'var(--marble-dim)',
+          border: '1px solid var(--line)',
+          position: 'relative',
+        }}
+      >
+        <input type="file" accept="image/*" ref={coverInputRef} onChange={handleCoverUpload} style={{ display: 'none' }} />
         <button
           type="button"
           className="btn btn-outline"
-          onClick={() => fileInputRef.current.click()}
-          disabled={uploadingPhoto}
+          onClick={() => coverInputRef.current.click()}
+          disabled={uploadingCover}
+          style={{ position: 'absolute', bottom: 10, right: 10, background: 'var(--white)', fontSize: 11, padding: '6px 12px' }}
         >
-          {uploadingPhoto ? 'Uploading...' : profile.avatar_url ? 'Change photo' : 'Add a photo'}
+          {uploadingCover ? 'Uploading...' : profile.cover_url ? 'Change cover' : 'Add cover photo'}
         </button>
+      </div>
+
+      {/* Avatar, overlapping the cover */}
+      <div style={{ display: 'flex', justifyContent: 'center', position: 'relative', zIndex: 2, marginBottom: 12 }}>
+        <div style={{ textAlign: 'center' }}>
+          <div
+            style={{
+              width: 88,
+              height: 88,
+              borderRadius: '50%',
+              margin: '0 auto 8px',
+              background: profile.avatar_url ? `url(${profile.avatar_url}) center/cover` : 'var(--marble-dim)',
+              border: '3px solid var(--paper)',
+            }}
+          />
+          <input type="file" accept="image/*" ref={fileInputRef} onChange={handlePhotoUpload} style={{ display: 'none' }} />
+          <button
+            type="button"
+            className="btn btn-outline"
+            onClick={() => fileInputRef.current.click()}
+            disabled={uploadingPhoto}
+            style={{ fontSize: 11, padding: '6px 12px' }}
+          >
+            {uploadingPhoto ? 'Uploading...' : profile.avatar_url ? 'Change photo' : 'Add a photo'}
+          </button>
+        </div>
       </div>
 
       <div className="card" style={{ margin: '20px 0' }}>
@@ -151,6 +241,7 @@ export default function FreelancerDashboard() {
         )}
       </div>
 
+      <h3 style={{ marginTop: 32, marginBottom: 4 }}>Profile details</h3>
       <form onSubmit={saveProfile}>
         <label>Headline</label>
         <input
@@ -159,10 +250,11 @@ export default function FreelancerDashboard() {
           placeholder="e.g. Shopify developer & brand designer"
         />
 
-        <label>Bio</label>
+        <label>Bio / description</label>
         <textarea
           value={profile.bio || ''}
           onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+          placeholder="Tell clients about your experience and what you do"
         />
 
         <label>Hourly rate ($)</label>
@@ -184,7 +276,60 @@ export default function FreelancerDashboard() {
         </button>
       </form>
 
-      <p style={{ marginTop: 24 }}>
+      {/* Work / portfolio management */}
+      <h3 style={{ marginTop: 40, marginBottom: 12 }}>Your work</h3>
+
+      {portfolio.map((item) => (
+        <div key={item.id} className="card" style={{ marginBottom: 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+            <div>
+              <h3 style={{ fontSize: 15, marginBottom: 4 }}>{item.title}</h3>
+              <p className="meta">{item.description}</p>
+              {item.link_url && <a href={item.link_url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: 'var(--wood)' }}>{item.link_url}</a>}
+            </div>
+            <button
+              onClick={() => deleteWorkItem(item.id)}
+              style={{ background: 'none', border: 'none', color: '#b3261e', cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap' }}
+            >
+              Remove
+            </button>
+          </div>
+        </div>
+      ))}
+
+      {addingWork ? (
+        <form onSubmit={addWorkItem} className="card" style={{ marginTop: 12 }}>
+          <label style={{ marginTop: 0 }}>Title</label>
+          <input
+            value={newWork.title}
+            onChange={(e) => setNewWork({ ...newWork, title: e.target.value })}
+            placeholder="e.g. Brand redesign for a local bakery"
+            required
+          />
+          <label>Description</label>
+          <textarea
+            value={newWork.description}
+            onChange={(e) => setNewWork({ ...newWork, description: e.target.value })}
+            placeholder="What did you do, and what was the result?"
+          />
+          <label>Link (optional)</label>
+          <input
+            value={newWork.link_url}
+            onChange={(e) => setNewWork({ ...newWork, link_url: e.target.value })}
+            placeholder="https://..."
+          />
+          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+            <button type="submit" className="btn btn-primary">Add to profile</button>
+            <button type="button" className="btn btn-outline" onClick={() => setAddingWork(false)}>Cancel</button>
+          </div>
+        </form>
+      ) : (
+        <button className="btn btn-outline" onClick={() => setAddingWork(true)} style={{ marginTop: 12 }}>
+          + Add work
+        </button>
+      )}
+
+      <p style={{ marginTop: 32 }}>
         <a href={`/profile/${profile.id}`} className="btn btn-outline">View public profile</a>
       </p>
 
