@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
 
 function Logo() {
   return (
@@ -14,6 +15,30 @@ function Logo() {
 
 export default function NavBar() {
   const [open, setOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
+
+  useEffect(() => {
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      if (user) {
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+        setRole(profile?.role);
+      }
+    }
+    load();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(() => load());
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    window.location.href = '/';
+  }
+
+  const dashboardHref = role === 'freelancer' ? '/dashboard/freelancer' : role === 'client' ? '/dashboard/client' : '/directory';
 
   return (
     <div className="nav-overlay" style={{ background: 'var(--marble)' }}>
@@ -26,11 +51,26 @@ export default function NavBar() {
         <div className="nav-links-plain nav-desktop-only">
           <a href="/directory">Hire freelancers</a>
           <a href="/listings">Projects</a>
-          <a href="/messages">Messages</a>
+          {user && <a href="/network">Network</a>}
+          {user && <a href="/messages">Messages</a>}
         </div>
-        <div className="nav-desktop-only" style={{ display: 'flex', gap: 10 }}>
-          <a href="/login" className="btn btn-outline" style={{ borderRadius: 999, padding: '13px 26px' }}>Log in</a>
-          <a href="/signup" className="wood-pill">Sign up</a>
+
+        <div className="nav-desktop-only" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          {user ? (
+            <>
+              <a href={dashboardHref} className="btn btn-outline" style={{ borderRadius: 999, padding: '13px 26px' }}>
+                Dashboard
+              </a>
+              <button onClick={handleLogout} className="wood-pill" style={{ border: 'none', cursor: 'pointer' }}>
+                Log out
+              </button>
+            </>
+          ) : (
+            <>
+              <a href="/login" className="btn btn-outline" style={{ borderRadius: 999, padding: '13px 26px' }}>Log in</a>
+              <a href="/signup" className="wood-pill">Sign up</a>
+            </>
+          )}
         </div>
 
         <button
@@ -57,9 +97,19 @@ export default function NavBar() {
         <div className="nav-mobile-menu">
           <a href="/directory" onClick={() => setOpen(false)}>Hire talent</a>
           <a href="/listings" onClick={() => setOpen(false)}>Find work</a>
-          <a href="/messages" onClick={() => setOpen(false)}>Messages</a>
-          <a href="/login" onClick={() => setOpen(false)}>Log in</a>
-          <a href="/signup" className="wood-pill" style={{ textAlign: 'center' }} onClick={() => setOpen(false)}>Sign up</a>
+          {user && <a href="/network" onClick={() => setOpen(false)}>Network</a>}
+          {user && <a href="/messages" onClick={() => setOpen(false)}>Messages</a>}
+          {user ? (
+            <>
+              <a href={dashboardHref} onClick={() => setOpen(false)}>Dashboard</a>
+              <a href="#" onClick={(e) => { e.preventDefault(); handleLogout(); }}>Log out</a>
+            </>
+          ) : (
+            <>
+              <a href="/login" onClick={() => setOpen(false)}>Log in</a>
+              <a href="/signup" className="wood-pill" style={{ textAlign: 'center' }} onClick={() => setOpen(false)}>Sign up</a>
+            </>
+          )}
         </div>
       )}
     </div>
