@@ -5,12 +5,15 @@ export default function Pricing() {
       <h1 style={{ fontSize: 38, margin: '16px 0 32px' }}>How LanceNest is paid for.</h1>
 
       <section style={{ marginBottom: 40 }}>
-        <h2 style={{ fontSize: 22, marginBottom: 12 }}>Free — 15% per project</h2>
+        <h2 style={{ fontSize: 22, marginBottom: 12 }}>Standard — 15% per project</h2>
         <p style={{ color: 'var(--slate)', fontSize: 15.5, lineHeight: 1.8 }}>
-          Every freelancer starts here, free forever. LanceNest takes 15% from
-          the freelancer's side of each completed job, deducted automatically
-          when a client pays. No fee to the client beyond the agreed job
-          amount, no listing fee, no fee to create or maintain a profile.
+          Every veteran freelancer starts here, no subscription required —
+          whether you're taking on cleared federal work through LanceNest
+          Federal or general freelance work through LanceNest Marketplace.
+          LanceNest takes 15% from the freelancer's side of each completed
+          job, deducted automatically when a client pays. No fee to the
+          client beyond the agreed job amount, no listing fee, no fee to
+          create or maintain a profile.
         </p>
       </section>
 
@@ -27,9 +30,7 @@ export default function Pricing() {
           <li>Instant payouts (coming soon)</li>
         </ul>
         <p style={{ marginTop: 16, fontSize: 14, color: 'var(--slate)' }}>
-          The 5% fee reduction alone covers the $20 subscription once you're
-          earning roughly $400/month or more through LanceNest — past that
-          point, Pro is saving you money, not costing you any.
+          The 5% fee reduction alone covers the $20 subscription. Pro is saving you money, not costing you any.
         </p>
         <p style={{ marginTop: 12 }}>
           <a href="/upgrade" style={{ color: 'var(--wood)', textDecoration: 'underline', fontSize: 14 }}>
