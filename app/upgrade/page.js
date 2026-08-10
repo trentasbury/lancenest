@@ -109,7 +109,7 @@ export default function Upgrade() {
       </button>
 
       <p style={{ fontSize: 12, color: 'var(--slate)', marginTop: 24 }}>
-        Free is always free — no credit card required. See the full breakdown on our{' '}
+        No subscription required to join — no credit card needed. See the full breakdown on our{' '}
         <a href="/pricing" style={{ textDecoration: 'underline' }}>pricing page</a>.
       </p>
     </main>
