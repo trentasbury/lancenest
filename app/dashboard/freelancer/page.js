@@ -13,6 +13,7 @@ export default function FreelancerDashboard() {
   const [uploadingCover, setUploadingCover] = useState(false);
   const [addingWork, setAddingWork] = useState(false);
   const [newWork, setNewWork] = useState({ title: '', description: '', link_url: '' });
+  const [trailingEarnings, setTrailingEarnings] = useState(0);
   const fileInputRef = useRef(null);
   const coverInputRef = useRef(null);
 
@@ -37,6 +38,17 @@ export default function FreelancerDashboard() {
           .eq('profile_id', session.user.id)
           .order('created_at', { ascending: false });
         setPortfolio(workData || []);
+
+        // Trailing 30-day earnings, used for a contextual (not signup-day) upgrade nudge.
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        const { data: recentJobs } = await supabase
+          .from('jobs')
+          .select('amount_cents')
+          .eq('freelancer_id', session.user.id)
+          .eq('status', 'completed')
+          .gte('created_at', thirtyDaysAgo);
+        const total = (recentJobs || []).reduce((sum, j) => sum + j.amount_cents, 0);
+        setTrailingEarnings(total / 100);
       } catch (err) {
         console.error('Dashboard load error:', err);
       } finally {
@@ -49,7 +61,7 @@ export default function FreelancerDashboard() {
   async function saveProfile(e) {
     e.preventDefault();
     setSaving(true);
-    const { id, headline, bio, hourly_rate, skills } = profile;
+    const { id, headline, bio, hourly_rate, skills, city, state, remote_ok } = profile;
     await supabase
       .from('profiles')
       .update({
@@ -57,6 +69,9 @@ export default function FreelancerDashboard() {
         bio,
         hourly_rate: hourly_rate ? Number(hourly_rate) : null,
         skills: typeof skills === 'string' ? skills.split(',').map((s) => s.trim()).filter(Boolean) : skills,
+        city,
+        state,
+        remote_ok,
       })
       .eq('id', id);
     setSaving(false);
@@ -155,6 +170,17 @@ export default function FreelancerDashboard() {
     setConnecting(false);
   }
 
+  function startIdmeVerification() {
+    const params = new URLSearchParams({
+      client_id: process.env.NEXT_PUBLIC_IDME_CLIENT_ID,
+      redirect_uri: `${window.location.origin}/api/auth/idme/callback`,
+      response_type: 'code',
+      scope: 'military',
+      state: profile.id,
+    });
+    window.location.href = `https://api.id.me/oauth/authorize?${params.toString()}`;
+  }
+
   if (loading) return <main className="plain-surface container" style={{ padding: 48 }}>Loading...</main>;
 
   if (!profile) {
@@ -220,6 +246,18 @@ export default function FreelancerDashboard() {
       </div>
 
       <div className="card" style={{ margin: '20px 0' }}>
+        <h3>Veteran verification</h3>
+        <p className="meta">
+          {profile.is_veteran_verified
+            ? 'Verified through ID.me — your profile shows a Verified Veteran badge.'
+            : 'Verify your military or veteran status through ID.me. No documents are ever stored with LanceNest — ID.me confirms your status directly.'}
+        </p>
+        {!profile.is_veteran_verified && (
+          <button className="btn btn-brass" onClick={startIdmeVerification}>Verify with ID.me</button>
+        )}
+      </div>
+
+      <div className="card" style={{ margin: '20px 0' }}>
         <h3>Payouts</h3>
         <p className="meta">
           {profile.stripe_onboarded
@@ -234,14 +272,30 @@ export default function FreelancerDashboard() {
       </div>
 
       <div className="card" style={{ margin: '20px 0' }}>
-        <h3>{profile.is_pro ? 'LanceNest Pro' : 'Get seen first'}</h3>
+        <h3>
+          {profile.plan === 'federal_pro' ? 'LanceNest Federal Pro' : profile.plan === 'pro' ? 'LanceNest Pro' : 'Your plan'}
+        </h3>
         <p className="meta">
-          {profile.is_pro
-            ? "You're a Pro member — 10% fee and priority placement."
-            : 'Pro lowers your fee from 15% to 10% and adds priority placement — $20/month.'}
+          {profile.plan === 'federal_pro' && "You're on Federal Pro — 8% fee and priority placement."}
+          {profile.plan === 'pro' && "You're a Pro member — 10% fee and priority placement."}
+          {(!profile.plan || profile.plan === 'standard') && 'Standard — 15% per job, no subscription.'}
         </p>
-        {!profile.is_pro && (
-          <a href="/upgrade" className="btn btn-brass">Upgrade to Pro</a>
+
+        {(!profile.plan || profile.plan === 'standard') && trailingEarnings >= 380 && (
+          <div style={{ background: 'var(--marble-dim)', border: '1px solid var(--wood)', borderRadius: 8, padding: '12px 14px', margin: '12px 0' }}>
+            <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>
+              You'd have saved ${(trailingEarnings * 0.05 - 19).toFixed(0)} this month on Pro.
+            </p>
+            <p style={{ fontSize: 12.5, color: 'var(--slate)' }}>
+              Based on ${trailingEarnings.toFixed(0)} in completed jobs over the last 30 days.
+            </p>
+          </div>
+        )}
+
+        {(!profile.plan || profile.plan === 'standard') && (
+          <a href="/upgrade" className="btn btn-brass">
+            {trailingEarnings >= 380 ? 'Upgrade to Pro' : 'See Pro & Federal Pro'}
+          </a>
         )}
       </div>
 
@@ -274,6 +328,27 @@ export default function FreelancerDashboard() {
           onChange={(e) => setProfile({ ...profile, skills: e.target.value })}
           placeholder="Shopify, React, Figma"
         />
+
+        <label>City</label>
+        <input value={profile.city || ''} onChange={(e) => setProfile({ ...profile, city: e.target.value })} />
+
+        <label>State</label>
+        <select value={profile.state || ''} onChange={(e) => setProfile({ ...profile, state: e.target.value })}>
+          <option value="">Select a state</option>
+          {['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'].map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14 }}>
+          <input
+            type="checkbox"
+            checked={profile.remote_ok || false}
+            onChange={(e) => setProfile({ ...profile, remote_ok: e.target.checked })}
+            style={{ width: 'auto' }}
+          />
+          Available for remote work
+        </label>
 
         <button type="submit" className="btn btn-primary" style={{ marginTop: 20 }} disabled={saving}>
           {saving ? 'Saving...' : 'Save profile'}
