@@ -75,7 +75,14 @@ export default function ClientDashboard() {
     <main className="plain-surface" style={{ minHeight: '70vh' }}>
       <div className="container" style={{ padding: '56px 40px', maxWidth: 720 }}>
         <span className="eyebrow">Company dashboard</span>
-        <h1 style={{ fontSize: 32, margin: '10px 0 6px' }}>{profile?.full_name}</h1>
+        <h1 style={{ fontSize: 32, margin: '10px 0 6px' }}>{profile?.company_name || profile?.full_name}</h1>
+        {!profile?.is_approved && (
+          <div className="card" style={{ marginBottom: 20, borderColor: 'var(--wood)' }}>
+            <p style={{ fontSize: 14 }}>
+              Your account is pending a quick manual review — this usually happens fast. Once approved, your job posts will appear publicly to veteran freelancers.
+            </p>
+          </div>
+        )}
         <p className="meta" style={{ marginBottom: 32 }}>{profile?.email}</p>
 
         <div style={{ display: 'flex', gap: 12, marginBottom: 40 }}>
