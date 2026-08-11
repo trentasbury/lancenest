@@ -12,6 +12,8 @@ function SignupForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [companyWebsite, setCompanyWebsite] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState('');
@@ -35,7 +37,11 @@ function SignupForm() {
       email,
       password,
       options: {
-        data: { full_name: fullName, role },
+        data: {
+          full_name: fullName,
+          role,
+          ...(role === 'client' ? { company_name: companyName, company_website: companyWebsite } : {}),
+        },
         captchaToken,
         emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/login?confirmEmail=true`,
       },
@@ -69,20 +75,41 @@ function SignupForm() {
           className={role === 'freelancer' ? 'btn btn-primary' : 'btn btn-outline'}
           onClick={() => setRole('freelancer')}
         >
-          I'm a freelancer
+          I'm a veteran freelancer
         </button>
         <button
           type="button"
           className={role === 'client' ? 'btn btn-primary' : 'btn btn-outline'}
           onClick={() => setRole('client')}
         >
-          I'm hiring
+          I want to hire veterans
         </button>
       </div>
+
+      {role === 'client' && (
+        <p style={{ fontSize: 13, color: 'var(--slate)', marginBottom: 8 }}>
+          Any company can hire through LanceNest — you don't need to be veteran-owned.
+        </p>
+      )}
 
       <form onSubmit={handleSubmit}>
         <label>Full name</label>
         <input value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+
+        {role === 'client' && (
+          <>
+            <label>Company name</label>
+            <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} required />
+
+            <label>Company website</label>
+            <input
+              value={companyWebsite}
+              onChange={(e) => setCompanyWebsite(e.target.value)}
+              placeholder="https://..."
+              required
+            />
+          </>
+        )}
 
         <label>Email</label>
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
