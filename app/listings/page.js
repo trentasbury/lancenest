@@ -7,31 +7,46 @@ export default function Listings() {
   const [listings, setListings] = useState(null);
   const [authed, setAuthed] = useState(null);
   const [counts, setCounts] = useState(null);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setAuthed(false);
-        const { data } = await supabase.rpc('get_platform_counts');
-        setCounts(data?.[0] || null);
-        return;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          setAuthed(false);
+          const { data } = await supabase.rpc('get_platform_counts');
+          setCounts(data?.[0] || null);
+          return;
+        }
+        setAuthed(true);
+
+        const { data } = await supabase
+          .from('job_listings')
+          .select('id, title, description, budget_cents, skills, created_at, profiles!inner(full_name, is_approved)')
+          .eq('status', 'open')
+          .eq('profiles.is_approved', true)
+          .order('created_at', { ascending: false });
+
+        setListings(data || []);
+      } catch (err) {
+        console.error('Listings load error:', err);
+        setLoadError(true);
       }
-      setAuthed(true);
-
-      const { data } = await supabase
-        .from('job_listings')
-        .select('id, title, description, budget_cents, skills, created_at, profiles!inner(full_name, is_approved)')
-        .eq('status', 'open')
-        .eq('profiles.is_approved', true)
-        .order('created_at', { ascending: false });
-
-      setListings(data || []);
     }
     load();
   }, []);
 
-  if (authed === null) return null;
+  if (loadError) {
+    return (
+      <main className="plain-surface container" style={{ padding: '80px 40px', textAlign: 'center' }}>
+        <p style={{ marginBottom: 16 }}>Something went wrong loading listings.</p>
+        <button className="btn btn-primary" onClick={() => window.location.reload()}>Try again</button>
+      </main>
+    );
+  }
+
+  if (authed === null) return <main className="plain-surface container" style={{ padding: 48 }}>Loading...</main>;
 
   if (authed === false) {
     const count = counts?.open_listing_count;
