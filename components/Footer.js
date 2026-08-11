@@ -20,9 +20,12 @@ export default function Footer() {
           <a href="/directory">Hire freelancers</a>
           <a href="/listings">Projects</a>
           <a href="/pricing">Pricing</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+          <a href="https://linkedin.com/company/lancenest" target="_blank" rel="noreferrer">LinkedIn</a>
         </div>
         <div className="footer-bottom">
-          © {new Date().getFullYear()} LanceNest
+          © {new Date().getFullYear()} Asbury Ventures Group LLC d/b/a LanceNest. Veteran-owned.
         </div>
       </div>
     </footer>
