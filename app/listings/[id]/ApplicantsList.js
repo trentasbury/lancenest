@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
+import MessageButton from '../../../components/MessageButton';
 
 export default function ApplicantsList({ listingId, clientId }) {
   const [applications, setApplications] = useState(null);
@@ -9,7 +10,8 @@ export default function ApplicantsList({ listingId, clientId }) {
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       if (!user || user.id !== clientId) return;
       setIsOwner(true);
 
@@ -36,7 +38,8 @@ export default function ApplicantsList({ listingId, clientId }) {
             <h3 style={{ fontSize: 17, marginBottom: 4 }}>{app.profiles?.full_name}</h3>
           </a>
           <p className="meta" style={{ marginBottom: 8 }}>{app.profiles?.headline}</p>
-          {app.message && <p style={{ fontSize: 14.5, color: 'var(--slate)' }}>{app.message}</p>}
+          {app.message && <p style={{ fontSize: 14.5, color: 'var(--slate)', marginBottom: 10 }}>{app.message}</p>}
+          <MessageButton otherUserId={app.profiles?.id} />
         </div>
       ))}
     </div>
