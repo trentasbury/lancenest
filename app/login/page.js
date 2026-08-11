@@ -2,11 +2,10 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import Script from 'next/script';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { supabase } from '../../lib/supabaseClient';
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const confirmEmail = searchParams.get('confirmEmail') === 'true';
   const [email, setEmail] = useState('');
@@ -30,6 +29,12 @@ function LoginForm() {
       return;
     }
 
+    // Hard safety net: no matter what happens below, force a redirect
+    // after 6 seconds so this can never hang on this screen forever.
+    const safetyTimeout = setTimeout(() => {
+      window.location.href = '/directory';
+    }, 6000);
+
     try {
       const { data, error: loginError } = await supabase.auth.signInWithPassword({
         email,
@@ -38,29 +43,34 @@ function LoginForm() {
       });
 
       if (loginError) {
+        clearTimeout(safetyTimeout);
         setError(loginError.message);
         if (window.turnstile) window.turnstile.reset();
         setCaptchaToken('');
+        setLoading(false);
         return;
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', data.user.id)
-        .maybeSingle();
+      let destination = '/directory';
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .maybeSingle();
 
-      if (profile?.role === 'freelancer') {
-        router.push('/dashboard/freelancer');
-      } else if (profile?.role === 'client') {
-        router.push('/dashboard/client');
-      } else {
-        router.push('/directory');
+        if (profile?.role === 'freelancer') destination = '/dashboard/freelancer';
+        else if (profile?.role === 'client') destination = '/dashboard/client';
+      } catch (profileErr) {
+        console.error('Profile lookup error (continuing to directory):', profileErr);
       }
+
+      clearTimeout(safetyTimeout);
+      window.location.href = destination;
     } catch (err) {
+      clearTimeout(safetyTimeout);
       console.error('Login error:', err);
       setError('Something went wrong. Please try again.');
-    } finally {
       setLoading(false);
     }
   }
@@ -90,10 +100,6 @@ function LoginForm() {
           data-callback="onTurnstileSuccessLogin"
           style={{ marginTop: 20 }}
         />
-
-        <p style={{ fontSize: 12, color: captchaToken ? 'green' : '#b3261e', marginTop: 8 }}>
-          Verification status: {captchaToken ? `✓ Verified (token length: ${captchaToken.length})` : '✗ Not yet verified'}
-        </p>
 
         {error && <p style={{ color: '#b3261e', fontSize: 14, marginTop: 12 }}>{error}</p>}
 
