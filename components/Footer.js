@@ -25,7 +25,7 @@ export default function Footer() {
           <a href="https://linkedin.com/company/lancenest" target="_blank" rel="noreferrer">LinkedIn</a>
         </div>
         <div className="footer-bottom">
-          © {new Date().getFullYear()} Asbury Ventures Group LLC d/b/a LanceNest. Veteran-owned.
+          © {new Date().getFullYear()} Ossa LLC d/b/a LanceNest. Veteran-owned.
         </div>
       </div>
     </footer>
