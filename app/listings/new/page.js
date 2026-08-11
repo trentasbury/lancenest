@@ -18,7 +18,9 @@ export default function NewListing() {
     setLoading(true);
     setError('');
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+
+    const user = session?.user;
     if (!user) {
       setError('Log in as a client to post a job.');
       setLoading(false);
