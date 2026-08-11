@@ -14,7 +14,8 @@ export default function JobPage() {
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       setUser(user);
       const { data } = await supabase.from('jobs').select('*').eq('id', id).single();
       setJob(data);
