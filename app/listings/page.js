@@ -21,8 +21,9 @@ export default function Listings() {
 
       const { data } = await supabase
         .from('job_listings')
-        .select('id, title, description, budget_cents, skills, created_at, profiles(full_name)')
+        .select('id, title, description, budget_cents, skills, created_at, profiles!inner(full_name, is_approved)')
         .eq('status', 'open')
+        .eq('profiles.is_approved', true)
         .order('created_at', { ascending: false });
 
       setListings(data || []);
