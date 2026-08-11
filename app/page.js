@@ -1,5 +1,7 @@
 import Footer from '../components/Footer';
 import Reveal from '../components/Reveal';
+import ConciergeForm from '../components/ConciergeForm';
+import FoundingBanner from '../components/FoundingBanner';
 
 function CheckIcon() {
   return (
@@ -15,52 +17,54 @@ export default function Home() {
     <main>
       <section className="marble-surface search-hero">
         <div className="search-hero-inner">
-          <span className="eyebrow">Veteran-owned · Cleared talent, first</span>
+          <span className="eyebrow">Veteran-owned · Federal-grade verification</span>
           <h1>
-            Your clearance is the credential. <em>We built the marketplace around it.</em>
+            Veteran talent for <em>federal missions.</em>
           </h1>
           <p className="hero-subline">
-            LanceNest Federal connects cleared veterans with federal contractors who
-            need surge talent — verified by DD-214 and clearance status. Below that,
-            LanceNest Marketplace is open to every veteran for everyday freelance
-            work, from web design to HVAC.
-          </p>
-
-          <form action="/directory" method="get" className="search-bar">
-            <input type="text" name="q" placeholder="Try 'cleared IT support', 'web design', or 'HVAC tech'" />
-            <button type="submit">Search</button>
-          </form>
-
-          <div className="chip-row">
-            <a href="/directory" className="chip">Security clearance</a>
-            <a href="/directory" className="chip">Federal & IT</a>
-            <a href="/directory" className="chip">Web design</a>
-            <a href="/directory" className="chip">HVAC & trades</a>
-            <a href="/directory" className="chip">Electrical</a>
-            <a href="/directory" className="chip chip-muted">Browse all →</a>
-          </div>
-          <p style={{ fontSize: 12, color: 'var(--slate-light)', marginTop: 6 }}>
-            Verified veterans only. Every skill, every trade — if you served, this is built for you.
+            Every freelancer on LanceNest is service-verified through ID.me —
+            not just claimed as "vetted." LanceNest Federal connects cleared
+            veterans to federal contractors who need surge talent.
+            LanceNest Marketplace opens the same verified pool to any veteran
+            freelancing in any trade, from IT to HVAC.
           </p>
         </div>
       </section>
 
       <Reveal>
+        <section className="plain-surface" style={{ padding: '70px 40px' }}>
+          <div style={{ textAlign: 'center', marginBottom: 32 }}>
+            <span className="eyebrow">Tell us what you need</span>
+            <h2 style={{ fontSize: 28, margin: '10px 0 8px' }}>
+              We'll hand you a shortlist. You pick.
+            </h2>
+            <p style={{ color: 'var(--slate)', maxWidth: 460, margin: '0 auto' }}>
+              Describe the work — we return three verified, service-matched candidates within 48 hours.
+            </p>
+          </div>
+          <ConciergeForm />
+          <p style={{ textAlign: 'center', marginTop: 20, fontSize: 13 }}>
+            Prefer to browse yourself? <a href="/directory" style={{ color: 'var(--wood)', textDecoration: 'underline' }}>See the directory →</a>
+          </p>
+        </section>
+      </Reveal>
+
+      <Reveal>
         <section className="plain-surface feature-row">
           <div className="feature-row-title">
-            <h2>Two tiers, one mission</h2>
-            <p>Veteran-owned. Built on transparency, not subscriptions</p>
+            <h2>The one claim competitors can't copy</h2>
+            <p>Not "vetted." Verified.</p>
           </div>
           <div className="feature-grid">
             <div className="feature-item">
               <CheckIcon />
-              <h3>LanceNest Federal</h3>
-              <p>The flagship. Verified veteran surge talent for federal contractors — cleared roles, DD-214 verification, and a marketplace built around security clearance as the credential that matters.</p>
+              <h3>ID.me service verification</h3>
+              <p>Every freelancer confirms military or veteran status through ID.me — no forged documents, no self-reported claims.</p>
             </div>
             <div className="feature-item">
               <CheckIcon />
-              <h3>LanceNest Marketplace</h3>
-              <p>Open to every veteran, cleared or not. Web design, HVAC, electrical, writing, consulting — build a freelance business in whatever trade you know.</p>
+              <h3>Companies, reviewed too</h3>
+              <p>Every company hiring on LanceNest is manually reviewed before their job posts go public — not just anyone can post.</p>
             </div>
             <div className="feature-item">
               <CheckIcon />
@@ -72,25 +76,22 @@ export default function Home() {
       </Reveal>
 
       <Reveal>
-        <section className="plain-surface welcome">
-          <div className="welcome-inner">
-            <span className="eyebrow">Welcome to</span>
-            <h2>LanceNest</h2>
+        <section className="plain-surface founder-section">
+          <div className="founder-photo" />
+          <div>
+            <span className="eyebrow">Built by a Marine</span>
+            <h3>Trent Asbury, Founder</h3>
             <p>
-              Built by a Marine, for the community that earned it. LanceNest
-              Federal leads — a marketplace where your clearance is verified
-              and valued, matching cleared veterans to the federal contractors
-              who need them most.
-            </p>
-            <p>
-              LanceNest Marketplace sits underneath it, open to any veteran
-              freelancing in any trade. Every profile is yours to keep. Our
-              full fee structure is always visible on our
-              <a href="/pricing" style={{ color: 'var(--wood)', textDecoration: 'underline' }}> pricing page</a>.
+              U.S. Marine Corps veteran. Built LanceNest because the same
+              clearance and service record that opened doors in uniform
+              should still count for something in civilian contract work —
+              not get buried in a resume no one reads.
             </p>
           </div>
         </section>
       </Reveal>
+
+      <FoundingBanner />
 
       <section className="plain-surface process">
         <span className="eyebrow">How it works</span>
@@ -98,7 +99,7 @@ export default function Home() {
           <Reveal className="process-item">
             <span className="process-numeral">I.</span>
             <h3>Verify & build a profile</h3>
-            <p>Confirm your veteran status, list your clearance level if applicable, and set your rate.</p>
+            <p>Confirm your veteran status through ID.me, list your clearance level if applicable, and set your rate.</p>
           </Reveal>
           <Reveal className="process-item">
             <span className="process-numeral">II.</span>
