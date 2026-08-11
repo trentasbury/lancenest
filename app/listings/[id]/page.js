@@ -84,4 +84,9 @@ export default function ListingDetail() {
       </div>
     </main>
   );
+}        <ApplyBox listingId={listing.id} clientId={listing.client_id} />
+        <ApplicantsList listingId={listing.id} clientId={listing.client_id} />
+      </div>
+    </main>
+  );
 }
