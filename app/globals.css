@@ -722,3 +722,78 @@ textarea { min-height: 100px; resize: vertical; }
   .profile-actions { justify-content: center; }
   .profile-badges { justify-content: center; }
 }
+
+/* ---------- Founder section ---------- */
+.founder-section {
+  padding: 80px 40px;
+  display: flex;
+  gap: 32px;
+  align-items: center;
+  max-width: 780px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+
+.founder-photo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: var(--marble-dim);
+  border: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.founder-section h3 { font-size: 22px; margin-bottom: 10px; }
+.founder-section p { color: var(--slate); font-size: 15.5px; line-height: 1.75; max-width: 500px; }
+
+/* ---------- Concierge form ---------- */
+.concierge-card {
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 28px;
+  text-align: left;
+}
+
+.concierge-card label {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin: 14px 0 6px;
+}
+
+.concierge-card input, .concierge-card textarea {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+}
+
+.concierge-card textarea { min-height: 80px; resize: vertical; }
+
+/* ---------- Founding cohort banner ---------- */
+.founding-banner {
+  padding: 70px 40px;
+  text-align: center;
+}
+
+.founding-banner .progress-track {
+  max-width: 340px;
+  margin: 20px auto 24px;
+  height: 6px;
+  background: var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.founding-banner .progress-fill {
+  height: 100%;
+  background: var(--wood);
+}
