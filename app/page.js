@@ -22,11 +22,10 @@ export default function Home() {
             Veteran talent for <em>federal missions.</em>
           </h1>
           <p className="hero-subline">
-            Every freelancer on LanceNest is service-verified through ID.me —
-            not just claimed as "vetted." LanceNest Federal connects cleared
-            veterans to federal contractors who need surge talent.
-            LanceNest Marketplace opens the same verified pool to any veteran
-            freelancing in any trade, from IT to HVAC.
+            Every freelancer is service-verified through ID.me — not just
+            claimed as "vetted." LanceNest is built first for cleared
+            veterans doing federal contract work, and open to every veteran
+            for everyday freelance and trade work, from IT to HVAC.
           </p>
         </div>
       </section>
