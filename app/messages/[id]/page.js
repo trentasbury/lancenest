@@ -58,8 +58,7 @@ export default function MessageThread() {
   }
 
   useEffect(() => {
-    async function init() {
-      const { data: { session } } = await supabase.auth.getSession();
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const user = session?.user;
       if (!user) {
         window.location.href = '/login';
@@ -67,8 +66,9 @@ export default function MessageThread() {
       }
       setUserId(user.id);
       await Promise.all([loadMessages(), loadParticipants(user.id)]);
-    }
-    init();
+    });
+
+    return () => listener.subscription.unsubscribe();
   }, [id]);
 
   useEffect(() => {
