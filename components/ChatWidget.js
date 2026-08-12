@@ -20,12 +20,12 @@ export default function ChatWidget() {
   const bottomRef = useRef(null);
 
   useEffect(() => {
-    async function init() {
-      const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user;
-      setUser(user);
-    }
-    init();
+    // onAuthStateChange fires immediately with the current session on
+    // subscription, so this alone covers the initial check.
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   async function loadConversations() {
