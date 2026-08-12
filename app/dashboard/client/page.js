@@ -10,48 +10,52 @@ export default function ClientDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function load() {
-      const { data: { session } } = await supabase.auth.getSession();
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!session) {
         window.location.href = '/login';
         return;
       }
       const user = session.user;
 
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
+      try {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
 
-      if (!profileData) {
-        setLoading(false);
-        return;
-      }
-      setProfile(profileData);
-
-      const { data: listingData } = await supabase
-        .from('job_listings')
-        .select('id, title, status, budget_cents, created_at')
-        .eq('client_id', user.id)
-        .order('created_at', { ascending: false });
-      setListings(listingData || []);
-
-      if (listingData?.length) {
-        const counts = {};
-        for (const listing of listingData) {
-          const { count } = await supabase
-            .from('job_applications')
-            .select('id', { count: 'exact', head: true })
-            .eq('listing_id', listing.id);
-          counts[listing.id] = count || 0;
+        if (!profileData) {
+          setLoading(false);
+          return;
         }
-        setApplicationCounts(counts);
-      }
+        setProfile(profileData);
 
-      setLoading(false);
-    }
-    load();
+        const { data: listingData } = await supabase
+          .from('job_listings')
+          .select('id, title, status, budget_cents, created_at')
+          .eq('client_id', user.id)
+          .order('created_at', { ascending: false });
+        setListings(listingData || []);
+
+        if (listingData?.length) {
+          const counts = {};
+          for (const listing of listingData) {
+            const { count } = await supabase
+              .from('job_applications')
+              .select('id', { count: 'exact', head: true })
+              .eq('listing_id', listing.id);
+            counts[listing.id] = count || 0;
+          }
+          setApplicationCounts(counts);
+        }
+      } catch (err) {
+        console.error('Client dashboard load error:', err);
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   async function toggleStatus(listingId, currentStatus) {
