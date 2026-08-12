@@ -10,8 +10,7 @@ export default function FollowButton({ targetId }) {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    async function load() {
-      const { data: { session } } = await supabase.auth.getSession();
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const user = session?.user;
       if (!user || user.id === targetId) {
         setChecking(false);
@@ -19,17 +18,23 @@ export default function FollowButton({ targetId }) {
       }
       setUserId(user.id);
 
-      const { data } = await supabase
-        .from('follows')
-        .select('id')
-        .eq('follower_id', user.id)
-        .eq('following_id', targetId)
-        .maybeSingle();
+      try {
+        const { data } = await supabase
+          .from('follows')
+          .select('id')
+          .eq('follower_id', user.id)
+          .eq('following_id', targetId)
+          .maybeSingle();
 
-      setFollowing(!!data);
-      setChecking(false);
-    }
-    load();
+        setFollowing(!!data);
+      } catch (err) {
+        console.error('FollowButton check error:', err);
+      } finally {
+        setChecking(false);
+      }
+    });
+
+    return () => listener.subscription.unsubscribe();
   }, [targetId]);
 
   async function toggleFollow() {
