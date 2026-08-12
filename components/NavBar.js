@@ -21,8 +21,7 @@ export default function NavBar() {
   const menuRef = useRef(null);
 
   useEffect(() => {
-    async function load() {
-      const { data: { session } } = await supabase.auth.getSession();
+    async function load(session) {
       setUser(session?.user || null);
       if (session?.user) {
         const { data } = await supabase.from('profiles').select('role, full_name, avatar_url').eq('id', session.user.id).single();
@@ -31,9 +30,11 @@ export default function NavBar() {
         setProfile(null);
       }
     }
-    load();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(() => load());
+    // onAuthStateChange fires immediately with the current session when
+    // first subscribed, so this alone covers the initial load — no need
+    // for a separate getSession() call that would just duplicate it.
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => load(session));
     return () => listener.subscription.unsubscribe();
   }, []);
 
@@ -64,7 +65,7 @@ export default function NavBar() {
         </a>
 
         <div className="nav-links-plain nav-desktop-only">
-          <a href="/directory">Hire freelancers</a>
+          <a href="/directory">Hire veterans</a>
           <a href="/listings">Projects</a>
           {user && <a href="/network">Network</a>}
         </div>
