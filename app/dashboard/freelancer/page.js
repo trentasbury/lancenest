@@ -18,13 +18,18 @@ export default function FreelancerDashboard() {
   const coverInputRef = useRef(null);
 
   useEffect(() => {
-    async function load() {
+    // Uses onAuthStateChange as the source of truth instead of a one-off
+    // getSession() call — this is the exact pattern that fixed NavBar and
+    // ChatWidget earlier. onAuthStateChange fires immediately with the
+    // current session the moment it's subscribed to, so nothing extra is
+    // needed to get the initial state.
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!session) {
+        window.location.href = '/login';
+        return;
+      }
+
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          window.location.href = '/login';
-          return;
-        }
         const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
         if (!data) {
           setLoading(false);
@@ -39,7 +44,6 @@ export default function FreelancerDashboard() {
           .order('created_at', { ascending: false });
         setPortfolio(workData || []);
 
-        // Trailing 30-day earnings, used for a contextual (not signup-day) upgrade nudge.
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
         const { data: recentJobs } = await supabase
           .from('jobs')
@@ -54,8 +58,9 @@ export default function FreelancerDashboard() {
       } finally {
         setLoading(false);
       }
-    }
-    load();
+    });
+
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   async function saveProfile(e) {
