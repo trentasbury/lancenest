@@ -13,14 +13,14 @@ export default function JobPage() {
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    async function load() {
-      const { data: { session } } = await supabase.auth.getSession();
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const user = session?.user;
       setUser(user);
       const { data } = await supabase.from('jobs').select('*').eq('id', id).single();
       setJob(data);
-    }
-    load();
+    });
+
+    return () => listener.subscription.unsubscribe();
   }, [id]);
 
   async function markComplete() {
