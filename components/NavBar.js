@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 function Logo() {
@@ -15,10 +15,8 @@ function Logo() {
 
 export default function NavBar() {
   const [open, setOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
-  const menuRef = useRef(null);
 
   useEffect(() => {
     async function load(session) {
@@ -31,21 +29,8 @@ export default function NavBar() {
       }
     }
 
-    // onAuthStateChange fires immediately with the current session when
-    // first subscribed, so this alone covers the initial load — no need
-    // for a separate getSession() call that would just duplicate it.
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => load(session));
     return () => listener.subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setMenuOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   async function handleLogout() {
@@ -54,7 +39,6 @@ export default function NavBar() {
   }
 
   const dashboardHref = profile?.role === 'freelancer' ? '/dashboard/freelancer' : profile?.role === 'client' ? '/dashboard/client' : '/directory';
-  const initial = profile?.full_name?.charAt(0)?.toUpperCase() || '?';
 
   return (
     <div className="nav-overlay" style={{ background: 'var(--marble)' }}>
@@ -68,71 +52,19 @@ export default function NavBar() {
           <a href="/directory">Hire veterans</a>
           <a href="/listings">Projects</a>
           {user && <a href="/network">Network</a>}
+          {user && <a href={`/profile/${user.id}`}>My profile</a>}
+          {user && <a href={dashboardHref}>Dashboard</a>}
         </div>
 
-        <div className="nav-desktop-only" style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+        <div className="nav-desktop-only" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           {user ? (
-            <div ref={menuRef} style={{ position: 'relative' }}>
-              <button
-                onClick={() => setMenuOpen(!menuOpen)}
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: '50%',
-                  border: '1px solid var(--line)',
-                  background: profile?.avatar_url ? `url(${profile.avatar_url}) center/cover` : 'var(--wood)',
-                  color: 'var(--white)',
-                  cursor: 'pointer',
-                  fontFamily: 'Cormorant Garamond, serif',
-                  fontSize: 16,
-                  fontWeight: 600,
-                }}
-                aria-label="Account menu"
-              >
-                {!profile?.avatar_url && initial}
-              </button>
-
-              {menuOpen && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: 48,
-                    width: 200,
-                    background: 'var(--white)',
-                    border: '1px solid var(--line)',
-                    borderRadius: 10,
-                    boxShadow: '0 12px 30px rgba(26,24,21,0.12)',
-                    overflow: 'hidden',
-                    zIndex: 50,
-                  }}
-                >
-                  <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)' }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>{profile?.full_name}</p>
-                  </div>
-                  <a href={`/profile/${user.id}`} style={{ display: 'block', padding: '10px 16px', fontSize: 13.5 }} onClick={() => setMenuOpen(false)}>
-                    View my profile
-                  </a>
-                  <a href={dashboardHref} style={{ display: 'block', padding: '10px 16px', fontSize: 13.5 }} onClick={() => setMenuOpen(false)}>
-                    Dashboard
-                  </a>
-                  {profile?.role === 'freelancer' && (
-                    <a href="/wallet" style={{ display: 'block', padding: '10px 16px', fontSize: 13.5 }} onClick={() => setMenuOpen(false)}>
-                      Wallet
-                    </a>
-                  )}
-                  <a href="/network" style={{ display: 'block', padding: '10px 16px', fontSize: 13.5 }} onClick={() => setMenuOpen(false)}>
-                    Network
-                  </a>
-                  <button
-                    onClick={handleLogout}
-                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 16px', fontSize: 13.5, border: 'none', borderTop: '1px solid var(--line)', background: 'none', cursor: 'pointer', color: '#b3261e' }}
-                  >
-                    Log out
-                  </button>
-                </div>
-              )}
-            </div>
+            <button
+              onClick={handleLogout}
+              className="btn btn-outline"
+              style={{ borderRadius: 999, padding: '11px 22px', cursor: 'pointer', border: '1px solid #b3261e', color: '#b3261e' }}
+            >
+              Log out
+            </button>
           ) : (
             <>
               <a href="/login" className="btn btn-outline" style={{ borderRadius: 999, padding: '13px 26px' }}>Log in</a>
@@ -171,7 +103,7 @@ export default function NavBar() {
               <a href={`/profile/${user.id}`} onClick={() => setOpen(false)}>My profile</a>
               <a href={dashboardHref} onClick={() => setOpen(false)}>Dashboard</a>
               {profile?.role === 'freelancer' && <a href="/wallet" onClick={() => setOpen(false)}>Wallet</a>}
-              <a href="#" onClick={(e) => { e.preventDefault(); handleLogout(); }}>Log out</a>
+              <a href="#" onClick={(e) => { e.preventDefault(); setOpen(false); handleLogout(); }} style={{ color: '#b3261e' }}>Log out</a>
             </>
           ) : (
             <>
