@@ -12,6 +12,7 @@ export default function ChatWidget() {
   const [otherName, setOtherName] = useState('');
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
+  const [leakWarning, setLeakWarning] = useState('');
   const [showNewChat, setShowNewChat] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -20,14 +21,16 @@ export default function ChatWidget() {
 
   useEffect(() => {
     async function init() {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       setUser(user);
     }
     init();
   }, []);
 
   async function loadConversations() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
     if (!user) return;
 
     const { data } = await supabase
@@ -114,6 +117,7 @@ export default function ChatWidget() {
     if (data.message) {
       setMessages((prev) => [...prev, data.message]);
       setDraft('');
+      setLeakWarning(data.warning || '');
     }
     setSending(false);
   }
@@ -233,6 +237,9 @@ export default function ChatWidget() {
             </div>
           ) : (
             <>
+              <p style={{ fontSize: 10.5, color: '#8a5a34', background: 'var(--marble-dim)', padding: '6px 10px', margin: 0, borderBottom: '1px solid var(--line)' }}>
+                🔒 Encrypted. Never share CUI or classified info here.
+              </p>
               <div style={{ flex: 1, overflowY: 'auto', padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {messages.length === 0 && <p style={{ fontSize: 12, color: 'var(--slate)' }}>Say hello — no messages yet.</p>}
                 {messages.map((m) => (
@@ -253,6 +260,11 @@ export default function ChatWidget() {
                 ))}
                 <div ref={bottomRef} />
               </div>
+              {leakWarning && (
+                <p style={{ fontSize: 10.5, color: '#8a5a34', background: 'var(--marble-dim)', padding: '6px 10px', margin: 0 }}>
+                  {leakWarning}
+                </p>
+              )}
               <form onSubmit={sendMessage} style={{ display: 'flex', gap: 6, padding: 10, borderTop: '1px solid var(--line)', maxWidth: 'none' }}>
                 <input
                   value={draft}
