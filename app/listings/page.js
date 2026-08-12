@@ -10,9 +10,8 @@ export default function Listings() {
   const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
-    async function load() {
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           setAuthed(false);
           const { data } = await supabase.rpc('get_platform_counts');
@@ -33,8 +32,9 @@ export default function Listings() {
         console.error('Listings load error:', err);
         setLoadError(true);
       }
-    }
-    load();
+    });
+
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   if (loadError) {
