@@ -9,29 +9,33 @@ export default function Wallet() {
   const [openingDashboard, setOpeningDashboard] = useState(false);
 
   useEffect(() => {
-    async function load() {
-      const { data: { session } } = await supabase.auth.getSession();
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const user = session?.user;
       if (!user) {
         window.location.href = '/login';
         return;
       }
 
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('stripe_onboarded')
-        .eq('id', user.id)
-        .single();
-      setProfile(profileData);
+      try {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('stripe_onboarded')
+          .eq('id', user.id)
+          .single();
+        setProfile(profileData);
 
-      const { data: jobData } = await supabase
-        .from('jobs')
-        .select('id, title, amount_cents, commission_cents, status, created_at, completed_at')
-        .eq('freelancer_id', user.id)
-        .order('created_at', { ascending: false });
-      setJobs(jobData || []);
-    }
-    load();
+        const { data: jobData } = await supabase
+          .from('jobs')
+          .select('id, title, amount_cents, commission_cents, status, created_at, completed_at')
+          .eq('freelancer_id', user.id)
+          .order('created_at', { ascending: false });
+        setJobs(jobData || []);
+      } catch (err) {
+        console.error('Wallet load error:', err);
+      }
+    });
+
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   async function openStripeDashboard() {
