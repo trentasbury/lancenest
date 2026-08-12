@@ -12,34 +12,39 @@ export default function AdminApprovals() {
   const [pendingClients, setPendingClients] = useState(null);
 
   useEffect(() => {
-    async function load() {
-      const { data: { session } } = await supabase.auth.getSession();
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const user = session?.user;
       if (!user || user.email !== ADMIN_EMAIL) {
         setIsAdmin(false);
         return;
       }
-      setIsAdmin(true);
 
-      const [{ data: freelancers }, { data: clients }] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('id, full_name, email, headline, bio, skills, is_veteran_verified, created_at')
-          .eq('role', 'freelancer')
-          .eq('is_approved', false)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('profiles')
-          .select('id, full_name, email, company_name, company_website, created_at')
-          .eq('role', 'client')
-          .eq('is_approved', false)
-          .order('created_at', { ascending: false }),
-      ]);
+      try {
+        const [{ data: freelancers }, { data: clients }] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('id, full_name, email, headline, bio, skills, is_veteran_verified, created_at')
+            .eq('role', 'freelancer')
+            .eq('is_approved', false)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('profiles')
+            .select('id, full_name, email, company_name, company_website, created_at')
+            .eq('role', 'client')
+            .eq('is_approved', false)
+            .order('created_at', { ascending: false }),
+        ]);
 
-      setPendingFreelancers(freelancers || []);
-      setPendingClients(clients || []);
-    }
-    load();
+        setIsAdmin(true);
+        setPendingFreelancers(freelancers || []);
+        setPendingClients(clients || []);
+      } catch (err) {
+        console.error('Admin approvals load error:', err);
+        setIsAdmin(true);
+      }
+    });
+
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   async function approve(id, isClient) {
