@@ -11,56 +11,61 @@ export default function Network() {
   const [feed, setFeed] = useState([]);
 
   useEffect(() => {
-    async function load() {
-      const { data: { session } } = await supabase.auth.getSession();
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const user = session?.user;
       if (!user) {
         setAuthed(false);
         return;
       }
-      setAuthed(true);
 
-      const { data: followingRows } = await supabase
-        .from('follows')
-        .select('following_id, profiles!follows_following_id_fkey(id, full_name, headline, role, avatar_url)')
-        .eq('follower_id', user.id);
+      try {
+        const { data: followingRows } = await supabase
+          .from('follows')
+          .select('following_id, profiles!follows_following_id_fkey(id, full_name, headline, role, avatar_url)')
+          .eq('follower_id', user.id);
 
-      const { data: followerRows } = await supabase
-        .from('follows')
-        .select('follower_id, profiles!follows_follower_id_fkey(id, full_name, headline, role, avatar_url)')
-        .eq('following_id', user.id);
+        const { data: followerRows } = await supabase
+          .from('follows')
+          .select('follower_id, profiles!follows_follower_id_fkey(id, full_name, headline, role, avatar_url)')
+          .eq('following_id', user.id);
 
-      setFollowing((followingRows || []).map((r) => r.profiles));
-      setFollowers((followerRows || []).map((r) => r.profiles));
+        setAuthed(true);
+        setFollowing((followingRows || []).map((r) => r.profiles));
+        setFollowers((followerRows || []).map((r) => r.profiles));
 
-      const followingIds = (followingRows || []).map((r) => r.following_id);
+        const followingIds = (followingRows || []).map((r) => r.following_id);
 
-      if (followingIds.length > 0) {
-        const [{ data: portfolioItems }, { data: listings }] = await Promise.all([
-          supabase
-            .from('portfolio_items')
-            .select('id, title, description, link_url, created_at, profiles(id, full_name, avatar_url)')
-            .in('profile_id', followingIds)
-            .order('created_at', { ascending: false })
-            .limit(20),
-          supabase
-            .from('job_listings')
-            .select('id, title, description, budget_cents, created_at, status, profiles(id, full_name, avatar_url)')
-            .in('client_id', followingIds)
-            .eq('status', 'open')
-            .order('created_at', { ascending: false })
-            .limit(20),
-        ]);
+        if (followingIds.length > 0) {
+          const [{ data: portfolioItems }, { data: listings }] = await Promise.all([
+            supabase
+              .from('portfolio_items')
+              .select('id, title, description, link_url, created_at, profiles(id, full_name, avatar_url)')
+              .in('profile_id', followingIds)
+              .order('created_at', { ascending: false })
+              .limit(20),
+            supabase
+              .from('job_listings')
+              .select('id, title, description, budget_cents, created_at, status, profiles(id, full_name, avatar_url)')
+              .in('client_id', followingIds)
+              .eq('status', 'open')
+              .order('created_at', { ascending: false })
+              .limit(20),
+          ]);
 
-        const combined = [
-          ...(portfolioItems || []).map((p) => ({ ...p, type: 'portfolio' })),
-          ...(listings || []).map((l) => ({ ...l, type: 'listing' })),
-        ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          const combined = [
+            ...(portfolioItems || []).map((p) => ({ ...p, type: 'portfolio' })),
+            ...(listings || []).map((l) => ({ ...l, type: 'listing' })),
+          ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-        setFeed(combined);
+          setFeed(combined);
+        }
+      } catch (err) {
+        console.error('Network load error:', err);
+        setAuthed(true);
       }
-    }
-    load();
+    });
+
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   if (authed === null) return null;
