@@ -13,24 +13,29 @@ export default function ListingDetail() {
   const [authed, setAuthed] = useState(null);
 
   useEffect(() => {
-    async function load() {
-      const { data: { session } } = await supabase.auth.getSession();
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const user = session?.user;
       if (!user) {
         setAuthed(false);
         return;
       }
-      setAuthed(true);
 
-      const { data } = await supabase
-        .from('job_listings')
-        .select('*, profiles(full_name, id)')
-        .eq('id', id)
-        .single();
+      try {
+        const { data } = await supabase
+          .from('job_listings')
+          .select('*, profiles(full_name, id)')
+          .eq('id', id)
+          .single();
 
-      setListing(data);
-    }
-    load();
+        setAuthed(true);
+        setListing(data);
+      } catch (err) {
+        console.error('Listing load error:', err);
+        setAuthed(true);
+      }
+    });
+
+    return () => listener.subscription.unsubscribe();
   }, [id]);
 
   if (authed === null) return null;
