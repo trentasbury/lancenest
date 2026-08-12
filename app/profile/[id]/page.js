@@ -19,45 +19,55 @@ export default function Profile() {
   const [tab, setTab] = useState('work');
 
   useEffect(() => {
-    async function load() {
-      const { data: { session } } = await supabase.auth.getSession();
+    // Uses onAuthStateChange as the source of truth — same fix that made
+    // NavBar and ChatWidget reliable, instead of a one-off getSession()
+    // call that has proven unreliable everywhere else it was used today.
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const user = session?.user;
       if (!user) {
         setAuthed(false);
         return;
       }
-      setAuthed(true);
 
-      const [
-        { data: profileData },
-        { data: portfolioData },
-        { data: reviewsData },
-        { count: followerCount },
-        { count: followingCount },
-        { data: completedJobs },
-      ] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', id).maybeSingle(),
-        supabase.from('portfolio_items').select('*').eq('profile_id', id),
-        supabase.from('reviews').select('rating, comment, created_at').eq('reviewee_id', id),
-        supabase.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', id),
-        supabase.from('follows').select('id', { count: 'exact', head: true }).eq('follower_id', id),
-        supabase.from('jobs').select('amount_cents, commission_cents').eq('freelancer_id', id).eq('status', 'completed'),
-      ]);
+      try {
+        const [
+          { data: profileData },
+          { data: portfolioData },
+          { data: reviewsData },
+          { count: followerCount },
+          { count: followingCount },
+          { data: completedJobs },
+        ] = await Promise.all([
+          supabase.from('profiles').select('*').eq('id', id).maybeSingle(),
+          supabase.from('portfolio_items').select('*').eq('profile_id', id),
+          supabase.from('reviews').select('rating, comment, created_at').eq('reviewee_id', id),
+          supabase.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', id),
+          supabase.from('follows').select('id', { count: 'exact', head: true }).eq('follower_id', id),
+          supabase.from('jobs').select('amount_cents, commission_cents').eq('freelancer_id', id).eq('status', 'completed'),
+        ]);
 
-      if (!profileData) {
+        setAuthed(true);
+
+        if (!profileData) {
+          setNotFound(true);
+          return;
+        }
+
+        const earnedCents = (completedJobs || []).reduce((sum, j) => sum + (j.amount_cents - j.commission_cents), 0);
+
+        setProfile(profileData);
+        setPortfolio(portfolioData || []);
+        setReviews(reviewsData || []);
+        setCounts({ followers: followerCount || 0, following: followingCount || 0 });
+        setStats({ earnedCents, hiredCount: (completedJobs || []).length });
+      } catch (err) {
+        console.error('Profile load error:', err);
+        setAuthed(true);
         setNotFound(true);
-        return;
       }
+    });
 
-      const earnedCents = (completedJobs || []).reduce((sum, j) => sum + (j.amount_cents - j.commission_cents), 0);
-
-      setProfile(profileData);
-      setPortfolio(portfolioData || []);
-      setReviews(reviewsData || []);
-      setCounts({ followers: followerCount || 0, following: followingCount || 0 });
-      setStats({ earnedCents, hiredCount: (completedJobs || []).length });
-    }
-    load();
+    return () => listener.subscription.unsubscribe();
   }, [id]);
 
   if (authed === null) return null;
