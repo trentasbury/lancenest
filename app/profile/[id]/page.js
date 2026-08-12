@@ -17,6 +17,7 @@ export default function Profile() {
   const [counts, setCounts] = useState({ followers: 0, following: 0 });
   const [stats, setStats] = useState({ earnedCents: 0, hiredCount: 0 });
   const [tab, setTab] = useState('work');
+  const [viewerId, setViewerId] = useState(null);
 
   useEffect(() => {
     // Uses onAuthStateChange as the source of truth — same fix that made
@@ -28,6 +29,7 @@ export default function Profile() {
         setAuthed(false);
         return;
       }
+      setViewerId(user.id);
 
       try {
         const [
@@ -105,9 +107,21 @@ export default function Profile() {
     : null;
 
   const isFreelancer = profile.role === 'freelancer';
+  const isOwnProfile = viewerId === profile.id;
+  const isIncomplete = !profile.headline && !profile.bio && !profile.avatar_url && portfolio.length === 0;
 
   return (
     <main className="plain-surface container" style={{ padding: '40px 24px', maxWidth: 780 }}>
+      {isOwnProfile && isIncomplete && (
+        <div className="card" style={{ marginBottom: 24, borderColor: 'var(--wood)', textAlign: 'center' }}>
+          <h3 style={{ fontSize: 17, marginBottom: 6 }}>This is what other people see when they visit your profile.</h3>
+          <p style={{ fontSize: 14, color: 'var(--slate)', marginBottom: 14 }}>
+            It's empty because nothing's been added yet — add a photo, a bio, and a piece of work to bring it to life.
+          </p>
+          <a href="/dashboard/freelancer" className="btn btn-primary">Complete your profile</a>
+        </div>
+      )}
+
       {profile.cover_url && (
         <div
           style={{
