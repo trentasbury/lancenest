@@ -17,28 +17,9 @@ function DirectoryContent() {
   const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
-    let settled = false;
-
-    // Hard failsafe: if anything below silently hangs for any reason,
-    // this guarantees the page moves on after 6 seconds instead of
-    // showing "Loading..." forever.
-    const failsafe = setTimeout(() => {
-      if (!settled) {
-        console.error('Directory load timed out after 6s — forcing logged-out view.');
-        settled = true;
-        setAuthed(false);
-        setLoadError(false);
-      }
-    }, 6000);
-
-    async function load() {
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (settled) return;
-
         if (!session) {
-          settled = true;
-          clearTimeout(failsafe);
           setAuthed(false);
           const { data } = await supabase.rpc('get_platform_counts');
           setCounts(data?.[0] || null);
@@ -53,23 +34,15 @@ function DirectoryContent() {
           .order('plan', { ascending: false })
           .order('created_at', { ascending: false });
 
-        if (settled) return;
-        settled = true;
-        clearTimeout(failsafe);
         setAuthed(true);
         setFreelancers(data || []);
       } catch (err) {
         console.error('Directory load error:', err);
-        if (!settled) {
-          settled = true;
-          clearTimeout(failsafe);
-          setLoadError(true);
-        }
+        setLoadError(true);
       }
-    }
-    load();
+    });
 
-    return () => clearTimeout(failsafe);
+    return () => listener.subscription.unsubscribe();
   }, [query]);
 
   if (loadError) {
