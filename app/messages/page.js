@@ -8,29 +8,34 @@ export default function Messages() {
   const [authed, setAuthed] = useState(null);
 
   useEffect(() => {
-    async function load() {
-      const { data: { session } } = await supabase.auth.getSession();
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const user = session?.user;
       if (!user) {
         setAuthed(false);
         return;
       }
-      setAuthed(true);
 
-      const { data } = await supabase
-        .from('conversations')
-        .select('id, freelancer_id, client_id, created_at, freelancer:profiles!conversations_freelancer_id_fkey(full_name), client:profiles!conversations_client_id_fkey(full_name)')
-        .or(`freelancer_id.eq.${user.id},client_id.eq.${user.id}`)
-        .order('created_at', { ascending: false });
+      try {
+        const { data } = await supabase
+          .from('conversations')
+          .select('id, freelancer_id, client_id, created_at, freelancer:profiles!conversations_freelancer_id_fkey(full_name), client:profiles!conversations_client_id_fkey(full_name)')
+          .or(`freelancer_id.eq.${user.id},client_id.eq.${user.id}`)
+          .order('created_at', { ascending: false });
 
-      const withOtherName = (data || []).map((c) => ({
-        ...c,
-        otherName: c.freelancer_id === user.id ? c.client?.full_name : c.freelancer?.full_name,
-      }));
+        const withOtherName = (data || []).map((c) => ({
+          ...c,
+          otherName: c.freelancer_id === user.id ? c.client?.full_name : c.freelancer?.full_name,
+        }));
 
-      setConversations(withOtherName);
-    }
-    load();
+        setAuthed(true);
+        setConversations(withOtherName);
+      } catch (err) {
+        console.error('Messages load error:', err);
+        setAuthed(true);
+      }
+    });
+
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   if (authed === null) return null;
