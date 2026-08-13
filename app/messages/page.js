@@ -8,7 +8,8 @@ export default function Messages() {
   const [authed, setAuthed] = useState(null);
 
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setTimeout(async () => {
       const user = session?.user;
       if (!user) {
         setAuthed(false);
@@ -33,6 +34,7 @@ export default function Messages() {
         console.error('Messages load error:', err);
         setAuthed(true);
       }
+    }, 0);
     });
 
     return () => listener.subscription.unsubscribe();
