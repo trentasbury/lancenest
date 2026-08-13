@@ -10,7 +10,8 @@ export default function ClientDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setTimeout(async () => {
       if (!session) {
         window.location.href = '/login';
         return;
@@ -53,6 +54,7 @@ export default function ClientDashboard() {
       } finally {
         setLoading(false);
       }
+    }, 0);
     });
 
     return () => listener.subscription.unsubscribe();
