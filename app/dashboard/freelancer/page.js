@@ -23,7 +23,8 @@ export default function FreelancerDashboard() {
     // ChatWidget earlier. onAuthStateChange fires immediately with the
     // current session the moment it's subscribed to, so nothing extra is
     // needed to get the initial state.
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setTimeout(async () => {
       if (!session) {
         window.location.href = '/login';
         return;
@@ -58,6 +59,7 @@ export default function FreelancerDashboard() {
       } finally {
         setLoading(false);
       }
+    }, 0);
     });
 
     return () => listener.subscription.unsubscribe();
