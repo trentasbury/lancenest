@@ -12,7 +12,8 @@ export default function AdminApprovals() {
   const [pendingClients, setPendingClients] = useState(null);
 
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setTimeout(async () => {
       const user = session?.user;
       if (!user || user.email !== ADMIN_EMAIL) {
         setIsAdmin(false);
@@ -42,6 +43,7 @@ export default function AdminApprovals() {
         console.error('Admin approvals load error:', err);
         setIsAdmin(true);
       }
+    }, 0);
     });
 
     return () => listener.subscription.unsubscribe();
