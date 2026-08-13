@@ -11,7 +11,8 @@ export default function Network() {
   const [feed, setFeed] = useState([]);
 
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setTimeout(async () => {
       const user = session?.user;
       if (!user) {
         setAuthed(false);
@@ -63,6 +64,7 @@ export default function Network() {
         console.error('Network load error:', err);
         setAuthed(true);
       }
+    }, 0);
     });
 
     return () => listener.subscription.unsubscribe();
