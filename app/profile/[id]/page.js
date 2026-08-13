@@ -20,53 +20,58 @@ export default function Profile() {
   const [viewerId, setViewerId] = useState(null);
 
   useEffect(() => {
-    // Uses onAuthStateChange as the source of truth — same fix that made
-    // NavBar and ChatWidget reliable, instead of a one-off getSession()
-    // call that has proven unreliable everywhere else it was used today.
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const user = session?.user;
-      if (!user) {
-        setAuthed(false);
-        return;
-      }
-      setViewerId(user.id);
-
-      try {
-        const [
-          { data: profileData },
-          { data: portfolioData },
-          { data: reviewsData },
-          { count: followerCount },
-          { count: followingCount },
-          { data: completedJobs },
-        ] = await Promise.all([
-          supabase.from('profiles').select('*').eq('id', id).maybeSingle(),
-          supabase.from('portfolio_items').select('*').eq('profile_id', id),
-          supabase.from('reviews').select('rating, comment, created_at').eq('reviewee_id', id),
-          supabase.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', id),
-          supabase.from('follows').select('id', { count: 'exact', head: true }).eq('follower_id', id),
-          supabase.from('jobs').select('amount_cents, commission_cents').eq('freelancer_id', id).eq('status', 'completed'),
-        ]);
-
-        setAuthed(true);
-
-        if (!profileData) {
-          setNotFound(true);
+    // Supabase's onAuthStateChange callback must not itself be async with
+    // awaited Supabase calls inside it — that can deadlock against
+    // Supabase's own internal auth lock (the callback waits on the client,
+    // the client waits on the callback to finish). Deferring the actual
+    // work with setTimeout escapes that lock, which is the officially
+    // recommended pattern for this exact situation.
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setTimeout(async () => {
+        const user = session?.user;
+        if (!user) {
+          setAuthed(false);
           return;
         }
+        setViewerId(user.id);
 
-        const earnedCents = (completedJobs || []).reduce((sum, j) => sum + (j.amount_cents - j.commission_cents), 0);
+        try {
+          const [
+            { data: profileData },
+            { data: portfolioData },
+            { data: reviewsData },
+            { count: followerCount },
+            { count: followingCount },
+            { data: completedJobs },
+          ] = await Promise.all([
+            supabase.from('profiles').select('*').eq('id', id).maybeSingle(),
+            supabase.from('portfolio_items').select('*').eq('profile_id', id),
+            supabase.from('reviews').select('rating, comment, created_at').eq('reviewee_id', id),
+            supabase.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', id),
+            supabase.from('follows').select('id', { count: 'exact', head: true }).eq('follower_id', id),
+            supabase.from('jobs').select('amount_cents, commission_cents').eq('freelancer_id', id).eq('status', 'completed'),
+          ]);
 
-        setProfile(profileData);
-        setPortfolio(portfolioData || []);
-        setReviews(reviewsData || []);
-        setCounts({ followers: followerCount || 0, following: followingCount || 0 });
-        setStats({ earnedCents, hiredCount: (completedJobs || []).length });
-      } catch (err) {
-        console.error('Profile load error:', err);
-        setAuthed(true);
-        setNotFound(true);
-      }
+          setAuthed(true);
+
+          if (!profileData) {
+            setNotFound(true);
+            return;
+          }
+
+          const earnedCents = (completedJobs || []).reduce((sum, j) => sum + (j.amount_cents - j.commission_cents), 0);
+
+          setProfile(profileData);
+          setPortfolio(portfolioData || []);
+          setReviews(reviewsData || []);
+          setCounts({ followers: followerCount || 0, following: followingCount || 0 });
+          setStats({ earnedCents, hiredCount: (completedJobs || []).length });
+        } catch (err) {
+          console.error('Profile load error:', err);
+          setAuthed(true);
+          setNotFound(true);
+        }
+      }, 0);
     });
 
     return () => listener.subscription.unsubscribe();
