@@ -10,7 +10,8 @@ export default function FollowButton({ targetId }) {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setTimeout(async () => {
       const user = session?.user;
       if (!user || user.id === targetId) {
         setChecking(false);
@@ -32,6 +33,7 @@ export default function FollowButton({ targetId }) {
       } finally {
         setChecking(false);
       }
+    }, 0);
     });
 
     return () => listener.subscription.unsubscribe();
