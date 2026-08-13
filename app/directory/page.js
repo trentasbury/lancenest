@@ -17,7 +17,8 @@ function DirectoryContent() {
   const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setTimeout(async () => {
       try {
         if (!session) {
           setAuthed(false);
@@ -40,6 +41,7 @@ function DirectoryContent() {
         console.error('Directory load error:', err);
         setLoadError(true);
       }
+    }, 0);
     });
 
     return () => listener.subscription.unsubscribe();
