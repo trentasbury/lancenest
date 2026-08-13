@@ -9,7 +9,8 @@ export default function Wallet() {
   const [openingDashboard, setOpeningDashboard] = useState(false);
 
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setTimeout(async () => {
       const user = session?.user;
       if (!user) {
         window.location.href = '/login';
@@ -33,6 +34,7 @@ export default function Wallet() {
       } catch (err) {
         console.error('Wallet load error:', err);
       }
+    }, 0);
     });
 
     return () => listener.subscription.unsubscribe();
