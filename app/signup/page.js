@@ -8,10 +8,13 @@ import { supabase } from '../../lib/supabaseClient';
 function SignupForm() {
   const params = useSearchParams();
   const router = useRouter();
-  const [role, setRole] = useState(params.get('role') === 'client' ? 'client' : 'freelancer');
+  // 'freelancer' = service member/veteran profile, 'client' = employer/recruiter.
+  // Kept as the underlying values everything else in the app already expects.
+  const [role, setRole] = useState(params.get('role') === 'employer' ? 'client' : 'freelancer');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [serviceStatus, setServiceStatus] = useState('veteran');
   const [companyName, setCompanyName] = useState('');
   const [companyWebsite, setCompanyWebsite] = useState('');
   const [error, setError] = useState('');
@@ -40,6 +43,7 @@ function SignupForm() {
         data: {
           full_name: fullName,
           role,
+          ...(role === 'freelancer' ? { service_status: serviceStatus } : {}),
           ...(role === 'client' ? { company_name: companyName, company_website: companyWebsite } : {}),
         },
         captchaToken,
@@ -75,26 +79,37 @@ function SignupForm() {
           className={role === 'freelancer' ? 'btn btn-primary' : 'btn btn-outline'}
           onClick={() => setRole('freelancer')}
         >
-          I'm a veteran freelancer
+          I served
         </button>
         <button
           type="button"
           className={role === 'client' ? 'btn btn-primary' : 'btn btn-outline'}
           onClick={() => setRole('client')}
         >
-          I want to hire veterans
+          I'm hiring veterans
         </button>
       </div>
 
       {role === 'client' && (
         <p style={{ fontSize: 13, color: 'var(--slate)', marginBottom: 8 }}>
-          Any company can hire through LanceNest — you don't need to be veteran-owned.
+          Any company can hire here — you don't need to be veteran-owned.
         </p>
       )}
 
       <form onSubmit={handleSubmit}>
         <label>Full name</label>
         <input value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+
+        {role === 'freelancer' && (
+          <>
+            <label>Your status</label>
+            <select value={serviceStatus} onChange={(e) => setServiceStatus(e.target.value)}>
+              <option value="active_duty">Active duty</option>
+              <option value="transitioning">Transitioning out</option>
+              <option value="veteran">Veteran</option>
+            </select>
+          </>
+        )}
 
         {role === 'client' && (
           <>
@@ -131,9 +146,12 @@ function SignupForm() {
         </button>
       </form>
 
-      <p style={{ marginTop: 24, fontSize: 13, color: 'var(--slate)' }}>
-        Curious about pricing? <a href="/pricing" style={{ color: 'var(--wood)', textDecoration: 'underline' }}>View our pricing page</a>.
-      </p>
+      {role === 'freelancer' && (
+        <p style={{ marginTop: 20, fontSize: 13, color: 'var(--slate)' }}>
+          After signup, you'll submit proof of service (DD-214 or equivalent) for a real
+          human review — your profile goes live once approved.
+        </p>
+      )}
     </main>
   );
 }
