@@ -1,7 +1,5 @@
 import Footer from '../components/Footer';
 import Reveal from '../components/Reveal';
-import ConciergeForm from '../components/ConciergeForm';
-import FoundingBanner from '../components/FoundingBanner';
 
 function CheckIcon() {
   return (
@@ -17,98 +15,81 @@ export default function Home() {
     <main>
       <section className="marble-surface search-hero">
         <div className="search-hero-inner">
-          <span className="eyebrow">Veteran-owned · Federal-grade verification</span>
+          <span className="eyebrow">Built for active duty, transitioning, and veteran service members</span>
           <h1>
-            Veteran talent for <em>federal missions.</em>
+            The professional network built for those who served.
           </h1>
           <p className="hero-subline">
-            Every freelancer is service-verified through ID.me — not just
-            claimed as "vetted." LanceNest is built first for cleared
-            veterans doing federal contract work, and open to every veteran
-            for everyday freelance and trade work, from IT to HVAC.
+            Build a profile, connect with others who've served, and find your
+            next role — whether you're still in, transitioning out, or years
+            past your last duty station.
           </p>
+
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 24 }}>
+            <a href="/signup?role=member" className="btn btn-primary">Join as a service member</a>
+            <a href="/signup?role=employer" className="btn btn-outline">I'm hiring veterans</a>
+          </div>
         </div>
       </section>
 
       <Reveal>
-        <section className="plain-surface" style={{ padding: '70px 40px' }}>
-          <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <span className="eyebrow">Tell us what you need</span>
-            <h2 style={{ fontSize: 28, margin: '10px 0 8px' }}>
-              We'll hand you a shortlist. You pick.
-            </h2>
-            <p style={{ color: 'var(--slate)', maxWidth: 460, margin: '0 auto' }}>
-              Describe the work — we return three verified, service-matched candidates within 48 hours.
-            </p>
-          </div>
-          <ConciergeForm />
-          <p style={{ textAlign: 'center', marginTop: 20, fontSize: 13 }}>
-            Prefer to browse yourself? <a href="/directory" style={{ color: 'var(--wood)', textDecoration: 'underline' }}>See the directory →</a>
-          </p>
-        </section>
-      </Reveal>
-
-      <Reveal>
         <section className="plain-surface feature-row">
           <div className="feature-row-title">
-            <h2>The one claim competitors can't copy</h2>
-            <p>Not "vetted." Verified.</p>
+            <h2>Your record, verified — not just claimed</h2>
+            <p>Built on transparency, not subscriptions for members</p>
           </div>
           <div className="feature-grid">
             <div className="feature-item">
               <CheckIcon />
-              <h3>ID.me service verification</h3>
-              <p>Every freelancer confirms military or veteran status through ID.me — no forged documents, no self-reported claims.</p>
+              <h3>Every profile reviewed</h3>
+              <p>Service members submit documentation for a real human review before a profile goes live — not a self-reported checkbox.</p>
             </div>
             <div className="feature-item">
               <CheckIcon />
-              <h3>Companies, reviewed too</h3>
-              <p>Every company hiring on LanceNest is manually reviewed before their job posts go public — not just anyone can post.</p>
+              <h3>A wall for the community</h3>
+              <p>Follow people you served with, see career updates and job openings from your network, in one feed built for this community specifically.</p>
             </div>
             <div className="feature-item">
               <CheckIcon />
-              <h3>Stripe secured</h3>
-              <p>Every payment is processed and protected through Stripe — we never hold your funds.</p>
+              <h3>Employers who actually want you</h3>
+              <p>Companies and recruiters here are looking specifically for military talent — not sorting you out of a generic applicant pile.</p>
             </div>
           </div>
         </section>
       </Reveal>
 
       <Reveal>
-        <section className="plain-surface founder-section">
-          <div className="founder-photo" />
-          <div>
-            <span className="eyebrow">Built by a Marine</span>
-            <h3>Trent Asbury, Founder</h3>
+        <section className="plain-surface welcome">
+          <div className="welcome-inner">
+            <span className="eyebrow">Welcome to</span>
+            <h2>LanceNest</h2>
             <p>
-              U.S. Marine Corps veteran. Built LanceNest because the same
-              clearance and service record that opened doors in uniform
-              should still count for something in civilian contract work —
-              not get buried in a resume no one reads.
+              Built by a Marine, for the community that earned it. Whether
+              you're chasing a federal role that needs a clearance, or
+              starting the next chapter entirely, your service is the
+              credential — we built the network around it.
             </p>
           </div>
         </section>
       </Reveal>
-
-      <FoundingBanner />
 
       <section className="plain-surface process">
         <span className="eyebrow">How it works</span>
         <div className="process-grid" style={{ marginTop: 40 }}>
           <Reveal className="process-item">
             <span className="process-numeral">I.</span>
-            <h3>Verify & build a profile</h3>
-            <p>Confirm your veteran status through ID.me, list your clearance level if applicable, and set your rate.</p>
+            <h3>Build a profile</h3>
+            <p>Your service record, your career history, your next move — submitted for verification in minutes.</p>
           </Reveal>
           <Reveal className="process-item">
             <span className="process-numeral">II.</span>
-            <h3>Get hired</h3>
-            <p>Federal contractors and everyday clients find you in the directory or message you directly.</p>
+            <h3>Connect and follow</h3>
+            <p>Find people you served with, follow companies hiring veterans, see it all on your wall.</p>
           </Reveal>
           <Reveal className="process-item">
             <span className="process-numeral">III.</span>
-            <h3>Get paid</h3>
-            <p>Client pays through LanceNest, straight to your bank.</p>
+            <h3>Get hired</h3>
+            <p>Apply directly, or let recruiters who are specifically looking for veterans find you.</p>
           </Reveal>
         </div>
       </section>
@@ -116,8 +97,8 @@ export default function Home() {
       <div className="marble-surface">
         <Reveal>
           <section className="statement">
-            <span className="eyebrow">Built for the work</span>
-            <h2>Your clearance opened doors in uniform. <em>It still should now.</em></h2>
+            <span className="eyebrow">Built for the mission</span>
+            <h2>Your service opened doors in uniform. <em>It still should now.</em></h2>
           </section>
         </Reveal>
 
