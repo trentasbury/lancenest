@@ -25,7 +25,7 @@ export default function Home() {
             past your last duty station.
           </p>
 
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 24 }}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 24, justifyContent: 'center' }}>
             <a href="/signup?role=member" className="btn btn-primary">Join as a service member</a>
             <a href="/signup?role=employer" className="btn btn-outline">I'm hiring veterans</a>
           </div>
