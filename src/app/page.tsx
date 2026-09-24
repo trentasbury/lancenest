@@ -41,15 +41,16 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="relative hidden h-[508px] w-[305px] justify-self-end lg:block">
+          <div className="relative hidden aspect-[3/5] max-h-[560px] justify-self-end lg:block">
             <div className="absolute -inset-3 border border-brass/40" aria-hidden="true" />
             <Image
               src="/assets/veteran-silhouette.webp"
               alt="A veteran with a pack looking out over a harbor at sunset"
-              width={305}
-              height={508}
+              fill
               priority
-              className="relative h-full w-full object-cover"
+              quality={90}
+              sizes="(min-width: 1024px) 340px, 0px"
+              className="object-cover"
             />
           </div>
         </div>
@@ -90,18 +91,15 @@ export default function HomePage() {
             <Link href="/employers" className="btn btn-outline">For Employers</Link>
           </div>
         </div>
-        <div className="flex items-center justify-center bg-cream px-6 py-14 sm:px-12">
-          <div className="relative w-full max-w-[600px]">
-            <div className="absolute -inset-3 border border-brass/40" aria-hidden="true" />
-            <Image
-              src="/assets/harbor-still-life.webp"
-              alt="A navy cap and a book titled Discipline, Leadership, Service on a boat deck at sunset"
-              width={722}
-              height={304}
-              sizes="(min-width: 1024px) 600px, 100vw"
-              className="relative h-auto w-full"
-            />
-          </div>
+        <div className="relative min-h-[320px] lg:min-h-[520px]">
+          <Image
+            src="/assets/harbor-still-life.webp"
+            alt="A navy cap and a book titled Discipline, Leadership, Service on a boat deck at sunset"
+            fill
+            quality={90}
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            className="object-cover"
+          />
         </div>
       </section>
 
