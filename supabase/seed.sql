@@ -153,7 +153,14 @@ catalog as (
       'Federal Account Manager','SkillBridge Operations Intern'] as titles,
     array['entry','mid','senior','mid','entry','mid','senior','mid','entry','mid',
       'mid','mid','senior','mid','mid','entry','mid','mid','senior','mid',
-      'mid','mid','mid','senior','mid','mid','mid','mid','senior','entry'] as levels
+      'mid','mid','mid','senior','mid','mid','mid','mid','senior','entry'] as levels,
+    -- Realistic pay bands per title (the SkillBridge role has none: the member keeps military pay).
+    array[75000,95000,50000,58000,48000,75000,90000,85000,52000,55000,
+      62000,65000,80000,60000,58000,38000,70000,50000,95000,80000,
+      70000,60000,50000,80000,55000,70000,58000,55000,110000,0] as pay_min,
+    array[105000,135000,68000,78000,65000,100000,125000,120000,70000,75000,
+      85000,88000,110000,82000,78000,50000,95000,68000,130000,115000,
+      98000,85000,66000,110000,78000,98000,80000,75000,150000,0] as pay_max
 )
 insert into public.jobs (company_id, slug, title, location, work_arrangement, employment_type, experience_level,
   industry, salary_min, salary_max, description, responsibilities, qualifications, benefits,
@@ -163,12 +170,12 @@ select
   regexp_replace(lower(cat.titles[g.n + 1] || '-' || c.headquarters), '[^a-z0-9]+', '-', 'g') || '-' || (g.n + 1),
   cat.titles[g.n + 1],
   c.headquarters,
-  (array['onsite','hybrid','remote'])[(g.n % 3) + 1],
+  case when c.headquarters = 'Remote' then 'remote' else (array['onsite','hybrid','remote'])[(g.n % 3) + 1] end,
   case when g.n = 29 then 'skillbridge' when g.n % 11 = 4 then 'contract' else 'full_time' end,
   cat.levels[g.n + 1],
   c.industry,
-  55000 + (g.n * 3200),
-  78000 + (g.n * 4100),
+  nullif(cat.pay_min[g.n + 1], 0),
+  nullif(cat.pay_max[g.n + 1], 0),
   'Fictional listing for development. ' || c.name || ' is hiring a ' || cat.titles[g.n + 1]
     || ' to lead day-to-day execution with a team that values service experience.',
   'Plan and execute daily operations.' || chr(10) || 'Lead and develop a small team.' || chr(10)
