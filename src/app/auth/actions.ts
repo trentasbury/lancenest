@@ -79,7 +79,11 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   // Email confirmation disabled in Supabase -> a session exists immediately.
   if (data.session) redirect(home);
 
-  return { message: `Almost there. We sent a confirmation link to ${email} — open it to activate your account.` };
+  // Supabase returns this same response for an email that is already registered (and sends
+  // nothing), so the message has to cover both cases without revealing which one applies.
+  return {
+    message: `Almost there. If ${email} is new to LanceNest, a confirmation link is on its way — open it to activate your account. Already have an account with this email? No email is sent; just log in, or use “Forgot password?” if you need to reset it.`,
+  };
 }
 
 export async function signOut() {

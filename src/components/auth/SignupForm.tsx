@@ -21,7 +21,8 @@ export default function SignupForm({ defaultRole }: { defaultRole: 'veteran' | '
     return (
       <div className="space-y-5">
         <FormMessage message={state.message} />
-        <Link href="/login" className="btn btn-outline w-full">Go to log in</Link>
+        <Link href="/login" className="btn btn-primary w-full">Go to log in</Link>
+        <Link href="/forgot-password" className="btn btn-outline w-full">Forgot password?</Link>
       </div>
     );
   }
