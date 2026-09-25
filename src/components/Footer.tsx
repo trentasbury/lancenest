@@ -15,6 +15,7 @@ export default function Footer() {
             <li><Link href="/jobs" className="hover:text-brass">Find jobs</Link></li>
             <li><Link href="/resources" className="hover:text-brass">Translate your MOS</Link></li>
             <li><Link href="/signup?role=veteran" className="hover:text-brass">Create a profile</Link></li>
+            <li><Link href="/plans" className="hover:text-brass">Veteran plans</Link></li>
           </ul>
         </div>
         <div>

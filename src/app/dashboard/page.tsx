@@ -46,10 +46,32 @@ export default async function VeteranDashboard() {
       </section>
 
       <div className="container-page space-y-10 py-10">
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Link href="/dashboard/profile" className="card group p-5 transition-colors hover:border-brass">
+            <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Your profile</p>
+            <p className="mt-2 font-serif text-2xl text-navy">{profile.onboarding_completed ? 'Edit profile' : 'Build your profile'} →</p>
+            <p className="mt-1 text-xs text-muted">Name, about, skills, service, experience</p>
+          </Link>
+          <Link href="/dashboard/verification" className="card group p-5 transition-colors hover:border-brass">
+            <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Verification</p>
+            <p className="mt-2 font-serif text-2xl text-navy">{vet?.verification_status === 'verified' ? 'Verified ✦' : 'Get verified'} →</p>
+            <p className="mt-1 text-xs text-muted">Earn the Verified Veteran badge</p>
+          </Link>
+          {profile.username && (
+            <Link href={`/veterans/${profile.username}`} className="card group p-5 transition-colors hover:border-brass">
+              <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Public profile</p>
+              <p className="mt-2 font-serif text-2xl text-navy">See what employers see →</p>
+            </Link>
+          )}
+          <Link href="/plans" className="card group p-5 transition-colors hover:border-brass">
+            <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Plans</p>
+            <p className="mt-2 font-serif text-2xl text-navy">Free · Pro · Federal Pro →</p>
+          </Link>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
           <StatCard label="Applications" value={applications.length} hint="Most recent five shown below" />
           <StatCard label="Saved jobs" value={savedCount ?? 0} />
-          <StatCard label="Profile" value={profile.onboarding_completed ? 'Complete' : 'In progress'} />
         </div>
 
         <div className="grid gap-8 lg:grid-cols-2">

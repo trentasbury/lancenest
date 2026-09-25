@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { requireRole } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import StatCard from '@/components/StatCard';
@@ -45,7 +46,9 @@ export default async function AdminPage() {
           <StatCard label="Employers" value={employers} />
           <StatCard label="Companies" value={companies} />
           <StatCard label="Open jobs" value={openJobs} />
-          <StatCard label="Pending verifications" value={pendingVerifications} />
+          <Link href="/admin/verifications" className="transition-opacity hover:opacity-80">
+            <StatCard label="Pending verifications →" value={pendingVerifications} hint="Open the review queue" />
+          </Link>
           <StatCard label="Open reports" value={openReports} />
         </div>
         <section>
