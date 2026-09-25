@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/server';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import { BRANCHES, CLEARANCES, COMPONENTS, yearOf } from '@/lib/military';
+import { VISIBILITY } from '@/lib/network';
+import { shareProfileMilestone } from '@/app/network/actions';
 import {
   addEducation, addExperience, addService, addSkill, removeEducation, removeExperience,
   removeService, removeSkill, saveBasics,
@@ -44,7 +46,7 @@ function RemoveButton({ action }: { action: () => Promise<void> }) {
   );
 }
 
-export default async function EditProfilePage({ searchParams }: { searchParams: { saved?: string; error?: string } }) {
+export default async function EditProfilePage({ searchParams }: { searchParams: { saved?: string; error?: string; share?: string } }) {
   const { user, profile } = await requireRole(['veteran'], '/dashboard/profile');
   const supabase = createClient();
 
@@ -63,6 +65,8 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
   const exps = (experience ?? []) as Exp[];
   const edus = (education ?? []) as Edu[];
   const error = searchParams.error ? ERRORS[searchParams.error] ?? ERRORS.save : undefined;
+  const [shareKindRaw, shareId] = (searchParams.share ?? '').split(':');
+  const shareKind = (['experience', 'education', 'service'] as const).find((k) => k === shareKindRaw);
 
   return (
     <>
@@ -81,7 +85,26 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
 
       <div className="container-page max-w-3xl space-y-6 py-10">
         {error && <FormMessage error={error} />}
-        {searchParams.saved && !error && <FormMessage message="Saved." />}
+        {searchParams.saved && !error && !searchParams.share && <FormMessage message="Saved." />}
+        {shareKind && shareId && (
+          <div id="share" className="card scroll-mt-24 border-brass p-6">
+            <p className="eyebrow">Saved — share this with your network?</p>
+            <p className="mt-2 font-serif text-xl text-navy">
+              {shareKind === 'experience' ? 'Let your network know about your new position.' : shareKind === 'education' ? 'Let your network celebrate your education milestone.' : 'Let your network recognize your service.'}
+            </p>
+            <p className="mt-1 text-sm text-muted">Nothing is posted unless you choose to. You can add a note and pick who sees it.</p>
+            <form action={shareProfileMilestone.bind(null, shareKind, shareId)} className="mt-4 space-y-3">
+              <textarea name="body" rows={2} maxLength={3000} placeholder="Add a note (optional)" className="field" />
+              <div className="flex flex-wrap items-center gap-3">
+                <select name="visibility" defaultValue="network" className="field w-auto">
+                  {VISIBILITY.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                </select>
+                <SubmitButton className="btn btn-primary" pendingText="Sharing…">Share to my network</SubmitButton>
+                <Link href="/dashboard/profile" className="btn btn-ghost">Not now</Link>
+              </div>
+            </form>
+          </div>
+        )}
 
         <Section id="basics" title="About you">
           <form action={saveBasics} className="grid gap-5 sm:grid-cols-2">

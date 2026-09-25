@@ -6,6 +6,9 @@ import JobCard from '@/components/JobCard';
 import EmptyState from '@/components/EmptyState';
 import { createClient } from '@/lib/supabase/server';
 import type { Company, JobWithCompany } from '@/lib/types';
+import { getSessionProfile } from '@/lib/auth';
+import SubmitButton from '@/components/SubmitButton';
+import { startConversation } from '@/app/messages/actions';
 
 async function getCompany(slug: string) {
   const supabase = createClient();
@@ -31,6 +34,7 @@ export default async function CompanyPage({ params }: { params: { slug: string }
     .eq('status', 'open')
     .order('posted_at', { ascending: false });
   const jobs = (data ?? []) as JobWithCompany[];
+  const session = await getSessionProfile();
 
   return (
     <>
@@ -95,6 +99,11 @@ export default async function CompanyPage({ params }: { params: { slug: string }
               <p className="eyebrow">Benefits</p>
               <p className="mt-3 text-sm leading-relaxed text-ink/85">{company.benefits}</p>
             </div>
+          )}
+          {session && company.owner_id && session.user.id !== company.owner_id && (
+            <form action={startConversation.bind(null, company.owner_id)}>
+              <SubmitButton className="btn btn-primary w-full" pendingText="Opening…">Message {company.name}</SubmitButton>
+            </form>
           )}
           <Link href="/jobs" className="btn btn-outline w-full">Browse all jobs</Link>
         </aside>

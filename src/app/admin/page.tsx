@@ -49,7 +49,9 @@ export default async function AdminPage() {
           <Link href="/admin/verifications" className="transition-opacity hover:opacity-80">
             <StatCard label="Pending verifications →" value={pendingVerifications} hint="Open the review queue" />
           </Link>
-          <StatCard label="Open reports" value={openReports} />
+          <Link href="/admin/reports" className="transition-opacity hover:opacity-80">
+            <StatCard label="Open reports →" value={openReports} hint="Open the moderation queue" />
+          </Link>
         </div>
         <section>
           <h2 className="eyebrow">Newest members</h2>

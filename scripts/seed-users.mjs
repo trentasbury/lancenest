@@ -109,4 +109,50 @@ for (const acct of accounts) {
   }
 }
 
+// ---------- Network demo activity (fictional) ----------
+const { data: people } = await admin.from('profiles').select('id, full_name').like('username', '%').in('role', ['veteran', 'employer']);
+const byName = Object.fromEntries((people ?? []).map((p) => [p.full_name, p.id]));
+const id = (name) => byName[name];
+const { count: existingPosts } = await admin.from('network_posts').select('id', { count: 'exact', head: true });
+
+if (!existingPosts) {
+  const names = veterans.map((v) => v.name).filter((n) => id(n));
+  // Everyone follows the next three people; the first two follow each other (a "connection").
+  const follows = [];
+  names.forEach((n, i) => [1, 2, 3].forEach((k) => follows.push({ follower_id: id(n), following_id: id(names[(i + k) % names.length]) })));
+  follows.push({ follower_id: id(names[1]), following_id: id(names[0]) });
+  await admin.from('user_follows').upsert(follows, { ignoreDuplicates: true });
+
+  const posts = [
+    [names[0], 'career', 'new_job', 'Started a new position as Operations Manager at Anchor & Oak Logistics', 'Eight years of leading Soldiers translated into leading a 40-person warehouse team. Grateful for everyone who helped me make the jump.', 'Operations Manager', 'Anchor & Oak Logistics'],
+    [names[1], 'certification', 'certification', 'Earned the PMP certification from PMI', 'Studied on nights and weekends for four months. The Navy taught me the discipline — PMI gave me the vocabulary.', 'PMP', 'PMI'],
+    [names[2], 'military', 'military_retirement', 'Retired from the U.S. Air Force after 20 years of service', 'Twenty years, six bases, one incredible family. Next chapter: corporate security leadership.', 'TSgt', 'U.S. Air Force'],
+    [names[3], 'career', 'promotion', 'Was promoted to Director of Operations at Brass Compass Consulting', null, 'Director of Operations', 'Brass Compass Consulting'],
+    [names[4], 'education', 'graduation', 'Graduated with a B.S. in Cybersecurity from Old Dominion University', 'Used every bit of my GI Bill. Worth it.', 'B.S. in Cybersecurity', 'Old Dominion University'],
+    [names[5], 'business', 'new_business', 'Launched Tidewater Medical Staffing', 'Veteran-owned and hiring corpsmen and medics first.', null, 'Tidewater Medical Staffing'],
+    [names[6], 'accomplishment', 'award', 'Received the Coast Guard Achievement Medal', null, 'Coast Guard Achievement Medal', null],
+    [names[7], 'career', 'career_transition', 'Transitioned into a new role as Data Analyst at Summit Line Cyber', 'Intelligence analysis → data analysis. Same instincts, new tools.', 'Data Analyst', 'Summit Line Cyber'],
+    [names[8], 'general', null, null, 'Just finished my first week on a SkillBridge internship. If you’re within 180 days of separation, ask your command about it — it changed my transition.', null, null],
+  ].filter((p) => id(p[0]));
+
+  const { data: created } = await admin.from('network_posts').insert(posts.map(([name, post_type, milestone, headline, body, title, organization], i) => ({
+    author_id: id(name), post_type, milestone, headline, body: body ?? '', title, organization, visibility: 'network',
+    created_at: new Date(Date.now() - i * 5 * 3600_000).toISOString(),
+  }))).select('id, author_id');
+
+  const reactions = ['congratulations', 'proud', 'support', 'well_done', 'inspiring', 'thank_you'];
+  const reactRows = [];
+  const commentRows = [];
+  (created ?? []).forEach((post, i) => {
+    names.filter((n) => id(n) !== post.author_id).slice(0, 3 + (i % 4)).forEach((n, k) => reactRows.push({ post_id: post.id, profile_id: id(n), reaction: reactions[(i + k) % reactions.length] }));
+    const commenter = names.find((n) => id(n) !== post.author_id);
+    commentRows.push({ post_id: post.id, author_id: id(commenter), body: ['Congratulations — well deserved.', 'This is huge. Proud of you.', 'Great example for everyone still transitioning.'][i % 3] });
+  });
+  await admin.from('post_reactions').insert(reactRows);
+  await admin.from('post_comments').insert(commentRows);
+  console.log(`✓ network: ${created?.length ?? 0} posts, ${reactRows.length} reactions, ${commentRows.length} comments, ${follows.length} follows`);
+} else {
+  console.log('• network activity already seeded');
+}
+
 console.log('\nDone. Sign in with any account above using DEMO_PASSWORD.');

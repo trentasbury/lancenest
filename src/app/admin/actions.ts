@@ -37,3 +37,22 @@ export async function decideVerification(requestId: string, decision: 'verified'
   revalidatePath('/admin/verifications');
   revalidatePath('/admin');
 }
+
+/** Moderation: resolve or dismiss a report, optionally removing the reported post/comment. */
+export async function decideReport(reportId: string, decision: 'dismissed' | 'resolved' | 'removed') {
+  const { user } = await requireRole(['admin'], '/admin/reports');
+  const admin = createAdminClient();
+  const { data: report } = await admin.from('reports').select('id, target_type, target_id, status').eq('id', reportId).maybeSingle();
+  if (!report || report.status === 'resolved' || report.status === 'dismissed') return;
+
+  if (decision === 'removed') {
+    if (report.target_type === 'post') await admin.from('network_posts').delete().eq('id', report.target_id);
+    if (report.target_type === 'comment') await admin.from('post_comments').delete().eq('id', report.target_id);
+  }
+  await admin.from('reports').update({ status: decision === 'dismissed' ? 'dismissed' : 'resolved' }).eq('id', reportId);
+  await admin.from('admin_actions').insert({
+    admin_id: user.id, action: `report_${decision}`, target_type: report.target_type, target_id: report.target_id, details: { report_id: reportId },
+  });
+  revalidatePath('/admin/reports');
+  revalidatePath('/admin');
+}

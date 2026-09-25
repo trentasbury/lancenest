@@ -1,7 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-const PROTECTED_PREFIXES = ['/dashboard', '/employer', '/admin', '/applications', '/saved-jobs', '/messages', '/onboarding', '/settings'];
+const PROTECTED_PREFIXES = ['/dashboard', '/employer', '/admin', '/applications', '/saved-jobs', '/messages', '/onboarding', '/settings', '/network', '/notifications'];
 
 function isProtected(path: string) {
   return PROTECTED_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));

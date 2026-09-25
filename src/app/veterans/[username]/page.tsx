@@ -6,6 +6,11 @@ import { getSessionProfile } from '@/lib/auth';
 import VerificationBadge from '@/components/VerificationBadge';
 import { CLEARANCES, COMPONENTS, yearOf } from '@/lib/military';
 import { initials } from '@/lib/format';
+import { getFeed } from '@/lib/network';
+import PostCard from '@/components/network/PostCard';
+import SubmitButton from '@/components/SubmitButton';
+import { followUser, unfollowUser } from '@/app/network/actions';
+import { startConversation } from '@/app/messages/actions';
 
 type Profile = { id: string; full_name: string; username: string; headline: string | null; location: string | null; avatar_url: string | null };
 type Vet = { about: string | null; clearance_level: string; verification_status: string; willing_to_relocate: boolean };
@@ -58,6 +63,13 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
     getSessionProfile(),
   ]);
 
+  const viewerId = session?.user.id ?? null;
+  const [{ posts }, { count: followers }, { data: iFollow }] = await Promise.all([
+    getFeed({ viewerId, authorId: profile.id, limit: 5 }),
+    supabase.from('user_follows').select('*', { count: 'exact', head: true }).eq('following_id', profile.id),
+    viewerId ? supabase.from('user_follows').select('following_id').eq('follower_id', viewerId).eq('following_id', profile.id) : Promise.resolve({ data: [] }),
+  ]);
+  const following = (iFollow ?? []).length > 0;
   const services = (service ?? []) as unknown as Service[];
   const skills = ((skillRows ?? []) as unknown as { skill: { name: string } | null }[]).map((r) => r.skill?.name).filter(Boolean) as string[];
   const isOwner = session?.user.id === profile.id;
@@ -89,7 +101,23 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
               )}
             </div>
           </div>
-          {isOwner && <Link href="/dashboard/profile" className="btn btn-brass shrink-0">Edit profile</Link>}
+          <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
+            {isOwner ? (
+              <Link href="/dashboard/profile" className="btn btn-brass">Edit profile</Link>
+            ) : session ? (
+              <div className="flex gap-2">
+                <form action={(following ? unfollowUser : followUser).bind(null, profile.id)}>
+                  <SubmitButton className={following ? 'btn border border-brass text-brass hover:bg-brass/10' : 'btn btn-brass'} pendingText="…">{following ? 'Following ✓' : 'Follow'}</SubmitButton>
+                </form>
+                <form action={startConversation.bind(null, profile.id)}>
+                  <SubmitButton className="btn border border-cream/40 text-ivory hover:bg-white/10" pendingText="…">Message</SubmitButton>
+                </form>
+              </div>
+            ) : (
+              <Link href={`/login?next=/veterans/${profile.username}`} className="btn btn-brass">Log in to connect</Link>
+            )}
+            <p className="text-xs text-cream/70">{followers ?? 0} follower{followers === 1 ? '' : 's'}</p>
+          </div>
         </div>
       </section>
 
@@ -124,6 +152,18 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
                   </li>
                 ))}
               </ul>
+            )}
+          </section>
+
+          <section id="posts" className="scroll-mt-24 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="eyebrow">Posts & milestones</h2>
+              {isOwner && <Link href="/network" className="text-sm text-navy underline decoration-brass underline-offset-4">Share an update →</Link>}
+            </div>
+            {posts.length === 0 ? (
+              <div className="card p-6 text-sm text-muted">{isOwner ? 'You haven’t shared anything yet.' : 'No posts to show yet.'}</div>
+            ) : (
+              posts.map((post) => <PostCard key={post.id} post={post} signedIn={!!session} />)
             )}
           </section>
 

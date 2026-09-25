@@ -12,10 +12,11 @@ function text(formData: FormData, name: string, max = 200) {
   return String(formData.get(name) ?? '').trim().slice(0, max);
 }
 
-function done(section: string, error?: string): never {
+function done(section: string, error?: string, share?: string): never {
   revalidatePath(PAGE);
   revalidatePath('/dashboard');
-  redirect(`${PAGE}?${error ? `error=${error}` : `saved=${section}`}#${section}`);
+  const q = error ? `error=${error}` : `saved=${section}${share ? `&share=${share}` : ''}`;
+  redirect(`${PAGE}?${q}#${share ? 'share' : section}`);
 }
 
 export async function saveBasics(formData: FormData) {
@@ -106,7 +107,7 @@ export async function addService(formData: FormData) {
   }
 
   const deployments = Math.max(0, Math.min(50, Number(formData.get('deployments')) || 0));
-  const { error } = await supabase.from('military_service').insert({
+  const { data: row, error } = await supabase.from('military_service').insert({
     profile_id: user.id,
     branch,
     component: COMPONENTS.some(([v]) => v === component) ? component : 'active',
@@ -116,12 +117,12 @@ export async function addService(formData: FormData) {
     start_date: yearToDate(formData.get('start_year')),
     end_date: yearToDate(formData.get('end_year')),
     deployments,
-  });
+  }).select('id, end_date').single();
   if (error) {
     console.error('addService failed:', error.message);
     done('service', error.message.includes('check') ? 'years' : 'save');
   }
-  done('service');
+  done('service', undefined, row?.end_date ? `service:${row.id}` : undefined);
 }
 
 export async function removeService(id: string) {
@@ -138,19 +139,19 @@ export async function addExperience(formData: FormData) {
   const position = text(formData, 'position', 120);
   if (!company || !position) done('experience', 'experience');
 
-  const { error } = await supabase.from('experience').insert({
+  const { data: row, error } = await supabase.from('experience').insert({
     profile_id: user.id,
     company,
     position,
     start_date: yearToDate(formData.get('start_year')),
     end_date: yearToDate(formData.get('end_year')),
     description: text(formData, 'description', 2000) || null,
-  });
+  }).select('id').single();
   if (error) {
     console.error('addExperience failed:', error.message);
     done('experience', 'save');
   }
-  done('experience');
+  done('experience', undefined, row ? `experience:${row.id}` : undefined);
 }
 
 export async function removeExperience(id: string) {
@@ -167,18 +168,18 @@ export async function addEducation(formData: FormData) {
   if (!school) done('education', 'school');
   const year = Number(formData.get('graduation_year'));
 
-  const { error } = await supabase.from('education').insert({
+  const { data: row, error } = await supabase.from('education').insert({
     profile_id: user.id,
     school,
     degree: text(formData, 'degree', 120) || null,
     field: text(formData, 'field', 120) || null,
     graduation_year: Number.isInteger(year) && year >= 1950 && year <= 2100 ? year : null,
-  });
+  }).select('id').single();
   if (error) {
     console.error('addEducation failed:', error.message);
     done('education', 'save');
   }
-  done('education');
+  done('education', undefined, row ? `education:${row.id}` : undefined);
 }
 
 export async function removeEducation(id: string) {
