@@ -69,6 +69,15 @@ delete from public.veteran_profiles
 where profile_id = (select id from auth.users where email = 'you@example.com');
 ```
 
+### Demo network activity (currently live)
+`supabase/demo_network.sql` adds 10 fictional, display-only members (no password; they cannot log in) with
+milestone posts, reactions, comments, and follows so the Network feed looks active before launch. Each demo bio
+says it's a fictional member. **Remove all of it before inviting real users** with one command in the SQL Editor:
+
+```sql
+delete from auth.users where raw_app_meta_data ->> 'demo' = 'true';
+```
+
 ---
 
 ## 2. Environment variables
