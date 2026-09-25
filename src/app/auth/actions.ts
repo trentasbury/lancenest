@@ -1,6 +1,8 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { LAST_SEEN_COOKIE, SESSION_START_COOKIE, sessionCookieOptions } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { roleHome, safeNextPath } from '@/lib/auth';
 import type { Role } from '@/lib/types';
@@ -9,6 +11,17 @@ export type FormState = { error?: string; message?: string };
 
 function siteUrl() {
   return (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+}
+
+function startSessionClock() {
+  const now = String(Date.now());
+  cookies().set(LAST_SEEN_COOKIE, now, sessionCookieOptions);
+  cookies().set(SESSION_START_COOKIE, now, sessionCookieOptions);
+}
+
+function clearSessionClock() {
+  cookies().delete(LAST_SEEN_COOKIE);
+  cookies().delete(SESSION_START_COOKIE);
 }
 
 function field(formData: FormData, name: string) {
@@ -42,6 +55,7 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
     return { error: 'That email and password combination didn’t match our records.' };
   }
 
+  startSessionClock();
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).maybeSingle();
   redirect(safeNextPath(formData.get('next')) ?? roleHome((profile?.role as Role) ?? null));
 }
@@ -77,7 +91,10 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   }
 
   // Email confirmation disabled in Supabase -> a session exists immediately.
-  if (data.session) redirect(home);
+  if (data.session) {
+    startSessionClock();
+    redirect(home);
+  }
 
   // Supabase returns this same response for an email that is already registered (and sends
   // nothing), so the message has to cover both cases without revealing which one applies.
@@ -89,7 +106,21 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
 export async function signOut() {
   const supabase = createClient();
   await supabase.auth.signOut();
+  clearSessionClock();
   redirect('/');
+}
+
+/** Called by the inactivity timer in the browser. */
+export async function signOutForInactivity() {
+  const supabase = createClient();
+  await supabase.auth.signOut({ scope: 'local' });
+  clearSessionClock();
+  redirect('/login?reason=idle');
+}
+
+/** "Stay signed in": the request itself refreshes the server-side activity clock in middleware. */
+export async function keepAlive() {
+  return;
 }
 
 export async function requestPasswordReset(_prev: FormState, formData: FormData): Promise<FormState> {

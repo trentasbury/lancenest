@@ -6,11 +6,18 @@ import { getSessionProfile, roleHome, safeNextPath } from '@/lib/auth';
 
 export const metadata: Metadata = { title: 'Log in' };
 
-export default async function LoginPage({ searchParams }: { searchParams: { next?: string; error?: string } }) {
+export default async function LoginPage({ searchParams }: { searchParams: { next?: string; error?: string; reason?: string } }) {
   const session = await getSessionProfile();
   if (session) redirect(roleHome(session.profile?.role));
 
-  const notice = searchParams.error === 'link' ? 'That link has expired or was already used. Log in, or request a new one.' : undefined;
+  const notice =
+    searchParams.reason === 'idle'
+      ? 'For your security, you were signed out after 30 minutes of inactivity.'
+      : searchParams.reason === 'expired'
+        ? 'For your security, sessions end after 12 hours. Please sign in again.'
+        : searchParams.error === 'link'
+          ? 'That link has expired or was already used. Log in, or request a new one.'
+          : undefined;
   return (
     <AuthShell title="Welcome back" subtitle="Log in to continue your mission.">
       <LoginForm next={safeNextPath(searchParams.next) ?? undefined} notice={notice} />

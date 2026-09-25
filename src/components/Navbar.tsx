@@ -5,6 +5,7 @@ import { initials } from '@/lib/format';
 import { createClient } from '@/lib/supabase/server';
 import Wordmark from './Wordmark';
 import MobileMenu, { type NavLink } from './MobileMenu';
+import IdleTimer from './IdleTimer';
 
 export default async function Navbar() {
   const session = await getSessionProfile();
@@ -36,6 +37,7 @@ export default async function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-cream/95 backdrop-blur">
+      {session && <IdleTimer />}
       <div className="container-page flex h-[72px] items-center justify-between gap-6">
         <Wordmark />
 
