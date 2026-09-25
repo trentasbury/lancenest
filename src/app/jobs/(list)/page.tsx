@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import JobCard from '@/components/JobCard';
 import EmptyState from '@/components/EmptyState';
-import { searchJobs, type JobFilters } from '@/lib/jobs';
+import { getFeaturedJobs, searchJobs, type JobFilters } from '@/lib/jobs';
 
 export const metadata: Metadata = {
   title: 'Find Jobs',
@@ -30,7 +30,8 @@ const CLEARANCE = [
 ];
 
 export default async function JobsPage({ searchParams }: { searchParams: JobFilters }) {
-  const jobs = await searchJobs(searchParams);
+  const [jobs, featured] = await Promise.all([searchJobs(searchParams), getFeaturedJobs()]);
+  const featuredIds = new Set(featured.map((j) => j.id));
   const hasFilters = Object.values(searchParams).some(Boolean);
 
   return (
@@ -102,7 +103,8 @@ export default async function JobsPage({ searchParams }: { searchParams: JobFilt
             />
           ) : (
             <div className="space-y-4">
-              {jobs.map((job) => <JobCard key={job.id} job={job} />)}
+              {!Object.values(searchParams).some(Boolean) && featured.map((job) => <JobCard key={`f-${job.id}`} job={job} />)}
+              {jobs.filter((job) => Object.values(searchParams).some(Boolean) || !featuredIds.has(job.id)).map((job) => <JobCard key={job.id} job={job} />)}
             </div>
           )}
         </section>

@@ -29,7 +29,8 @@ export type Company = {
   benefits: string | null;
   veteran_commitment: string | null;
   is_verified: boolean;
-  plan: 'free' | 'professional' | 'enterprise';
+  plan: 'free' | 'professional' | 'federal' | 'enterprise';
+  extra_job_slots?: number;
 };
 
 export type Job = {
@@ -56,6 +57,7 @@ export type Job = {
   clearance_required: ClearanceLevel;
   clearance_eligible: boolean;
   status: 'draft' | 'open' | 'paused' | 'closed';
+  featured_until?: string | null;
   posted_at: string;
 };
 

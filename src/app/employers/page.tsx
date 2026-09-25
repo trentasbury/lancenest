@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getSessionProfile } from '@/lib/auth';
 
 export const metadata: Metadata = {
   title: 'Hire Veterans',
@@ -38,7 +39,11 @@ const PLANS = [
   },
 ];
 
-export default function EmployersPage() {
+const CHECKOUT: Record<string, string> = { Professional: 'employer_professional', Federal: 'employer_federal' };
+
+export default async function EmployersPage() {
+  const session = await getSessionProfile();
+  const isEmployer = session?.profile?.role === 'employer';
   return (
     <>
       <section className="bg-navy-deep text-ivory">
@@ -67,14 +72,23 @@ export default function EmployersPage() {
                   <li key={f} className="flex gap-2"><span className="text-brass">✦</span>{f}</li>
                 ))}
               </ul>
-              <Link href="/signup?role=employer" className={`btn mt-8 ${plan.featured ? 'btn-primary' : 'btn-outline'}`}>
-                {plan.cta}
-              </Link>
+              {isEmployer && CHECKOUT[plan.name] ? (
+                <div className="mt-8 space-y-2">
+                  <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value={`${CHECKOUT[plan.name]}_month`} /><button className={`btn w-full ${plan.featured ? 'btn-primary' : 'btn-outline'}`}>Choose monthly</button></form>
+                  <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value={`${CHECKOUT[plan.name]}_year`} /><button className="btn btn-ghost w-full border border-line">Choose annual · 2 months free</button></form>
+                </div>
+              ) : isEmployer && plan.name === 'Free' ? (
+                <Link href="/employer/dashboard" className="btn btn-outline mt-8">Go to dashboard</Link>
+              ) : (
+                <Link href="/signup?role=employer" className={`btn mt-8 ${plan.featured ? 'btn-primary' : 'btn-outline'}`}>
+                  {plan.cta}
+                </Link>
+              )}
             </div>
           ))}
         </div>
         <p className="mt-8 text-center text-sm text-muted">
-          Every employer account starts free. Paid plans are activated from your employer dashboard once billing launches.
+          Every employer account starts free. Upgrade, downgrade, or cancel anytime from your dashboard. Add-ons: featured job boost $49 · extra job slot $39/month.
         </p>
       </div>
     </>

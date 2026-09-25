@@ -9,12 +9,14 @@ import type { Company } from '@/lib/types';
 
 export const metadata: Metadata = { title: 'Employer Dashboard' };
 
-export default async function EmployerDashboard() {
+const PLAN_LABEL: Record<string, string> = { free: 'Free', professional: 'Professional', federal: 'Federal', enterprise: 'Enterprise' };
+
+export default async function EmployerDashboard({ searchParams }: { searchParams: { error?: string } }) {
   const { user, profile } = await requireRole(['employer'], '/employer/dashboard');
   const supabase = createClient();
 
   const { data: companyData } = await supabase.from('companies').select('*').eq('owner_id', user.id).maybeSingle();
-  const company = companyData as Company | null;
+  const company = companyData as (Company & { stripe_customer_id: string | null }) | null;
 
   let activeJobs = 0;
   let totalJobs = 0;
@@ -71,26 +73,54 @@ export default async function EmployerDashboard() {
               <StatCard label="Active jobs" value={activeJobs} hint={`${totalJobs} total`} />
               <StatCard label="Applicants" value={applicants} />
               <StatCard label="Interviews" value={interviews} />
-              <StatCard label="Plan" value={company.plan === 'free' ? 'Free' : company.plan} />
+              <StatCard label="Plan" value={PLAN_LABEL[company.plan] ?? company.plan} hint={company.plan === 'free' ? `${activeJobs} of ${2 + (company.extra_job_slots ?? 0)} open posts used` : 'Unlimited job posts'} />
             </div>
 
+            {searchParams.error && <p role="alert" className="text-sm text-signal">That purchase couldn’t start. Please try again.</p>}
+
+            <section className="card flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="eyebrow">Your plan: {PLAN_LABEL[company.plan] ?? company.plan}</p>
+                <p className="mt-1 text-sm text-muted">
+                  {company.plan === 'free'
+                    ? 'Upgrade for unlimited posts, candidate search, and analytics — or add single job slots as you need them.'
+                    : 'Thank you for hiring veterans. Manage your card, invoices, and plan anytime.'}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {company.plan === 'free' && (
+                  <>
+                    <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="employer_professional_month" /><button className="btn btn-primary">Professional · $149/mo</button></form>
+                    <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="job_slot" /><button className="btn btn-outline">+1 job slot · $39/mo</button></form>
+                  </>
+                )}
+                {company.plan === 'professional' && (
+                  <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="employer_federal_month" /><button className="btn btn-primary">Upgrade to Federal · $499/mo</button></form>
+                )}
+                {company.stripe_customer_id && (
+                  <form action="/api/billing/portal" method="post"><button className="btn btn-ghost border border-line">Manage billing</button></form>
+                )}
+              </div>
+            </section>
+
             <section>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="eyebrow">Your job postings</h2>
+                <Link href="/employer/jobs/new" className="btn btn-primary">Post a job</Link>
                 <Link href={`/companies/${company.slug}`} className="text-sm text-navy underline decoration-brass underline-offset-4">View public company page →</Link>
               </div>
               <div className="mt-4">
                 {jobs.length === 0 ? (
                   <EmptyState
                     title="No job postings yet."
-                    body="The guided job-posting flow is the next piece being built. Your company page is live in the meantime."
-                    action={{ href: `/companies/${company.slug}`, label: 'View company page' }}
+                    body="Post your first role — veterans on LanceNest see it right away."
+                    action={{ href: '/employer/jobs/new', label: 'Post a job' }}
                   />
                 ) : (
                   <ul className="card divide-y divide-line">
                     {jobs.map((j) => (
                       <li key={j.id} className="flex items-center justify-between gap-4 p-4">
-                        <Link href={`/jobs/${j.slug}`} className="font-medium text-navy hover:underline">{j.title}</Link>
+                        <Link href={`/employer/jobs/${j.id}`} className="font-medium text-navy hover:underline">{j.title}</Link>
                         <span className="pill capitalize">{j.status}</span>
                       </li>
                     ))}

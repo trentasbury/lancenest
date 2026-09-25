@@ -27,6 +27,7 @@ export default function JobCard({ job }: { job: JobWithCompany }) {
         <div className="mt-3 flex flex-wrap gap-2">
           <span className="pill">{ARRANGEMENT_LABELS[job.work_arrangement]}</span>
           <span className="pill">{EMPLOYMENT_LABELS[job.employment_type]}</span>
+          {job.featured_until && new Date(job.featured_until) > new Date() && <span className="pill border-brass bg-brass text-navy-deep">Featured</span>}
           {job.veteran_preferred && <span className="pill border-brass/50 bg-brass/10 text-brass-dark">Veteran preferred</span>}
           {job.clearance_required !== 'none' && (
             <span className="pill border-navy/30 bg-navy/5 text-navy">{CLEARANCE_LABELS[job.clearance_required]} clearance</span>

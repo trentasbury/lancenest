@@ -40,7 +40,7 @@ export async function searchJobs(filters: JobFilters, limit = 50): Promise<JobWi
   if (filters.clearance === 'none') query = query.eq('clearance_required', 'none');
   if (filters.veteran === '1') query = query.eq('veteran_preferred', true);
 
-  const { data, error } = await query.order('is_featured', { ascending: false }).order('posted_at', { ascending: false }).limit(limit);
+  const { data, error } = await query.order('posted_at', { ascending: false }).limit(limit);
   if (error) {
     console.error('searchJobs failed:', error.message);
     return [];
@@ -52,4 +52,11 @@ export async function getJobBySlug(slug: string): Promise<JobWithCompany | null>
   const supabase = createClient();
   const { data } = await supabase.from('jobs').select(JOB_SELECT).eq('slug', slug).maybeSingle();
   return (data as JobWithCompany | null) ?? null;
+}
+
+/** Active paid boosts, shown above regular results. */
+export async function getFeaturedJobs(limit = 3): Promise<JobWithCompany[]> {
+  const supabase = createClient();
+  const { data } = await supabase.from('jobs').select(JOB_SELECT).eq('status', 'open').gt('featured_until', new Date().toISOString()).order('featured_until', { ascending: false }).limit(limit);
+  return (data ?? []) as JobWithCompany[];
 }
