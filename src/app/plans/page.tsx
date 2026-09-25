@@ -22,7 +22,7 @@ const PLANS = [
     id: 'veteran_pro' as const,
     name: 'Pro',
     price: '$19',
-    note: 'per month',
+    note: 'per month · $190/year (2 months free)',
     featured: true,
     features: ['Everything in Member', 'Featured placement in employer searches', 'See which employers viewed your profile', 'Unlimited job alerts', 'Priority verification review', 'Pro badge on your profile'],
   },
@@ -30,7 +30,7 @@ const PLANS = [
     id: 'veteran_federal_pro' as const,
     name: 'Federal Pro',
     price: '$29',
-    note: 'per month',
+    note: 'per month · $290/year (2 months free)',
     features: ['Everything in Pro', 'Clearance holders spotlighted to federal contractors', 'Early access to cleared and GovCon roles', 'Federal Pro badge on your profile'],
   },
 ];

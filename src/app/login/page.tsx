@@ -17,7 +17,9 @@ export default async function LoginPage({ searchParams }: { searchParams: { next
         ? 'For your security, sessions end after 12 hours. Please sign in again.'
         : searchParams.error === 'link'
           ? 'That link has expired or was already used. Log in, or request a new one.'
-          : undefined;
+          : searchParams.next?.startsWith('/jobs')
+            ? 'Job listings are for LanceNest members. Log in, or create a free account in under a minute.'
+            : undefined;
   return (
     <AuthShell title="Welcome back" subtitle="Log in to continue your mission.">
       <LoginForm next={safeNextPath(searchParams.next) ?? undefined} notice={notice} />

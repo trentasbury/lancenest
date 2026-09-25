@@ -71,9 +71,11 @@ export default async function CompanyPage({ params }: { params: { slug: string }
             </section>
           )}
           <section>
-            <p className="eyebrow">Open positions ({jobs.length})</p>
+            <p className="eyebrow">Open positions{session ? ` (${jobs.length})` : ''}</p>
             <div className="mt-4 space-y-4">
-              {jobs.length === 0 ? (
+              {!session ? (
+                <EmptyState title="Open positions are for members." body="Create a free account to see this company’s jobs and apply." action={{ href: `/login?next=/companies/${company.slug}`, label: 'Log in or sign up' }} />
+              ) : jobs.length === 0 ? (
                 <EmptyState title="No open positions right now." body="Check back soon — this company posts new roles regularly." action={{ href: '/jobs', label: 'Browse all jobs' }} />
               ) : (
                 jobs.map((job) => <JobCard key={job.id} job={job} />)

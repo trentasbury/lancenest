@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { IDLE_LIMIT_MS, LAST_SEEN_COOKIE, MAX_SESSION_MS, SESSION_START_COOKIE, sessionCookieOptions } from '@/lib/session';
 
-const PROTECTED_PREFIXES = ['/dashboard', '/employer', '/admin', '/applications', '/saved-jobs', '/messages', '/onboarding', '/settings', '/network', '/notifications', '/security'];
+const PROTECTED_PREFIXES = ['/dashboard', '/employer', '/admin', '/applications', '/saved-jobs', '/messages', '/onboarding', '/settings', '/network', '/notifications', '/security', '/jobs'];
 
 function isProtected(path: string) {
   return PROTECTED_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
@@ -84,7 +84,7 @@ export async function updateSession(request: NextRequest) {
   if (isProtected(path)) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
-    url.search = `?next=${encodeURIComponent(path)}`;
+    url.search = `?next=${encodeURIComponent(path + request.nextUrl.search)}`;
     return NextResponse.redirect(url);
   }
 

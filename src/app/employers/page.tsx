@@ -8,25 +8,32 @@ export const metadata: Metadata = {
 
 const PLANS = [
   {
-    name: 'Employer',
-    price: 'Free',
+    name: 'Free',
+    price: '$0',
     note: 'To get started',
-    features: ['Company profile page', 'Limited job postings', 'Basic applicant management'],
+    features: ['Company recruiting page', '2 open job posts', 'Applicant inbox'],
     cta: 'Create a free account',
   },
   {
     name: 'Professional',
-    price: '$199',
-    note: 'per month',
-    features: ['More job postings', 'Veteran candidate search', 'Direct messaging', 'Hiring analytics', 'Featured jobs'],
+    price: '$149',
+    note: 'per month · $1,490/year (2 months free)',
+    features: ['Unlimited job posts', 'Veteran candidate search', 'Message candidates first', 'Hiring analytics', '2 featured jobs each month'],
     cta: 'Start with Professional',
     featured: true,
   },
   {
+    name: 'Federal',
+    price: '$499',
+    note: 'per month · $4,990/year',
+    features: ['Everything in Professional', 'Cleared-talent search by clearance level', 'Clearance-holder spotlight', 'Unlimited featured jobs', '3 recruiter seats'],
+    cta: 'Start with Federal',
+  },
+  {
     name: 'Enterprise',
     price: 'Custom',
-    note: 'For large hiring programs',
-    features: ['Unlimited jobs', 'Advanced candidate search', 'Employer branding', 'Analytics', 'Dedicated support'],
+    note: 'from $12,000/year',
+    features: ['Everything in Federal', 'Unlimited recruiter seats', 'Employer branding', 'ATS integration', 'Dedicated support'],
     cta: 'Talk to us',
   },
 ];
@@ -48,7 +55,7 @@ export default function EmployersPage() {
       </section>
 
       <div className="container-page py-16">
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {PLANS.map((plan) => (
             <div key={plan.name} className={`card flex flex-col p-8 ${plan.featured ? 'border-brass ring-1 ring-brass' : ''}`}>
               {plan.featured && <p className="eyebrow mb-3">Most popular</p>}
