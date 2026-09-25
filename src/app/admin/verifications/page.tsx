@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { requireRole } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import SubmitButton from '@/components/SubmitButton';
 import EmptyState from '@/components/EmptyState';
@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: 'Verification queue', robots: { index
 type Req = { id: string; profile_id: string; document_path: string | null; notes: string | null; created_at: string; profile: { full_name: string; username: string | null } | null };
 
 export default async function VerificationQueue() {
-  await requireRole(['admin'], '/admin/verifications');
+  await requireAdmin('/admin/verifications');
   const admin = createAdminClient();
   const { data } = await admin
     .from('verification_requests')

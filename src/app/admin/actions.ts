@@ -1,12 +1,12 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { requireRole } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 /** Approve or reject a verification request. Role is checked BEFORE the service-role client is used. */
 export async function decideVerification(requestId: string, decision: 'verified' | 'failed', formData: FormData) {
-  const { user } = await requireRole(['admin'], '/admin/verifications');
+  const { user } = await requireAdmin('/admin/verifications');
   const admin = createAdminClient();
   const note = String(formData.get('note') ?? '').trim().slice(0, 300) || null;
 
@@ -40,7 +40,7 @@ export async function decideVerification(requestId: string, decision: 'verified'
 
 /** Moderation: resolve or dismiss a report, optionally removing the reported post/comment. */
 export async function decideReport(reportId: string, decision: 'dismissed' | 'resolved' | 'removed') {
-  const { user } = await requireRole(['admin'], '/admin/reports');
+  const { user } = await requireAdmin('/admin/reports');
   const admin = createAdminClient();
   const { data: report } = await admin.from('reports').select('id, target_type, target_id, status').eq('id', reportId).maybeSingle();
   if (!report || report.status === 'resolved' || report.status === 'dismissed') return;

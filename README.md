@@ -59,6 +59,15 @@ Use a **new** Supabase project for this version — the schema is not compatible
    Supabase’s built-in mailer only delivers to your own team’s addresses, so real signups need custom SMTP.
 7. **Project Settings → API** → copy the Project URL, the anon/publishable key, and the service role/secret key.
 
+### Admin two-step login
+Admin pages require an authenticator-app code (Supabase MFA, TOTP). The first time an admin visits `/admin`
+they're sent to `/security/mfa` to set it up. Admin powers in the database also require the two-step session.
+**Lost your phone?** Remove the factor in the SQL Editor, then set it up again:
+
+```sql
+delete from auth.mfa_factors where user_id = (select id from auth.users where email = 'you@example.com');
+```
+
 ### Make yourself an admin
 Sign up through the site normally, confirm your email, then run in the SQL Editor:
 

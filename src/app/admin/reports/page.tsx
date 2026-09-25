@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { requireRole } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import SubmitButton from '@/components/SubmitButton';
 import EmptyState from '@/components/EmptyState';
@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: 'Reports', robots: { index: false } }
 type Report = { id: string; target_type: string; target_id: string; reason: string; details: string | null; created_at: string; reporter: { full_name: string } | null };
 
 export default async function ReportsPage() {
-  await requireRole(['admin'], '/admin/reports');
+  await requireAdmin('/admin/reports');
   const admin = createAdminClient();
   const { data } = await admin
     .from('reports')

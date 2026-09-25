@@ -83,7 +83,7 @@ export default async function ThreadPage({ params, searchParams }: { params: { i
         })}
       </ul>
 
-      {searchParams.error && <div className="mb-3"><FormMessage error={searchParams.error === 'blocked' ? 'This conversation is closed because one of you has blocked the other.' : 'Your message didn’t send. Please try again.'} /></div>}
+      {searchParams.error && <div className="mb-3"><FormMessage error={searchParams.error === 'blocked' ? 'This conversation is closed because one of you has blocked the other.' : searchParams.error === 'rate' ? 'You’re sending messages very quickly. Please wait a few minutes.' : 'Your message didn’t send. Please try again.'} /></div>}
       <form action={sendMessage.bind(null, params.id)} className="sticky bottom-4 flex gap-2 rounded-[6px] border border-line bg-ivory p-2 shadow-card">
         <label htmlFor="msg" className="sr-only">Message</label>
         <textarea id="msg" name="body" required rows={2} maxLength={4000} placeholder="Write a message…" className="field resize-none border-0 focus:ring-0" />

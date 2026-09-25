@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { requireRole } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import StatCard from '@/components/StatCard';
 
@@ -10,7 +10,7 @@ type Recent = { id: string; full_name: string; role: string; created_at: string 
 
 export default async function AdminPage() {
   // Server-side role check FIRST — only then use the service-role client.
-  await requireRole(['admin'], '/admin');
+  await requireAdmin('/admin');
   const admin = createAdminClient();
 
   const countOf = async (table: string, filter?: { column: string; value: string }) => {

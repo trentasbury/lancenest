@@ -53,6 +53,7 @@ export async function createPost(formData: FormData): Promise<PostState> {
     .select('id')
     .single();
   if (error || !data) {
+    if (error?.code === 'P0002') return { error: 'You’re posting a lot right now. Please wait a bit and try again.' };
     console.error('createPost failed:', error?.message);
     return { error: 'Your post couldn’t be published. Please try again.' };
   }

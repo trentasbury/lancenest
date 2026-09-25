@@ -47,3 +47,12 @@ export function safeNextPath(value: FormDataEntryValue | string | null | undefin
   const next = typeof value === 'string' ? value : null;
   return next && next.startsWith('/') && !next.startsWith('//') ? next : null;
 }
+
+/** Admin pages and actions: requires the admin role AND a session that passed two-step verification. */
+export async function requireAdmin(nextPath = '/admin') {
+  const session = await requireRole(['admin'], nextPath);
+  const supabase = createClient();
+  const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (data?.currentLevel !== 'aal2') redirect('/security/mfa');
+  return session;
+}
