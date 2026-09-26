@@ -8,7 +8,7 @@ import { decideCompany } from '../actions';
 
 export const metadata: Metadata = { title: 'Company verification', robots: { index: false } };
 
-type Details = { website?: string; role?: string; linkedin?: string | null; ein?: string | null; phone?: string | null; submitted_at?: string; checks?: { domain_age_days?: number | null; website_mentions_company?: boolean } };
+type Details = { website?: string; role?: string; linkedin?: string | null; ein?: string | null; phone?: string | null; submitted_at?: string; state?: string | null; state_id?: string | null; uei?: string | null; checks?: { domain_age_days?: number | null; website_mentions_company?: boolean } };
 const host = (u?: string | null) => { try { return u ? new URL(u).hostname.replace(/^www\./, '').toLowerCase() : ''; } catch { return ''; } };
 
 export default async function CompanyQueue() {
@@ -49,7 +49,18 @@ export default async function CompanyQueue() {
                 {d.linkedin && <div><dt className="inline text-muted">LinkedIn: </dt><dd className="inline break-all">{d.linkedin}</dd></div>}
                 {d.ein && <div><dt className="inline text-muted">EIN: </dt><dd className="inline">{d.ein}</dd></div>}
                 {d.phone && <div><dt className="inline text-muted">Phone: </dt><dd className="inline">{d.phone}</dd></div>}
+                {(d.state || d.state_id) && <div><dt className="inline text-muted">Registered: </dt><dd className="inline">{[d.state, d.state_id].filter(Boolean).join(' · ')}</dd></div>}
+                {d.uei && <div><dt className="inline text-muted">SAM.gov UEI: </dt><dd className="inline">{d.uei}</dd></div>}
               </dl>
+              <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                <a className="btn btn-ghost border border-line px-3 py-1.5" target="_blank" rel="noopener noreferrer"
+                  href={`https://opencorporates.com/companies${d.state ? `/us_${d.state.toLowerCase()}` : ''}?q=${encodeURIComponent(d.state_id || (c.name as string))}`}>State registration lookup ↗</a>
+                <a className="btn btn-ghost border border-line px-3 py-1.5" target="_blank" rel="noopener noreferrer"
+                  href={`https://sam.gov/search/?index=ei&keywords=${encodeURIComponent(d.uei || (c.name as string))}`}>SAM.gov lookup ↗</a>
+                <a className="btn btn-ghost border border-line px-3 py-1.5" target="_blank" rel="noopener noreferrer"
+                  href={`https://www.google.com/search?q=${encodeURIComponent(`"${c.name as string}" ${d.state ?? ''}`)}`}>Web search ↗</a>
+                {d.linkedin && <a className="btn btn-ghost border border-line px-3 py-1.5" target="_blank" rel="noopener noreferrer" href={d.linkedin.startsWith('http') ? d.linkedin : `https://${d.linkedin}`}>LinkedIn ↗</a>}
+              </div>
               <p className={`mt-3 text-sm font-medium ${match ? 'text-olive' : freeMail ? 'text-signal' : 'text-brass-dark'}`}>
                 {match ? '✓ Login email matches the company website domain' : freeMail ? '⚠ Signed up with a personal email — confirm by calling the company or checking LinkedIn' : '⚠ Email domain doesn’t match the website — check carefully'}
               </p>

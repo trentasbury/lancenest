@@ -54,7 +54,9 @@ export async function submitCompanyVerification(formData: FormData) {
   const website = t('website', 200);
   const role = t('role', 100);
   if (!/^https?:\/\/[^\s.]+\.[^\s]+$/i.test(website) || !role || formData.get('attest') !== 'on') redirect('/employer/dashboard?verify=invalid');
-  const details: Record<string, unknown> = { website, role, linkedin: t('linkedin', 200) || null, ein: t('ein', 20) || null, phone: t('phone', 30) || null, submitted_at: new Date().toISOString() };
+  const details: Record<string, unknown> = { website, role, linkedin: t('linkedin', 200) || null, ein: t('ein', 20) || null, phone: t('phone', 30) || null,
+    state: t('state', 2).toUpperCase() || null, state_id: t('state_id', 30) || null, uei: t('uei', 12).toUpperCase() || null,
+    submitted_at: new Date().toISOString() };
   const admin = createAdminClient();
 
   // Automatic approval: the account email was confirmed at signup, so a match between its domain and the

@@ -25,6 +25,10 @@ export default function CompanyVerification({ status, note, flash }: { status: s
         <div><label className="field-label" htmlFor="linkedin">Company LinkedIn page (optional)</label><input id="linkedin" name="linkedin" className="field" /></div>
         <div><label className="field-label" htmlFor="ein">EIN (optional, speeds up review)</label><input id="ein" name="ein" placeholder="12-3456789" className="field" /></div>
         <div><label className="field-label" htmlFor="phone">Business phone (optional)</label><input id="phone" name="phone" className="field" /></div>
+        <div><label className="field-label" htmlFor="state">State where the business is registered</label><input id="state" name="state" maxLength={2} placeholder="FL" className="field uppercase" /></div>
+        <div><label className="field-label" htmlFor="state_id">State business ID / document number (optional)</label><input id="state_id" name="state_id" placeholder="e.g. L24000123456" className="field" /></div>
+        <div className="sm:col-span-2"><label className="field-label" htmlFor="uei">SAM.gov UEI (federal contractors, optional)</label><input id="uei" name="uei" maxLength={12} placeholder="12-character Unique Entity ID" className="field uppercase" /></div>
+        <p className="text-xs text-muted sm:col-span-2">New company? No problem — a person reviews it, usually within one business day. Your state business ID or SAM.gov UEI makes that review fastest.</p>
         <p className="self-end text-xs text-muted">If your login email is at your company’s domain (for example you@yourcompany.com), you’re approved instantly. Otherwise we review it by hand, usually within one business day.</p>
         <label className="flex items-start gap-2.5 text-sm sm:col-span-2">
           <input type="checkbox" name="attest" required className="mt-0.5 h-4 w-4 accent-navy" />
