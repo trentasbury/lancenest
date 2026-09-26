@@ -138,9 +138,9 @@ export async function deleteComment(commentId: string) {
   refresh();
 }
 
-const REPORT_REASONS = ['spam', 'harassment', 'fraud', 'fake_information', 'inappropriate', 'impersonation', 'other'];
+const REPORT_REASONS = ['spam', 'harassment', 'fraud', 'fake_job', 'fake_information', 'inappropriate', 'impersonation', 'other'];
 
-export async function reportContent(targetType: 'post' | 'comment' | 'profile' | 'message', targetId: string, formData: FormData) {
+export async function reportContent(targetType: 'post' | 'comment' | 'profile' | 'message' | 'job', targetId: string, formData: FormData) {
   const uid = await me();
   const reason = t(formData, 'reason', 30);
   if (!REPORT_REASONS.includes(reason)) return;

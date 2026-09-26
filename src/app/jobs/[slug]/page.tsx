@@ -7,6 +7,7 @@ import SubmitButton from '@/components/SubmitButton';
 import { getJobBySlug } from '@/lib/jobs';
 import { getSessionProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { reportContent } from '@/app/network/actions';
 import { ARRANGEMENT_LABELS, CLEARANCE_LABELS, EMPLOYMENT_LABELS, formatSalary, postedAgo } from '@/lib/format';
 import { applyToJob, toggleSaveJob } from '../actions';
 
@@ -84,6 +85,22 @@ export default async function JobDetailPage({ params }: { params: { slug: string
               <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-olive/40 bg-olive/10 px-3 py-1 text-xs font-semibold text-olive">
                 ✓ Verified company — reviewed by LanceNest
               </p>
+            )}
+            {session?.profile?.role === 'veteran' && (
+              <details className="mt-3 text-xs text-muted">
+                <summary className="cursor-pointer hover:text-signal">Something wrong with this job? Report it</summary>
+                <form action={reportContent.bind(null, 'job', job.id)} className="mt-2 flex max-w-md flex-col gap-2 sm:flex-row">
+                  <select name="reason" required defaultValue="" className="field py-2 text-sm">
+                    <option value="" disabled>Reason…</option>
+                    <option value="fake_job">Fake or scam job</option>
+                    <option value="fraud">Asked for money or personal info</option>
+                    <option value="impersonation">Impersonating a company</option>
+                    <option value="inappropriate">Inappropriate</option>
+                    <option value="other">Other</option>
+                  </select>
+                  <SubmitButton className="btn btn-outline py-2" pendingText="…">Report</SubmitButton>
+                </form>
+              </details>
             )}
           </div>
         </div>

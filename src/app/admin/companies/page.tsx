@@ -8,7 +8,7 @@ import { decideCompany } from '../actions';
 
 export const metadata: Metadata = { title: 'Company verification', robots: { index: false } };
 
-type Details = { website?: string; role?: string; linkedin?: string | null; ein?: string | null; phone?: string | null; submitted_at?: string };
+type Details = { website?: string; role?: string; linkedin?: string | null; ein?: string | null; phone?: string | null; submitted_at?: string; checks?: { domain_age_days?: number | null; website_mentions_company?: boolean } };
 const host = (u?: string | null) => { try { return u ? new URL(u).hostname.replace(/^www\./, '').toLowerCase() : ''; } catch { return ''; } };
 
 export default async function CompanyQueue() {
@@ -53,6 +53,12 @@ export default async function CompanyQueue() {
               <p className={`mt-3 text-sm font-medium ${match ? 'text-olive' : freeMail ? 'text-signal' : 'text-brass-dark'}`}>
                 {match ? '✓ Login email matches the company website domain' : freeMail ? '⚠ Signed up with a personal email — confirm by calling the company or checking LinkedIn' : '⚠ Email domain doesn’t match the website — check carefully'}
               </p>
+              {d.checks && (
+                <p className="mt-1 text-sm text-muted">
+                  Domain age: {d.checks.domain_age_days == null ? 'unknown' : d.checks.domain_age_days >= 365 ? `${Math.floor(d.checks.domain_age_days / 365)}+ years ✓` : <span className="text-signal">{d.checks.domain_age_days} days — new domain ⚠</span>}
+                  {' · '}Website mentions company: {d.checks.website_mentions_company ? '✓' : <span className="text-signal">no ⚠</span>}
+                </p>
+              )}
               <div className="mt-5 flex flex-col gap-3 border-t border-line pt-5 sm:flex-row sm:items-end">
                 <form action={decideCompany.bind(null, c.id as string, 'rejected')} className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-end">
                   <div className="flex-1"><label className="field-label" htmlFor={`n-${c.id}`}>Reason (sent to employer if rejected)</label><input id={`n-${c.id}`} name="note" maxLength={300} className="field" /></div>

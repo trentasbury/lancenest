@@ -25,6 +25,8 @@ export default async function ReportsPage() {
   const postIds = reports.filter((r) => r.target_type === 'post').map((r) => r.target_id);
   const commentIds = reports.filter((r) => r.target_type === 'comment').map((r) => r.target_id);
   const profileIds = reports.filter((r) => r.target_type === 'profile').map((r) => r.target_id);
+  const jobIds = reports.filter((r) => r.target_type === 'job').map((r) => r.target_id);
+  const { data: jobs } = jobIds.length ? await admin.from('jobs').select('id, title, slug, status').in('id', jobIds) : { data: [] };
   const [{ data: posts }, { data: comments }, { data: profiles }] = await Promise.all([
     postIds.length ? admin.from('network_posts').select('id, headline, body').in('id', postIds) : Promise.resolve({ data: [] }),
     commentIds.length ? admin.from('post_comments').select('id, post_id, body').in('id', commentIds) : Promise.resolve({ data: [] }),
@@ -43,6 +45,10 @@ export default async function ReportsPage() {
       const p = (profiles ?? []).find((x) => x.id === r.target_id);
       return p ? { text: p.full_name as string, href: p.role === 'veteran' && p.username ? `/veterans/${p.username}` : null } : { text: 'Unknown member', href: null };
     }
+    if (r.target_type === 'job') {
+      const j = (jobs ?? []).find((x) => x.id === r.target_id);
+      return j ? { text: `Job: ${j.title} (${j.status})`, href: `/jobs/${j.slug}` } : { text: 'Job already removed', href: null };
+    }
     return { text: `${r.target_type} ${r.target_id.slice(0, 8)}`, href: null };
   };
 
@@ -59,7 +65,7 @@ export default async function ReportsPage() {
         {reports.length === 0 && <EmptyState title="No open reports." body="Reports from members will appear here." />}
         {reports.map((r) => {
           const p = preview(r);
-          const removable = r.target_type === 'post' || r.target_type === 'comment';
+          const removable = r.target_type === 'post' || r.target_type === 'comment' || r.target_type === 'job';
           return (
             <div key={r.id} className="card p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-signal">{r.reason.replace('_', ' ')} · {r.target_type}</p>

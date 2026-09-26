@@ -50,11 +50,18 @@ export async function decideReport(reportId: string, decision: 'dismissed' | 're
   if (decision === 'removed') {
     if (report.target_type === 'post') await admin.from('network_posts').delete().eq('id', report.target_id);
     if (report.target_type === 'comment') await admin.from('post_comments').delete().eq('id', report.target_id);
+    if (report.target_type === 'job') await admin.from('jobs').update({ status: 'closed' }).eq('id', report.target_id);
   }
   if (decision !== 'removed') {
     // Not a violation: bring back anything the automatic 3-report rule hid.
     if (report.target_type === 'post') await admin.from('network_posts').update({ hidden: false }).eq('id', report.target_id);
     if (report.target_type === 'comment') await admin.from('post_comments').update({ hidden: false }).eq('id', report.target_id);
+    if (report.target_type === 'job') {
+      // Reopen a job the report rule paused — only if its company is still verified.
+      const { data: job } = await admin.from('jobs').select('company_id, status').eq('id', report.target_id).maybeSingle();
+      const { data: co } = job ? await admin.from('companies').select('is_verified').eq('id', job.company_id).maybeSingle() : { data: null };
+      if (job?.status === 'paused' && co?.is_verified) await admin.from('jobs').update({ status: 'open' }).eq('id', report.target_id);
+    }
   }
   await admin.from('reports').update({ status: decision === 'dismissed' ? 'dismissed' : 'resolved' }).eq('id', reportId);
   await admin.from('admin_actions').insert({

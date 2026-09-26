@@ -6,6 +6,7 @@ import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { slugify } from '@/lib/format';
+import { MIN_DOMAIN_AGE_DAYS, baseDomain, domainAgeDays, websiteMentions } from '@/lib/companyChecks';
 import type { FormState } from '@/app/auth/actions';
 
 export async function createCompany(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -47,13 +48,13 @@ export async function createCompany(_prev: FormState, formData: FormData): Promi
 /** Employer submits company details for review. Status can only be set to "pending" here; approval is admin-only. */
 export async function submitCompanyVerification(formData: FormData) {
   const { user } = await requireRole(['employer'], '/employer/dashboard');
-  const { data: company } = await createClient().from('companies').select('id, verification_status').eq('owner_id', user.id).maybeSingle();
+  const { data: company } = await createClient().from('companies').select('id, name, verification_status').eq('owner_id', user.id).maybeSingle();
   if (!company || company.verification_status === 'verified' || company.verification_status === 'pending') redirect('/employer/dashboard');
   const t = (k: string, max: number) => String(formData.get(k) ?? '').trim().slice(0, max);
   const website = t('website', 200);
   const role = t('role', 100);
   if (!/^https?:\/\/[^\s.]+\.[^\s]+$/i.test(website) || !role || formData.get('attest') !== 'on') redirect('/employer/dashboard?verify=invalid');
-  const details = { website, role, linkedin: t('linkedin', 200) || null, ein: t('ein', 20) || null, phone: t('phone', 30) || null, submitted_at: new Date().toISOString() };
+  const details: Record<string, unknown> = { website, role, linkedin: t('linkedin', 200) || null, ein: t('ein', 20) || null, phone: t('phone', 30) || null, submitted_at: new Date().toISOString() };
   const admin = createAdminClient();
 
   // Automatic approval: the account email was confirmed at signup, so a match between its domain and the
@@ -62,14 +63,21 @@ export async function submitCompanyVerification(formData: FormData) {
   const emailDomain = (user.email ?? '').split('@')[1]?.toLowerCase() ?? '';
   let site = '';
   try { site = new URL(website).hostname.replace(/^www\./, '').toLowerCase(); } catch { site = ''; }
-  const autoApprove = !!user.email_confirmed_at && !!site && !!emailDomain && !FREE_MAIL.test(emailDomain)
+  const domainMatch = !!user.email_confirmed_at && !!site && !!emailDomain && !FREE_MAIL.test(emailDomain)
     && (emailDomain === site || emailDomain.endsWith(`.${site}`));
+  // Scammers can register a fresh domain and throw up a site; they can't fake a domain's age.
+  const [ageDays, siteOk] = domainMatch
+    ? await Promise.all([domainAgeDays(baseDomain(site)), websiteMentions(website, company.name as string)])
+    : [null, false];
+  const checks = { domain_match: domainMatch, domain_age_days: ageDays, website_mentions_company: siteOk };
+  Object.assign(details, { checks });
+  const autoApprove = domainMatch && ageDays !== null && ageDays >= MIN_DOMAIN_AGE_DAYS && siteOk;
   if (autoApprove) {
     await admin.from('companies').update({
       verification_details: details, verification_status: 'verified', is_verified: true,
       verification_note: 'Auto-verified: confirmed work email matches the company website.',
     }).eq('id', company.id);
-    await admin.from('admin_actions').insert({ admin_id: null, action: 'company_auto_verified', target_type: 'company', target_id: company.id, details: { email_domain: emailDomain, website: site } });
+    await admin.from('admin_actions').insert({ admin_id: null, action: 'company_auto_verified', target_type: 'company', target_id: company.id, details: { email_domain: emailDomain, website: site, ...checks } });
     const { data: admins } = await admin.from('profiles').select('id').eq('role', 'admin');
     if (admins?.length) {
       await admin.from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'company_verification', title: `A company was auto-verified (work email @${emailDomain} matches its website). You can revoke it anytime.`, link: '/admin/companies' })));
