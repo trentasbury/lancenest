@@ -31,6 +31,15 @@ export default async function Navbar() {
     unread = count ?? 0;
   }
 
+  const role = profile?.role;
+  const accountLinks: NavLink[] = !session ? [] : [
+    { href: roleHome(role), label: role === 'admin' ? 'Admin' : role === 'employer' ? 'Employer dashboard' : 'Dashboard' },
+    ...(role === 'veteran' && profile?.username ? [{ href: `/veterans/${profile.username}`, label: 'My profile' }] : []),
+    ...(role === 'veteran' ? [{ href: '/dashboard/profile', label: 'Edit profile' }, { href: '/dashboard/verification', label: 'Verification' }, { href: '/plans', label: 'Plans & upgrades' }] : []),
+    ...(role === 'employer' ? [{ href: '/employer/jobs/new', label: 'Post a job' }, { href: '/employer/analytics', label: 'Hiring analytics' }, { href: '/employers', label: 'Plans & billing' }] : []),
+    { href: '/network?view=saved', label: 'Saved posts' },
+    { href: '/settings/account', label: 'Account settings' },
+  ];
   const dashboard = session
     ? { href: roleHome(profile?.role), label: profile?.role === 'admin' ? 'Admin' : profile?.role === 'employer' ? 'Employer Dashboard' : 'Dashboard' }
     : null;
@@ -61,18 +70,24 @@ export default async function Navbar() {
                 )}
               </Link>
               {dashboard && (
-                <Link href={dashboard.href} className="flex items-center gap-2 text-sm text-ink hover:text-brass-dark">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full border border-brass bg-navy font-serif text-xs text-brass">
-                    {initials(profile?.full_name)}
-                  </span>
-                  {dashboard.label}
-                </Link>
+                <details className="relative">
+                  <summary className="flex cursor-pointer list-none items-center gap-2 text-sm text-ink hover:text-brass-dark">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full border border-brass bg-navy font-serif text-xs text-brass">
+                      {initials(profile?.full_name)}
+                    </span>
+                    <span className="hidden xl:inline">{profile?.full_name?.split(' ')[0] ?? 'Account'}</span>
+                    <span aria-hidden="true" className="text-xs text-muted">▾</span>
+                  </summary>
+                  <div className="absolute right-0 z-50 mt-2 w-60 rounded-[4px] border border-line bg-ivory p-2 text-sm shadow-card">
+                    {accountLinks.map((l) => (
+                      <Link key={l.href} href={l.href} className="block rounded-[3px] px-3 py-2 hover:bg-cream">{l.label}</Link>
+                    ))}
+                    <form action={signOut} className="mt-1 border-t border-line pt-1">
+                      <button type="submit" className="w-full rounded-[3px] px-3 py-2 text-left text-signal hover:bg-signal/5">Log out</button>
+                    </form>
+                  </div>
+                </details>
               )}
-              <form action={signOut}>
-                <button type="submit" className="btn btn-outline px-4 py-2">
-                  Log out
-                </button>
-              </form>
             </>
           ) : (
             <>
@@ -87,7 +102,7 @@ export default async function Navbar() {
         </div>
 
         <MobileMenu
-          links={session ? [...links, { href: '/notifications', label: unread ? `Notifications (${unread})` : 'Notifications' }] : links}
+          links={session ? [...links, { href: '/notifications', label: unread ? `Notifications (${unread})` : 'Notifications' }, ...accountLinks.slice(1)] : links}
           dashboard={dashboard}
           signedIn={!!session}
           signOutAction={signOut}

@@ -46,6 +46,16 @@ export default async function VeteranDashboard() {
       </section>
 
       <div className="container-page space-y-10 py-10">
+        {vet?.verification_status !== 'verified' && (
+          <div className="card flex flex-col gap-3 border-brass p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-medium">{vet?.verification_status === 'pending' ? 'Your verification is being reviewed.' : 'Get your Verified Veteran badge.'}</p>
+              <p className="text-sm text-muted">{vet?.verification_status === 'pending' ? 'We’ll update your badge as soon as a reviewer checks your document.' : 'Employers can filter to verified veterans only — unverified profiles don’t appear in those searches.'}</p>
+            </div>
+            {vet?.verification_status !== 'pending' && <Link href="/dashboard/verification" className="btn btn-brass shrink-0">Verify now</Link>}
+          </div>
+        )}
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <Link href="/dashboard/profile" className="card group p-5 transition-colors hover:border-brass">
             <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Your profile</p>

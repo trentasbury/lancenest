@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { ensureOccupationsLoaded } from '@/lib/occupations';
 import StarRule from '@/components/StarRule';
 
 const FEATURES = [
@@ -11,7 +12,8 @@ const FEATURES = [
 
 const LOOP = ['Service', 'Skills', 'Translation', 'Opportunity', 'Application', 'Career'];
 
-export default function HomePage({ searchParams }: { searchParams: { deleted?: string } }) {
+export default async function HomePage({ searchParams }: { searchParams: { deleted?: string } }) {
+  await ensureOccupationsLoaded();
   return (
     <>
       {searchParams.deleted && (
