@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getSessionProfile } from '@/lib/auth';
+import { foundingSpotsLeft } from '@/lib/billing';
 
 export const metadata: Metadata = {
   title: 'Hire Veterans',
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 const PLANS = [
   { name: 'Free', price: '$0', note: 'To get started', cta: 'Create a free account',
     features: ['Company recruiting page', '2 open job posts', 'Applicant pipeline', 'Message candidates who apply'] },
-  { name: 'Professional', price: '$149', note: 'per month · $1,490/year (2 months free)', cta: 'Start with Professional', featured: true,
+  { name: 'Professional', price: '$199', note: 'per month · $1,990/year (2 months free)', cta: 'Start with Professional', featured: true,
     features: ['Unlimited job posts', 'Search every veteran profile', 'Message 50 new candidates a month', 'Hiring analytics', '5 featured jobs a month, included', 'Applicant export (CSV)'] },
   { name: 'Federal', price: '$499', note: 'per month · $4,990/year', cta: 'Start with Federal',
     features: ['Everything in Professional', 'Search by security clearance', 'Cleared talent spotlight', 'Unlimited candidate messages', 'Unlimited featured jobs'] },
@@ -23,6 +24,7 @@ const CHECKOUT: Record<string, string> = { Professional: 'employer_professional'
 export default async function EmployersPage() {
   const session = await getSessionProfile();
   const isEmployer = session?.profile?.role === 'employer';
+  const founding = await foundingSpotsLeft();
   return (
     <>
       <section className="bg-navy-deep text-ivory">
@@ -46,6 +48,11 @@ export default async function EmployersPage() {
               <h2 className="font-serif text-2xl font-semibold">{plan.name}</h2>
               <p className="mt-4 font-serif text-5xl font-medium text-navy">{plan.price}</p>
               <p className="text-sm text-muted">{plan.note}</p>
+              {plan.name === 'Professional' && founding > 0 && (
+                <p className="mt-3 rounded-[3px] border border-brass bg-brass/10 px-3 py-2 text-xs font-semibold text-brass-dark">
+                  Founding Employer: $149/mo for life · {founding} of 50 spots left
+                </p>
+              )}
               <ul className="mt-6 flex-1 space-y-2.5 text-sm text-ink/85">
                 {plan.features.map((f) => (
                   <li key={f} className="flex gap-2">

@@ -44,6 +44,7 @@ export async function syncSubscription(sub: Stripe.Subscription) {
       stripe_customer_id: typeof sub.customer === 'string' ? sub.customer : sub.customer.id,
       stripe_subscription_id: sub.id,
       current_period_end: periodEnd(sub),
+      founding: sub.metadata?.founding === 'true',
     },
     { onConflict: 'stripe_subscription_id' },
   );
@@ -92,4 +93,11 @@ export async function applyCheckoutSession(sessionId: string) {
     return { ok: true as const, kind };
   }
   return { ok: false as const };
+}
+
+/** How many Founding Employer spots are left (each company counts once, even if it later cancels). */
+export async function foundingSpotsLeft() {
+  const { data } = await createAdminClient().from('subscriptions').select('company_id').eq('founding', true);
+  const used = new Set((data ?? []).map((r) => r.company_id as string)).size;
+  return Math.max(50 - used, 0);
 }

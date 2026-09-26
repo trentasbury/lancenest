@@ -16,7 +16,7 @@ const PLANS = [
     name: 'Member',
     price: 'Free',
     note: 'Always, for every service member',
-    features: ['Full profile & military translation', 'Verified Veteran badge', 'Search and apply to every job', 'Save jobs'],
+    features: ['Freelance fee: 15%', 'Full profile & military translation', 'Verified Veteran badge', 'Search and apply to every job', 'Save jobs'],
   },
   {
     id: 'veteran_pro' as const,
@@ -24,14 +24,14 @@ const PLANS = [
     price: '$19',
     note: 'per month · $190/year (2 months free)',
     featured: true,
-    features: ['Everything in Member', 'Featured placement in employer searches', 'See which employers viewed your profile', 'Unlimited job alerts', 'Priority verification review', 'Pro badge on your profile'],
+    features: ['Freelance fee: 10% (save a third)', 'Everything in Member', 'Featured placement in employer searches', 'See which employers viewed your profile', 'Unlimited job alerts', 'Priority verification review', 'Pro badge on your profile'],
   },
   {
     id: 'veteran_federal_pro' as const,
     name: 'Federal Pro',
     price: '$29',
     note: 'per month · $290/year (2 months free)',
-    features: ['Everything in Pro', 'Clearance holders spotlighted to federal contractors', 'Early access to cleared and GovCon roles', 'Federal Pro badge on your profile'],
+    features: ['Freelance fee: 8% — lowest on LanceNest', 'Everything in Pro', 'Clearance holders spotlighted to federal contractors', 'Early access to cleared and GovCon roles', 'Federal Pro badge on your profile'],
   },
 ];
 

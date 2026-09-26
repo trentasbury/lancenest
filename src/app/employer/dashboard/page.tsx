@@ -105,7 +105,7 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
               <div className="flex flex-wrap gap-2">
                 {company.plan === 'free' && (
                   <>
-                    <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="employer_professional_month" /><button className="btn btn-primary">Professional · $149/mo</button></form>
+                    <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="employer_professional_month" /><button className="btn btn-primary">Professional · $199/mo (Founding $149)</button></form>
                     <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="job_slot" /><button className="btn btn-outline">+1 job slot · $39/mo</button></form>
                   </>
                 )}
