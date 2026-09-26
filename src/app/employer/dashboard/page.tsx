@@ -80,6 +80,7 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
             {searchParams.error && <p role="alert" className="text-sm text-signal">That purchase couldn’t start. Please try again.</p>}
 
             {searchParams.verify === 'submitted' && <p className="text-sm text-olive">Thanks — your company is in review.</p>}
+            {searchParams.verify === 'auto' && <p className="text-sm font-medium text-olive">✓ Your company is verified — your work email matches your website. You can publish jobs now.</p>}
             <CompanyVerification status={(company as unknown as { verification_status: string }).verification_status} note={(company as unknown as { verification_note: string | null }).verification_note} flash={searchParams.verify} />
             {searchParams.error === 'verify' && <p role="alert" className="text-sm text-signal">Your company needs to be verified before you can purchase a plan or add-on.</p>}
 
@@ -105,7 +106,7 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
               <div className="flex flex-wrap gap-2">
                 {company.plan === 'free' && (
                   <>
-                    <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="employer_professional_month" /><button className="btn btn-primary">Professional · $199/mo (Founding $149)</button></form>
+                    <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="employer_professional_month" /><button className="btn btn-primary">Professional · $199/mo (Founding: $149 first year)</button></form>
                     <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="job_slot" /><button className="btn btn-outline">+1 job slot · $39/mo</button></form>
                   </>
                 )}

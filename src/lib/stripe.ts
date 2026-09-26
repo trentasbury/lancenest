@@ -27,5 +27,20 @@ export const BOOST_DAYS = 30;
 
 export const CONTACT_PACK_SIZE = 5;
 
-/** Founding Employers: first 50 Professional subscribers keep this price for life. */
-export const FOUNDING = { spots: 50, month: 14900, year: 149000 };
+/** Founding Employers: first 50 Professional subscribers pay $149/mo (or $1,490/yr) for their first 12 months. */
+export const FOUNDING = { spots: 50, months: 12, monthlyOffCents: 5000, annualOffCents: 50000 };
+
+/** Stripe coupons for the founding discount, created once and reused. */
+export async function foundingCoupon(interval: 'month' | 'year') {
+  const id = interval === 'year' ? 'lancenest-founding-annual' : 'lancenest-founding-monthly';
+  try {
+    await stripe().coupons.retrieve(id);
+  } catch {
+    await stripe().coupons.create(
+      interval === 'year'
+        ? { id, name: 'Founding Employer — first year', amount_off: FOUNDING.annualOffCents, currency: 'usd', duration: 'once' }
+        : { id, name: 'Founding Employer — first 12 months', amount_off: FOUNDING.monthlyOffCents, currency: 'usd', duration: 'repeating', duration_in_months: FOUNDING.months },
+    );
+  }
+  return id;
+}

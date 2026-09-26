@@ -55,6 +55,29 @@ export async function submitCompanyVerification(formData: FormData) {
   if (!/^https?:\/\/[^\s.]+\.[^\s]+$/i.test(website) || !role || formData.get('attest') !== 'on') redirect('/employer/dashboard?verify=invalid');
   const details = { website, role, linkedin: t('linkedin', 200) || null, ein: t('ein', 20) || null, phone: t('phone', 30) || null, submitted_at: new Date().toISOString() };
   const admin = createAdminClient();
+
+  // Automatic approval: the account email was confirmed at signup, so a match between its domain and the
+  // company website proves control of the company's email. Personal email providers never qualify.
+  const FREE_MAIL = /^(gmail|googlemail|yahoo|ymail|outlook|hotmail|live|msn|icloud|me|mac|aol|proton|protonmail|pm|gmx|mail|yandex|hey|fastmail)\./i;
+  const emailDomain = (user.email ?? '').split('@')[1]?.toLowerCase() ?? '';
+  let site = '';
+  try { site = new URL(website).hostname.replace(/^www\./, '').toLowerCase(); } catch { site = ''; }
+  const autoApprove = !!user.email_confirmed_at && !!site && !!emailDomain && !FREE_MAIL.test(emailDomain)
+    && (emailDomain === site || emailDomain.endsWith(`.${site}`));
+  if (autoApprove) {
+    await admin.from('companies').update({
+      verification_details: details, verification_status: 'verified', is_verified: true,
+      verification_note: 'Auto-verified: confirmed work email matches the company website.',
+    }).eq('id', company.id);
+    await admin.from('admin_actions').insert({ admin_id: null, action: 'company_auto_verified', target_type: 'company', target_id: company.id, details: { email_domain: emailDomain, website: site } });
+    const { data: admins } = await admin.from('profiles').select('id').eq('role', 'admin');
+    if (admins?.length) {
+      await admin.from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'company_verification', title: `A company was auto-verified (work email @${emailDomain} matches its website). You can revoke it anytime.`, link: '/admin/companies' })));
+    }
+    revalidatePath('/employer/dashboard');
+    redirect('/employer/dashboard?verify=auto');
+  }
+
   await admin.from('companies').update({ verification_details: details, verification_status: 'pending', verification_note: null }).eq('id', company.id);
   const { data: admins } = await admin.from('profiles').select('id').eq('role', 'admin');
   if (admins?.length) {

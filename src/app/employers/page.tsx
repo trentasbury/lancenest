@@ -50,7 +50,7 @@ export default async function EmployersPage() {
               <p className="text-sm text-muted">{plan.note}</p>
               {plan.name === 'Professional' && founding > 0 && (
                 <p className="mt-3 rounded-[3px] border border-brass bg-brass/10 px-3 py-2 text-xs font-semibold text-brass-dark">
-                  Founding Employer: $149/mo for life · {founding} of 50 spots left
+                  Founding Employer: $149/mo for your first 12 months ($1,490 first year on annual) · {founding} of 50 spots left
                 </p>
               )}
               <ul className="mt-6 flex-1 space-y-2.5 text-sm text-ink/85">

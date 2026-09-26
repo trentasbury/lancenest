@@ -95,7 +95,7 @@ export async function applyCheckoutSession(sessionId: string) {
   return { ok: false as const };
 }
 
-/** How many Founding Employer spots are left (each company counts once, even if it later cancels). */
+/** How many of the 50 Founding Employer spots are left (each company counts once, even if it later cancels). */
 export async function foundingSpotsLeft() {
   const { data } = await createAdminClient().from('subscriptions').select('company_id').eq('founding', true);
   const used = new Set((data ?? []).map((r) => r.company_id as string)).size;

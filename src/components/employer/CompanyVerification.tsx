@@ -25,7 +25,7 @@ export default function CompanyVerification({ status, note, flash }: { status: s
         <div><label className="field-label" htmlFor="linkedin">Company LinkedIn page (optional)</label><input id="linkedin" name="linkedin" className="field" /></div>
         <div><label className="field-label" htmlFor="ein">EIN (optional, speeds up review)</label><input id="ein" name="ein" placeholder="12-3456789" className="field" /></div>
         <div><label className="field-label" htmlFor="phone">Business phone (optional)</label><input id="phone" name="phone" className="field" /></div>
-        <p className="self-end text-xs text-muted">Tip: sign up with your work email (for example you@yourcompany.com) — a matching domain is the fastest way to get approved.</p>
+        <p className="self-end text-xs text-muted">If your login email is at your company’s domain (for example you@yourcompany.com), you’re approved instantly. Otherwise we review it by hand, usually within one business day.</p>
         <label className="flex items-start gap-2.5 text-sm sm:col-span-2">
           <input type="checkbox" name="attest" required className="mt-0.5 h-4 w-4 accent-navy" />
           I’m authorized to recruit for this company, and every job we post will be real and lawful.

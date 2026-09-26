@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getSessionProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { CATALOG, FOUNDING, stripe, type ProductKey } from '@/lib/stripe';
+import { CATALOG, foundingCoupon, stripe, type ProductKey } from '@/lib/stripe';
 import { foundingSpotsLeft } from '@/lib/billing';
 
 /** Starts a Stripe Checkout for an employer plan, an extra job slot, or a job boost. */
@@ -38,16 +38,13 @@ export async function POST(request: NextRequest) {
 
   const metadata: Record<string, string> = { company_id: company.id as string, kind: item.kind, product };
 
-  // Founding Employer price, locked for life on this subscription, while spots remain.
-  let amount = item.amount;
-  let name = item.name;
-  if (item.plan === 'professional' && (await foundingSpotsLeft()) > 0) {
-    amount = item.interval === 'year' ? FOUNDING.year : FOUNDING.month;
-    name = `${item.name} — Founding Employer rate`;
+  // Founding Employer discount (first 12 months) while spots remain. Stripe applies it, then the
+  // subscription renews at the standard price automatically.
+  let coupon: string | null = null;
+  if (item.plan === 'professional' && item.interval && (await foundingSpotsLeft()) > 0) {
+    coupon = await foundingCoupon(item.interval);
     metadata.founding = 'true';
   }
-  if (item.plan) metadata.plan = item.plan;
-  if (jobId) metadata.job_id = jobId;
 
   const checkout = await stripe().checkout.sessions.create({
     mode: item.interval ? 'subscription' : 'payment',
@@ -56,14 +53,15 @@ export async function POST(request: NextRequest) {
       quantity: 1,
       price_data: {
         currency: 'usd',
-        unit_amount: amount,
-        product_data: { name },
+        unit_amount: item.amount,
+        product_data: { name: item.name },
         ...(item.interval ? { recurring: { interval: item.interval } } : {}),
       },
     }],
     metadata,
     ...(item.interval ? { subscription_data: { metadata } } : {}),
-    allow_promotion_codes: true,
+    // Stripe allows either a pre-applied discount or customer-entered promo codes, not both.
+    ...(coupon ? { discounts: [{ coupon }] } : { allow_promotion_codes: true }),
     success_url: `${site}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: jobId ? `${site}/employer/jobs/${jobId}` : `${site}/employer/dashboard`,
   });

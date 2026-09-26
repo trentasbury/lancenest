@@ -8,7 +8,7 @@ export default function Upsell({ title, body, plan = 'Professional' }: { title: 
       <p className="mt-3 font-serif text-3xl">{title}</p>
       <p className="mx-auto mt-2 max-w-lg text-sm text-muted">{body}</p>
       <div className="mt-6 flex flex-wrap justify-center gap-2">
-        <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value={product} /><button className="btn btn-primary">Upgrade to {plan} · {plan === 'Federal' ? '$499/mo' : '$199/mo · Founding $149'}</button></form>
+        <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value={product} /><button className="btn btn-primary">Upgrade to {plan} · {plan === 'Federal' ? '$499/mo' : '$199/mo · Founding: $149 first year'}</button></form>
         <Link href="/employers" className="btn btn-outline">Compare plans</Link>
       </div>
     </div>
