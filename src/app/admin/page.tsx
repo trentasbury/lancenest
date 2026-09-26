@@ -13,6 +13,7 @@ type Recent = { id: string; full_name: string; role: string; created_at: string 
 const DELETE_MSG: Record<string, string> = { ok: 'Member deleted.', notfound: 'No account with that email.', confirm: 'Type DELETE to confirm.', self: 'You can’t delete your own admin account here.' };
 
 export default async function AdminPage({ searchParams }: { searchParams: { deleted?: string } }) {
+  const { count: pendingCompanies } = await createAdminClient().from('companies').select('id', { count: 'exact', head: true }).eq('verification_status', 'pending');
   // Server-side role check FIRST — only then use the service-role client.
   await requireAdmin('/admin');
   const admin = createAdminClient();
@@ -52,6 +53,9 @@ export default async function AdminPage({ searchParams }: { searchParams: { dele
           <StatCard label="Open jobs" value={openJobs} />
           <Link href="/admin/verifications" className="transition-opacity hover:opacity-80">
             <StatCard label="Pending verifications →" value={pendingVerifications} hint="Open the review queue" />
+          </Link>
+          <Link href="/admin/companies" className="transition-opacity hover:opacity-80">
+            <StatCard label="Company verification →" value={pendingCompanies ?? 0} hint="Employers waiting for approval" />
           </Link>
           <Link href="/admin/reports" className="transition-opacity hover:opacity-80">
             <StatCard label="Open reports →" value={openReports} hint="Open the moderation queue" />

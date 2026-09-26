@@ -16,8 +16,9 @@ export async function POST(request: NextRequest) {
   if (session.profile?.role !== 'employer') return NextResponse.redirect(`${site}/employers`, 303);
 
   const supabase = createClient();
-  const { data: company } = await supabase.from('companies').select('id, name, stripe_customer_id').eq('owner_id', session.user.id).maybeSingle();
+  const { data: company } = await supabase.from('companies').select('id, name, stripe_customer_id, is_verified').eq('owner_id', session.user.id).maybeSingle();
   if (!company) return NextResponse.redirect(`${site}/employer/dashboard?error=company`, 303);
+  if (!company.is_verified) return NextResponse.redirect(`${site}/employer/dashboard?error=verify`, 303);
 
   let jobId: string | null = null;
   if (item.kind === 'job_boost') {

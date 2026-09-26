@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import CompanyVerification from '@/components/employer/CompanyVerification';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import StatCard from '@/components/StatCard';
@@ -11,7 +12,7 @@ export const metadata: Metadata = { title: 'Employer Dashboard' };
 
 const PLAN_LABEL: Record<string, string> = { free: 'Free', professional: 'Professional', federal: 'Federal', enterprise: 'Enterprise' };
 
-export default async function EmployerDashboard({ searchParams }: { searchParams: { error?: string } }) {
+export default async function EmployerDashboard({ searchParams }: { searchParams: { error?: string; verify?: string } }) {
   const { user, profile } = await requireRole(['employer'], '/employer/dashboard');
   const supabase = createClient();
 
@@ -77,6 +78,10 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
             </div>
 
             {searchParams.error && <p role="alert" className="text-sm text-signal">That purchase couldn’t start. Please try again.</p>}
+
+            {searchParams.verify === 'submitted' && <p className="text-sm text-olive">Thanks — your company is in review.</p>}
+            <CompanyVerification status={(company as unknown as { verification_status: string }).verification_status} note={(company as unknown as { verification_note: string | null }).verification_note} flash={searchParams.verify} />
+            {searchParams.error === 'verify' && <p role="alert" className="text-sm text-signal">Your company needs to be verified before you can purchase a plan or add-on.</p>}
 
             <nav className="grid gap-3 sm:grid-cols-3">
               <Link href="/employer/candidates" className="card p-5 hover:border-brass"><p className="eyebrow">Candidate search</p><p className="mt-2 font-serif text-xl text-navy">Find veterans →</p></Link>

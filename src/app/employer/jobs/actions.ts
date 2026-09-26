@@ -67,6 +67,7 @@ export async function saveJob(jobId: string | null, formData: FormData) {
   }
   if (error) {
     if (error.code === 'P0003') redirect(`${back}?error=limit`);
+    if (error.code === 'P0004') redirect(`${back}?error=company`);
     console.error('saveJob failed:', error.message);
     redirect(`${back}?error=save`);
   }
@@ -79,6 +80,7 @@ export async function setJobStatus(jobId: string, status: 'open' | 'paused' | 'c
   await requireRole(['employer'], '/employer/dashboard');
   const { error } = await createClient().from('jobs').update({ status }).eq('id', jobId);
   if (error?.code === 'P0003') redirect(`/employer/jobs/${jobId}?error=limit`);
+  if (error?.code === 'P0004') redirect(`/employer/jobs/${jobId}?error=company`);
   revalidatePath('/employer/dashboard');
   revalidatePath('/jobs');
   redirect(`/employer/jobs/${jobId}?saved=1`);

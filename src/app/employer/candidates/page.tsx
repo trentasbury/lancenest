@@ -31,6 +31,18 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
   const paid = PAID.includes(company.plan);
   const cleared = CLEARANCE_SEARCH.includes(company.plan);
 
+  if (!company.is_verified) {
+    return (
+      <div className="container-page max-w-3xl py-12">
+        <h1 className="mb-6 font-serif text-4xl font-medium">Candidate search</h1>
+        <div className="card border-brass p-8 text-center">
+          <p className="font-serif text-2xl">Verify your company first.</p>
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted">To protect veterans, candidate search opens once we’ve verified your company — usually within one business day.</p>
+          <Link href="/employer/dashboard" className="btn btn-primary mt-6">Go to verification</Link>
+        </div>
+      </div>
+    );
+  }
   if (!paid) {
     return (
       <div className="container-page max-w-3xl py-12">

@@ -37,8 +37,9 @@ export async function startConversation(otherId: string) {
     admin.from('profiles').select('role').eq('id', otherId).maybeSingle(),
   ]);
   if (meP?.role === 'employer' && otherP?.role === 'veteran') {
-    const { data: company } = await admin.from('companies').select('id, plan, contact_credits').eq('owner_id', me).maybeSingle();
+    const { data: company } = await admin.from('companies').select('id, plan, contact_credits, is_verified').eq('owner_id', me).maybeSingle();
     if (!company) redirect('/employer/dashboard');
+    if (!company.is_verified) redirect('/employer/dashboard?verify=required');
     const [{ count: applied }, { count: contacted }] = await Promise.all([
       admin.from('applications').select('id, jobs!inner(company_id)', { count: 'exact', head: true }).eq('profile_id', otherId).eq('jobs.company_id', company.id),
       admin.from('employer_contacts').select('veteran_id', { count: 'exact', head: true }).eq('company_id', company.id).eq('veteran_id', otherId),

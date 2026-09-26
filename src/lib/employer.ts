@@ -16,7 +16,7 @@ export function monthStart() {
 
 export async function getMyCompany(userId: string) {
   const { data } = await createClient().from('companies').select('*').eq('owner_id', userId).maybeSingle();
-  return data as ({ id: string; name: string; slug: string; plan: Plan; contact_credits: number; extra_job_slots: number; stripe_customer_id: string | null } & Record<string, unknown>) | null;
+  return data as ({ id: string; name: string; slug: string; plan: Plan; is_verified: boolean; verification_status: string; contact_credits: number; extra_job_slots: number; stripe_customer_id: string | null } & Record<string, unknown>) | null;
 }
 
 export async function contactUsage(companyId: string, plan: Plan) {

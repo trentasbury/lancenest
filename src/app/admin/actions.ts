@@ -74,3 +74,24 @@ export async function adminDeleteMember(formData: FormData) {
   revalidatePath('/admin');
   redirect('/admin?deleted=ok');
 }
+
+/** Company verification decisions. Rejecting or revoking pauses the company's open jobs. */
+export async function decideCompany(companyId: string, decision: 'verified' | 'rejected' | 'revoked', formData: FormData) {
+  const { user } = await requireAdmin();
+  const admin = createAdminClient();
+  const note = String(formData.get('note') ?? '').trim().slice(0, 300) || null;
+  const { data: company } = await admin.from('companies').select('id, owner_id, name').eq('id', companyId).maybeSingle();
+  if (!company) return;
+  const verified = decision === 'verified';
+  await admin.from('companies').update({ is_verified: verified, verification_status: verified ? 'verified' : 'rejected', verification_note: note }).eq('id', companyId);
+  if (!verified) await admin.from('jobs').update({ status: 'paused' }).eq('company_id', companyId).eq('status', 'open');
+  if (company.owner_id) {
+    await admin.from('notifications').insert({
+      profile_id: company.owner_id, type: 'company_verification', link: '/employer/dashboard',
+      title: verified ? `${company.name} is verified — you can now publish jobs and search candidates.` : `${company.name} wasn’t verified${note ? `: ${note}` : '.'}`,
+    });
+  }
+  await admin.from('admin_actions').insert({ admin_id: user.id, action: `company_${decision}`, target_type: 'company', target_id: companyId, details: note ? { note } : {} });
+  revalidatePath('/admin/companies');
+  revalidatePath('/admin');
+}

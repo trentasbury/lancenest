@@ -23,7 +23,8 @@ export async function searchJobs(filters: JobFilters, limit = 50): Promise<JobWi
     // Company-name matches are resolved first, then OR'd into the text search.
     const { data: companies } = await supabase.from('companies').select('id').ilike('name', `%${q}%`).limit(50);
     const ids = (companies ?? []).map((c) => c.id as string);
-    const parts = [`title.ilike.%${q}%`, `description.ilike.%${q}%`, `industry.ilike.%${q}%`];
+    // Ranked full-text search (stemmed: "managing" finds "manager") plus partial title matches while typing.
+    const parts = [`search.wfts(english).${JSON.stringify(q)}`, `title.ilike.%${q}%`];
     if (ids.length) parts.push(`company_id.in.(${ids.join(',')})`);
     query = query.or(parts.join(','));
   }
