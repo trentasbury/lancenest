@@ -39,7 +39,7 @@ export default async function ManageJobPage({ params, searchParams }: { params: 
           <p className="mt-1 text-sm text-muted">
             <span className="pill capitalize">{job.status}</span>
             {featured && <span className="pill ml-2 border-brass bg-brass/10 text-brass-dark">Featured until {new Date(job.featured_until!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>}
-            <span className="ml-2">{applicants ?? 0} applicant{applicants === 1 ? '' : 's'}</span>
+            <Link href={`/employer/jobs/${job.id}/applicants`} className="ml-2 underline decoration-brass underline-offset-4">{applicants ?? 0} applicant{applicants === 1 ? '' : 's'} →</Link>
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -58,7 +58,7 @@ export default async function ManageJobPage({ params, searchParams }: { params: 
           </div>
           {paidPlan ? (
             <form action={featureWithPlan.bind(null, job.id)}>
-              <SubmitButton className="btn btn-brass shrink-0" pendingText="…">{co?.plan === 'professional' ? 'Feature · included (2/month)' : 'Feature · included'}</SubmitButton>
+              <SubmitButton className="btn btn-brass shrink-0" pendingText="…">{co?.plan === 'professional' ? 'Feature · included (5/month)' : 'Feature · included'}</SubmitButton>
             </form>
           ) : (
             <form action="/api/billing/checkout" method="post">

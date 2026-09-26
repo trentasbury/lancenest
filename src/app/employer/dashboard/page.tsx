@@ -16,7 +16,7 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
   const supabase = createClient();
 
   const { data: companyData } = await supabase.from('companies').select('*').eq('owner_id', user.id).maybeSingle();
-  const company = companyData as (Company & { stripe_customer_id: string | null }) | null;
+  const company = companyData as (Company & { stripe_customer_id: string | null; contact_credits: number }) | null;
 
   let activeJobs = 0;
   let totalJobs = 0;
@@ -78,6 +78,16 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
 
             {searchParams.error && <p role="alert" className="text-sm text-signal">That purchase couldn’t start. Please try again.</p>}
 
+            <nav className="grid gap-3 sm:grid-cols-3">
+              <Link href="/employer/candidates" className="card p-5 hover:border-brass"><p className="eyebrow">Candidate search</p><p className="mt-2 font-serif text-xl text-navy">Find veterans →</p></Link>
+              <Link href="/employer/analytics" className="card p-5 hover:border-brass"><p className="eyebrow">Hiring analytics</p><p className="mt-2 font-serif text-xl text-navy">Views & applicants →</p></Link>
+              <div className="card p-5">
+                <p className="eyebrow">Contact credits</p>
+                <p className="mt-2 font-serif text-xl text-navy">{company.contact_credits ?? 0} available</p>
+                <form action="/api/billing/checkout" method="post" className="mt-2"><input type="hidden" name="product" value="contact_pack" /><button className="text-sm text-navy underline decoration-brass underline-offset-4">Buy 5 · $59</button></form>
+              </div>
+            </nav>
+
             <section className="card flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="eyebrow">Your plan: {PLAN_LABEL[company.plan] ?? company.plan}</p>
@@ -122,6 +132,7 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
                     {jobs.map((j) => (
                       <li key={j.id} className="flex items-center justify-between gap-4 p-4">
                         <Link href={`/employer/jobs/${j.id}`} className="font-medium text-navy hover:underline">{j.title}</Link>
+                        <Link href={`/employer/jobs/${j.id}/applicants`} className="ml-3 text-xs text-muted underline">Applicants</Link>
                         <span className="pill capitalize">{j.status}</span>
                       </li>
                     ))}

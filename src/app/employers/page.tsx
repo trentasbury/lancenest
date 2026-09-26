@@ -8,39 +8,15 @@ export const metadata: Metadata = {
 };
 
 const PLANS = [
-  {
-    name: 'Free',
-    price: '$0',
-    note: 'To get started',
-    features: ['Company recruiting page', '2 open job posts', 'Applicant inbox'],
-    cta: 'Create a free account',
-  },
-  {
-    name: 'Professional',
-    price: '$149',
-    note: 'per month · $1,490/year (2 months free)',
-    features: ['Unlimited job posts', 'Veteran candidate search', 'Message candidates first', 'Hiring analytics', '2 featured jobs each month (included)'],
-    cta: 'Start with Professional',
-    featured: true,
-  },
-  {
-    name: 'Federal',
-    price: '$499',
-    note: 'per month · $4,990/year',
-    features: ['Everything in Professional', 'Cleared-talent search by clearance level', 'Clearance-holder spotlight', 'Unlimited featured jobs', '3 recruiter seats'],
-    cta: 'Start with Federal',
-  },
-  {
-    name: 'Enterprise',
-    price: 'Custom',
-    note: 'from $12,000/year',
-    features: ['Everything in Federal', 'Unlimited recruiter seats', 'Employer branding', 'ATS integration', 'Dedicated support'],
-    cta: 'Talk to us',
-  },
+  { name: 'Free', price: '$0', note: 'To get started', cta: 'Create a free account',
+    features: ['Company recruiting page', '2 open job posts', 'Applicant pipeline', 'Message candidates who apply'] },
+  { name: 'Professional', price: '$149', note: 'per month · $1,490/year (2 months free)', cta: 'Start with Professional', featured: true,
+    features: ['Unlimited job posts', 'Search every veteran profile', 'Message 50 new candidates a month', 'Hiring analytics', '5 featured jobs a month, included', 'Applicant export (CSV)'] },
+  { name: 'Federal', price: '$499', note: 'per month · $4,990/year', cta: 'Start with Federal',
+    features: ['Everything in Professional', 'Search by security clearance', 'Cleared talent spotlight', 'Unlimited candidate messages', 'Unlimited featured jobs'] },
+  { name: 'Enterprise', price: 'Custom', note: 'from $12,000/year', cta: 'Talk to us',
+    features: ['Everything in Federal', 'Volume pricing for multiple hiring teams', 'Invoice billing', 'Dedicated support'] },
 ];
-
-// Perks still being built are labeled so no one pays for something that isn't live yet.
-const COMING_SOON = new Set(['Veteran candidate search', 'Message candidates first', 'Hiring analytics', 'Cleared-talent search by clearance level', 'Clearance-holder spotlight', '3 recruiter seats', 'Unlimited recruiter seats', 'Employer branding', 'ATS integration']);
 
 const CHECKOUT: Record<string, string> = { Professional: 'employer_professional', Federal: 'employer_federal' };
 
@@ -74,7 +50,7 @@ export default async function EmployersPage() {
                 {plan.features.map((f) => (
                   <li key={f} className="flex gap-2">
                     <span className="text-brass">✦</span>
-                    <span>{f}{COMING_SOON.has(f) && <span className="ml-1.5 rounded-full bg-cream px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted">Coming soon</span>}</span>
+                    <span>{f}</span>
                   </li>
                 ))}
               </ul>
@@ -94,7 +70,7 @@ export default async function EmployersPage() {
           ))}
         </div>
         <p className="mt-8 text-center text-sm text-muted">
-          Every employer account starts free. Upgrade, downgrade, or cancel anytime from your dashboard. Add-ons: featured job boost $49 · extra job slot $39/month.
+          Every employer account starts free. Upgrade, downgrade, or cancel anytime from your dashboard. Add-ons: featured job boost $49 · extra job slot $39/month · 5 candidate contacts $59.
         </p>
       </div>
     </>

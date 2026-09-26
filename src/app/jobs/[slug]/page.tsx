@@ -42,6 +42,10 @@ export default async function JobDetailPage({ params }: { params: { slug: string
   if (!job) notFound();
 
   const session = await getSessionProfile();
+  if (session) {
+    // One view per member per job per day; duplicates are ignored.
+    await createClient().from('job_views').insert({ job_id: job.id, viewer_id: session.user.id }).then(() => undefined, () => undefined);
+  }
   const isVeteran = session?.profile?.role === 'veteran';
 
   let saved = false;

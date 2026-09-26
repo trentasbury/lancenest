@@ -37,7 +37,18 @@ export default async function MessagesPage({ searchParams }: { searchParams: { e
       <h1 className="font-serif text-4xl font-medium">Messages</h1>
       <p className="mt-1 text-muted">Private conversations between you and other members.</p>
       {searchParams.error && (
-        <div className="mt-4"><FormMessage error={searchParams.error === 'blocked' ? 'You can’t message this member.' : 'That conversation couldn’t be started. Please try again.'} /></div>
+        searchParams.error === 'credits' ? (
+          <div className="card mt-4 border-brass p-5">
+            <p className="font-medium">You’ve used your candidate contacts.</p>
+            <p className="mt-1 text-sm text-muted">Candidates who apply to your jobs are always free to message. To reach out to others first, add contact credits or upgrade.</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="contact_pack" /><button className="btn btn-outline">5 contacts · $59</button></form>
+              <Link href="/employers" className="btn btn-primary">See plans</Link>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-4"><FormMessage error={searchParams.error === 'blocked' ? 'You can’t message this member.' : 'That conversation couldn’t be started. Please try again.'} /></div>
+        )
       )}
       <div className="mt-6">
         {list.length === 0 ? (

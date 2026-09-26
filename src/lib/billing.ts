@@ -1,7 +1,7 @@
 import 'server-only';
 import type Stripe from 'stripe';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { BOOST_DAYS, stripe } from '@/lib/stripe';
+import { BOOST_DAYS, CONTACT_PACK_SIZE, stripe } from '@/lib/stripe';
 
 const ACTIVE = new Set(['active', 'trialing', 'past_due']);
 
@@ -75,6 +75,19 @@ export async function applyCheckoutSession(sessionId: string) {
         company_id: s.metadata?.company_id ?? null, kind: 'job_boost', job_id: jobId,
         amount_cents: s.amount_total ?? 0, stripe_checkout_session_id: s.id,
       });
+    }
+    return { ok: true as const, kind };
+  }
+  if (kind === 'contact_pack' && s.payment_status === 'paid') {
+    const admin = createAdminClient();
+    const companyId = s.metadata?.company_id;
+    const { error } = await admin.from('purchases').insert({
+      company_id: companyId ?? null, kind: 'contact_credits', amount_cents: s.amount_total ?? 0, stripe_checkout_session_id: s.id,
+    });
+    // The unique session id makes this run once even if Stripe and the success page both apply it.
+    if (!error && companyId) {
+      const { data: c } = await admin.from('companies').select('contact_credits').eq('id', companyId).maybeSingle();
+      await admin.from('companies').update({ contact_credits: (c?.contact_credits ?? 0) + CONTACT_PACK_SIZE }).eq('id', companyId);
     }
     return { ok: true as const, kind };
   }

@@ -84,7 +84,7 @@ export async function setJobStatus(jobId: string, status: 'open' | 'paused' | 'c
   redirect(`/employer/jobs/${jobId}?saved=1`);
 }
 
-const INCLUDED_FEATURES: Record<string, number> = { professional: 2, federal: Infinity, enterprise: Infinity };
+const INCLUDED_FEATURES: Record<string, number> = { professional: 5, federal: Infinity, enterprise: Infinity };
 
 /** Uses a featured-job credit included in the company's paid plan. */
 export async function featureWithPlan(jobId: string) {

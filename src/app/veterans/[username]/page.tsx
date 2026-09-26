@@ -11,6 +11,7 @@ import PostCard from '@/components/network/PostCard';
 import SubmitButton from '@/components/SubmitButton';
 import { followUser, unfollowUser } from '@/app/network/actions';
 import { startConversation } from '@/app/messages/actions';
+import Upsell from '@/components/employer/Upsell';
 
 type Profile = { id: string; full_name: string; username: string; headline: string | null; location: string | null; avatar_url: string | null };
 type Vet = { about: string | null; clearance_level: string; verification_status: string; willing_to_relocate: boolean };
@@ -36,14 +37,13 @@ async function load(username: string) {
     .select('about, clearance_level, verification_status, willing_to_relocate')
     .eq('profile_id', profile.id)
     .maybeSingle();
-  if (!vet) return null;
 
-  return { supabase, profile: profile as Profile, vet: vet as Vet };
+  return { supabase, profile: profile as Profile, vet: (vet as Vet) ?? null };
 }
 
 export async function generateMetadata({ params }: { params: { username: string } }): Promise<Metadata> {
   const data = await load(params.username);
-  if (!data) return { title: 'Profile not found', robots: { index: false } };
+  if (!data || !data.vet) return { title: 'Profile', robots: { index: false } };
   return {
     title: data.profile.full_name,
     description: data.profile.headline ?? `${data.profile.full_name} on LanceNest`,
@@ -53,7 +53,26 @@ export async function generateMetadata({ params }: { params: { username: string 
 export default async function VeteranProfilePage({ params }: { params: { username: string } }) {
   const data = await load(params.username);
   if (!data) notFound();
-  const { supabase, profile, vet } = data;
+  const { supabase, profile } = data;
+  const viewer = await getSessionProfile();
+
+  // Hidden by the database: a Free employer who hasn't received an application from this veteran.
+  if (!data.vet) {
+    if (viewer?.profile?.role !== 'employer') notFound();
+    return (
+      <div className="container-page max-w-3xl py-12">
+        <div className="card mb-6 flex items-center gap-4 p-6">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-brass bg-navy font-serif text-xl text-brass">{initials(profile.full_name)}</div>
+          <div><p className="font-serif text-3xl">{profile.full_name}</p>{profile.headline && <p className="text-muted">{profile.headline}</p>}</div>
+        </div>
+        <Upsell title="Unlock full veteran profiles." body="See service history, skills, clearance, and experience for every veteran on LanceNest — and message them first. Free plans see full profiles only for candidates who apply." />
+      </div>
+    );
+  }
+  const vet = data.vet;
+  if (viewer && viewer.user.id !== profile.id) {
+    await supabase.from('profile_views').insert({ profile_id: profile.id, viewer_id: viewer.user.id }).then(() => undefined, () => undefined);
+  }
 
   const [{ data: service }, { data: skillRows }, { data: experience }, { data: education }, session] = await Promise.all([
     supabase.from('military_service').select('*, occupation:military_occupations(title, civilian_categories, civilian_skills)').eq('profile_id', profile.id).order('start_date', { ascending: false }),
