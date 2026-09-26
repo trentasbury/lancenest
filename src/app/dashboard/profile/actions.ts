@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { BRANCHES, CLEARANCES, COMPONENTS, yearToDate } from '@/lib/military';
+import { ensureOccupationsLoaded } from '@/lib/occupations';
 
 const PAGE = '/dashboard/profile';
 
@@ -97,6 +98,7 @@ export async function addService(formData: FormData) {
 
   let occupationId: string | null = null;
   if (code) {
+    await ensureOccupationsLoaded();
     const { data } = await supabase
       .from('military_occupations')
       .select('id')

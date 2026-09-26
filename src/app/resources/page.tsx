@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { ensureOccupationsLoaded } from '@/lib/occupations';
 import { sanitizeSearch } from '@/lib/format';
 import type { MilitaryOccupation } from '@/lib/types';
 
@@ -9,15 +10,21 @@ export const metadata: Metadata = {
   description: 'See the civilian careers and skills your MOS, rating, or AFSC prepares you for.',
 };
 
-export default async function ResourcesPage({ searchParams }: { searchParams: { code?: string } }) {
+const BRANCH_LIST = ['Army', 'Marine Corps', 'Navy', 'Air Force', 'Coast Guard'];
+
+export default async function ResourcesPage({ searchParams }: { searchParams: { code?: string; branch?: string } }) {
+  await ensureOccupationsLoaded();
   const supabase = createClient();
+  const branch = BRANCH_LIST.includes(searchParams.branch ?? '') ? searchParams.branch! : null;
   const code = sanitizeSearch(searchParams.code ?? '');
 
   const [{ data: matches }, { data: directory }] = await Promise.all([
     code
-      ? supabase.from('military_occupations').select('*').or(`code.ilike.${code},title.ilike.%${code}%`).limit(10)
+      ? supabase.from('military_occupations').select('*').or(`code.ilike.${code},title.ilike.%${code}%`).order('branch').limit(20)
       : Promise.resolve({ data: [] as MilitaryOccupation[] }),
-    supabase.from('military_occupations').select('code, branch, title').order('branch').order('code'),
+    branch
+      ? supabase.from('military_occupations').select('code, branch, title, description').eq('branch', branch).order('description').order('code').limit(1000)
+      : Promise.resolve({ data: [] as { code: string; branch: string; title: string; description: string | null }[] }),
   ]);
 
   const results = (matches ?? []) as MilitaryOccupation[];
@@ -77,19 +84,40 @@ export default async function ResourcesPage({ searchParams }: { searchParams: { 
         ))}
 
         <section className="mt-6">
-          <p className="eyebrow">Occupations on file</p>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {(directory ?? []).map((o) => (
-              <Link
-                key={`${o.branch}-${o.code}`}
-                href={`/resources?code=${encodeURIComponent(o.code as string)}`}
-                className="rounded-[3px] border border-line bg-ivory px-4 py-3 text-sm hover:border-brass"
-              >
-                <span className="font-semibold text-navy">{o.code as string}</span>
-                <span className="text-muted"> · {o.title as string} · {o.branch as string}</span>
-              </Link>
+          <p className="eyebrow">Browse by branch</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {BRANCH_LIST.map((b) => (
+              <Link key={b} href={`/resources?branch=${encodeURIComponent(b)}`}
+                className={`rounded-full border px-4 py-1.5 text-sm ${branch === b ? 'border-navy bg-navy text-ivory' : 'border-line bg-ivory hover:border-brass'}`}>{b}</Link>
             ))}
           </div>
+          {branch && (() => {
+            const groups = new Map<string, { code: string; title: string }[]>();
+            (directory ?? []).forEach((o) => {
+              const field = (o.description ?? 'Other').replace('Occupational field: ', '');
+              groups.set(field, [...(groups.get(field) ?? []), { code: o.code as string, title: o.title as string }]);
+            });
+            return (
+              <div className="mt-6 space-y-6">
+                <p className="text-sm text-muted">{(directory ?? []).length} {branch} occupations</p>
+                {Array.from(groups.entries()).map(([field, items]) => (
+                  <details key={field} className="card p-5">
+                    <summary className="cursor-pointer font-serif text-xl">{field} <span className="font-sans text-sm text-muted">({items.length})</span></summary>
+                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                      {items.map((o) => (
+                        <Link key={o.code} href={`/resources?code=${encodeURIComponent(o.code)}`} className="rounded-[3px] border border-line bg-paper px-3 py-2 text-sm hover:border-brass">
+                          <span className="font-semibold text-navy">{o.code}</span><span className="text-muted"> · {o.title}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </details>
+                ))}
+              </div>
+            );
+          })()}
+          <p className="mt-8 text-xs text-muted">
+            Occupation codes and titles for the Army, Marine Corps, Navy, Air Force, and Coast Guard. Civilian career paths and skills are LanceNest’s guidance based on each occupation’s field and duties — use them as a starting point, not an official equivalency.
+          </p>
         </section>
       </div>
     </>

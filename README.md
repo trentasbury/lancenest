@@ -78,6 +78,12 @@ delete from public.veteran_profiles
 where profile_id = (select id from auth.users where email = 'you@example.com');
 ```
 
+### Military occupation data
+`src/data/military-occupations.json` holds ~1,450 occupation codes and titles for the Army, Marine Corps, Navy,
+Air Force, and Coast Guard (source: Carnegie Mellon SEI GHOSTS project, `military_mos.json`), each mapped by
+LanceNest to civilian career paths and skills. It loads into `military_occupations` automatically the first time
+the MOS translator runs; hand-curated rows are never overwritten. Regenerate the JSON to update mappings.
+
 ### Demo network activity (currently live)
 `supabase/demo_network.sql` adds 10 fictional, display-only members (no password; they cannot log in) with
 milestone posts, reactions, comments, and follows so the Network feed looks active before launch. Each demo bio
