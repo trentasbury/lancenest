@@ -11,6 +11,10 @@ export default function TermsPage() {
         <p>These Terms govern your use of LanceNest. By creating an account or using the site, you agree to them and to our <Link href="/privacy" className="text-navy underline">Privacy Policy</Link>.</p>
       </section>
       <section>
+        <h2>Independence</h2>
+        <p>LanceNest is not affiliated with, endorsed by, or sponsored by the U.S. Department of Defense, the Department of Veterans Affairs, the U.S. Armed Forces, or any branch of service. Service branch names and occupation codes are used only to describe members’ experience. Civilian career paths shown for military occupations are LanceNest’s guidance, not official equivalencies.</p>
+      </section>
+      <section>
         <h2>Eligibility and accounts</h2>
         <ul>
           <li>You must be at least 18 years old.</li>
