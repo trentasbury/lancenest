@@ -24,7 +24,7 @@ const ACCEPTED = [
   ['Guard & Reserve', 'NGB-22, a recent LES, or current orders.'],
 ];
 
-export default async function VerificationPage({ searchParams }: { searchParams: { error?: string; submitted?: string } }) {
+export default async function VerificationPage({ searchParams }: { searchParams: { error?: string; submitted?: string; required?: string } }) {
   const { user } = await requireRole(['veteran'], '/dashboard/verification');
   const supabase = createClient();
   const [{ data: vet }, { data: latest }] = await Promise.all([
@@ -48,6 +48,14 @@ export default async function VerificationPage({ searchParams }: { searchParams:
 
       <div className="container-page grid max-w-5xl gap-8 py-10 lg:grid-cols-[1fr_340px]">
         <div className="space-y-6">
+          {searchParams.required && status !== 'verified' && (
+            <div className="card border-brass p-5">
+              <p className="font-medium">LanceNest is for verified service members.</p>
+              <p className="mt-1 text-sm text-muted">
+                Jobs, the network, messaging, and member profiles unlock as soon as your service is verified. Until then you can build your profile so it’s ready.
+              </p>
+            </div>
+          )}
           {searchParams.error && <FormMessage error={ERRORS[searchParams.error] ?? ERRORS.upload} />}
           {searchParams.submitted && <FormMessage message="Received. We’ll review it and update your badge — usually within 3 business days." />}
 

@@ -56,3 +56,17 @@ export async function requireAdmin(nextPath = '/admin') {
   if (data?.currentLevel !== 'aal2') redirect('/security/mfa');
   return session;
 }
+
+/**
+ * Jobs, the network, messaging, and member profiles are for verified service members.
+ * Employers and admins pass; unverified veteran accounts are sent to verification.
+ * (The database enforces the same rule.)
+ */
+export async function requireVerifiedMember(nextPath: string) {
+  const session = await requireRole(['veteran', 'employer', 'admin'], nextPath);
+  if (session.profile.role === 'veteran') {
+    const { data } = await createClient().from('veteran_profiles').select('verification_status').eq('profile_id', session.user.id).maybeSingle();
+    if (data?.verification_status !== 'verified') redirect(`/dashboard/verification?required=1`);
+  }
+  return session;
+}

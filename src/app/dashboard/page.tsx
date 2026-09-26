@@ -49,8 +49,8 @@ export default async function VeteranDashboard() {
         {vet?.verification_status !== 'verified' && (
           <div className="card flex flex-col gap-3 border-brass p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="font-medium">{vet?.verification_status === 'pending' ? 'Your verification is being reviewed.' : 'Get your Verified Veteran badge.'}</p>
-              <p className="text-sm text-muted">{vet?.verification_status === 'pending' ? 'We’ll update your badge as soon as a reviewer checks your document.' : 'Employers can filter to verified veterans only — unverified profiles don’t appear in those searches.'}</p>
+              <p className="font-medium">{vet?.verification_status === 'pending' ? 'Your verification is being reviewed.' : 'Verify your service to unlock LanceNest.'}</p>
+              <p className="text-sm text-muted">{vet?.verification_status === 'pending' ? 'Jobs, the network, and messaging unlock the moment a reviewer approves your document.' : 'Jobs, the network, messaging, and employer visibility are for verified service members. It’s free and takes two minutes to submit.'}</p>
             </div>
             {vet?.verification_status !== 'pending' && <Link href="/dashboard/verification" className="btn btn-brass shrink-0">Verify now</Link>}
           </div>

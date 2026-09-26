@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth';
 import VerificationBadge from '@/components/VerificationBadge';
@@ -55,6 +55,10 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
   if (!data) notFound();
   const { supabase, profile } = data;
   const viewer = await getSessionProfile();
+  if (viewer?.profile?.role === 'veteran' && viewer.user.id !== profile.id) {
+    const { data: me } = await supabase.from('veteran_profiles').select('verification_status').eq('profile_id', viewer.user.id).maybeSingle();
+    if (me?.verification_status !== 'verified') redirect('/dashboard/verification?required=1');
+  }
 
   // Hidden by the database: a Free employer who hasn't received an application from this veteran.
   if (!data.vet) {

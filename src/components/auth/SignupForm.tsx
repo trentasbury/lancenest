@@ -72,7 +72,7 @@ export default function SignupForm({ defaultRole }: { defaultRole: 'veteran' | '
       <FormMessage error={state.error} />
       <SubmitButton pendingText="Creating your account…">Create account</SubmitButton>
       <p className="text-center text-xs text-muted">
-        By creating an account, you agree to our <Link href="/terms" className="underline">Terms</Link> and <Link href="/privacy" className="underline">Privacy Policy</Link>.
+        Service members verify their service after signup to unlock jobs and the network. By creating an account, you agree to our <Link href="/terms" className="underline">Terms</Link> and <Link href="/privacy" className="underline">Privacy Policy</Link>.
       </p>
       <p className="text-center text-sm text-muted">
         Already a member? <Link href="/login" className="text-navy underline decoration-brass underline-offset-4">Log in</Link>
