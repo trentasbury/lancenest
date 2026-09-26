@@ -44,6 +44,7 @@ export default function TermsPage() {
       <section>
         <h2>Plans and payments</h2>
         <p>Core features are free for service members. Paid plans, when offered, will show their price and terms before you buy, renew automatically until canceled, and can be canceled at any time for the end of the current billing period. Fees for any freelance marketplace will be shown before you accept work.</p>
+        <p><strong>Refunds.</strong> Subscription payments are non-refundable; canceling stops future charges and your plan stays active until the end of the period you paid for. Featured-job boosts are non-refundable once the job is featured. If you believe you were charged in error, contact us within 30 days and we will make it right.</p>
       </section>
       <section>
         <h2>No guarantees</h2>

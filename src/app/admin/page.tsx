@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/auth';
+import SubmitButton from '@/components/SubmitButton';
+import { adminDeleteMember } from './actions';
 import { createAdminClient } from '@/lib/supabase/admin';
 import StatCard from '@/components/StatCard';
 
@@ -8,7 +10,9 @@ export const metadata: Metadata = { title: 'Admin', robots: { index: false } };
 
 type Recent = { id: string; full_name: string; role: string; created_at: string };
 
-export default async function AdminPage() {
+const DELETE_MSG: Record<string, string> = { ok: 'Member deleted.', notfound: 'No account with that email.', confirm: 'Type DELETE to confirm.', self: 'You can’t delete your own admin account here.' };
+
+export default async function AdminPage({ searchParams }: { searchParams: { deleted?: string } }) {
   // Server-side role check FIRST — only then use the service-role client.
   await requireAdmin('/admin');
   const admin = createAdminClient();
@@ -53,6 +57,17 @@ export default async function AdminPage() {
             <StatCard label="Open reports →" value={openReports} hint="Open the moderation queue" />
           </Link>
         </div>
+        <section className="card p-6">
+          <h2 className="eyebrow">Delete a member (on request)</h2>
+          <p className="mt-2 text-sm text-muted">Cancels their billing, deletes their files and documents, their company if they own one, and their account.</p>
+          {searchParams.deleted && <p className={`mt-3 text-sm ${searchParams.deleted === 'ok' ? 'text-olive' : 'text-signal'}`}>{DELETE_MSG[searchParams.deleted] ?? ''}</p>}
+          <form action={adminDeleteMember} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex-1"><label htmlFor="del-email" className="field-label">Member email</label><input id="del-email" name="email" type="email" required className="field" /></div>
+            <div className="sm:w-40"><label htmlFor="del-confirm" className="field-label">Type DELETE</label><input id="del-confirm" name="confirm" autoComplete="off" required className="field" /></div>
+            <SubmitButton className="btn border border-signal text-signal hover:bg-signal hover:text-ivory" pendingText="Deleting…">Delete</SubmitButton>
+          </form>
+        </section>
+
         <section>
           <h2 className="eyebrow">Newest members</h2>
           <div className="card mt-4 overflow-x-auto">

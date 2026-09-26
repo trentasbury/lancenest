@@ -19,7 +19,7 @@ const PLANS = [
     name: 'Professional',
     price: '$149',
     note: 'per month · $1,490/year (2 months free)',
-    features: ['Unlimited job posts', 'Veteran candidate search', 'Message candidates first', 'Hiring analytics', '2 featured jobs each month'],
+    features: ['Unlimited job posts', 'Veteran candidate search', 'Message candidates first', 'Hiring analytics', '2 featured jobs each month (included)'],
     cta: 'Start with Professional',
     featured: true,
   },
@@ -38,6 +38,9 @@ const PLANS = [
     cta: 'Talk to us',
   },
 ];
+
+// Perks still being built are labeled so no one pays for something that isn't live yet.
+const COMING_SOON = new Set(['Veteran candidate search', 'Message candidates first', 'Hiring analytics', 'Cleared-talent search by clearance level', 'Clearance-holder spotlight', '3 recruiter seats', 'Unlimited recruiter seats', 'Employer branding', 'ATS integration']);
 
 const CHECKOUT: Record<string, string> = { Professional: 'employer_professional', Federal: 'employer_federal' };
 
@@ -69,7 +72,10 @@ export default async function EmployersPage() {
               <p className="text-sm text-muted">{plan.note}</p>
               <ul className="mt-6 flex-1 space-y-2.5 text-sm text-ink/85">
                 {plan.features.map((f) => (
-                  <li key={f} className="flex gap-2"><span className="text-brass">✦</span>{f}</li>
+                  <li key={f} className="flex gap-2">
+                    <span className="text-brass">✦</span>
+                    <span>{f}{COMING_SOON.has(f) && <span className="ml-1.5 rounded-full bg-cream px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted">Coming soon</span>}</span>
+                  </li>
                 ))}
               </ul>
               {isEmployer && CHECKOUT[plan.name] ? (

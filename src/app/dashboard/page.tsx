@@ -46,7 +46,7 @@ export default async function VeteranDashboard() {
       </section>
 
       <div className="container-page space-y-10 py-10">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <Link href="/dashboard/profile" className="card group p-5 transition-colors hover:border-brass">
             <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Your profile</p>
             <p className="mt-2 font-serif text-2xl text-navy">{profile.onboarding_completed ? 'Edit profile' : 'Build your profile'} →</p>
@@ -63,6 +63,10 @@ export default async function VeteranDashboard() {
               <p className="mt-2 font-serif text-2xl text-navy">See what employers see →</p>
             </Link>
           )}
+          <Link href="/settings/account" className="card group p-5 transition-colors hover:border-brass">
+            <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Account</p>
+            <p className="mt-2 font-serif text-2xl text-navy">Settings & privacy →</p>
+          </Link>
           <Link href="/plans" className="card group p-5 transition-colors hover:border-brass">
             <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Plans</p>
             <p className="mt-2 font-serif text-2xl text-navy">Free · Pro · Federal Pro →</p>

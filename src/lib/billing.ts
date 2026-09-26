@@ -20,6 +20,13 @@ export async function recomputeCompany(companyId: string) {
   const plan = plans.includes('enterprise') ? 'enterprise' : plans.includes('federal') ? 'federal' : plans.includes('professional') ? 'professional' : 'free';
   const slots = live.filter((s) => s.kind === 'job_slot').length;
   await admin.from('companies').update({ plan, extra_job_slots: slots }).eq('id', companyId);
+
+  // Back on Free: keep the newest (2 + slots) open jobs, pause the rest. Nothing is deleted.
+  if (plan === 'free') {
+    const { data: open } = await admin.from('jobs').select('id').eq('company_id', companyId).eq('status', 'open').order('posted_at', { ascending: false });
+    const extra = (open ?? []).slice(2 + slots).map((j) => j.id as string);
+    if (extra.length) await admin.from('jobs').update({ status: 'paused' }).in('id', extra);
+  }
 }
 
 /** Upserts one Stripe subscription into our table, then refreshes the company's entitlements. */

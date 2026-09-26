@@ -7,7 +7,7 @@ import JobForm from '@/components/employer/JobForm';
 import JobErrors from '@/components/employer/JobErrors';
 import SubmitButton from '@/components/SubmitButton';
 import type { Job } from '@/lib/types';
-import { saveJob, setJobStatus } from '../actions';
+import { featureWithPlan, saveJob, setJobStatus } from '../actions';
 
 export const metadata: Metadata = { title: 'Manage job' };
 
@@ -20,6 +20,8 @@ export default async function ManageJobPage({ params, searchParams }: { params: 
   if (!data || (data.company as { owner_id: string }).owner_id !== user?.id) notFound();
   const job = data as unknown as Job & { featured_until: string | null };
   const featured = job.featured_until && new Date(job.featured_until) > new Date();
+  const { data: co } = await supabase.from('companies').select('plan').eq('owner_id', user!.id).maybeSingle();
+  const paidPlan = co?.plan && co.plan !== 'free';
   const { count: applicants } = await supabase.from('applications').select('id', { count: 'exact', head: true }).eq('job_id', job.id).neq('status', 'withdrawn');
 
   const statusButtons: [string, 'open' | 'paused' | 'closed' | 'draft'][] =
@@ -54,11 +56,17 @@ export default async function ManageJobPage({ params, searchParams }: { params: 
             <p className="font-medium">{featured ? 'Extend the boost' : 'Boost this job'}</p>
             <p className="text-sm text-muted">Featured at the top of job search for 30 days{featured ? ' — added to your current boost' : ''}.</p>
           </div>
-          <form action="/api/billing/checkout" method="post">
-            <input type="hidden" name="product" value="job_boost" />
-            <input type="hidden" name="job_id" value={job.id} />
-            <button className="btn btn-brass shrink-0">Boost · $49</button>
-          </form>
+          {paidPlan ? (
+            <form action={featureWithPlan.bind(null, job.id)}>
+              <SubmitButton className="btn btn-brass shrink-0" pendingText="…">{co?.plan === 'professional' ? 'Feature · included (2/month)' : 'Feature · included'}</SubmitButton>
+            </form>
+          ) : (
+            <form action="/api/billing/checkout" method="post">
+              <input type="hidden" name="product" value="job_boost" />
+              <input type="hidden" name="job_id" value={job.id} />
+              <button className="btn btn-brass shrink-0">Boost · $49</button>
+            </form>
+          )}
         </div>
       )}
 

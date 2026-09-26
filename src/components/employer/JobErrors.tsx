@@ -5,6 +5,8 @@ const MESSAGES: Record<string, string> = {
   required: 'A job title and overview are required.',
   salary: 'The maximum salary can’t be lower than the minimum.',
   save: 'That didn’t save. Please try again.',
+  allowance: 'You’ve used this month’s 2 included featured jobs. You can still boost this job for $49, or upgrade to Federal for unlimited.',
+  plan: 'Included featured jobs are part of the Professional and Federal plans.',
 };
 
 export default function JobErrors({ error, saved }: { error?: string; saved?: string }) {

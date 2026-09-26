@@ -11,9 +11,12 @@ const FEATURES = [
 
 const LOOP = ['Service', 'Skills', 'Translation', 'Opportunity', 'Application', 'Career'];
 
-export default function HomePage() {
+export default function HomePage({ searchParams }: { searchParams: { deleted?: string } }) {
   return (
     <>
+      {searchParams.deleted && (
+        <div className="bg-olive/10 py-3 text-center text-sm text-olive">Your account and data have been permanently deleted.</div>
+      )}
       {/* Hero */}
       <section className="relative overflow-hidden bg-navy-deep text-ivory">
         <div className="container-page grid items-center gap-12 py-16 lg:grid-cols-[1.25fr_1fr] lg:py-24">

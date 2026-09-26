@@ -97,6 +97,7 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
                 {company.plan === 'professional' && (
                   <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="employer_federal_month" /><button className="btn btn-primary">Upgrade to Federal · $499/mo</button></form>
                 )}
+                <Link href="/settings/account" className="btn btn-ghost border border-line">Account</Link>
                 {company.stripe_customer_id && (
                   <form action="/api/billing/portal" method="post"><button className="btn btn-ghost border border-line">Manage billing</button></form>
                 )}

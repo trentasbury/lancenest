@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { slugify } from '@/lib/format';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { BOOST_DAYS } from '@/lib/stripe';
 
 const t = (fd: FormData, k: string, max: number) => String(fd.get(k) ?? '').trim().slice(0, max);
 const oneOf = (v: string, allowed: string[], fallback: string) => (allowed.includes(v) ? v : fallback);
@@ -78,6 +80,32 @@ export async function setJobStatus(jobId: string, status: 'open' | 'paused' | 'c
   const { error } = await createClient().from('jobs').update({ status }).eq('id', jobId);
   if (error?.code === 'P0003') redirect(`/employer/jobs/${jobId}?error=limit`);
   revalidatePath('/employer/dashboard');
+  revalidatePath('/jobs');
+  redirect(`/employer/jobs/${jobId}?saved=1`);
+}
+
+const INCLUDED_FEATURES: Record<string, number> = { professional: 2, federal: Infinity, enterprise: Infinity };
+
+/** Uses a featured-job credit included in the company's paid plan. */
+export async function featureWithPlan(jobId: string) {
+  const { user } = await requireRole(['employer'], '/employer/dashboard');
+  const supabase = createClient();
+  const { data: company } = await supabase.from('companies').select('id, plan').eq('owner_id', user.id).maybeSingle();
+  const allowance = company ? INCLUDED_FEATURES[company.plan as string] ?? 0 : 0;
+  if (!company || !allowance) redirect(`/employer/jobs/${jobId}?error=plan`);
+  const { data: job } = await supabase.from('jobs').select('id, featured_until').eq('id', jobId).eq('company_id', company.id).eq('status', 'open').maybeSingle();
+  if (!job) redirect(`/employer/jobs/${jobId}?error=save`);
+
+  const admin = createAdminClient();
+  const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+  const { count } = await admin.from('purchases').select('id', { count: 'exact', head: true })
+    .eq('company_id', company.id).eq('kind', 'job_boost').eq('amount_cents', 0).gte('created_at', monthStart);
+  if ((count ?? 0) >= allowance) redirect(`/employer/jobs/${jobId}?error=allowance`);
+
+  const base = job.featured_until && new Date(job.featured_until) > new Date() ? new Date(job.featured_until) : new Date();
+  base.setDate(base.getDate() + BOOST_DAYS);
+  await admin.from('jobs').update({ featured_until: base.toISOString() }).eq('id', jobId);
+  await admin.from('purchases').insert({ company_id: company.id, kind: 'job_boost', job_id: jobId, amount_cents: 0, stripe_checkout_session_id: `included:${crypto.randomUUID()}` });
   revalidatePath('/jobs');
   redirect(`/employer/jobs/${jobId}?saved=1`);
 }
