@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { LAST_SEEN_COOKIE, SESSION_START_COOKIE, sessionCookieOptions } from '@/lib/session';
+import { recordLogin } from '@/lib/devices';
 import { createClient } from '@/lib/supabase/server';
 import { roleHome, safeNextPath } from '@/lib/auth';
 import type { Role } from '@/lib/types';
@@ -56,6 +57,7 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
   }
 
   startSessionClock();
+  await recordLogin(data.user.id, data.user.email);
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).maybeSingle();
   redirect(safeNextPath(formData.get('next')) ?? roleHome((profile?.role as Role) ?? null));
 }

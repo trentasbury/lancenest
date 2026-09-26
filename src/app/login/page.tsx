@@ -11,7 +11,9 @@ export default async function LoginPage({ searchParams }: { searchParams: { next
   if (session) redirect(roleHome(session.profile?.role));
 
   const notice =
-    searchParams.reason === 'idle'
+    searchParams.reason === 'everywhere'
+      ? 'You’ve been signed out on every device. Sign in again — and change your password if you didn’t do this yourself.'
+      : searchParams.reason === 'idle'
       ? 'For your security, you were signed out after 30 minutes of inactivity.'
       : searchParams.reason === 'expired'
         ? 'For your security, sessions end after 12 hours. Please sign in again.'

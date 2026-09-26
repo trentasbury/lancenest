@@ -20,7 +20,7 @@ export default function JobCard({ job }: { job: JobWithCompany }) {
         </div>
         <p className="mt-1 text-sm text-muted">
           {companyName}
-          {job.company?.is_verified && <span className="ml-1.5 text-brass-dark">✦</span>}
+          {job.company?.is_verified && <span className="ml-2 rounded-full border border-olive/40 bg-olive/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-olive">✓ Verified company</span>}
           {job.location && <> · {job.location}</>}
         </p>
 

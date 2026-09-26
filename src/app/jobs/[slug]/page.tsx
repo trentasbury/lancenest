@@ -80,6 +80,11 @@ export default async function JobDetailPage({ params }: { params: { slug: string
               )}
               {job.location && <> · {job.location}</>} · {postedAgo(job.posted_at)}
             </p>
+            {job.company?.is_verified && (
+              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-olive/40 bg-olive/10 px-3 py-1 text-xs font-semibold text-olive">
+                ✓ Verified company — reviewed by LanceNest
+              </p>
+            )}
           </div>
         </div>
 

@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { requireRole, roleHome } from '@/lib/auth';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
-import { deleteMyAccount } from './actions';
+import { deleteMyAccount, signOutEverywhere } from './actions';
+import { createClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = { title: 'Account settings', robots: { index: false } };
 
@@ -15,6 +16,7 @@ const ERRORS: Record<string, string> = {
 
 export default async function AccountPage({ searchParams }: { searchParams: { error?: string } }) {
   const { user, profile } = await requireRole(['veteran', 'employer', 'admin'], '/settings/account');
+  const { data: devices } = await createClient().from('login_devices').select('label, first_seen, last_seen').eq('profile_id', user.id).order('last_seen', { ascending: false }).limit(10);
   return (
     <div className="container-page max-w-2xl space-y-6 py-10">
       <Link href={roleHome(profile.role)} className="text-sm text-muted hover:text-navy">← Dashboard</Link>
@@ -30,6 +32,24 @@ export default async function AccountPage({ searchParams }: { searchParams: { er
           <Link href="/forgot-password" className="btn btn-outline">Change password</Link>
           <Link href="/network/people?tab=blocked" className="btn btn-ghost border border-line">Blocked & muted</Link>
         </div>
+      </section>
+
+      <section className="card p-7">
+        <h2 className="font-serif text-2xl font-semibold">Security</h2>
+        <p className="mt-2 text-sm text-muted">We alert you when your account signs in from a new device. Sessions end after 30 minutes of inactivity.</p>
+        {(devices ?? []).length > 0 && (
+          <ul className="mt-4 divide-y divide-line rounded-[4px] border border-line text-sm">
+            {(devices ?? []).map((d, i) => (
+              <li key={i} className="flex justify-between gap-3 px-4 py-2.5">
+                <span>{d.label as string}</span>
+                <span className="text-muted">last used {new Date(d.last_seen as string).toLocaleDateString('en-US', { dateStyle: 'medium' })}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <form action={signOutEverywhere} className="mt-4">
+          <SubmitButton className="btn btn-outline" pendingText="Signing out…">Sign out of all devices</SubmitButton>
+        </form>
       </section>
 
       <section className="card border-signal/40 p-7">

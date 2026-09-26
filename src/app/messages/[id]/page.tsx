@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { timeAgo } from '@/lib/network';
+import { scamSignals } from '@/lib/scam';
 import Avatar from '@/components/network/Avatar';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
@@ -25,6 +26,10 @@ export default async function ThreadPage({ params, searchParams }: { params: { i
   const other = (participants as unknown as { profile_id: string; profile: { full_name: string; username: string | null; role: string; headline: string | null } | null }[])
     .find((p) => p.profile_id !== user.id);
 
+  const { data: employerCo } = other?.profile?.role === 'employer'
+    ? await supabase.from('companies').select('name, is_verified').eq('owner_id', other.profile_id).maybeSingle()
+    : { data: null };
+
   const [{ data: messages }] = await Promise.all([
     supabase.from('messages').select('id, sender_id, body, created_at').eq('conversation_id', params.id).order('created_at', { ascending: true }).limit(300),
     supabase.from('conversation_participants').update({ last_read_at: new Date().toISOString() }).eq('conversation_id', params.id).eq('profile_id', user.id),
@@ -43,6 +48,11 @@ export default async function ThreadPage({ params, searchParams }: { params: { i
                 : other?.profile?.full_name ?? 'Member'}
             </p>
             {other?.profile?.headline && <p className="text-xs text-muted">{other.profile.headline}</p>}
+            {other?.profile?.role === 'employer' && (
+              employerCo?.is_verified
+                ? <p className="mt-1 text-xs font-semibold text-olive">✓ Recruiting for {employerCo.name} · verified company</p>
+                : <p className="mt-1 text-xs font-semibold text-signal">⚠ This employer’s company isn’t verified</p>
+            )}
           </div>
         </div>
         {other && (
@@ -77,6 +87,11 @@ export default async function ThreadPage({ params, searchParams }: { params: { i
               <div className={`max-w-[80%] rounded-[6px] px-4 py-2.5 ${mine ? 'bg-navy text-ivory' : 'border border-line bg-ivory text-ink'}`}>
                 <p className="whitespace-pre-line text-[15px] leading-relaxed">{m.body}</p>
                 <p className={`mt-1 text-[11px] ${mine ? 'text-cream/60' : 'text-muted'}`}>{timeAgo(m.created_at)}</p>
+                {!mine && scamSignals(m.body).length > 0 && (
+                  <p className="mt-2 rounded-[3px] border border-signal/30 bg-signal/5 px-2.5 py-1.5 text-xs text-signal">
+                    ⚠ Be careful — this message {scamSignals(m.body).join(', ')}. Real LanceNest employers never ask for fees, gift cards, bank details, or your SSN in chat. Use ⋯ to report.
+                  </p>
+                )}
               </div>
             </li>
           );

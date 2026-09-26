@@ -26,3 +26,14 @@ export async function deleteMyAccount(formData: FormData) {
   cookies().delete(SESSION_START_COOKIE);
   redirect('/?deleted=1');
 }
+
+/** Ends every session on every device (e.g. after a suspicious sign-in). */
+export async function signOutEverywhere() {
+  const session = await getSessionProfile();
+  if (!session) redirect('/login');
+  await createClient().auth.signOut({ scope: 'global' }).catch(() => undefined);
+  cookies().getAll().filter((c) => c.name.startsWith('sb-')).forEach((c) => cookies().delete(c.name));
+  cookies().delete(LAST_SEEN_COOKIE);
+  cookies().delete(SESSION_START_COOKIE);
+  redirect('/login?reason=everywhere');
+}

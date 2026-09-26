@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { slugify } from '@/lib/format';
+import { scamSignals } from '@/lib/scam';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { BOOST_DAYS } from '@/lib/stripe';
 
@@ -55,6 +56,13 @@ export async function saveJob(jobId: string | null, formData: FormData) {
     status: oneOf(t(formData, 'status', 8), ['draft', 'open'], 'open'),
   };
 
+  // Pay transparency (required by law in several states) and scam screening before anything goes live.
+  let publishError: string | null = null;
+  if (fields.status === 'open' && (!salaryMin || !salaryMax)) publishError = 'salary_required';
+  const text = [title, description, fields.responsibilities, fields.qualifications, fields.preferred_qualifications, fields.benefits].filter(Boolean).join('\n');
+  if (fields.status === 'open' && scamSignals(text, 'block').length) publishError = 'scam';
+  if (publishError) fields.status = 'draft';
+
   let id = jobId;
   let error;
   if (jobId) {
@@ -73,7 +81,7 @@ export async function saveJob(jobId: string | null, formData: FormData) {
   }
   revalidatePath('/employer/dashboard');
   revalidatePath('/jobs');
-  redirect(`/employer/jobs/${id}?saved=1`);
+  redirect(`/employer/jobs/${id}?${publishError ? `error=${publishError}` : 'saved=1'}`);
 }
 
 export async function setJobStatus(jobId: string, status: 'open' | 'paused' | 'closed' | 'draft') {

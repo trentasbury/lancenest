@@ -46,7 +46,7 @@ export default function JobForm({ job, action }: { job?: Job | null; action: (fd
         <Field label="Paid per">
           <select name="salary_period" defaultValue={job?.salary_period ?? 'year'} className="field"><option value="year">Year</option><option value="hour">Hour</option></select>
         </Field>
-        <p className="text-xs text-muted sm:col-span-3">Listings with a salary range get noticeably more applicants.</p>
+        <p className="text-xs text-muted sm:col-span-3">A salary range is required to publish. It’s required by law in several states, and veterans skip listings without pay.</p>
       </section>
 
       <section className="card grid gap-5 p-7">
