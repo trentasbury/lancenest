@@ -6,7 +6,7 @@ type Occ = { code: string; branch: string; title: string; field: string; categor
 let loaded = false;
 
 /**
- * Loads the full military occupation list (≈1,450 codes across five branches) into the database
+ * Loads the full military occupation list (≈1,470 codes across all six branches) into the database
  * the first time it's needed. Existing rows — including hand-curated ones — are never overwritten.
  */
 export async function ensureOccupationsLoaded() {

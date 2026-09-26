@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: 'See the civilian careers and skills your MOS, rating, or AFSC prepares you for.',
 };
 
-const BRANCH_LIST = ['Army', 'Marine Corps', 'Navy', 'Air Force', 'Coast Guard'];
+const BRANCH_LIST = ['Army', 'Marine Corps', 'Navy', 'Air Force', 'Space Force', 'Coast Guard'];
 
 export default async function ResourcesPage({ searchParams }: { searchParams: { code?: string; branch?: string } }) {
   await ensureOccupationsLoaded();
@@ -116,7 +116,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams: { 
             );
           })()}
           <p className="mt-8 text-xs text-muted">
-            Occupation codes and titles for the Army, Marine Corps, Navy, Air Force, and Coast Guard. Civilian career paths and skills are LanceNest’s guidance based on each occupation’s field and duties — use them as a starting point, not an official equivalency.
+            Occupation codes and titles for all six branches: Army, Marine Corps, Navy, Air Force, Space Force, and Coast Guard. Civilian career paths and skills are LanceNest’s guidance based on each occupation’s field and duties — use them as a starting point, not an official equivalency.
           </p>
         </section>
       </div>
