@@ -74,6 +74,7 @@ export default async function ReportsPage() {
               <p className="mt-2 text-xs text-muted">Reported by {r.reporter?.full_name ?? 'a member'} · {new Date(r.created_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</p>
               <div className="mt-4 flex flex-wrap gap-2 border-t border-line pt-4">
                 {p.href && <Link href={p.href} className="btn btn-ghost border border-line">Open</Link>}
+                {r.target_type === 'profile' && <Link href={`/admin/members?id=${r.target_id}`} className="btn btn-outline">Conduct record & actions</Link>}
                 {removable && (
                   <form action={decideReport.bind(null, r.id, 'removed')}>
                     <SubmitButton className="btn btn-outline border-signal text-signal hover:bg-signal hover:text-ivory" pendingText="…">Remove content</SubmitButton>

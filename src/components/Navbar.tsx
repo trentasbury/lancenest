@@ -14,6 +14,7 @@ export default async function Navbar() {
   const links: NavLink[] = session
     ? [
         { href: '/network', label: 'Network' },
+        { href: '/people', label: 'People' },
         session.profile?.role === 'employer' ? { href: '/employer/candidates', label: 'Candidates' } : { href: '/jobs', label: 'Find Jobs' },
         { href: '/freelance', label: 'Freelance' },
         { href: '/messages', label: 'Messages' },

@@ -16,6 +16,7 @@ const ERRORS: Record<string, string> = {
 
 export default async function AccountPage({ searchParams }: { searchParams: { error?: string } }) {
   const { user, profile } = await requireRole(['veteran', 'employer', 'admin'], '/settings/account');
+  const { data: strikes } = await createClient().from('member_strikes').select('level, reason, created_at').eq('profile_id', user.id).order('created_at', { ascending: false });
   const { data: devices } = await createClient().from('login_devices').select('label, first_seen, last_seen').eq('profile_id', user.id).order('last_seen', { ascending: false }).limit(10);
   return (
     <div className="container-page max-w-2xl space-y-6 py-10">
@@ -50,6 +51,20 @@ export default async function AccountPage({ searchParams }: { searchParams: { er
         <form action={signOutEverywhere} className="mt-4">
           <SubmitButton className="btn btn-outline" pendingText="Signing out…">Sign out of all devices</SubmitButton>
         </form>
+      </section>
+
+      <section className="card p-7">
+        <h2 className="font-serif text-2xl font-semibold">Conduct record</h2>
+        {(strikes ?? []).length === 0 ? (
+          <p className="mt-2 text-sm text-olive">✓ In good standing — no warnings or actions on your account.</p>
+        ) : (
+          <ul className="mt-3 divide-y divide-line rounded-[4px] border border-line text-sm">
+            {(strikes ?? []).map((st, i) => (
+              <li key={i} className="px-4 py-3"><span className="font-semibold capitalize">{st.level as string}</span> · {new Date(st.created_at as string).toLocaleDateString('en-US', { dateStyle: 'medium' })}<p className="text-muted">{st.reason as string}</p></li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-3 text-xs text-muted">See the <Link href="/conduct" className="underline">Code of Conduct</Link>. Appeals: support@lancenest.com within 30 days.</p>
       </section>
 
       <section className="card border-signal/40 p-7">

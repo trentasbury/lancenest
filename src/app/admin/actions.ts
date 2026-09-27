@@ -120,3 +120,37 @@ export async function decideSkillBridge(companyId: string, decision: 'authorized
   await admin.from('admin_actions').insert({ admin_id: user.id, action: `skillbridge_${decision}`, target_type: 'company', target_id: companyId, details: {} });
   revalidatePath('/admin/companies');
 }
+
+/** Conduct enforcement. Every action is logged to the member's record and to admin_actions. */
+export async function actOnMember(profileId: string, action: 'warning' | 'suspension' | 'removal' | 'reinstated', formData: FormData) {
+  const { user } = await requireAdmin('/admin/members');
+  const reason = String(formData.get('reason') ?? '').trim().slice(0, 500);
+  if (reason.length < 3) redirect(`/admin/members?id=${profileId}&err=reason`);
+  if (profileId === user.id) redirect('/admin/members');
+  const admin = createAdminClient();
+  const reportId = String(formData.get('report_id') ?? '') || null;
+
+  if (action === 'suspension') {
+    await admin.from('profiles').update({ suspended_until: new Date(Date.now() + 7 * 86400000).toISOString() }).eq('id', profileId);
+  } else if (action === 'removal') {
+    await admin.from('profiles').update({ banned: true }).eq('id', profileId);
+    await admin.auth.admin.updateUserById(profileId, { ban_duration: '876000h' }); // blocks sign-in
+    await admin.from('network_posts').update({ hidden: true }).eq('author_id', profileId);
+    await admin.from('post_comments').update({ hidden: true }).eq('author_id', profileId);
+    const { data: cos } = await admin.from('companies').select('id').eq('owner_id', profileId);
+    if (cos?.length) await admin.from('jobs').update({ status: 'paused' }).in('company_id', cos.map((c) => c.id)).eq('status', 'open');
+  } else if (action === 'reinstated') {
+    await admin.from('profiles').update({ banned: false, suspended_until: null }).eq('id', profileId);
+    await admin.auth.admin.updateUserById(profileId, { ban_duration: 'none' });
+    await admin.from('network_posts').update({ hidden: false }).eq('author_id', profileId);
+  }
+  await admin.from('member_strikes').insert({ profile_id: profileId, level: action, reason, report_id: reportId, issued_by: user.id });
+  await admin.from('admin_actions').insert({ admin_id: user.id, action: `member_${action}`, target_type: 'profile', target_id: profileId, details: { reason } });
+  if (action !== 'removal') {
+    await admin.from('notifications').insert({ profile_id: profileId, type: 'conduct', link: '/settings/account',
+      title: action === 'warning' ? `Conduct warning: ${reason}` : action === 'suspension' ? `Your account is suspended for 7 days: ${reason}` : 'Your account has been reinstated.' });
+  }
+  if (reportId) await admin.from('reports').update({ status: 'resolved' }).eq('id', reportId);
+  revalidatePath('/admin/members');
+  redirect(`/admin/members?id=${profileId}&done=${action}`);
+}

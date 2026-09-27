@@ -19,7 +19,7 @@ export async function getSessionProfile() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, role, full_name, username, headline, avatar_url, location, onboarding_completed')
+    .select('id, role, full_name, username, headline, avatar_url, location, onboarding_completed, suspended_until, banned')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -36,6 +36,9 @@ export async function requireRole(roles: Role[], nextPath?: string) {
     // Profile row missing — send somewhere that cannot loop back here.
     redirect('/account-setup');
   }
+  // Conduct enforcement: removed accounts are locked out; suspended accounts can only manage their account.
+  if (session.profile.banned) redirect('/removed');
+  if (session.profile.suspended_until && new Date(session.profile.suspended_until) > new Date() && nextPath !== '/settings/account') redirect('/suspended');
   if (!roles.includes(session.profile.role)) {
     redirect(roleHome(session.profile.role));
   }

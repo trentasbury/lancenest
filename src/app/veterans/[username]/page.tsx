@@ -9,7 +9,7 @@ import { initials } from '@/lib/format';
 import { getFeed } from '@/lib/network';
 import PostCard from '@/components/network/PostCard';
 import SubmitButton from '@/components/SubmitButton';
-import { followUser, unfollowUser } from '@/app/network/actions';
+import { followUser, reportContent, unfollowUser } from '@/app/network/actions';
 import { startConversation } from '@/app/messages/actions';
 import Upsell from '@/components/employer/Upsell';
 
@@ -121,7 +121,7 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <VerificationBadge status={vet.verification_status} />
-              {clearance && vet.clearance_level !== 'none' && (
+              {clearance && vet.clearance_level !== 'none' && (isOwner || viewer?.profile?.role === 'employer' || viewer?.profile?.role === 'admin') && (
                 <span className="inline-flex items-center rounded-full border border-brass/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-brass">
                   {clearance} clearance
                 </span>
@@ -144,6 +144,20 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
               <Link href={`/login?next=/veterans/${profile.username}`} className="btn btn-brass">Log in to connect</Link>
             )}
             <p className="text-xs text-cream/70">{followers ?? 0} follower{followers === 1 ? '' : 's'}</p>
+            {session && !isOwner && (
+              <details className="text-xs text-cream/60">
+                <summary className="cursor-pointer hover:text-ivory">Report this member</summary>
+                <form action={reportContent.bind(null, 'profile', profile.id)} className="mt-2 flex flex-col gap-2 text-ink">
+                  <select name="reason" required defaultValue="" className="field py-2 text-sm">
+                    <option value="" disabled>Reason…</option>
+                    <option value="harassment">Harassment or unprofessional conduct</option><option value="impersonation">Impersonation or false service claims</option>
+                    <option value="fraud">Scam or fraud</option><option value="spam">Spam</option><option value="inappropriate">Inappropriate content</option><option value="other">Other</option>
+                  </select>
+                  <textarea name="details" rows={2} maxLength={1000} placeholder="What happened? (optional)" className="field py-2 text-sm" />
+                  <SubmitButton className="btn btn-outline border-cream/40 py-1.5 text-xs text-ivory" pendingText="Sending…">Send report</SubmitButton>
+                </form>
+              </details>
+            )}
           </div>
         </div>
       </section>

@@ -9,6 +9,8 @@ export type Profile = {
   avatar_url: string | null;
   location: string | null;
   onboarding_completed: boolean;
+  suspended_until?: string | null;
+  banned?: boolean;
 };
 
 export type WorkArrangement = 'remote' | 'hybrid' | 'onsite';
