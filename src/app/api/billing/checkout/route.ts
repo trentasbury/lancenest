@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getSessionProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { CATALOG, foundingCoupon, stripe, type ProductKey } from '@/lib/stripe';
+import { CATALOG, foundingCoupon, publicSafetyCoupon, stripe, type ProductKey } from '@/lib/stripe';
 import { foundingSpotsLeft } from '@/lib/billing';
 
 /** Starts a Stripe Checkout for an employer plan, an extra job slot, or a job boost. */
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   if (session.profile?.role !== 'employer') return NextResponse.redirect(`${site}/employers`, 303);
 
   const supabase = createClient();
-  const { data: company } = await supabase.from('companies').select('id, name, stripe_customer_id, is_verified').eq('owner_id', session.user.id).maybeSingle();
+  const { data: company } = await supabase.from('companies').select('id, name, stripe_customer_id, is_verified, public_safety_status').eq('owner_id', session.user.id).maybeSingle();
   if (!company) return NextResponse.redirect(`${site}/employer/dashboard?error=company`, 303);
   if (!company.is_verified) return NextResponse.redirect(`${site}/employer/dashboard?error=verify`, 303);
 
@@ -41,7 +41,11 @@ export async function POST(request: NextRequest) {
   // Founding Employer discount (first 12 months) while spots remain. Stripe applies it, then the
   // subscription renews at the standard price automatically.
   let coupon: string | null = null;
-  if (item.plan === 'professional' && item.interval && (await foundingSpotsLeft()) > 0) {
+  // Approved public-safety agencies get 30% off Professional/Federal (better than, and instead of, the Founding offer).
+  if ((item.plan === 'professional' || item.plan === 'federal') && company.public_safety_status === 'approved') {
+    coupon = await publicSafetyCoupon();
+    metadata.public_safety = 'true';
+  } else if (item.plan === 'professional' && item.interval && (await foundingSpotsLeft()) > 0) {
     coupon = await foundingCoupon(item.interval);
     metadata.founding = 'true';
   }

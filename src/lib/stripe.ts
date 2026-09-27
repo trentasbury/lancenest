@@ -44,3 +44,11 @@ export async function foundingCoupon(interval: 'month' | 'year') {
   }
   return id;
 }
+
+/** Public Safety rate: 30% off Professional/Federal for approved government public-safety agencies. */
+export async function publicSafetyCoupon() {
+  const id = 'lancenest-public-safety';
+  try { await stripe().coupons.retrieve(id); }
+  catch { await stripe().coupons.create({ id, name: 'Public Safety rate — 30% off', percent_off: 30, duration: 'forever' }); }
+  return id;
+}

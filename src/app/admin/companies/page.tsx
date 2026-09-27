@@ -4,7 +4,7 @@ import { requireAdmin } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import SubmitButton from '@/components/SubmitButton';
 import EmptyState from '@/components/EmptyState';
-import { decideCompany, decideSkillBridge } from '../actions';
+import { decideCompany, decidePublicSafety, decideSkillBridge } from '../actions';
 
 export const metadata: Metadata = { title: 'Company verification', robots: { index: false } };
 
@@ -15,6 +15,7 @@ export default async function CompanyQueue() {
   await requireAdmin('/admin/companies');
   const admin = createAdminClient();
   const { data: sbPending } = await admin.from('companies').select('id, name, skillbridge_org_name').eq('skillbridge_status', 'pending');
+  const { data: psPending } = await admin.from('companies').select('id, name, public_safety_details').eq('public_safety_status', 'pending');
   const [{ data: pending }, { data: verified }] = await Promise.all([
     admin.from('companies').select('id, name, slug, owner_id, verification_details, created_at').eq('verification_status', 'pending').order('updated_at'),
     admin.from('companies').select('id, name, slug').eq('verification_status', 'verified').order('updated_at', { ascending: false }).limit(20),
@@ -33,6 +34,26 @@ export default async function CompanyQueue() {
         </div>
       </section>
       <div className="container-page max-w-4xl space-y-5 py-10">
+        {(psPending ?? []).length > 0 && (
+          <section className="card border-navy/30 p-6">
+            <p className="eyebrow">Public Safety rate to confirm</p>
+            <p className="mt-1 text-sm text-muted">Approve only government agencies (usually a .gov website). Private security companies don’t qualify.</p>
+            <ul className="mt-4 space-y-3">
+              {(psPending ?? []).map((c) => {
+                const d = (c.public_safety_details ?? {}) as { agency_type?: string; official_site?: string };
+                return (
+                  <li key={c.id as string} className="flex flex-wrap items-center justify-between gap-3 rounded-[4px] border border-line p-4">
+                    <div><p className="font-medium">{c.name as string}</p><p className="text-sm text-muted">{d.agency_type} · <a href={d.official_site} target="_blank" rel="noopener noreferrer" className="text-navy underline">{d.official_site}</a>{/^https?:\/\/[^/]+\.gov(\/|$)/i.test(d.official_site ?? '') ? ' ✓ .gov' : ''}</p></div>
+                    <div className="flex gap-2">
+                      <form action={decidePublicSafety.bind(null, c.id as string, 'rejected')}><SubmitButton className="btn btn-outline border-signal px-3 py-1.5 text-xs text-signal" pendingText="…">Decline</SubmitButton></form>
+                      <form action={decidePublicSafety.bind(null, c.id as string, 'approved')}><SubmitButton className="btn btn-primary px-3 py-1.5 text-xs" pendingText="…">Approve 30% rate</SubmitButton></form>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
         {(sbPending ?? []).length > 0 && (
           <section className="card border-olive/40 p-6">
             <p className="eyebrow">SkillBridge authorization to confirm</p>

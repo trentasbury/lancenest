@@ -116,3 +116,20 @@ export async function requestSkillBridge(formData: FormData) {
   revalidatePath('/employer/dashboard');
   redirect('/employer/dashboard?skillbridge=requested');
 }
+
+const AGENCY_TYPES = ['Police department', 'Sheriff’s office', 'State police / highway patrol', 'Corrections', 'Fire department', 'EMS agency', 'Federal law enforcement', 'Other government public safety'];
+
+/** A government public-safety agency asks for the Public Safety rate; an admin confirms it. */
+export async function requestPublicSafety(formData: FormData) {
+  const { user } = await requireRole(['employer'], '/employer/dashboard');
+  const type = String(formData.get('agency_type') ?? '');
+  const site = String(formData.get('official_site') ?? '').trim().slice(0, 200);
+  const { data: company } = await createClient().from('companies').select('id, name, is_verified, public_safety_status').eq('owner_id', user.id).maybeSingle();
+  if (!company?.is_verified || !AGENCY_TYPES.includes(type) || !/^https?:\/\//i.test(site) || ['pending', 'approved'].includes(company.public_safety_status as string)) redirect('/employer/dashboard?ps=invalid');
+  const admin = createAdminClient();
+  await admin.from('companies').update({ public_safety_status: 'pending', public_safety_details: { agency_type: type, official_site: site, requested_at: new Date().toISOString() } }).eq('id', company.id);
+  const { data: admins } = await admin.from('profiles').select('id').eq('role', 'admin');
+  if (admins?.length) await admin.from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'public_safety_request', title: `Public Safety rate requested: ${company.name} (${type})`, link: '/admin/companies' })));
+  revalidatePath('/employer/dashboard');
+  redirect('/employer/dashboard?ps=requested');
+}

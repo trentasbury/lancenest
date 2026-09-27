@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import CompanyVerification from '@/components/employer/CompanyVerification';
-import { requestSkillBridge } from '@/app/employer/actions';
+import { requestPublicSafety, requestSkillBridge } from '@/app/employer/actions';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import StatCard from '@/components/StatCard';
@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: 'Employer Dashboard' };
 
 const PLAN_LABEL: Record<string, string> = { free: 'Free', professional: 'Professional', federal: 'Federal', enterprise: 'Enterprise' };
 
-export default async function EmployerDashboard({ searchParams }: { searchParams: { error?: string; verify?: string; skillbridge?: string } }) {
+export default async function EmployerDashboard({ searchParams }: { searchParams: { error?: string; verify?: string; skillbridge?: string; ps?: string } }) {
   const { user, profile } = await requireRole(['employer'], '/employer/dashboard');
   const supabase = createClient();
 
@@ -103,6 +103,26 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
                     </form>
                   )}
                 </section>
+              );
+            })()}
+
+            {(company as unknown as { is_verified: boolean }).is_verified && (() => {
+              const ps = (company as unknown as { public_safety_status: string }).public_safety_status;
+              if (ps === 'approved') return <p className="rounded-[4px] border border-olive/40 bg-olive/5 p-4 text-sm text-olive">✓ Public Safety rate active — 30% off Professional and Federal, applied automatically at checkout.</p>;
+              if (ps === 'pending' || searchParams.ps === 'requested') return <p className="text-sm text-muted">Public Safety rate requested — we’ll confirm within one business day.</p>;
+              return (
+                <details className="card p-5">
+                  <summary className="cursor-pointer text-sm font-medium">Government police, sheriff, corrections, fire, or EMS agency? Get 30% off →</summary>
+                  <form action={requestPublicSafety} className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+                    <div><label className="field-label" htmlFor="agency_type">Agency type</label>
+                      <select id="agency_type" name="agency_type" required className="field">
+                        {['Police department', 'Sheriff’s office', 'State police / highway patrol', 'Corrections', 'Fire department', 'EMS agency', 'Federal law enforcement', 'Other government public safety'].map((t) => <option key={t}>{t}</option>)}
+                      </select></div>
+                    <div><label className="field-label" htmlFor="official_site">Official agency website</label><input id="official_site" name="official_site" type="url" required placeholder="https://www.yourcity.gov/police" className="field" /></div>
+                    <button className="btn btn-outline">Request rate</button>
+                  </form>
+                  {searchParams.ps === 'invalid' && <p className="mt-2 text-sm text-signal">Choose your agency type and enter your official website (starting with https://).</p>}
+                </details>
               );
             })()}
 

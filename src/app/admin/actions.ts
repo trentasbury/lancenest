@@ -228,3 +228,27 @@ export async function actOnMember(profileId: string, action: 'warning' | 'suspen
   revalidatePath('/admin/members');
   redirect(`/admin/members?id=${profileId}&done=${action}`);
 }
+
+/** Approve or decline the Public Safety rate after confirming the agency is a government public-safety organization. */
+export async function decidePublicSafety(companyId: string, decision: 'approved' | 'rejected') {
+  const { user } = await requireAdmin('/admin/companies');
+  const admin = createAdminClient();
+  const { data: c } = await admin.from('companies').select('owner_id, name').eq('id', companyId).maybeSingle();
+  await admin.from('companies').update({ public_safety_status: decision }).eq('id', companyId);
+  await admin.from('admin_actions').insert({ admin_id: user.id, action: `public_safety_${decision}`, target_type: 'company', target_id: companyId, details: {} });
+  if (c?.owner_id) await notifyMember(c.owner_id as string, {
+    type: 'public_safety_request', link: '/employers',
+    title: decision === 'approved' ? `${c.name} qualifies for the Public Safety rate — 30% off Professional and Federal.` : `We couldn’t confirm ${c.name} for the Public Safety rate.`,
+    email: decision === 'approved'
+      ? { subject: 'Your Public Safety rate is active', preheader: '30% off Professional and Federal, for as long as you subscribe.', tone: 'success', badge: 'Public Safety rate',
+          heading: 'Thank you for serving your community.',
+          paragraphs: [`${c.name} is approved for the LanceNest Public Safety rate: 30% off Professional and Federal, for as long as you’re subscribed. It’s applied automatically at checkout.`,
+            'Need annual invoice billing instead of a card? Reply to this email and we’ll set it up.'],
+          cta: { label: 'See plans', url: `${SITE}/employers` } }
+      : { subject: 'About your Public Safety rate request', preheader: 'We couldn’t confirm eligibility.', tone: 'notice', badge: 'Public Safety rate',
+          heading: 'We couldn’t confirm eligibility yet.',
+          paragraphs: ['The Public Safety rate is for government police, sheriff, corrections, fire, and EMS agencies. If that’s you, reply with your agency’s official .gov page and we’ll take another look.'],
+          cta: { label: 'Open your dashboard', url: `${SITE}/employer/dashboard` } },
+  });
+  revalidatePath('/admin/companies');
+}

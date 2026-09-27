@@ -81,7 +81,7 @@ export default async function EmployersPage() {
           ))}
         </div>
         <p className="mt-8 text-center text-sm text-muted">
-          Every employer account starts free. Upgrade, downgrade, or cancel anytime from your dashboard. Add-ons: featured job boost $49 · extra job slot $39/month · 5 candidate contacts $59.
+          Every employer account starts free. Upgrade, downgrade, or cancel anytime from your dashboard. Add-ons: featured job boost $49 · extra job slot $39/month · 5 candidate contacts $59. <strong>Public Safety rate:</strong> government police, sheriff, corrections, fire, and EMS agencies get 30% off Professional and Federal — annual invoicing available.
         </p>
       </div>
     </>
