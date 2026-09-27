@@ -10,14 +10,21 @@ export function stripe() {
 export type ProductKey =
   | 'employer_professional_month' | 'employer_professional_year'
   | 'employer_federal_month' | 'employer_federal_year'
+  | 'veteran_pro_month' | 'veteran_pro_year' | 'veteran_pro_plus_month' | 'veteran_pro_plus_year' | 'veteran_federal_month' | 'veteran_federal_year'
   | 'job_slot' | 'job_boost' | 'contact_pack';
 
 /** Single source of truth for what we sell. Prices in cents. */
-export const CATALOG: Record<ProductKey, { name: string; amount: number; interval?: 'month' | 'year'; plan?: 'professional' | 'federal'; kind: 'plan' | 'job_slot' | 'job_boost' | 'contact_pack' }> = {
+export const CATALOG: Record<ProductKey, { name: string; amount: number; interval?: 'month' | 'year'; plan?: 'professional' | 'federal' | 'veteran_pro' | 'veteran_pro_plus' | 'veteran_federal_pro'; audience?: 'veteran'; kind: 'plan' | 'job_slot' | 'job_boost' | 'contact_pack' }> = {
   employer_professional_month: { name: 'LanceNest Professional (monthly)', amount: 19900, interval: 'month', plan: 'professional', kind: 'plan' },
   employer_professional_year: { name: 'LanceNest Professional (annual)', amount: 199000, interval: 'year', plan: 'professional', kind: 'plan' },
   employer_federal_month: { name: 'LanceNest Federal (monthly)', amount: 49900, interval: 'month', plan: 'federal', kind: 'plan' },
   employer_federal_year: { name: 'LanceNest Federal (annual)', amount: 499000, interval: 'year', plan: 'federal', kind: 'plan' },
+  veteran_pro_month: { name: 'LanceNest Pro (monthly)', amount: 1900, interval: 'month', plan: 'veteran_pro', audience: 'veteran', kind: 'plan' },
+  veteran_pro_year: { name: 'LanceNest Pro (annual)', amount: 19000, interval: 'year', plan: 'veteran_pro', audience: 'veteran', kind: 'plan' },
+  veteran_pro_plus_month: { name: 'LanceNest Pro Plus (monthly)', amount: 3900, interval: 'month', plan: 'veteran_pro_plus', audience: 'veteran', kind: 'plan' },
+  veteran_pro_plus_year: { name: 'LanceNest Pro Plus (annual)', amount: 39000, interval: 'year', plan: 'veteran_pro_plus', audience: 'veteran', kind: 'plan' },
+  veteran_federal_month: { name: 'LanceNest Federal (monthly)', amount: 5900, interval: 'month', plan: 'veteran_federal_pro', audience: 'veteran', kind: 'plan' },
+  veteran_federal_year: { name: 'LanceNest Federal (annual)', amount: 59000, interval: 'year', plan: 'veteran_federal_pro', audience: 'veteran', kind: 'plan' },
   job_slot: { name: 'Extra open job slot', amount: 3900, interval: 'month', kind: 'job_slot' },
   job_boost: { name: 'Featured job boost (30 days)', amount: 4900, kind: 'job_boost' },
   contact_pack: { name: '5 candidate contact credits', amount: 5900, kind: 'contact_pack' },

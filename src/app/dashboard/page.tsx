@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import MemberPerks from '@/components/MemberPerks';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import StatCard from '@/components/StatCard';
@@ -13,7 +14,7 @@ export const metadata: Metadata = { title: 'Dashboard' };
 
 type AppRow = { id: string; status: string; applied_at: string; job: { title: string; slug: string } | null };
 
-export default async function VeteranDashboard() {
+export default async function VeteranDashboard({ searchParams }: { searchParams: { boost?: string } }) {
   const { user, profile } = await requireRole(['veteran'], '/dashboard');
   const supabase = createClient();
 
@@ -46,6 +47,8 @@ export default async function VeteranDashboard() {
       </section>
 
       <div className="container-page space-y-10 py-10">
+        {vet?.verification_status === 'verified' && <MemberPerks userId={user.id} boost={searchParams.boost} />}
+
         {vet?.verification_status !== 'verified' && (
           <div className="card flex flex-col gap-3 border-brass p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>

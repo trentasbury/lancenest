@@ -1,3 +1,4 @@
+import PlanBadge from '@/components/PlanBadge';
 import VerifiedMark from '@/components/VerifiedMark';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -38,7 +39,12 @@ export default async function ApplicantsPage({ params }: { params: { id: string 
   const { data } = await supabase.from('applications')
     .select('id, status, applied_at, profile_id, resume_id, profile:profiles!applications_profile_id_fkey(full_name, username, headline, service_summary, verified)')
     .eq('job_id', job.id).eq('source', 'lancenest').neq('status', 'withdrawn').order('applied_at', { ascending: false });
-  const apps = (data ?? []) as unknown as App[];
+  const rawApps = (data ?? []) as unknown as App[];
+  const { data: plans } = rawApps.length ? await supabase.from('veteran_profiles').select('profile_id, plan').in('profile_id', rawApps.map((a) => a.profile_id)) : { data: [] };
+  const planOf = new Map((plans ?? []).map((p) => [p.profile_id as string, p.plan as string]));
+  const featured = (a: App) => ['pro_plus', 'federal_pro'].includes(planOf.get(a.profile_id) ?? '');
+  // Pro Plus / Federal members are featured applicants: listed first, newest first within each group.
+  const apps = [...rawApps.filter(featured), ...rawApps.filter((a) => !featured(a))];
 
 
   return (
@@ -62,7 +68,8 @@ export default async function ApplicantsPage({ params }: { params: { id: string 
               <div className="min-w-0 flex-1">
                 <p className="font-medium">
                   {a.profile?.username ? <Link href={`/veterans/${a.profile.username}`} className="hover:underline">{a.profile.full_name}</Link> : a.profile?.full_name ?? 'Applicant'}
-                  {a.profile?.verified && <VerifiedMark />}
+                  {a.profile?.verified && <VerifiedMark />}<PlanBadge plan={planOf.get(a.profile_id)} />
+                  {featured(a) && <span className="ml-1.5 rounded-full bg-brass px-2 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-[0.1em] text-navy">Featured applicant</span>}
                 </p>
                 <p className="truncate text-sm text-muted">{[a.profile?.headline, a.profile?.service_summary].filter(Boolean).join(' · ')}</p>
                 <p className="text-xs text-muted">Applied {new Date(a.applied_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}

@@ -12,9 +12,10 @@ import SubmitButton from '@/components/SubmitButton';
 import { followUser, reportContent, unfollowUser } from '@/app/network/actions';
 import { startConversation } from '@/app/messages/actions';
 import Upsell from '@/components/employer/Upsell';
+import PlanBadge from '@/components/PlanBadge';
 
 type Profile = { id: string; full_name: string; username: string; headline: string | null; location: string | null; avatar_url: string | null };
-type Vet = { about: string | null; clearance_level: string; verification_status: string; willing_to_relocate: boolean };
+type Vet = { plan?: string; about: string | null; clearance_level: string; verification_status: string; willing_to_relocate: boolean };
 type Service = {
   id: string; branch: string; component: string; rank: string | null; occupation_code: string | null;
   start_date: string | null; end_date: string | null; deployments: number; duty_title: string | null; unit: string | null; description: string | null;
@@ -34,7 +35,7 @@ async function load(username: string) {
 
   const { data: vet } = await supabase
     .from('veteran_profiles')
-    .select('about, clearance_level, verification_status, willing_to_relocate')
+    .select('about, clearance_level, verification_status, willing_to_relocate, plan')
     .eq('profile_id', profile.id)
     .maybeSingle();
 
@@ -112,7 +113,7 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
             {initials(profile.full_name)}
           </div>
           <div className="flex-1">
-            <h1 className="font-serif text-4xl font-medium text-ivory sm:text-5xl">{profile.full_name}</h1>
+            <h1 className="font-serif text-4xl font-medium text-ivory sm:text-5xl">{profile.full_name}<PlanBadge plan={vet.plan} /></h1>
             {profile.headline && <p className="mt-1 text-lg text-cream/85">{profile.headline}</p>}
             <p className="mt-2 text-sm text-cream/70">
               {[primary ? `${primary.branch}${primary.rank ? ` · ${primary.rank}` : ''}` : null, profile.location, vet.willing_to_relocate ? 'Open to relocation' : null]

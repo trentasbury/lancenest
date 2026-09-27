@@ -1,3 +1,4 @@
+import PlanBadge from '@/components/PlanBadge';
 import VerifiedMark from '@/components/VerifiedMark';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -15,11 +16,11 @@ import { startConversation } from '@/app/messages/actions';
 export const metadata: Metadata = { title: 'Candidate search' };
 
 type Row = {
-  profile_id: string; city: string | null; state: string | null; clearance_level: string; verification_status: string; willing_to_relocate: boolean; separation_date: string | null; skillbridge_interest: boolean; open_to_transition_hiring: boolean;
+  profile_id: string; city: string | null; state: string | null; clearance_level: string; verification_status: string; willing_to_relocate: boolean; separation_date: string | null; skillbridge_interest: boolean; open_to_transition_hiring: boolean; plan: string; boosted_until: string | null;
   profile: { full_name: string; username: string | null; headline: string | null; service_summary: string | null } | null;
 };
 type F = { q?: string; branch?: string; mos?: string; state?: string; skill?: string; clearance?: string; verified?: string; relocate?: string; transitioning?: string };
-const SELECT = 'profile_id, city, state, clearance_level, verification_status, willing_to_relocate, separation_date, skillbridge_interest, open_to_transition_hiring, profile:profiles!veteran_profiles_profile_id_fkey(full_name, username, headline, service_summary)';
+const SELECT = 'profile_id, city, state, clearance_level, verification_status, willing_to_relocate, separation_date, skillbridge_interest, open_to_transition_hiring, plan, boosted_until, profile:profiles!veteran_profiles_profile_id_fkey(full_name, username, headline, service_summary)';
 
 function intersect(a: string[] | null, b: string[]) {
   return a === null ? b : a.filter((x) => b.includes(x));
@@ -93,7 +94,10 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
       ? supabase.from('veteran_profiles').select(SELECT).in('clearance_level', ['secret', 'top_secret', 'ts_sci']).order('verification_status', { ascending: false }).order('updated_at', { ascending: false }).limit(6)
       : Promise.resolve({ data: [] }),
   ]);
-  const rows = ((data ?? []) as unknown as Row[]).filter((r) => r.profile);
+  // Placement perks: boosted profiles first, then Federal members (for federal employers), then Pro Plus / Federal.
+  const now = Date.now();
+  const rank = (r: Row) => (r.boosted_until && Date.parse(r.boosted_until) > now ? 4 : 0) + (cleared && r.plan === 'federal_pro' ? 2 : 0) + (['pro_plus', 'federal_pro'].includes(r.plan) ? 1 : 0);
+  const rows = ((data ?? []) as unknown as Row[]).filter((r) => r.profile).map((r, i) => ({ r, i })).sort((a, b) => rank(b.r) - rank(a.r) || a.i - b.i).map((x) => x.r);
   const spot = ((spotlight.data ?? []) as unknown as Row[]).filter((r) => r.profile);
 
   const Card = ({ r }: { r: Row }) => (
@@ -102,7 +106,8 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
       <div className="min-w-0 flex-1">
         <p className="font-medium">
           {r.profile!.username ? <Link href={`/veterans/${r.profile!.username}`} className="hover:underline">{r.profile!.full_name}</Link> : r.profile!.full_name}
-          {r.verification_status === 'verified' && <VerifiedMark />}
+          {r.verification_status === 'verified' && <VerifiedMark />}<PlanBadge plan={r.plan} />
+          {r.boosted_until && Date.parse(r.boosted_until) > Date.now() && <span className="ml-1.5 rounded-full bg-brass px-2 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-[0.1em] text-navy">Featured</span>}
         </p>
         <p className="truncate text-sm text-muted">{[r.profile!.headline, r.profile!.service_summary].filter(Boolean).join(' · ')}</p>
         <p className="text-xs text-muted">

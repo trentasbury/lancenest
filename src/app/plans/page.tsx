@@ -2,8 +2,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getSessionProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import SubmitButton from '@/components/SubmitButton';
-import { joinWaitlist } from './actions';
 
 export const metadata: Metadata = {
   title: 'Plans for Veterans',
@@ -11,48 +9,26 @@ export const metadata: Metadata = {
 };
 
 const PLANS = [
-  {
-    id: null,
-    name: 'Free',
-    price: '$0',
-    note: 'Always, for every verified service member',
+  { id: null, key: 'free', name: 'Free', price: '$0', note: 'Always, for every verified service member',
     features: ['Verified profile with military & professional career', 'Apply to every job with up to 3 résumés', 'Network, messaging, and People search',
-      'Transition Hub & SkillBridge', '10 freelance proposals a month', 'Freelance fee: 15%'],
-  },
-  {
-    id: 'veteran_pro' as const,
-    name: 'Pro',
-    price: '$19',
-    note: 'per month · $190/year (2 months free)',
-    features: ['Everything in Free', 'See who viewed your profile', 'Unlimited freelance proposals', 'Unlimited job alerts',
-      'Pro badge on your profile', 'Freelance fee: 10%'],
-  },
-  {
-    id: 'veteran_pro_plus' as const,
-    name: 'Pro Plus',
-    price: '$39',
-    note: 'per month · $390/year (2 months free)',
-    featured: true,
-    features: ['Everything in Pro', 'Featured applicant — your applications rise to the top of employer lists', 'Profile boost: featured in employer searches twice a month',
-      'Featured freelancer placement', 'Profile & application insights', 'Priority verification review', 'Freelance fee: 8%'],
-  },
-  {
-    id: 'veteran_federal_pro' as const,
-    name: 'Federal',
-    price: '$59',
-    note: 'per month · $590/year (2 months free)',
-    features: ['Everything in Pro Plus', 'Cleared-talent spotlight to verified federal contractors', '48-hour early access to cleared and GovCon roles',
-      'VOSB / SDVOSB business showcase for federal subcontracting', 'Priority placement in federal employer searches', 'Federal badge on your profile', 'Freelance fee: 6% — lowest on LanceNest'],
-  },
+      'Transition Hub & SkillBridge', 'See how many people viewed your profile', '10 freelance proposals a month', 'Freelance fee: 15%'] },
+  { id: 'veteran_pro' as const, key: 'pro', name: 'Pro', price: '$19', note: 'per month · $190/year (2 months free)', month: 'veteran_pro_month', year: 'veteran_pro_year',
+    features: ['Everything in Free', 'See exactly who viewed your profile', 'Unlimited freelance proposals', 'Pro badge on your profile', 'Freelance fee: 10%'] },
+  { id: 'veteran_pro_plus' as const, key: 'pro_plus', name: 'Pro Plus', price: '$39', note: 'per month · $390/year (2 months free)', month: 'veteran_pro_plus_month', year: 'veteran_pro_plus_year', featured: true,
+    features: ['Everything in Pro', 'Featured applicant — you appear first in employers’ applicant lists', 'Profile boost twice a month — featured at the top of employer searches for 7 days',
+      'Priority placement in employer candidate search', 'Pro Plus badge', 'Freelance fee: 8%'] },
+  { id: 'veteran_federal_pro' as const, key: 'federal_pro', name: 'Federal', price: '$59', note: 'per month · $590/year (2 months free)', month: 'veteran_federal_month', year: 'veteran_federal_year',
+    features: ['Everything in Pro Plus', 'See jobs requiring a clearance 48 hours before everyone else', 'Top placement in cleared-talent searches by federal employers',
+      'Federal badge on your profile', 'Freelance fee: 6% — lowest on LanceNest'] },
 ];
 
 export default async function PlansPage() {
   const session = await getSessionProfile();
   const isVeteran = session?.profile?.role === 'veteran';
-  let joined: string[] = [];
+  let currentPlan = 'free';
   if (isVeteran && session) {
-    const { data } = await createClient().from('plan_waitlist').select('plan').eq('profile_id', session.user.id);
-    joined = (data ?? []).map((r) => r.plan as string);
+    const { data } = await createClient().from('veteran_profiles').select('plan').eq('profile_id', session.user.id).maybeSingle();
+    currentPlan = (data?.plan as string) ?? 'free';
   }
 
   return (
@@ -62,7 +38,7 @@ export default async function PlansPage() {
           <p className="eyebrow text-brass">Plans for Veterans</p>
           <h1 className="mx-auto mt-4 max-w-3xl font-serif text-5xl font-medium leading-tight text-ivory">Free for every service member. Pro when you want an edge.</h1>
           <p className="mx-auto mt-5 max-w-2xl text-cream/80">
-            Your profile, verification, and every job on LanceNest cost nothing. Pro plans are launching soon — join the list and you’ll be first in line.
+            Your profile, verification, and every job on LanceNest cost nothing. Upgrade anytime; cancel anytime from your billing page.
           </p>
         </div>
       </section>
@@ -70,7 +46,6 @@ export default async function PlansPage() {
       <div className="container-page py-16">
         <div className="grid gap-6 lg:grid-cols-4">
           {PLANS.map((plan) => {
-            const onList = plan.id ? joined.includes(plan.id) : false;
             return (
               <div key={plan.name} className={`card flex flex-col p-8 ${plan.featured ? 'border-brass ring-1 ring-brass' : ''}`}>
                 {plan.featured && <p className="eyebrow mb-3">Most popular</p>}
@@ -84,21 +59,19 @@ export default async function PlansPage() {
                 </ul>
                 <div className="mt-8">
                   {!plan.id ? (
-                    session ? (
-                      <Link href="/dashboard" className="btn btn-outline w-full">Your current plan</Link>
-                    ) : (
-                      <Link href="/signup?role=veteran" className="btn btn-outline w-full">Create a free profile</Link>
-                    )
+                    session ? <p className="rounded-[3px] border border-line px-4 py-3 text-center text-sm text-muted">{currentPlan === 'free' ? 'Your current plan' : 'Included'}</p>
+                      : <Link href="/signup?role=veteran" className="btn btn-outline w-full">Create a free profile</Link>
                   ) : !session ? (
-                    <Link href="/login?next=/plans" className="btn btn-primary w-full">Log in to join the waitlist</Link>
+                    <Link href="/login?next=/plans" className="btn btn-primary w-full">Log in to upgrade</Link>
                   ) : !isVeteran ? (
-                    <p className="text-center text-sm text-muted">Pro plans are for veteran accounts.</p>
-                  ) : onList ? (
-                    <p className="rounded-[3px] border border-olive/30 bg-olive/10 px-4 py-3 text-center text-sm font-medium text-olive">✓ You’re on the waitlist</p>
+                    <p className="text-center text-sm text-muted">Member plans are for service member accounts.</p>
+                  ) : currentPlan === plan.key ? (
+                    <form action="/api/billing/portal" method="post"><button className="btn btn-outline w-full">✓ Your plan · Manage billing</button></form>
                   ) : (
-                    <form action={joinWaitlist.bind(null, plan.id)}>
-                      <SubmitButton className={`btn w-full ${plan.featured ? 'btn-primary' : 'btn-outline'}`} pendingText="Joining…">Join the waitlist</SubmitButton>
-                    </form>
+                    <div className="space-y-2">
+                      <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value={plan.month} /><button className={`btn w-full ${plan.featured ? 'btn-primary' : 'btn-outline'}`}>{currentPlan !== 'free' ? 'Switch' : 'Upgrade'} · {plan.price}/mo</button></form>
+                      <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value={plan.year} /><button className="w-full text-center text-xs text-navy underline decoration-brass underline-offset-4">or pay yearly — 2 months free</button></form>
+                    </div>
                   )}
                 </div>
               </div>

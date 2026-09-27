@@ -6,7 +6,7 @@ import { applyCheckoutSession } from '@/lib/billing';
 export const metadata: Metadata = { title: 'Payment complete', robots: { index: false } };
 
 export default async function BillingSuccess({ searchParams }: { searchParams: { session_id?: string } }) {
-  await requireRole(['employer', 'veteran'], '/employer/dashboard');
+  const { profile } = await requireRole(['employer', 'veteran'], '/dashboard');
   let result: Awaited<ReturnType<typeof applyCheckoutSession>> = { ok: false };
   try {
     if (searchParams.session_id?.startsWith('cs_')) result = await applyCheckoutSession(searchParams.session_id);
@@ -25,7 +25,7 @@ export default async function BillingSuccess({ searchParams }: { searchParams: {
       <p className="eyebrow">{result.ok ? 'Payment complete' : 'Almost there'}</p>
       <h1 className="mt-3 font-serif text-4xl font-medium">{result.ok ? 'You’re all set.' : 'Processing…'}</h1>
       <p className="mt-4 text-muted">{message}</p>
-      <Link href="/employer/dashboard" className="btn btn-primary mx-auto mt-8">Go to your dashboard</Link>
+      <Link href={profile.role === 'veteran' ? '/dashboard' : '/employer/dashboard'} className="btn btn-primary mx-auto mt-8">Go to your dashboard</Link>
     </div>
   );
 }

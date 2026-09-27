@@ -14,6 +14,27 @@ export async function POST(request: NextRequest) {
   const session = await getSessionProfile();
   if (!session) return NextResponse.redirect(`${site}/login?next=/employers`, 303);
   if (!item) return NextResponse.redirect(`${site}/employer/dashboard?error=product`, 303);
+  if (item.audience === 'veteran') {
+    // Member plans: verified service members only; one Stripe customer per member (stored server-side only).
+    if (session.profile?.role !== 'veteran') return NextResponse.redirect(`${site}/plans`, 303);
+    const { data: vet } = await createClient().from('veteran_profiles').select('verification_status').eq('profile_id', session.user.id).maybeSingle();
+    if (vet?.verification_status !== 'verified') return NextResponse.redirect(`${site}/dashboard/verification?required=1`, 303);
+    const admin = createAdminClient();
+    const { data: bc } = await admin.from('billing_customers').select('stripe_customer_id').eq('profile_id', session.user.id).maybeSingle();
+    let customer = bc?.stripe_customer_id as string | undefined;
+    if (!customer) {
+      customer = (await stripe().customers.create({ email: session.user.email, name: session.profile?.full_name ?? undefined, metadata: { profile_id: session.user.id } })).id;
+      await admin.from('billing_customers').insert({ profile_id: session.user.id, stripe_customer_id: customer });
+    }
+    const meta = { profile_id: session.user.id, kind: 'plan', plan: item.plan as string, product };
+    const checkout = await stripe().checkout.sessions.create({
+      mode: 'subscription', customer, allow_promotion_codes: true,
+      line_items: [{ quantity: 1, price_data: { currency: 'usd', unit_amount: item.amount, recurring: { interval: item.interval! }, product_data: { name: item.name } } }],
+      subscription_data: { metadata: meta }, metadata: meta,
+      success_url: `${site}/billing/success?session_id={CHECKOUT_SESSION_ID}`, cancel_url: `${site}/plans`,
+    });
+    return NextResponse.redirect(checkout.url!, 303);
+  }
   if (session.profile?.role !== 'employer') return NextResponse.redirect(`${site}/employers`, 303);
 
   const supabase = createClient();

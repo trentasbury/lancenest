@@ -33,11 +33,13 @@ export async function recomputeCompany(companyId: string) {
 export async function syncSubscription(sub: Stripe.Subscription) {
   const admin = createAdminClient();
   const companyId = sub.metadata?.company_id;
-  if (!companyId) return;
+  const profileId = sub.metadata?.profile_id;
+  if (!companyId && !profileId) return;
   const kind = sub.metadata?.kind === 'job_slot' ? 'job_slot' : 'plan';
   await admin.from('subscriptions').upsert(
     {
-      company_id: companyId,
+      company_id: companyId ?? null,
+      profile_id: profileId ?? null,
       kind,
       plan: kind === 'job_slot' ? 'job_slot' : sub.metadata?.plan ?? 'professional',
       status: sub.status,
@@ -48,7 +50,17 @@ export async function syncSubscription(sub: Stripe.Subscription) {
     },
     { onConflict: 'stripe_subscription_id' },
   );
-  await recomputeCompany(companyId);
+  if (companyId) await recomputeCompany(companyId);
+  else if (profileId) await recomputeVeteran(profileId);
+}
+
+const VET_RANK: Record<string, [number, string]> = { veteran_federal_pro: [3, 'federal_pro'], veteran_pro_plus: [2, 'pro_plus'], veteran_pro: [1, 'pro'] };
+/** A member's plan is the best one among their active subscriptions (free if none). */
+export async function recomputeVeteran(profileId: string) {
+  const admin = createAdminClient();
+  const { data } = await admin.from('subscriptions').select('plan').eq('profile_id', profileId).in('status', ['active', 'trialing', 'past_due']);
+  const best = (data ?? []).map((r) => VET_RANK[r.plan as string]).filter(Boolean).sort((a, b) => b[0] - a[0])[0];
+  await admin.from('veteran_profiles').update({ plan: best ? best[1] : 'free' }).eq('profile_id', profileId);
 }
 
 /** Applies a completed Checkout Session. Safe to call more than once (webhook + success page). */
