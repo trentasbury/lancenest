@@ -37,6 +37,10 @@ export default async function EmployersPage() {
             LanceNest translates military experience into the language your hiring managers use — so you see leaders,
             operators, and specialists instead of unfamiliar acronyms.
           </p>
+          <p className="mx-auto mt-4 max-w-2xl rounded-[4px] border border-brass/40 bg-white/5 px-4 py-3 text-sm text-cream/90">
+            <strong className="text-brass">Any company can hire here.</strong> You don’t need to be veteran-owned or have served — if you want to hire
+            service members, you belong on LanceNest. We simply verify that your company is real to keep veterans safe.
+          </p>
         </div>
       </section>
 

@@ -10,7 +10,7 @@ import Turnstile from './Turnstile';
 
 const OPTIONS = [
   { value: 'veteran', title: 'I’m a Veteran', body: 'Active duty, transitioning, or veteran — build your profile and find your next role.' },
-  { value: 'employer', title: 'I’m an Employer', body: 'Post roles, search verified military talent, and build your veteran pipeline.' },
+  { value: 'employer', title: 'I’m hiring', body: 'Any company or recruiter — no military background or veteran ownership required. Post roles and search verified military talent.' },
 ] as const;
 
 export default function SignupForm({ defaultRole }: { defaultRole: 'veteran' | 'employer' }) {

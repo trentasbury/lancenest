@@ -15,7 +15,7 @@ export default function CompanyVerification({ status, note, flash }: { status: s
     <section className="card border-brass p-6">
       <p className="eyebrow">Verify your company</p>
       <p className="mt-2 text-sm text-muted">
-        To protect veterans from fake recruiters, every company is verified before it can publish jobs, search candidates, message veterans, or buy a plan.
+        Every kind of company is welcome — you don’t need to be veteran-owned. To protect veterans from fake recruiters, we just confirm your company is real before it can publish jobs, search candidates, message veterans, or buy a plan.
         {status === 'rejected' && note && <span className="mt-2 block text-signal">Last review: {note}</span>}
       </p>
       {flash === 'invalid' && <p className="mt-2 text-sm text-signal">Add your company website (starting with https://), your role, and confirm the statement.</p>}
