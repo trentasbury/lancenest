@@ -54,6 +54,9 @@ export default async function AdminPage({ searchParams }: { searchParams: { dele
           <Link href="/admin/verifications" className="transition-opacity hover:opacity-80">
             <StatCard label="Pending verifications →" value={pendingVerifications} hint="Open the review queue" />
           </Link>
+          <Link href="/admin/insights" className="transition-opacity hover:opacity-80">
+            <StatCard label="Insights →" value="Money & traffic" hint="Revenue, payouts, visitors, active members" />
+          </Link>
           <Link href="/admin/members" className="transition-opacity hover:opacity-80">
             <StatCard label="Members & conduct →" value="Search" hint="Warnings, suspensions, removals" />
           </Link>

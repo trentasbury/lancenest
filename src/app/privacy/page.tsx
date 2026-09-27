@@ -17,7 +17,7 @@ export default function PrivacyPage() {
           <li><strong>Verification documents:</strong> if you request a Verified Veteran badge, the document you upload (for example a DD-214 with your Social Security number blacked out). See “Verification documents” below.</li>
           <li><strong>Activity:</strong> jobs you save or apply to, posts, comments, reactions, follows, messages, and reports you submit.</li>
           <li><strong>Company information</strong> for employer accounts, and job postings they publish.</li>
-          <li><strong>Technical data:</strong> security cookies that keep you signed in and sign you out after inactivity, and basic request logs used to operate and secure the service. We do not use advertising or cross-site tracking cookies.</li>
+          <li><strong>Technical data:</strong> security cookies that keep you signed in and sign you out after inactivity, and basic request logs used to operate and secure the service. We count page visits with our own private analytics: no cookies, no cross-site tracking, and visitors are identified only by an anonymous code that changes every day. We do not use advertising or tracking cookies.</li>
         </ul>
       </section>
       <section>
