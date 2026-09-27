@@ -6,6 +6,7 @@ import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { slugify } from '@/lib/format';
+import { SITE, notifyMember } from '@/lib/email';
 import { MIN_DOMAIN_AGE_DAYS, baseDomain, domainAgeDays, websiteMentions } from '@/lib/companyChecks';
 import type { FormState } from '@/app/auth/actions';
 
@@ -84,6 +85,11 @@ export async function submitCompanyVerification(formData: FormData) {
     if (admins?.length) {
       await admin.from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'company_verification', title: `A company was auto-verified (work email @${emailDomain} matches its website). You can revoke it anytime.`, link: '/admin/companies' })));
     }
+    await notifyMember(user.id, { type: 'company_verification', link: '/employer/dashboard', title: `${company.name} is verified — you can now publish jobs and search candidates.`,
+      email: { subject: `${company.name} is verified on LanceNest`, preheader: 'Your work email matched your company website — you’re approved.', tone: 'success', badge: '✓ Verified company',
+        heading: `${company.name} is verified.`,
+        paragraphs: ['Your work email matched your company’s website, so you were approved automatically. Your jobs can now go live, and you can connect with verified service members.'],
+        cta: { label: 'Post your first job', url: `${SITE}/employer/jobs/new` } } });
     revalidatePath('/employer/dashboard');
     redirect('/employer/dashboard?verify=auto');
   }

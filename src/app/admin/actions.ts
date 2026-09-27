@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { deleteMemberCompletely } from '@/lib/account';
 import { identityHash } from '@/lib/identity';
+import { SITE, notifyMember } from '@/lib/email';
 
 /** Approve or reject a verification request. Role is checked BEFORE the service-role client is used. */
 export async function decideVerification(requestId: string, decision: 'verified' | 'failed', formData: FormData) {
@@ -55,6 +56,22 @@ export async function decideVerification(requestId: string, decision: 'verified'
     target_id: request.profile_id,
     details: note ? { note } : {},
   });
+
+  await notifyMember(request.profile_id, decision === 'verified'
+    ? { type: 'verification', link: '/dashboard', title: 'You’re verified ✓ — jobs, the network, messaging, and freelance are unlocked.',
+        email: { subject: 'You’re verified on LanceNest', preheader: 'Jobs, the network, messaging, and freelance are now unlocked.', tone: 'success', badge: '✓ Verified service member',
+          heading: 'Welcome aboard — your service is verified.',
+          paragraphs: ['Thank you for your service. Your Verified badge is now on your profile, and everything on LanceNest is unlocked: jobs, the Network, messaging, and freelance work.',
+            'Your verification document has been permanently deleted, as promised.',
+            'Next step: complete your profile — members with a résumé and military career filled in hear from employers far more often.'],
+          cta: { label: 'Go to your dashboard', url: `${SITE}/dashboard` } } }
+    : { type: 'verification', link: '/dashboard/verification', title: `We couldn’t verify your document${note ? `: ${note}` : '.'} Please resubmit.`,
+        email: { subject: 'Action needed: your LanceNest verification', preheader: 'We couldn’t verify your document — here’s how to fix it.', tone: 'alert', badge: 'Action needed',
+          heading: 'We couldn’t verify your document yet.',
+          paragraphs: [note ? `Reason: ${note}` : 'The document didn’t meet our requirements.',
+            'For your privacy, the document you sent has already been permanently deleted.',
+            'You can resubmit anytime — it only takes a couple of minutes. Remember to black out your Social Security number first.'],
+          cta: { label: 'Resubmit verification', url: `${SITE}/dashboard/verification` } } });
 
   revalidatePath('/admin/verifications');
   revalidatePath('/admin');
@@ -118,10 +135,22 @@ export async function decideCompany(companyId: string, decision: 'verified' | 'r
   await admin.from('companies').update({ is_verified: verified, verification_status: verified ? 'verified' : 'rejected', verification_note: note }).eq('id', companyId);
   if (!verified) await admin.from('jobs').update({ status: 'paused' }).eq('company_id', companyId).eq('status', 'open');
   if (company.owner_id) {
-    await admin.from('notifications').insert({
-      profile_id: company.owner_id, type: 'company_verification', link: '/employer/dashboard',
-      title: verified ? `${company.name} is verified — you can now publish jobs and search candidates.` : `${company.name} wasn’t verified${note ? `: ${note}` : '.'}`,
-    });
+    const name = company.name as string;
+    await notifyMember(company.owner_id as string, verified
+      ? { type: 'company_verification', link: '/employer/dashboard', title: `${name} is verified — you can now publish jobs and search candidates.`,
+          email: { subject: `${name} is verified on LanceNest`, preheader: 'You can now publish jobs and connect with verified service members.', tone: 'success', badge: '✓ Verified company',
+            heading: `${name} is verified.`,
+            paragraphs: ['Your company is approved on LanceNest. Your jobs can now go live, and you can connect with verified service members.',
+              'Any drafts you saved are ready to publish from your employer dashboard.'],
+            cta: { label: 'Open your employer dashboard', url: `${SITE}/employer/dashboard` } } }
+      : { type: 'company_verification', link: '/employer/dashboard', title: `${name} ${decision === 'revoked' ? 'is no longer verified' : 'wasn’t verified'}${note ? `: ${note}` : '.'}`,
+          email: { subject: decision === 'revoked' ? `${name}’s verification was removed` : `Action needed: ${name}’s verification`, tone: 'alert', badge: 'Action needed',
+            preheader: 'Here’s what happened and what you can do.',
+            heading: decision === 'revoked' ? `${name} is no longer verified.` : `We couldn’t verify ${name} yet.`,
+            paragraphs: [note ? `Reason: ${note}` : 'We weren’t able to confirm the company details provided.',
+              decision === 'revoked' ? 'Your open jobs have been paused while this is reviewed.' : 'You can update your details and resubmit from your dashboard — a state business ID or SAM.gov UEI makes review fastest.',
+              'Questions or want to appeal? Just reply to this email.'],
+            cta: { label: 'Go to your dashboard', url: `${SITE}/employer/dashboard` } } });
   }
   await admin.from('admin_actions').insert({ admin_id: user.id, action: `company_${decision}`, target_type: 'company', target_id: companyId, details: note ? { note } : {} });
   revalidatePath('/admin/companies');
@@ -135,8 +164,21 @@ export async function decideSkillBridge(companyId: string, decision: 'authorized
   const { data: c } = await admin.from('companies').select('owner_id, name').eq('id', companyId).maybeSingle();
   await admin.from('companies').update({ skillbridge_status: decision }).eq('id', companyId);
   if (decision === 'rejected') await admin.from('jobs').update({ status: 'paused' }).eq('company_id', companyId).eq('employment_type', 'skillbridge').eq('status', 'open');
-  if (c?.owner_id) await admin.from('notifications').insert({ profile_id: c.owner_id, type: 'skillbridge_request', link: '/employer/dashboard',
-    title: decision === 'authorized' ? `${c.name} is confirmed for SkillBridge listings.` : `We couldn’t confirm ${c.name} on the official DoD SkillBridge list.` });
+  if (c?.owner_id) await notifyMember(c.owner_id as string, {
+    type: 'skillbridge_request', link: '/employer/dashboard',
+    title: decision === 'authorized' ? `${c.name} is confirmed for SkillBridge listings.` : `We couldn’t confirm ${c.name} on the official DoD SkillBridge list.`,
+    email: decision === 'authorized'
+      ? { subject: 'You can now list SkillBridge programs', preheader: 'Your DoD SkillBridge authorization is confirmed.', tone: 'success', badge: '✓ SkillBridge confirmed',
+          heading: 'Your SkillBridge listings are unlocked.',
+          paragraphs: [`${c.name} is confirmed on the official DoD SkillBridge list. Post a program by choosing “SkillBridge” as the employment type.`,
+            'Reminder: SkillBridge participants keep their military pay, so listings never show a salary.'],
+          cta: { label: 'Post a SkillBridge program', url: `${SITE}/employer/jobs/new` } }
+      : { subject: 'About your SkillBridge request', preheader: 'We couldn’t find your organization on the DoD list.', tone: 'notice', badge: 'SkillBridge',
+          heading: 'We couldn’t confirm your SkillBridge authorization.',
+          paragraphs: [`We couldn’t find ${c.name} on the official DoD SkillBridge directory. If your organization is listed under a different name, reply with that exact name and we’ll recheck.`,
+            'You can still hire transitioning members for roles that start after they separate.'],
+          cta: { label: 'Open your dashboard', url: `${SITE}/employer/dashboard` } },
+  });
   await admin.from('admin_actions').insert({ admin_id: user.id, action: `skillbridge_${decision}`, target_type: 'company', target_id: companyId, details: {} });
   revalidatePath('/admin/companies');
 }
@@ -168,10 +210,20 @@ export async function actOnMember(profileId: string, action: 'warning' | 'suspen
   }
   await admin.from('member_strikes').insert({ profile_id: profileId, level: action, reason, report_id: reportId, issued_by: user.id });
   await admin.from('admin_actions').insert({ admin_id: user.id, action: `member_${action}`, target_type: 'profile', target_id: profileId, details: { reason } });
-  if (action !== 'removal') {
-    await admin.from('notifications').insert({ profile_id: profileId, type: 'conduct', link: '/settings/account',
-      title: action === 'warning' ? `Conduct warning: ${reason}` : action === 'suspension' ? `Your account is suspended for 7 days: ${reason}` : 'Your account has been reinstated.' });
-  }
+  const CONDUCT = {
+    warning: ['Conduct warning on your LanceNest account', 'A formal warning was added to your account.', 'This is a formal warning under our Code of Conduct. A second violation results in a 7-day suspension.'],
+    suspension: ['Your LanceNest account is suspended for 7 days', 'Your account is suspended for 7 days.', 'You won’t be able to use LanceNest during the suspension. A further violation results in removal.'],
+    removal: ['Your LanceNest account has been removed', 'Your account has been removed.', 'Your account was permanently removed for violating our Code of Conduct.'],
+    reinstated: ['Your LanceNest account is reinstated', 'Welcome back — your account is reinstated.', 'Your account is active again. Thank you for your patience.'],
+  }[action];
+  await notifyMember(profileId, {
+    type: 'conduct', link: '/settings/account', inApp: action !== 'removal',
+    title: action === 'warning' ? `Conduct warning: ${reason}` : action === 'suspension' ? `Your account is suspended for 7 days: ${reason}` : action === 'reinstated' ? 'Your account has been reinstated.' : 'Your account was removed.',
+    email: { subject: CONDUCT[0], preheader: CONDUCT[1], tone: action === 'reinstated' ? 'success' : 'alert', badge: action === 'reinstated' ? 'Reinstated' : 'Code of Conduct',
+      heading: CONDUCT[1],
+      paragraphs: [...(action === 'reinstated' ? [] : [`Reason: ${reason}`]), CONDUCT[2], 'To appeal, reply to this email within 30 days.'],
+      cta: action === 'removal' ? { label: 'Read the Code of Conduct', url: `${SITE}/conduct` } : { label: 'View your account', url: `${SITE}/settings/account` } },
+  });
   if (reportId) await admin.from('reports').update({ status: 'resolved' }).eq('id', reportId);
   revalidatePath('/admin/members');
   redirect(`/admin/members?id=${profileId}&done=${action}`);
