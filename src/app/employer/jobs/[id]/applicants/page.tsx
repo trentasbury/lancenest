@@ -1,3 +1,4 @@
+import VerifiedMark from '@/components/VerifiedMark';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -60,7 +61,7 @@ export default async function ApplicantsPage({ params }: { params: { id: string 
               <div className="min-w-0 flex-1">
                 <p className="font-medium">
                   {a.profile?.username ? <Link href={`/veterans/${a.profile.username}`} className="hover:underline">{a.profile.full_name}</Link> : a.profile?.full_name ?? 'Applicant'}
-                  {a.profile?.verified && <span className="ml-1.5 text-brass-dark">✦</span>}
+                  {a.profile?.verified && <VerifiedMark />}
                 </p>
                 <p className="truncate text-sm text-muted">{[a.profile?.headline, a.profile?.service_summary].filter(Boolean).join(' · ')}</p>
                 <p className="text-xs text-muted">Applied {new Date(a.applied_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}</p>

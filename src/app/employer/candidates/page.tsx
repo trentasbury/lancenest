@@ -1,3 +1,4 @@
+import VerifiedMark from '@/components/VerifiedMark';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -96,7 +97,7 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
       <div className="min-w-0 flex-1">
         <p className="font-medium">
           {r.profile!.username ? <Link href={`/veterans/${r.profile!.username}`} className="hover:underline">{r.profile!.full_name}</Link> : r.profile!.full_name}
-          {r.verification_status === 'verified' && <span className="ml-1.5 text-brass-dark" title="Verified Veteran">✦</span>}
+          {r.verification_status === 'verified' && <VerifiedMark />}
         </p>
         <p className="truncate text-sm text-muted">{[r.profile!.headline, r.profile!.service_summary].filter(Boolean).join(' · ')}</p>
         <p className="text-xs text-muted">

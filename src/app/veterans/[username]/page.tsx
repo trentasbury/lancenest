@@ -93,6 +93,10 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
     viewerId ? supabase.from('user_follows').select('following_id').eq('follower_id', viewerId).eq('following_id', profile.id) : Promise.resolve({ data: [] }),
   ]);
   const following = (iFollow ?? []).length > 0;
+  const [{ data: freelance }, { data: portfolio }] = await Promise.all([
+    supabase.from('freelancer_profiles').select('title, bio, hourly_rate, available, clearance_work, vosb, sdvosb').eq('profile_id', profile.id).maybeSingle(),
+    supabase.from('portfolio_items').select('id, title, description, url').eq('profile_id', profile.id).order('created_at', { ascending: false }).limit(6),
+  ]);
   const services = (service ?? []) as unknown as Service[];
   const skills = ((skillRows ?? []) as unknown as { skill: { name: string } | null }[]).map((r) => r.skill?.name).filter(Boolean) as string[];
   const isOwner = session?.user.id === profile.id;
@@ -177,6 +181,36 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
               </ul>
             )}
           </section>
+
+          {freelance && (
+            <section className="card border-brass/40 p-7">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="eyebrow">Available for freelance</h2>
+                  <p className="mt-2 font-serif text-2xl text-navy">{freelance.title as string}</p>
+                </div>
+                {freelance.hourly_rate && <p className="font-serif text-2xl">${freelance.hourly_rate as number}/hr</p>}
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                {freelance.sdvosb && <span className="rounded-full border border-brass px-3 py-1 font-semibold text-brass-dark">SDVOSB</span>}
+                {freelance.vosb && !freelance.sdvosb && <span className="rounded-full border border-brass px-3 py-1 font-semibold text-brass-dark">VOSB</span>}
+                {freelance.clearance_work && <span className="rounded-full border border-line px-3 py-1">Open to cleared work</span>}
+                {!freelance.available && <span className="rounded-full border border-line px-3 py-1 text-muted">Not taking new work</span>}
+              </div>
+              {freelance.bio && <p className="mt-3 whitespace-pre-line text-sm text-ink/90">{freelance.bio as string}</p>}
+              {(portfolio ?? []).length > 0 && (
+                <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+                  {(portfolio ?? []).map((it) => (
+                    <li key={it.id as string} className="rounded-[4px] border border-line p-4">
+                      <p className="font-medium">{it.title as string}</p>
+                      {it.description && <p className="mt-1 text-sm text-muted">{it.description as string}</p>}
+                      {it.url && <a href={it.url as string} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-xs text-navy underline">View work ↗</a>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
 
           <section id="posts" className="scroll-mt-24 space-y-4">
             <div className="flex items-center justify-between">

@@ -15,8 +15,8 @@ export default async function Navbar() {
     ? [
         { href: '/network', label: 'Network' },
         session.profile?.role === 'employer' ? { href: '/employer/candidates', label: 'Candidates' } : { href: '/jobs', label: 'Find Jobs' },
+        { href: '/freelance', label: 'Freelance' },
         { href: '/messages', label: 'Messages' },
-        { href: '/resources', label: 'Resources' },
       ]
     : [
         { href: '/jobs', label: 'Find Jobs' },

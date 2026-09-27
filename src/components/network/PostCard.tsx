@@ -1,3 +1,4 @@
+import VerifiedMark from '@/components/VerifiedMark';
 import Link from 'next/link';
 import type { Post } from '@/lib/network';
 import { MILESTONE_EYEBROW, REACTIONS, VISIBILITY, mediaUrl, timeAgo } from '@/lib/network';
@@ -23,7 +24,7 @@ function AuthorLine({ post, compact = false }: { post: Post; compact?: boolean }
       <div className="min-w-0">
         <p className="flex flex-wrap items-center gap-x-1.5 font-medium text-ink">
           {href ? <Link href={href} className="hover:underline">{name}</Link> : name}
-          {a?.verified && <span className="text-brass-dark" title="Verified Veteran">✦</span>}
+          {a?.verified && <VerifiedMark />}
         </p>
         {!compact && (a?.headline || a?.service_summary) && (
           <p className="truncate text-xs text-muted">{[a?.headline, a?.service_summary].filter(Boolean).join(' · ')}</p>

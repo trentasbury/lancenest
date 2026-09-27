@@ -1,3 +1,4 @@
+import VerifiedMark from '@/components/VerifiedMark';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -31,7 +32,7 @@ function CommentItem({ c, me, postAuthorId, postId, replies }: { c: Comment; me:
         <div className="rounded-[4px] bg-paper px-4 py-3">
           <p className="text-sm font-medium">
             {c.author?.role === 'veteran' && c.author.username ? <Link href={`/veterans/${c.author.username}`} className="hover:underline">{c.author.full_name}</Link> : c.author?.full_name ?? 'Member'}
-            {c.author?.verified && <span className="ml-1 text-brass-dark">✦</span>}
+            {c.author?.verified && <VerifiedMark />}
             <span className="ml-2 text-xs font-normal text-muted">{timeAgo(c.created_at)}{c.edited_at && ' · edited'}</span>
           </p>
           <p className="mt-1 whitespace-pre-line text-sm text-ink/90">{c.body}</p>

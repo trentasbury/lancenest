@@ -12,7 +12,7 @@ const csp = [
   "frame-src https://challenges.cloudflare.com",
   "object-src 'none'",
   "base-uri 'self'",
-  "form-action 'self' https://checkout.stripe.com https://billing.stripe.com",
+  "form-action 'self' https://checkout.stripe.com https://billing.stripe.com https://connect.stripe.com",
   "frame-ancestors 'none'",
   'upgrade-insecure-requests',
 ].join('; ');
