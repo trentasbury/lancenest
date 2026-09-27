@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { getSessionProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 
-export async function joinWaitlist(plan: 'veteran_pro' | 'veteran_federal_pro') {
+export async function joinWaitlist(plan: 'veteran_pro' | 'veteran_pro_plus' | 'veteran_federal_pro') {
   const session = await getSessionProfile();
   if (!session) redirect('/login?next=/plans');
   if (session.profile?.role !== 'veteran') redirect('/plans');

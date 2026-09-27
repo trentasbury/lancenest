@@ -13,25 +13,36 @@ export const metadata: Metadata = {
 const PLANS = [
   {
     id: null,
-    name: 'Member',
-    price: 'Free',
-    note: 'Always, for every service member',
-    features: ['Freelance fee: 15%', 'Full profile & military translation', 'Verified Veteran badge', 'Search and apply to every job', 'Save jobs'],
+    name: 'Free',
+    price: '$0',
+    note: 'Always, for every verified service member',
+    features: ['Verified profile with military & professional career', 'Apply to every job with up to 3 résumés', 'Network, messaging, and People search',
+      'Transition Hub & SkillBridge', '10 freelance proposals a month', 'Freelance fee: 15%'],
   },
   {
     id: 'veteran_pro' as const,
     name: 'Pro',
     price: '$19',
     note: 'per month · $190/year (2 months free)',
+    features: ['Everything in Free', 'See who viewed your profile', 'Unlimited freelance proposals', 'Unlimited job alerts',
+      'Pro badge on your profile', 'Freelance fee: 10%'],
+  },
+  {
+    id: 'veteran_pro_plus' as const,
+    name: 'Pro Plus',
+    price: '$39',
+    note: 'per month · $390/year (2 months free)',
     featured: true,
-    features: ['Freelance fee: 10% (save a third)', 'Everything in Member', 'Featured placement in employer searches', 'See which employers viewed your profile', 'Unlimited job alerts', 'Priority verification review', 'Pro badge on your profile'],
+    features: ['Everything in Pro', 'Featured applicant — your applications rise to the top of employer lists', 'Profile boost: featured in employer searches twice a month',
+      'Featured freelancer placement', 'Profile & application insights', 'Priority verification review', 'Freelance fee: 8%'],
   },
   {
     id: 'veteran_federal_pro' as const,
-    name: 'Federal Pro',
-    price: '$29',
-    note: 'per month · $290/year (2 months free)',
-    features: ['Freelance fee: 8% — lowest on LanceNest', 'Everything in Pro', 'Clearance holders spotlighted to federal contractors', 'Early access to cleared and GovCon roles', 'Federal Pro badge on your profile'],
+    name: 'Federal',
+    price: '$59',
+    note: 'per month · $590/year (2 months free)',
+    features: ['Everything in Pro Plus', 'Cleared-talent spotlight to verified federal contractors', '48-hour early access to cleared and GovCon roles',
+      'VOSB / SDVOSB business showcase for federal subcontracting', 'Priority placement in federal employer searches', 'Federal badge on your profile', 'Freelance fee: 6% — lowest on LanceNest'],
   },
 ];
 
@@ -57,7 +68,7 @@ export default async function PlansPage() {
       </section>
 
       <div className="container-page py-16">
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 lg:grid-cols-4">
           {PLANS.map((plan) => {
             const onList = plan.id ? joined.includes(plan.id) : false;
             return (

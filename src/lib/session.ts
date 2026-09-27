@@ -10,5 +10,6 @@ export const sessionCookieOptions = {
   sameSite: 'lax' as const,
   secure: process.env.NODE_ENV === 'production',
   path: '/',
-  maxAge: MAX_SESSION_MS / 1000,
+  // Must outlive the limits it enforces: if these cookies expired first, an old session would look brand new.
+  maxAge: 30 * 24 * 60 * 60,
 };

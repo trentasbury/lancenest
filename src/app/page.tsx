@@ -46,15 +46,15 @@ export default async function HomePage({ searchParams }: { searchParams: { delet
             </div>
           </div>
 
-          <div className="relative hidden h-[540px] w-[324px] shrink-0 justify-self-end lg:block">
+          <div className="relative hidden aspect-[4/5] w-full max-w-[432px] justify-self-end lg:block">
             <div className="absolute -inset-3 border border-brass/40" aria-hidden="true" />
             <Image
-              src="/assets/veteran-silhouette.webp"
-              alt="A veteran with a pack looking out over a harbor at sunset"
+              src="/assets/hero-service.webp"
+              alt="A U.S. Marine in desert camouflage kneeling to help a person on the ground"
               fill
               priority
               quality={90}
-              sizes="(min-width: 1024px) 324px, 0px"
+              sizes="(min-width: 1024px) 432px, 0px"
               className="object-cover"
             />
           </div>
