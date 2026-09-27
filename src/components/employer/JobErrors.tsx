@@ -5,6 +5,7 @@ const MESSAGES: Record<string, string> = {
   required: 'A job title and overview are required.',
   salary: 'The maximum salary can’t be lower than the minimum.',
   save: 'That didn’t save. Please try again.',
+  skillbridge: 'Only DoD-authorized SkillBridge organizations can publish SkillBridge programs. Request SkillBridge listing access from your dashboard — or choose another employment type.',
   salary_required: 'Saved as a draft. Add a salary range to publish — every LanceNest job shows pay, and several states require it.',
   scam: 'Saved as a draft. This post contains wording often used in job scams (for example fees, gift cards, check deposits, or moving to another chat app). Edit it and publish again, or contact support@lancenest.com if we got it wrong.',
   company: 'Your job is saved as a draft. It can be published once your company is verified — submit verification from your dashboard.',

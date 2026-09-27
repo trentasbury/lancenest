@@ -58,7 +58,12 @@ export async function saveJob(jobId: string | null, formData: FormData) {
 
   // Pay transparency (required by law in several states) and scam screening before anything goes live.
   let publishError: string | null = null;
-  if (fields.status === 'open' && (!salaryMin || !salaryMax)) publishError = 'salary_required';
+  const isSkillBridge = fields.employment_type === 'skillbridge';
+  const weeks = Math.round(Number(t(formData, 'skillbridge_weeks', 3)));
+  Object.assign(fields, isSkillBridge
+    ? { salary_min: null, salary_max: null, skillbridge_weeks: weeks >= 1 && weeks <= 26 ? weeks : null } // DoD pays SkillBridge participants
+    : { skillbridge_weeks: null });
+  if (fields.status === 'open' && !isSkillBridge && (!salaryMin || !salaryMax)) publishError = 'salary_required';
   const text = [title, description, fields.responsibilities, fields.qualifications, fields.preferred_qualifications, fields.benefits].filter(Boolean).join('\n');
   if (fields.status === 'open' && scamSignals(text, 'block').length) publishError = 'scam';
   if (publishError) fields.status = 'draft';
@@ -76,6 +81,7 @@ export async function saveJob(jobId: string | null, formData: FormData) {
   if (error) {
     if (error.code === 'P0003') redirect(`${back}?error=limit`);
     if (error.code === 'P0004') redirect(`${back}?error=company`);
+    if (error.code === 'P0007') redirect(`${back}?error=skillbridge`);
     console.error('saveJob failed:', error.message);
     redirect(`${back}?error=save`);
   }
@@ -89,6 +95,7 @@ export async function setJobStatus(jobId: string, status: 'open' | 'paused' | 'c
   const { error } = await createClient().from('jobs').update({ status }).eq('id', jobId);
   if (error?.code === 'P0003') redirect(`/employer/jobs/${jobId}?error=limit`);
   if (error?.code === 'P0004') redirect(`/employer/jobs/${jobId}?error=company`);
+  if (error?.code === 'P0007') redirect(`/employer/jobs/${jobId}?error=skillbridge`);
   revalidatePath('/employer/dashboard');
   revalidatePath('/jobs');
   redirect(`/employer/jobs/${jobId}?saved=1`);

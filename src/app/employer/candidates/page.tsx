@@ -15,11 +15,11 @@ import { startConversation } from '@/app/messages/actions';
 export const metadata: Metadata = { title: 'Candidate search' };
 
 type Row = {
-  profile_id: string; city: string | null; state: string | null; clearance_level: string; verification_status: string; willing_to_relocate: boolean;
+  profile_id: string; city: string | null; state: string | null; clearance_level: string; verification_status: string; willing_to_relocate: boolean; separation_date: string | null; skillbridge_interest: boolean; open_to_transition_hiring: boolean;
   profile: { full_name: string; username: string | null; headline: string | null; service_summary: string | null } | null;
 };
-type F = { q?: string; branch?: string; mos?: string; state?: string; skill?: string; clearance?: string; verified?: string; relocate?: string };
-const SELECT = 'profile_id, city, state, clearance_level, verification_status, willing_to_relocate, profile:profiles!veteran_profiles_profile_id_fkey(full_name, username, headline, service_summary)';
+type F = { q?: string; branch?: string; mos?: string; state?: string; skill?: string; clearance?: string; verified?: string; relocate?: string; transitioning?: string };
+const SELECT = 'profile_id, city, state, clearance_level, verification_status, willing_to_relocate, separation_date, skillbridge_interest, open_to_transition_hiring, profile:profiles!veteran_profiles_profile_id_fkey(full_name, username, headline, service_summary)';
 
 function intersect(a: string[] | null, b: string[]) {
   return a === null ? b : a.filter((x) => b.includes(x));
@@ -81,6 +81,11 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
   if (f.state) query = query.ilike('state', sanitizeSearch(f.state));
   if (f.verified) query = query.eq('verification_status', 'verified');
   if (f.relocate) query = query.eq('willing_to_relocate', true);
+  if (f.transitioning) {
+    const today = new Date().toISOString().slice(0, 10);
+    const inAYear = new Date(Date.now() + 365 * 86400000).toISOString().slice(0, 10);
+    query = query.eq('open_to_transition_hiring', true).gte('separation_date', today).lte('separation_date', inAYear);
+  }
   if (cleared && f.clearance && CLEARANCE_ORDER.includes(f.clearance)) query = query.in('clearance_level', CLEARANCE_ORDER.slice(CLEARANCE_ORDER.indexOf(f.clearance)));
   const [{ data }, spotlight] = await Promise.all([
     query.order('verification_status', { ascending: false }).order('updated_at', { ascending: false }).limit(60),
@@ -103,6 +108,8 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
         <p className="text-xs text-muted">
           {[r.city, r.state].filter(Boolean).join(', ') || 'Location not listed'}
           {r.willing_to_relocate && ' · Open to relocation'}
+          {r.open_to_transition_hiring && r.separation_date && ` · Separating ${new Date(`${r.separation_date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`}
+          {r.open_to_transition_hiring && r.skillbridge_interest && <span className="ml-2 rounded-full border border-olive/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-olive">SkillBridge interested</span>}
           {cleared && r.clearance_level !== 'none' && <span className="ml-2 rounded-full border border-brass/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-brass-dark">{CLEARANCE_LABEL[r.clearance_level]}</span>}
         </p>
       </div>
@@ -142,6 +149,7 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
         <div className="flex flex-wrap items-center gap-4 text-sm">
           <label className="flex items-center gap-2"><input type="checkbox" name="verified" value="1" defaultChecked={!!f.verified} className="accent-navy" />Verified only</label>
           <label className="flex items-center gap-2"><input type="checkbox" name="relocate" value="1" defaultChecked={!!f.relocate} className="accent-navy" />Will relocate</label>
+          <label className="flex items-center gap-2"><input type="checkbox" name="transitioning" value="1" defaultChecked={!!f.transitioning} className="accent-navy" />Transitioning (next 12 months)</label>
         </div>
         <div className="flex gap-2 lg:col-span-4">
           <button className="btn btn-primary">Search</button>

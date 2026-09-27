@@ -46,6 +46,8 @@ export default function JobForm({ job, action }: { job?: Job | null; action: (fd
         <Field label="Paid per">
           <select name="salary_period" defaultValue={job?.salary_period ?? 'year'} className="field"><option value="year">Year</option><option value="hour">Hour</option></select>
         </Field>
+        <div className="sm:col-span-3"><label className="field-label" htmlFor="skillbridge_weeks">SkillBridge program length in weeks (SkillBridge only, up to 26)</label><input id="skillbridge_weeks" name="skillbridge_weeks" inputMode="numeric" defaultValue={(job as unknown as { skillbridge_weeks?: number | null })?.skillbridge_weeks ?? ''} className="field max-w-[200px]" /></div>
+        <p className="text-xs text-muted sm:col-span-3">SkillBridge programs never list pay — DoD continues the member’s military pay and benefits, and companies may not pay participants.</p>
         <p className="text-xs text-muted sm:col-span-3">A salary range is required to publish. It’s required by law in several states, and veterans skip listings without pay.</p>
       </section>
 

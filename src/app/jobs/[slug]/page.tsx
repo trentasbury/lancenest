@@ -86,6 +86,13 @@ export default async function JobDetailPage({ params }: { params: { slug: string
                 ✓ Verified company — reviewed by LanceNest
               </p>
             )}
+            {job.employment_type === 'skillbridge' && (
+              <div className="mt-4 rounded-[4px] border border-olive/40 bg-olive/5 p-4 text-sm">
+                <p className="font-semibold text-olive">DoD SkillBridge program{(job as unknown as { skillbridge_weeks?: number }).skillbridge_weeks ? ` · ${(job as unknown as { skillbridge_weeks: number }).skillbridge_weeks} weeks` : ''}</p>
+                <p className="mt-1 text-ink/80">You keep your full military pay and benefits; the company doesn’t pay you. You’ll need an approved separation date, completed TAP, and written approval from your first O-4 commander, and you can start up to 180 days before separation.</p>
+                <Link href="/transition" className="mt-2 inline-block text-navy underline">Plan it in your Transition Hub →</Link>
+              </div>
+            )}
             {session?.profile?.role === 'veteran' && (
               <details className="mt-3 text-xs text-muted">
                 <summary className="cursor-pointer hover:text-signal">Something wrong with this job? Report it</summary>

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import CompanyVerification from '@/components/employer/CompanyVerification';
+import { requestSkillBridge } from '@/app/employer/actions';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import StatCard from '@/components/StatCard';
@@ -12,7 +13,7 @@ export const metadata: Metadata = { title: 'Employer Dashboard' };
 
 const PLAN_LABEL: Record<string, string> = { free: 'Free', professional: 'Professional', federal: 'Federal', enterprise: 'Enterprise' };
 
-export default async function EmployerDashboard({ searchParams }: { searchParams: { error?: string; verify?: string } }) {
+export default async function EmployerDashboard({ searchParams }: { searchParams: { error?: string; verify?: string; skillbridge?: string } }) {
   const { user, profile } = await requireRole(['employer'], '/employer/dashboard');
   const supabase = createClient();
 
@@ -83,6 +84,27 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
             {searchParams.verify === 'auto' && <p className="text-sm font-medium text-olive">✓ Your company is verified — your work email matches your website. You can publish jobs now.</p>}
             <CompanyVerification status={(company as unknown as { verification_status: string }).verification_status} note={(company as unknown as { verification_note: string | null }).verification_note} flash={searchParams.verify} />
             {searchParams.error === 'verify' && <p role="alert" className="text-sm text-signal">Your company needs to be verified before you can purchase a plan or add-on.</p>}
+
+            {(company as unknown as { is_verified: boolean }).is_verified && (() => {
+              const sbs = (company as unknown as { skillbridge_status: string; skillbridge_note: string | null }).skillbridge_status;
+              return (
+                <section className="card p-6">
+                  <p className="eyebrow">DoD SkillBridge</p>
+                  {sbs === 'authorized' ? <p className="mt-2 text-sm text-olive">✓ Confirmed DoD SkillBridge organization. Post programs by choosing “SkillBridge” as the employment type.</p>
+                  : sbs === 'pending' || searchParams.skillbridge === 'requested' ? <p className="mt-2 text-sm text-muted">We’re confirming your organization on the official DoD SkillBridge list — usually within one business day.</p>
+                  : (
+                    <form action={requestSkillBridge} className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end">
+                      <div className="flex-1">
+                        <label htmlFor="org_name" className="field-label">Your organization’s name exactly as listed on skillbridge.osd.mil</label>
+                        <input id="org_name" name="org_name" required className="field" />
+                        <p className="mt-1 text-xs text-muted">{sbs === 'rejected' ? 'We couldn’t find you on the official list last time. ' : ''}Only DoD-authorized organizations can list SkillBridge programs. Not authorized yet? You can still hire transitioning members for roles that start after they separate.</p>
+                      </div>
+                      <button className="btn btn-outline shrink-0">Request SkillBridge listing access</button>
+                    </form>
+                  )}
+                </section>
+              );
+            })()}
 
             <nav className="grid gap-3 sm:grid-cols-3">
               <Link href="/employer/candidates" className="card p-5 hover:border-brass"><p className="eyebrow">Candidate search</p><p className="mt-2 font-serif text-xl text-navy">Find veterans →</p></Link>

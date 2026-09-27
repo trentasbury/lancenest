@@ -4,7 +4,7 @@ import { requireAdmin } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import SubmitButton from '@/components/SubmitButton';
 import EmptyState from '@/components/EmptyState';
-import { decideCompany } from '../actions';
+import { decideCompany, decideSkillBridge } from '../actions';
 
 export const metadata: Metadata = { title: 'Company verification', robots: { index: false } };
 
@@ -14,6 +14,7 @@ const host = (u?: string | null) => { try { return u ? new URL(u).hostname.repla
 export default async function CompanyQueue() {
   await requireAdmin('/admin/companies');
   const admin = createAdminClient();
+  const { data: sbPending } = await admin.from('companies').select('id, name, skillbridge_org_name').eq('skillbridge_status', 'pending');
   const [{ data: pending }, { data: verified }] = await Promise.all([
     admin.from('companies').select('id, name, slug, owner_id, verification_details, created_at').eq('verification_status', 'pending').order('updated_at'),
     admin.from('companies').select('id, name, slug').eq('verification_status', 'verified').order('updated_at', { ascending: false }).limit(20),
@@ -32,6 +33,24 @@ export default async function CompanyQueue() {
         </div>
       </section>
       <div className="container-page max-w-4xl space-y-5 py-10">
+        {(sbPending ?? []).length > 0 && (
+          <section className="card border-olive/40 p-6">
+            <p className="eyebrow">SkillBridge authorization to confirm</p>
+            <p className="mt-1 text-sm text-muted">Search each name on the official DoD directory before approving.</p>
+            <ul className="mt-4 space-y-3">
+              {(sbPending ?? []).map((c) => (
+                <li key={c.id as string} className="flex flex-wrap items-center justify-between gap-3 rounded-[4px] border border-line p-4">
+                  <div><p className="font-medium">{c.name as string}</p><p className="text-sm text-muted">Listed as: {c.skillbridge_org_name as string}</p></div>
+                  <div className="flex flex-wrap gap-2">
+                    <a href="https://skillbridge.osd.mil/locations.htm" target="_blank" rel="noopener noreferrer" className="btn btn-ghost border border-line px-3 py-1.5 text-xs">DoD directory ↗</a>
+                    <form action={decideSkillBridge.bind(null, c.id as string, 'rejected')}><SubmitButton className="btn btn-outline border-signal px-3 py-1.5 text-xs text-signal" pendingText="…">Not on list</SubmitButton></form>
+                    <form action={decideSkillBridge.bind(null, c.id as string, 'authorized')}><SubmitButton className="btn btn-primary px-3 py-1.5 text-xs" pendingText="…">Confirm</SubmitButton></form>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         {(pending ?? []).length === 0 && <EmptyState title="No companies waiting." body="New submissions appear here, and you’ll get a notification." />}
         {(pending ?? []).map((c) => {
           const d = (c.verification_details ?? {}) as Details;

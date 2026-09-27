@@ -107,3 +107,16 @@ export async function decideCompany(companyId: string, decision: 'verified' | 'r
   revalidatePath('/admin/companies');
   revalidatePath('/admin');
 }
+
+/** Confirm (or reject) a company's DoD SkillBridge authorization after checking skillbridge.osd.mil. */
+export async function decideSkillBridge(companyId: string, decision: 'authorized' | 'rejected') {
+  const { user } = await requireAdmin();
+  const admin = createAdminClient();
+  const { data: c } = await admin.from('companies').select('owner_id, name').eq('id', companyId).maybeSingle();
+  await admin.from('companies').update({ skillbridge_status: decision }).eq('id', companyId);
+  if (decision === 'rejected') await admin.from('jobs').update({ status: 'paused' }).eq('company_id', companyId).eq('employment_type', 'skillbridge').eq('status', 'open');
+  if (c?.owner_id) await admin.from('notifications').insert({ profile_id: c.owner_id, type: 'skillbridge_request', link: '/employer/dashboard',
+    title: decision === 'authorized' ? `${c.name} is confirmed for SkillBridge listings.` : `We couldn’t confirm ${c.name} on the official DoD SkillBridge list.` });
+  await admin.from('admin_actions').insert({ admin_id: user.id, action: `skillbridge_${decision}`, target_type: 'company', target_id: companyId, details: {} });
+  revalidatePath('/admin/companies');
+}

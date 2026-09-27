@@ -96,3 +96,17 @@ export async function submitCompanyVerification(formData: FormData) {
   revalidatePath('/employer/dashboard');
   redirect('/employer/dashboard?verify=submitted');
 }
+
+/** Employer asks LanceNest to confirm their DoD SkillBridge authorization (admin checks skillbridge.osd.mil). */
+export async function requestSkillBridge(formData: FormData) {
+  const { user } = await requireRole(['employer'], '/employer/dashboard');
+  const orgName = String(formData.get('org_name') ?? '').trim().slice(0, 160);
+  const { data: company } = await createClient().from('companies').select('id, is_verified, skillbridge_status').eq('owner_id', user.id).maybeSingle();
+  if (!company?.is_verified || !orgName || company.skillbridge_status === 'authorized' || company.skillbridge_status === 'pending') redirect('/employer/dashboard');
+  const admin = createAdminClient();
+  await admin.from('companies').update({ skillbridge_status: 'pending', skillbridge_org_name: orgName, skillbridge_note: null }).eq('id', company.id);
+  const { data: admins } = await admin.from('profiles').select('id').eq('role', 'admin');
+  if (admins?.length) await admin.from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'skillbridge_request', title: `SkillBridge authorization to confirm: ${orgName}`, link: '/admin/companies' })));
+  revalidatePath('/employer/dashboard');
+  redirect('/employer/dashboard?skillbridge=requested');
+}

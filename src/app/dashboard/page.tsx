@@ -56,7 +56,7 @@ export default async function VeteranDashboard() {
           </div>
         )}
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Link href="/dashboard/profile" className="card group p-5 transition-colors hover:border-brass">
             <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Your profile</p>
             <p className="mt-2 font-serif text-2xl text-navy">{profile.onboarding_completed ? 'Edit profile' : 'Build your profile'} →</p>
@@ -73,6 +73,10 @@ export default async function VeteranDashboard() {
               <p className="mt-2 font-serif text-2xl text-navy">See what employers see →</p>
             </Link>
           )}
+          <Link href="/transition" className="card group p-5 transition-colors hover:border-brass">
+            <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Transitioning?</p>
+            <p className="mt-2 font-serif text-2xl text-navy">Transition Hub & SkillBridge →</p>
+          </Link>
           <Link href="/settings/account" className="card group p-5 transition-colors hover:border-brass">
             <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Account</p>
             <p className="mt-2 font-serif text-2xl text-navy">Settings & privacy →</p>
