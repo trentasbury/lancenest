@@ -93,6 +93,8 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
     viewerId ? supabase.from('user_follows').select('following_id').eq('follower_id', viewerId).eq('following_id', profile.id) : Promise.resolve({ data: [] }),
   ]);
   const following = (iFollow ?? []).length > 0;
+  // RLS returns the résumé only to the owner or a verified employer connected to this member.
+  const { data: resume } = viewer ? await supabase.from('resumes').select('file_name').eq('profile_id', profile.id).maybeSingle() : { data: null };
   const [{ data: freelance }, { data: portfolio }] = await Promise.all([
     supabase.from('freelancer_profiles').select('title, bio, hourly_rate, available, clearance_work, vosb, sdvosb').eq('profile_id', profile.id).maybeSingle(),
     supabase.from('portfolio_items').select('id, title, description, url').eq('profile_id', profile.id).order('created_at', { ascending: false }).limit(6),
@@ -143,6 +145,7 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
             ) : (
               <Link href={`/login?next=/veterans/${profile.username}`} className="btn btn-brass">Log in to connect</Link>
             )}
+            {resume && <a href={`/api/resumes/${profile.id}`} className="btn border border-brass py-1.5 text-xs text-brass hover:bg-brass/10">Download résumé</a>}
             <p className="text-xs text-cream/70">{followers ?? 0} follower{followers === 1 ? '' : 's'}</p>
             {session && !isOwner && (
               <details className="text-xs text-cream/60">

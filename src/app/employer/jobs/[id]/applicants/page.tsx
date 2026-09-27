@@ -39,6 +39,8 @@ export default async function ApplicantsPage({ params }: { params: { id: string 
     .select('id, status, applied_at, profile_id, profile:profiles!applications_profile_id_fkey(full_name, username, headline, service_summary, verified)')
     .eq('job_id', job.id).neq('status', 'withdrawn').order('applied_at', { ascending: false });
   const apps = (data ?? []) as unknown as App[];
+  const { data: resumes } = apps.length ? await supabase.from('resumes').select('profile_id').in('profile_id', apps.map((a) => a.profile_id)) : { data: [] };
+  const hasResume = new Set((resumes ?? []).map((r) => r.profile_id as string));
 
   return (
     <div className="container-page max-w-4xl py-10">
@@ -64,7 +66,8 @@ export default async function ApplicantsPage({ params }: { params: { id: string 
                   {a.profile?.verified && <VerifiedMark />}
                 </p>
                 <p className="truncate text-sm text-muted">{[a.profile?.headline, a.profile?.service_summary].filter(Boolean).join(' · ')}</p>
-                <p className="text-xs text-muted">Applied {new Date(a.applied_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}</p>
+                <p className="text-xs text-muted">Applied {new Date(a.applied_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}
+                  {hasResume.has(a.profile_id) && <> · <a href={`/api/resumes/${a.profile_id}`} className="text-navy underline">Résumé</a></>}</p>
               </div>
               <form action={moveApplicant.bind(null, a.id, job.id)} className="flex gap-2">
                 <select name="status" defaultValue={a.status === 'applied' ? 'viewed' : a.status} className="field py-2 text-sm">

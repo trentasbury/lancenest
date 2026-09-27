@@ -190,3 +190,42 @@ export async function removeEducation(id: string) {
   await supabase.from('education').delete().eq('id', id).eq('profile_id', user.id);
   done('education');
 }
+
+const RESUME_TYPES: Record<string, string> = {
+  'application/pdf': 'pdf', 'application/msword': 'doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+};
+
+/** Upload or replace the member's one current résumé (the old file is deleted). */
+export async function uploadResume(formData: FormData) {
+  const { user } = await requireRole(['veteran'], PAGE);
+  const file = formData.get('resume');
+  if (!(file instanceof File) || file.size === 0) done('resume', 'resume_missing');
+  if (file.size > 4 * 1024 * 1024) done('resume', 'resume_size');
+  const ext = RESUME_TYPES[file.type];
+  if (!ext) done('resume', 'resume_type');
+  const supabase = createClient();
+  const path = `${user.id}/resume-${Date.now()}.${ext}`;
+  const { error: upErr } = await supabase.storage.from('resumes').upload(path, file, { contentType: file.type, upsert: false });
+  if (upErr) { console.error('resume upload failed:', upErr.message); done('resume', 'save'); }
+  const { data: old } = await supabase.from('resumes').select('id, storage_path').eq('profile_id', user.id).maybeSingle();
+  if (old) {
+    await supabase.from('resumes').delete().eq('id', old.id);
+    await supabase.storage.from('resumes').remove([old.storage_path as string]);
+  }
+  const safeName = file.name.replace(/[^\w.\- ]+/g, '').slice(0, 120) || `resume.${ext}`;
+  const { error } = await supabase.from('resumes').insert({ profile_id: user.id, storage_path: path, file_name: safeName, mime_type: file.type });
+  if (error) { await supabase.storage.from('resumes').remove([path]); done('resume', 'save'); }
+  done('resume');
+}
+
+export async function removeResume() {
+  const { user } = await requireRole(['veteran'], PAGE);
+  const supabase = createClient();
+  const { data: old } = await supabase.from('resumes').select('id, storage_path').eq('profile_id', user.id).maybeSingle();
+  if (old) {
+    await supabase.from('resumes').delete().eq('id', old.id);
+    await supabase.storage.from('resumes').remove([old.storage_path as string]);
+  }
+  done('resume');
+}

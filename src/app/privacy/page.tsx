@@ -39,6 +39,7 @@ export default function PrivacyPage() {
         <ul>
           <li><strong>Employers on LanceNest</strong> can see service member profiles so they can recruit. Your email address is never shown on your profile.</li>
           <li><strong>Other members</strong> see your name, headline, and branch on your posts. Your full profile is visible to them only if you make it public.</li>
+          <li><strong>Your résumé</strong> is visible only to you and to verified companies you’ve applied to, sent a proposal to, or are messaging with — plus verified employers on paid plans. Other members can never see it, and each download link expires within a minute.</li>
           <li><strong>Posts</strong> follow the audience you choose: Public, Network (all members), Connections, or Private (only you).</li>
           <li><strong>Messages</strong> are visible only to the people in the conversation, and to our team when investigating a report.</li>
         </ul>

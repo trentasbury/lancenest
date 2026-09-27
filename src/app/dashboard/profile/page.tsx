@@ -9,7 +9,7 @@ import { VISIBILITY } from '@/lib/network';
 import { shareProfileMilestone } from '@/app/network/actions';
 import {
   addEducation, addExperience, addService, addSkill, removeEducation, removeExperience,
-  removeService, removeSkill, saveBasics,
+  removeResume, removeService, removeSkill, saveBasics, uploadResume,
 } from './actions';
 
 export const metadata: Metadata = { title: 'Edit profile' };
@@ -22,6 +22,9 @@ const ERRORS: Record<string, string> = {
   experience: 'Company and position are both required.',
   school: 'Enter the school name.',
   save: 'Something went wrong saving that. Please try again.',
+  resume_missing: 'Choose a file to upload.',
+  resume_size: 'Résumés must be under 4 MB.',
+  resume_type: 'Upload a PDF or Word document (.pdf, .doc, .docx).',
 };
 
 type Service = { id: string; branch: string; component: string; rank: string | null; occupation_code: string | null; start_date: string | null; end_date: string | null; deployments: number; occupation: { title: string } | null };
@@ -50,6 +53,7 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
   const { user, profile } = await requireRole(['veteran'], '/dashboard/profile');
   const supabase = createClient();
 
+  const { data: resume } = await supabase.from('resumes').select('file_name, uploaded_at').eq('profile_id', user.id).maybeSingle();
   const [{ data: vet }, { data: skillRows }, { data: service }, { data: experience }, { data: education }] = await Promise.all([
     supabase.from('veteran_profiles').select('*').eq('profile_id', user.id).maybeSingle(),
     supabase.from('profile_skills').select('skill:skills(id, name)').eq('profile_id', user.id),
@@ -149,6 +153,25 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
               Employers on LanceNest can always see your profile. “Public” also lets anyone with the link see it, without an account.
             </p>
             <div className="sm:col-span-2"><SubmitButton className="btn btn-primary" pendingText="Saving…">Save</SubmitButton></div>
+          </form>
+        </Section>
+
+        <Section id="resume" title="Résumé" hint="Only verified companies you’ve applied to, sent a proposal to, or are talking with — and verified paid employers — can open it. Other members never see your résumé.">
+          {resume ? (
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-[4px] border border-line bg-paper p-4">
+              <div><p className="font-medium">{resume.file_name as string}</p><p className="text-xs text-muted">Uploaded {new Date(resume.uploaded_at as string).toLocaleDateString('en-US', { dateStyle: 'medium' })}</p></div>
+              <div className="flex gap-2">
+                <a href={`/api/resumes/${user.id}`} className="btn btn-ghost border border-line py-1.5 text-xs">Download</a>
+                <form action={removeResume}><button className="btn btn-ghost py-1.5 text-xs text-signal">Remove</button></form>
+              </div>
+            </div>
+          ) : <p className="mb-5 text-sm text-muted">No résumé yet. Employers are far more likely to reach out when one is attached.</p>}
+          <form action={uploadResume} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex-1">
+              <label htmlFor="resume-file" className="field-label">{resume ? 'Replace with a new file' : 'Upload your résumé'} (PDF or Word, up to 4 MB)</label>
+              <input id="resume-file" name="resume" type="file" required accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="field text-sm file:mr-3 file:rounded-[3px] file:border-0 file:bg-navy file:px-3 file:py-1.5 file:text-ivory" />
+            </div>
+            <SubmitButton className="btn btn-primary shrink-0" pendingText="Uploading…">{resume ? 'Replace résumé' : 'Upload'}</SubmitButton>
           </form>
         </Section>
 
