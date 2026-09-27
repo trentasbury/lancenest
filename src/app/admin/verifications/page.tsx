@@ -10,7 +10,12 @@ export const metadata: Metadata = { title: 'Verification queue', robots: { index
 
 type Req = { id: string; profile_id: string; document_path: string | null; notes: string | null; created_at: string; profile: { full_name: string; username: string | null } | null };
 
-export default async function VerificationQueue() {
+const FLAGS: Record<string, string> = {
+  missing: 'Enter the legal first name, last name, and date of birth exactly as shown on the document.',
+  duplicate: '⚠ This person is already verified on another LanceNest account. Possible duplicate or ban evasion — check before approving.',
+};
+
+export default async function VerificationQueue({ searchParams }: { searchParams: { req?: string; flag?: string; on?: string; why?: string } }) {
   await requireAdmin('/admin/verifications');
   const admin = createAdminClient();
   const { data } = await admin
@@ -64,8 +69,25 @@ export default async function VerificationQueue() {
                 </div>
                 <SubmitButton className="btn btn-outline border-signal text-signal hover:bg-signal hover:text-ivory" pendingText="Saving…">Reject</SubmitButton>
               </form>
-              <form action={decideVerification.bind(null, r.id, 'verified')}>
-                <SubmitButton className="btn btn-primary w-full" pendingText="Saving…">Approve</SubmitButton>
+              <form action={decideVerification.bind(null, r.id, 'verified')} className="w-full space-y-2 rounded-[4px] border border-line bg-paper p-3 sm:w-auto">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Identity check (from the document)</p>
+                {searchParams.req === r.id && searchParams.flag && (
+                  <p className="text-xs font-semibold text-signal">
+                    {searchParams.flag === 'removed'
+                      ? `⚠ This person was removed from LanceNest on ${new Date(searchParams.on ?? '').toLocaleDateString()}${searchParams.why ? ` — ${searchParams.why}` : ''}. Reject unless an appeal was granted.`
+                      : FLAGS[searchParams.flag]}
+                  </p>
+                )}
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <input name="first" required placeholder="Legal first name" className="field py-2 text-sm" />
+                  <input name="last" required placeholder="Last name" className="field py-2 text-sm" />
+                  <input name="dob" type="date" required className="field py-2 text-sm" />
+                </div>
+                {searchParams.req === r.id && (searchParams.flag === 'removed' || searchParams.flag === 'duplicate') && (
+                  <label className="flex items-center gap-2 text-xs"><input type="checkbox" name="override" className="accent-signal" />I’ve reviewed this flag and approve anyway</label>
+                )}
+                <p className="text-[11px] text-muted">Only a one-way fingerprint is saved — never the name or birth date.</p>
+                <SubmitButton className="btn btn-primary w-full" pendingText="Checking…">Check & approve</SubmitButton>
               </form>
             </div>
           </div>

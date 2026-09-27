@@ -5,6 +5,7 @@ import { requireAdmin } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { deleteMemberCompletely } from '@/lib/account';
+import { identityHash } from '@/lib/identity';
 
 /** Approve or reject a verification request. Role is checked BEFORE the service-role client is used. */
 export async function decideVerification(requestId: string, decision: 'verified' | 'failed', formData: FormData) {
@@ -19,11 +20,30 @@ export async function decideVerification(requestId: string, decision: 'verified'
     .maybeSingle();
   if (!request || request.status !== 'pending') return;
 
+  // Identity check on approval: fingerprint the name + DOB typed from the document (nothing readable is stored).
+  let fingerprint: string | null = null;
+  if (decision === 'verified') {
+    const first = String(formData.get('first') ?? '').trim();
+    const last = String(formData.get('last') ?? '').trim();
+    const dob = String(formData.get('dob') ?? '');
+    if (!first || !last || !/^\d{4}-\d{2}-\d{2}$/.test(dob)) redirect(`/admin/verifications?req=${requestId}&flag=missing`);
+    fingerprint = identityHash(first, last, dob);
+    const override = formData.get('override') === 'on';
+    const [{ data: banned }, { data: dupes }] = await Promise.all([
+      admin.from('banned_identities').select('removed_at, reason').eq('identity_hash', fingerprint).maybeSingle(),
+      admin.from('verified_identities').select('profile_id').eq('identity_hash', fingerprint).neq('profile_id', request.profile_id).limit(1),
+    ]);
+    if (banned && !override) redirect(`/admin/verifications?req=${requestId}&flag=removed&on=${encodeURIComponent(banned.removed_at as string)}&why=${encodeURIComponent((banned.reason as string) ?? '')}`);
+    if (dupes?.length && !override) redirect(`/admin/verifications?req=${requestId}&flag=duplicate`);
+  }
+
   // Status change syncs to the member's profile via a database trigger.
   await admin
     .from('verification_requests')
     .update({ status: decision, reviewer_id: user.id, reviewed_at: new Date().toISOString(), notes: note, document_path: null })
     .eq('id', requestId);
+
+  if (fingerprint) await admin.from('verified_identities').upsert({ profile_id: request.profile_id, identity_hash: fingerprint });
 
   // Data minimization: the document isn't needed once a decision is made.
   if (request.document_path) await admin.storage.from('verification-docs').remove([request.document_path]);
@@ -134,6 +154,8 @@ export async function actOnMember(profileId: string, action: 'warning' | 'suspen
     await admin.from('profiles').update({ suspended_until: new Date(Date.now() + 7 * 86400000).toISOString() }).eq('id', profileId);
   } else if (action === 'removal') {
     await admin.from('profiles').update({ banned: true }).eq('id', profileId);
+    const { data: ident } = await admin.from('verified_identities').select('identity_hash').eq('profile_id', profileId).maybeSingle();
+    if (ident) await admin.from('banned_identities').upsert({ identity_hash: ident.identity_hash, reason });
     await admin.auth.admin.updateUserById(profileId, { ban_duration: '876000h' }); // blocks sign-in
     await admin.from('network_posts').update({ hidden: true }).eq('author_id', profileId);
     await admin.from('post_comments').update({ hidden: true }).eq('author_id', profileId);
