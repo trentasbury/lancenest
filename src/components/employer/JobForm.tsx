@@ -37,6 +37,10 @@ export default function JobForm({ job, action }: { job?: Job | null; action: (fd
           </select>
         </Field>
         <Field label="Industry"><input name="industry" defaultValue={job?.industry ?? ''} className="field" /></Field>
+        <Field label="Apply on company site — optional link" wide>
+          <input name="apply_url" type="url" defaultValue={(job as unknown as { apply_url?: string | null })?.apply_url ?? ''} placeholder="https://careers.yourcompany.com/job/123" className="field" />
+          <p className="mt-1 text-xs text-muted">Must be on your verified company domain or a standard applicant-tracking system (Workday, Greenhouse, Lever, iCIMS, and similar). Veterans can still apply on LanceNest.</p>
+        </Field>
       </section>
 
       <section className="card grid gap-5 p-7 sm:grid-cols-3">

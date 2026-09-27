@@ -68,7 +68,7 @@ export default async function ThreadPage({ params, searchParams }: { params: { i
                   <select name="reason" required defaultValue="" className="field text-sm">
                     <option value="" disabled>Reason…</option>
                     <option value="harassment">Harassment</option><option value="spam">Spam</option><option value="fraud">Fraud</option>
-                    <option value="impersonation">Impersonation</option><option value="inappropriate">Inappropriate</option><option value="other">Other</option>
+                    <option value="impersonation">Impersonation</option><option value="inappropriate">Inappropriate</option><option value="sensitive_info">Shares SSN, personal info, or OPSEC-sensitive details</option><option value="other">Other</option>
                   </select>
                   <SubmitButton className="btn btn-outline w-full py-2" pendingText="Sending…">Send report</SubmitButton>
                 </form>
@@ -98,7 +98,7 @@ export default async function ThreadPage({ params, searchParams }: { params: { i
         })}
       </ul>
 
-      {searchParams.error && <div className="mb-3"><FormMessage error={searchParams.error === 'blocked' ? 'This conversation is closed because one of you has blocked the other.' : searchParams.error === 'rate' ? 'You’re sending messages very quickly. Please wait a few minutes.' : 'Your message didn’t send. Please try again.'} /></div>}
+      {searchParams.error && <div className="mb-3"><FormMessage error={searchParams.error === 'blocked' ? 'This conversation is closed because one of you has blocked the other.' : searchParams.error === 'rate' ? 'You’re sending messages very quickly. Please wait a few minutes.' : searchParams.error === 'pii' ? 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' : 'Your message didn’t send. Please try again.'} /></div>}
       <form action={sendMessage.bind(null, params.id)} className="sticky bottom-4 flex gap-2 rounded-[6px] border border-line bg-ivory p-2 shadow-card">
         <label htmlFor="msg" className="sr-only">Message</label>
         <textarea id="msg" name="body" required rows={2} maxLength={4000} placeholder="Write a message…" className="field resize-none border-0 focus:ring-0" />

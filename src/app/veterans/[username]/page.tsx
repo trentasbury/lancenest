@@ -17,7 +17,7 @@ type Profile = { id: string; full_name: string; username: string; headline: stri
 type Vet = { about: string | null; clearance_level: string; verification_status: string; willing_to_relocate: boolean };
 type Service = {
   id: string; branch: string; component: string; rank: string | null; occupation_code: string | null;
-  start_date: string | null; end_date: string | null; deployments: number;
+  start_date: string | null; end_date: string | null; deployments: number; duty_title: string | null; unit: string | null; description: string | null;
   occupation: { title: string; civilian_categories: string[]; civilian_skills: string[] } | null;
 };
 
@@ -93,8 +93,6 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
     viewerId ? supabase.from('user_follows').select('following_id').eq('follower_id', viewerId).eq('following_id', profile.id) : Promise.resolve({ data: [] }),
   ]);
   const following = (iFollow ?? []).length > 0;
-  // RLS returns the résumé only to the owner or a verified employer connected to this member.
-  const { data: resume } = viewer ? await supabase.from('resumes').select('file_name').eq('profile_id', profile.id).maybeSingle() : { data: null };
   const [{ data: freelance }, { data: portfolio }] = await Promise.all([
     supabase.from('freelancer_profiles').select('title, bio, hourly_rate, available, clearance_work, vosb, sdvosb').eq('profile_id', profile.id).maybeSingle(),
     supabase.from('portfolio_items').select('id, title, description, url').eq('profile_id', profile.id).order('created_at', { ascending: false }).limit(6),
@@ -145,7 +143,6 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
             ) : (
               <Link href={`/login?next=/veterans/${profile.username}`} className="btn btn-brass">Log in to connect</Link>
             )}
-            {resume && <a href={`/api/resumes/${profile.id}`} className="btn border border-brass py-1.5 text-xs text-brass hover:bg-brass/10">Download résumé</a>}
             <p className="text-xs text-cream/70">{followers ?? 0} follower{followers === 1 ? '' : 's'}</p>
             {session && !isOwner && (
               <details className="text-xs text-cream/60">
@@ -154,7 +151,7 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
                   <select name="reason" required defaultValue="" className="field py-2 text-sm">
                     <option value="" disabled>Reason…</option>
                     <option value="harassment">Harassment or unprofessional conduct</option><option value="impersonation">Impersonation or false service claims</option>
-                    <option value="fraud">Scam or fraud</option><option value="spam">Spam</option><option value="inappropriate">Inappropriate content</option><option value="other">Other</option>
+                    <option value="fraud">Scam or fraud</option><option value="spam">Spam</option><option value="inappropriate">Inappropriate content</option><option value="sensitive_info">Shares SSN, personal info, or OPSEC-sensitive details</option><option value="other">Other</option>
                   </select>
                   <textarea name="details" rows={2} maxLength={1000} placeholder="What happened? (optional)" className="field py-2 text-sm" />
                   <SubmitButton className="btn btn-outline border-cream/40 py-1.5 text-xs text-ivory" pendingText="Sending…">Send report</SubmitButton>
@@ -175,14 +172,15 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
           )}
 
           <section className="card p-7">
-            <h2 className="eyebrow">Military service</h2>
+            <h2 className="eyebrow">Military career</h2>
             {services.length === 0 ? (
               <p className="mt-3 text-sm text-muted">No service history added yet.</p>
             ) : (
               <ul className="mt-4 space-y-5">
                 {services.map((s) => (
                   <li key={s.id} className="border-l-2 border-brass pl-4">
-                    <p className="font-serif text-xl font-semibold">
+                    {s.duty_title && <p className="font-serif text-xl font-semibold">{s.duty_title}</p>}
+                    <p className={s.duty_title ? 'text-sm font-medium text-ink/80' : 'font-serif text-xl font-semibold'}>
                       {s.occupation?.title ?? s.occupation_code ?? s.branch}
                       {s.occupation_code && s.occupation && <span className="font-sans text-sm font-normal text-muted"> · {s.occupation_code}</span>}
                     </p>
@@ -190,6 +188,8 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
                       {s.branch}{s.rank ? ` · ${s.rank}` : ''} · {COMPONENTS.find(([v]) => v === s.component)?.[1]} · {yearOf(s.start_date) || '—'}–{yearOf(s.end_date) || 'Present'}
                       {s.deployments > 0 && ` · ${s.deployments} deployment${s.deployments > 1 ? 's' : ''}`}
                     </p>
+                    {s.unit && <p className="text-sm text-muted">{s.unit}</p>}
+                    {s.description && <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink/85">{s.description}</p>}
                     {s.occupation && s.occupation.civilian_skills.length > 0 && (
                       <p className="mt-2 text-sm text-navy">{s.occupation.civilian_skills.join(' · ')}</p>
                     )}
@@ -243,7 +243,7 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
 
           {(experience ?? []).length > 0 && (
             <section className="card p-7">
-              <h2 className="eyebrow">Civilian experience</h2>
+              <h2 className="eyebrow">Professional career</h2>
               <ul className="mt-4 space-y-5">
                 {(experience ?? []).map((e: { id: string; company: string; position: string; start_date: string | null; end_date: string | null; description: string | null }) => (
                   <li key={e.id}>

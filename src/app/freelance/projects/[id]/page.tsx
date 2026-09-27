@@ -14,7 +14,7 @@ import { startConversation } from '@/app/messages/actions';
 import { setProjectStatus, setProposalStatus, submitProposal, withdrawProposal } from '../../actions';
 
 export const metadata: Metadata = { title: 'Project' };
-const ERR: Record<string, string> = { proposal: 'Add your price and a cover letter of at least 30 characters.', limit: `You’ve used your ${FREE_PROPOSALS_PER_MONTH} free proposals this month. Pro members send unlimited proposals.`, closed: 'This project is no longer accepting proposals.', duplicate: 'You’ve already sent a proposal for this project.', save: 'Your proposal didn’t send — please try again.' };
+const ERR: Record<string, string> = { proposal: 'Add your price and a cover letter of at least 30 characters.', limit: `You’ve used your ${FREE_PROPOSALS_PER_MONTH} free proposals this month. Pro members send unlimited proposals.`, closed: 'This project is no longer accepting proposals.', duplicate: 'You’ve already sent a proposal for this project.', save: 'Your proposal didn’t send — please try again.', pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' };
 
 type Proposal = { id: string; freelancer_id: string; cover_letter: string; bid_amount: number; timeline: string | null; status: string; created_at: string;
   freelancer: { full_name: string; username: string | null; headline: string | null; verified: boolean; service_summary: string | null } | null };

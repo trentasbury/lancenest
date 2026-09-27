@@ -31,21 +31,17 @@ export async function toggleSaveJob(jobId: string, slug: string) {
   revalidatePath('/dashboard');
 }
 
-export async function applyToJob(jobId: string, slug: string) {
+export async function applyToJob(jobId: string, slug: string, formData: FormData) {
   const userId = await requireVeteran(slug);
   const supabase = createClient();
-  const { data: existing } = await supabase
-    .from('applications')
-    .select('id, status')
-    .eq('profile_id', userId)
-    .eq('job_id', jobId)
-    .maybeSingle();
-
+  const resumeId = String(formData.get('resume_id') ?? '') || null;
+  const { data: existing } = await supabase.from('applications').select('id, status').eq('profile_id', userId).eq('job_id', jobId).maybeSingle();
   if (!existing) {
-    await supabase.from('applications').insert({ profile_id: userId, job_id: jobId });
+    await supabase.from('applications').insert({ profile_id: userId, job_id: jobId, resume_id: resumeId, source: 'lancenest' });
   } else if (existing.status === 'withdrawn') {
     await supabase.from('applications').update({ status: 'applied' }).eq('id', existing.id);
   }
   revalidatePath(`/jobs/${slug}`);
   revalidatePath('/dashboard');
+  revalidatePath('/dashboard/applications');
 }

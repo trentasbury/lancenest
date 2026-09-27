@@ -10,7 +10,7 @@ import {
 
 const REPORT_REASONS = [
   ['spam', 'Spam'], ['harassment', 'Harassment'], ['fraud', 'Fraud'], ['fake_information', 'Fake information'],
-  ['inappropriate', 'Inappropriate content'], ['impersonation', 'Impersonation'], ['other', 'Other'],
+  ['inappropriate', 'Inappropriate content'], ['impersonation', 'Impersonation'], ['sensitive_info', 'Shares SSN, personal info, or OPSEC details'], ['other', 'Other'],
 ];
 
 function AuthorLine({ post, compact = false }: { post: Post; compact?: boolean }) {

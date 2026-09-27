@@ -9,7 +9,7 @@ import FormMessage from '@/components/FormMessage';
 import { createProject } from '../../actions';
 
 export const metadata: Metadata = { title: 'Post a project' };
-const ERR: Record<string, string> = { required: 'Add a title and a description of at least 20 characters.', budget: 'The maximum budget can’t be lower than the minimum.', scam: 'This description contains wording often used in scams (fees, gift cards, off-platform chat apps). Please revise it.', save: 'That didn’t post — please try again.' };
+const ERR: Record<string, string> = { required: 'Add a title and a description of at least 20 characters.', budget: 'The maximum budget can’t be lower than the minimum.', scam: 'This description contains wording often used in scams (fees, gift cards, off-platform chat apps). Please revise it.', save: 'That didn’t post — please try again.', pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' };
 
 export default async function NewProjectPage({ searchParams }: { searchParams: { error?: string } }) {
   const { user, profile } = await requireVerifiedMember('/freelance/projects/new');

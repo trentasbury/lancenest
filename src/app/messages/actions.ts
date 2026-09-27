@@ -76,7 +76,7 @@ export async function sendMessage(conversationId: string, formData: FormData) {
   // Row-level security confirms participation; a database trigger refuses blocked senders and sends the notification.
   const { error } = await createClient().from('messages').insert({ conversation_id: conversationId, sender_id: session.user.id, body });
   if (error) {
-    const reason = error.code === 'P0002' ? 'rate' : error.message.includes("can't") ? 'blocked' : 'send';
+    const reason = error.code === 'P0009' ? 'pii' : error.code === 'P0002' ? 'rate' : error.message.includes("can't") ? 'blocked' : 'send';
     redirect(`/messages/${conversationId}?error=${reason}`);
   }
   revalidatePath('/', 'layout');

@@ -9,7 +9,7 @@ import { VISIBILITY } from '@/lib/network';
 import { shareProfileMilestone } from '@/app/network/actions';
 import {
   addEducation, addExperience, addService, addSkill, removeEducation, removeExperience,
-  removeResume, removeService, removeSkill, saveBasics, uploadResume,
+  removeResume, removeService, removeSkill, saveBasics, setDefaultResume, uploadResume,
 } from './actions';
 
 export const metadata: Metadata = { title: 'Edit profile' };
@@ -25,6 +25,7 @@ const ERRORS: Record<string, string> = {
   resume_missing: 'Choose a file to upload.',
   resume_size: 'Résumés must be under 4 MB.',
   resume_type: 'Upload a PDF or Word document (.pdf, .doc, .docx).',
+  resume_limit: 'You can keep up to 3 résumés. Remove one to add another.',
 };
 
 type Service = { id: string; branch: string; component: string; rank: string | null; occupation_code: string | null; start_date: string | null; end_date: string | null; deployments: number; occupation: { title: string } | null };
@@ -53,7 +54,7 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
   const { user, profile } = await requireRole(['veteran'], '/dashboard/profile');
   const supabase = createClient();
 
-  const { data: resume } = await supabase.from('resumes').select('file_name, uploaded_at').eq('profile_id', user.id).maybeSingle();
+  const { data: resumes } = await supabase.from('resumes').select('id, file_name, uploaded_at, is_default').eq('profile_id', user.id).order('uploaded_at', { ascending: false });
   const [{ data: vet }, { data: skillRows }, { data: service }, { data: experience }, { data: education }] = await Promise.all([
     supabase.from('veteran_profiles').select('*').eq('profile_id', user.id).maybeSingle(),
     supabase.from('profile_skills').select('skill:skills(id, name)').eq('profile_id', user.id),
@@ -156,26 +157,38 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
           </form>
         </Section>
 
-        <Section id="resume" title="Résumé" hint="Only verified companies you’ve applied to, sent a proposal to, or are talking with — and verified paid employers — can open it. Other members never see your résumé.">
-          {resume ? (
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-[4px] border border-line bg-paper p-4">
-              <div><p className="font-medium">{resume.file_name as string}</p><p className="text-xs text-muted">Uploaded {new Date(resume.uploaded_at as string).toLocaleDateString('en-US', { dateStyle: 'medium' })}</p></div>
-              <div className="flex gap-2">
-                <a href={`/api/resumes/${user.id}`} className="btn btn-ghost border border-line py-1.5 text-xs">Download</a>
-                <form action={removeResume}><button className="btn btn-ghost py-1.5 text-xs text-signal">Remove</button></form>
+        <Section id="resume" title="Résumés" hint="Keep up to 3 (for example, one per career path). You choose which to send each time you apply, and only that company sees it — never other members.">
+          {(resumes ?? []).length > 0 ? (
+            <ul className="mb-5 divide-y divide-line rounded-[4px] border border-line bg-paper">
+              {(resumes ?? []).map((r) => (
+                <li key={r.id as string} className="flex flex-wrap items-center justify-between gap-3 p-4">
+                  <div>
+                    <p className="font-medium">{r.file_name as string}{r.is_default && <span className="ml-2 rounded-full bg-olive/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-olive">Default</span>}</p>
+                    <p className="text-xs text-muted">Uploaded {new Date(r.uploaded_at as string).toLocaleDateString('en-US', { dateStyle: 'medium' })}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <a href={`/api/resume-files/${r.id}`} className="btn btn-ghost border border-line py-1.5 text-xs">Download</a>
+                    {!r.is_default && <form action={setDefaultResume.bind(null, r.id as string)}><button className="btn btn-ghost py-1.5 text-xs">Make default</button></form>}
+                    <form action={removeResume.bind(null, r.id as string)}><button className="btn btn-ghost py-1.5 text-xs text-signal">Remove</button></form>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : <p className="mb-5 text-sm text-muted">No résumé yet. Applications with a résumé get far more responses.</p>}
+          {(resumes ?? []).length < 3 && (
+            <form action={uploadResume} className="space-y-3">
+              <div>
+                <label htmlFor="resume-file" className="field-label">Add a résumé (PDF or Word, up to 4 MB)</label>
+                <input id="resume-file" name="resume" type="file" required accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="field text-sm file:mr-3 file:rounded-[3px] file:border-0 file:bg-navy file:px-3 file:py-1.5 file:text-ivory" />
               </div>
-            </div>
-          ) : <p className="mb-5 text-sm text-muted">No résumé yet. Employers are far more likely to reach out when one is attached.</p>}
-          <form action={uploadResume} className="flex flex-col gap-3 sm:flex-row sm:items-end">
-            <div className="flex-1">
-              <label htmlFor="resume-file" className="field-label">{resume ? 'Replace with a new file' : 'Upload your résumé'} (PDF or Word, up to 4 MB)</label>
-              <input id="resume-file" name="resume" type="file" required accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="field text-sm file:mr-3 file:rounded-[3px] file:border-0 file:bg-navy file:px-3 file:py-1.5 file:text-ivory" />
-            </div>
-            <SubmitButton className="btn btn-primary shrink-0" pendingText="Uploading…">{resume ? 'Replace résumé' : 'Upload'}</SubmitButton>
-          </form>
+              {(resumes ?? []).length > 0 && <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="make_default" className="accent-navy" />Make this my default</label>}
+              <p className="text-xs text-signal">Before uploading: remove your Social Security number, DoD ID number, date of birth, home address, and any clearance investigation details. A phone number and email are enough.</p>
+              <SubmitButton className="btn btn-primary" pendingText="Uploading…">Upload</SubmitButton>
+            </form>
+          )}
         </Section>
 
-        <Section id="service" title="Military service" hint="Add your MOS, rating, or AFSC — we translate it into civilian language on your profile.">
+        <Section id="service" title="Military career" hint="Add each assignment like a job: billet, unit, and what you accomplished. Your MOS, rating, or AFSC is translated into civilian language on your profile.">
           {services.length > 0 && (
             <ul className="mb-6 divide-y divide-line rounded-[4px] border border-line bg-paper">
               {services.map((s) => (
@@ -224,6 +237,19 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
               <label htmlFor="end_year" className="field-label">End year</label>
               <input id="end_year" name="end_year" type="number" min={1950} max={2100} placeholder="Blank if serving" className="field" />
             </div>
+            <div className="sm:col-span-2">
+              <label htmlFor="duty_title" className="field-label">Duty title / billet</label>
+              <input id="duty_title" name="duty_title" placeholder="e.g. Platoon Sergeant, Presidential Security Specialist" className="field" />
+            </div>
+            <div>
+              <label htmlFor="unit" className="field-label">Unit (optional)</label>
+              <input id="unit" name="unit" placeholder="e.g. 2nd Battalion, 7th Marines" className="field" />
+            </div>
+            <div className="sm:col-span-3">
+              <label htmlFor="svc_description" className="field-label">What you led and accomplished</label>
+              <textarea id="svc_description" name="description" rows={3} maxLength={2000} placeholder="Team size, equipment value, results — in civilian terms." className="field" />
+              <p className="mt-1 text-xs text-signal">OPSEC: don’t list current locations, deployment dates or movements, or anything classified or CUI.</p>
+            </div>
             <div>
               <label htmlFor="deployments" className="field-label">Deployments</label>
               <input id="deployments" name="deployments" type="number" min={0} max={50} defaultValue={0} className="field" />
@@ -251,7 +277,7 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
           </form>
         </Section>
 
-        <Section id="experience" title="Civilian experience">
+        <Section id="experience" title="Professional career" hint="Civilian jobs, contracting, and your own business — if applicable.">
           {exps.length > 0 && (
             <ul className="mb-6 divide-y divide-line rounded-[4px] border border-line bg-paper">
               {exps.map((e) => (

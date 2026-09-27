@@ -69,7 +69,7 @@ function CommentItem({ c, me, postAuthorId, postId, replies }: { c: Comment; me:
                     <option value="" disabled>Reason…</option>
                     <option value="spam">Spam</option><option value="harassment">Harassment</option><option value="fraud">Fraud</option>
                     <option value="fake_information">Fake information</option><option value="inappropriate">Inappropriate</option>
-                    <option value="impersonation">Impersonation</option><option value="other">Other</option>
+                    <option value="impersonation">Impersonation</option><option value="sensitive_info">Shares SSN, personal info, or OPSEC-sensitive details</option><option value="other">Other</option>
                   </select>
                   <SubmitButton className="btn btn-outline shrink-0 py-2" pendingText="…">Send</SubmitButton>
                 </form>

@@ -43,6 +43,9 @@ export default async function JobDetailPage({ params }: { params: { slug: string
   if (!job) notFound();
 
   const session = await getSessionProfile();
+  const { data: myResumes } = session?.profile?.role === 'veteran'
+    ? await createClient().from('resumes').select('id, file_name, is_default').eq('profile_id', session.user.id).order('uploaded_at', { ascending: false })
+    : { data: [] as { id: string; file_name: string; is_default: boolean }[] };
   if (session) {
     // One view per member per job per day; duplicates are ignored.
     await createClient().from('job_views').insert({ job_id: job.id, viewer_id: session.user.id }).then(() => undefined, () => undefined);
@@ -103,7 +106,7 @@ export default async function JobDetailPage({ params }: { params: { slug: string
                     <option value="fraud">Asked for money or personal info</option>
                     <option value="impersonation">Impersonating a company</option>
                     <option value="inappropriate">Inappropriate</option>
-                    <option value="other">Other</option>
+                    <option value="sensitive_info">Shares SSN, personal info, or OPSEC-sensitive details</option><option value="other">Other</option>
                   </select>
                   <SubmitButton className="btn btn-outline py-2" pendingText="…">Report</SubmitButton>
                 </form>
@@ -158,9 +161,22 @@ export default async function JobDetailPage({ params }: { params: { slug: string
                   ✓ Applied — status: {applicationStatus}
                 </p>
               ) : (
-                <form action={applyToJob.bind(null, job.id, job.slug)}>
-                  <SubmitButton pendingText="Submitting…">Apply now</SubmitButton>
+                <form action={applyToJob.bind(null, job.id, job.slug)} className="space-y-2">
+                  {(myResumes ?? []).length > 0 ? (
+                    <div>
+                      <label htmlFor="resume_id" className="field-label">Résumé to send</label>
+                      <select id="resume_id" name="resume_id" defaultValue={((myResumes ?? []).find((r) => r.is_default)?.id as string) ?? ''} className="field text-sm">
+                        {(myResumes ?? []).map((r) => <option key={r.id as string} value={r.id as string}>{r.file_name as string}</option>)}
+                        <option value="">Apply without a résumé</option>
+                      </select>
+                      <p className="mt-1 text-[11px] text-muted">Only {job.company?.name ?? 'this company'} will see it.</p>
+                    </div>
+                  ) : <p className="text-xs text-muted"><Link href="/dashboard/profile#resume" className="underline">Add a résumé</Link> to stand out.</p>}
+                  <SubmitButton pendingText="Submitting…">{(job as unknown as { apply_url?: string }).apply_url ? 'Easy Apply on LanceNest' : 'Apply now'}</SubmitButton>
                 </form>
+              )}
+              {!applied && (job as unknown as { apply_url?: string }).apply_url && (
+                <a href={`/api/jobs/${job.id}/external`} className="btn btn-outline w-full">Apply on company site ↗</a>
               )}
               <form action={toggleSaveJob.bind(null, job.id, job.slug)}>
                 <SubmitButton className="btn btn-outline w-full" pendingText="Saving…">

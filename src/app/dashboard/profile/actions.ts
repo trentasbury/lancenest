@@ -114,6 +114,9 @@ export async function addService(formData: FormData) {
     branch,
     component: COMPONENTS.some(([v]) => v === component) ? component : 'active',
     rank: text(formData, 'rank', 30) || null,
+    duty_title: text(formData, 'duty_title', 120) || null,
+    unit: text(formData, 'unit', 120) || null,
+    description: text(formData, 'description', 2000) || null,
     occupation_code: code || null,
     occupation_id: occupationId,
     start_date: yearToDate(formData.get('start_year')),
@@ -196,7 +199,7 @@ const RESUME_TYPES: Record<string, string> = {
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
 };
 
-/** Upload or replace the member's one current résumé (the old file is deleted). */
+/** Save a résumé (up to 3). The first one — or one marked default — becomes the default for applications. */
 export async function uploadResume(formData: FormData) {
   const { user } = await requireRole(['veteran'], PAGE);
   const file = formData.get('resume');
@@ -205,27 +208,39 @@ export async function uploadResume(formData: FormData) {
   const ext = RESUME_TYPES[file.type];
   if (!ext) done('resume', 'resume_type');
   const supabase = createClient();
+  const { count } = await supabase.from('resumes').select('id', { count: 'exact', head: true }).eq('profile_id', user.id);
+  if ((count ?? 0) >= 3) done('resume', 'resume_limit');
   const path = `${user.id}/resume-${Date.now()}.${ext}`;
   const { error: upErr } = await supabase.storage.from('resumes').upload(path, file, { contentType: file.type, upsert: false });
   if (upErr) { console.error('resume upload failed:', upErr.message); done('resume', 'save'); }
-  const { data: old } = await supabase.from('resumes').select('id, storage_path').eq('profile_id', user.id).maybeSingle();
-  if (old) {
-    await supabase.from('resumes').delete().eq('id', old.id);
-    await supabase.storage.from('resumes').remove([old.storage_path as string]);
-  }
+  const makeDefault = !count || formData.get('make_default') === 'on';
+  if (makeDefault) await supabase.from('resumes').update({ is_default: false }).eq('profile_id', user.id);
   const safeName = file.name.replace(/[^\w.\- ]+/g, '').slice(0, 120) || `resume.${ext}`;
-  const { error } = await supabase.from('resumes').insert({ profile_id: user.id, storage_path: path, file_name: safeName, mime_type: file.type });
-  if (error) { await supabase.storage.from('resumes').remove([path]); done('resume', 'save'); }
+  const { error } = await supabase.from('resumes').insert({ profile_id: user.id, storage_path: path, file_name: safeName, mime_type: file.type, is_default: makeDefault });
+  if (error) { await supabase.storage.from('resumes').remove([path]); done('resume', error.code === 'P0010' ? 'resume_limit' : 'save'); }
   done('resume');
 }
 
-export async function removeResume() {
+export async function setDefaultResume(id: string) {
   const { user } = await requireRole(['veteran'], PAGE);
   const supabase = createClient();
-  const { data: old } = await supabase.from('resumes').select('id, storage_path').eq('profile_id', user.id).maybeSingle();
+  await supabase.from('resumes').update({ is_default: false }).eq('profile_id', user.id);
+  await supabase.from('resumes').update({ is_default: true }).eq('id', id).eq('profile_id', user.id);
+  done('resume');
+}
+
+/** Removing a résumé also removes it from past applications (employers lose access). */
+export async function removeResume(id: string) {
+  const { user } = await requireRole(['veteran'], PAGE);
+  const supabase = createClient();
+  const { data: old } = await supabase.from('resumes').select('id, storage_path, is_default').eq('id', id).eq('profile_id', user.id).maybeSingle();
   if (old) {
     await supabase.from('resumes').delete().eq('id', old.id);
     await supabase.storage.from('resumes').remove([old.storage_path as string]);
+    if (old.is_default) {
+      const { data: next } = await supabase.from('resumes').select('id').eq('profile_id', user.id).order('uploaded_at', { ascending: false }).limit(1).maybeSingle();
+      if (next) await supabase.from('resumes').update({ is_default: true }).eq('id', next.id);
+    }
   }
   done('resume');
 }

@@ -36,7 +36,7 @@ export default async function Navbar() {
   const accountLinks: NavLink[] = !session ? [] : [
     { href: roleHome(role), label: role === 'admin' ? 'Admin' : role === 'employer' ? 'Employer dashboard' : 'Dashboard' },
     ...(role === 'veteran' && profile?.username ? [{ href: `/veterans/${profile.username}`, label: 'My profile' }] : []),
-    ...(role === 'veteran' ? [{ href: '/dashboard/profile', label: 'Edit profile' }, { href: '/dashboard/verification', label: 'Verification' }, { href: '/transition', label: 'Transition Hub & SkillBridge' }, { href: '/plans', label: 'Plans & upgrades' }] : []),
+    ...(role === 'veteran' ? [{ href: '/dashboard/profile', label: 'Edit profile' }, { href: '/dashboard/applications', label: 'My applications' }, { href: '/dashboard/verification', label: 'Verification' }, { href: '/transition', label: 'Transition Hub & SkillBridge' }, { href: '/plans', label: 'Plans & upgrades' }] : []),
     ...(role === 'employer' ? [{ href: '/employer/jobs/new', label: 'Post a job' }, { href: '/employer/analytics', label: 'Hiring analytics' }, { href: '/employers', label: 'Plans & billing' }] : []),
     { href: '/network?view=saved', label: 'Saved posts' },
     { href: '/settings/account', label: 'Account settings' },

@@ -54,6 +54,7 @@ export async function createPost(formData: FormData): Promise<PostState> {
     .single();
   if (error || !data) {
     if (error?.code === 'P0002') return { error: 'You’re posting a lot right now. Please wait a bit and try again.' };
+    if (error?.code === 'P0009') return { error: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' };
     console.error('createPost failed:', error?.message);
     return { error: 'Your post couldn’t be published. Please try again.' };
   }
@@ -138,7 +139,7 @@ export async function deleteComment(commentId: string) {
   refresh();
 }
 
-const REPORT_REASONS = ['spam', 'harassment', 'fraud', 'fake_job', 'fake_information', 'inappropriate', 'impersonation', 'other'];
+const REPORT_REASONS = ['spam', 'harassment', 'fraud', 'fake_job', 'fake_information', 'inappropriate', 'impersonation', 'sensitive_info', 'other'];
 
 export async function reportContent(targetType: 'post' | 'comment' | 'profile' | 'message' | 'job', targetId: string, formData: FormData) {
   const uid = await me();

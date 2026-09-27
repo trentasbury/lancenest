@@ -24,7 +24,7 @@ async function moveApplicant(applicationId: string, jobId: string, formData: For
   revalidatePath(`/employer/jobs/${jobId}/applicants`);
 }
 
-type App = { id: string; status: string; applied_at: string; profile_id: string; profile: { full_name: string; username: string | null; headline: string | null; service_summary: string | null; verified: boolean } | null };
+type App = { id: string; status: string; applied_at: string; profile_id: string; resume_id: string | null; profile: { full_name: string; username: string | null; headline: string | null; service_summary: string | null; verified: boolean } | null };
 
 export default async function ApplicantsPage({ params }: { params: { id: string } }) {
   const { user } = await requireRole(['employer'], '/employer/dashboard');
@@ -34,13 +34,12 @@ export default async function ApplicantsPage({ params }: { params: { id: string 
   if (!job || !company || job.company_id !== company.id) notFound();
 
   // Opening the pipeline marks new applications as "Reviewing" (the applicant is told their application was viewed).
-  await supabase.from('applications').update({ status: 'viewed' }).eq('job_id', job.id).eq('status', 'applied');
+  await supabase.from('applications').update({ status: 'viewed' }).eq('job_id', job.id).eq('status', 'applied').eq('source', 'lancenest');
   const { data } = await supabase.from('applications')
-    .select('id, status, applied_at, profile_id, profile:profiles!applications_profile_id_fkey(full_name, username, headline, service_summary, verified)')
-    .eq('job_id', job.id).neq('status', 'withdrawn').order('applied_at', { ascending: false });
+    .select('id, status, applied_at, profile_id, resume_id, profile:profiles!applications_profile_id_fkey(full_name, username, headline, service_summary, verified)')
+    .eq('job_id', job.id).eq('source', 'lancenest').neq('status', 'withdrawn').order('applied_at', { ascending: false });
   const apps = (data ?? []) as unknown as App[];
-  const { data: resumes } = apps.length ? await supabase.from('resumes').select('profile_id').in('profile_id', apps.map((a) => a.profile_id)) : { data: [] };
-  const hasResume = new Set((resumes ?? []).map((r) => r.profile_id as string));
+
 
   return (
     <div className="container-page max-w-4xl py-10">
@@ -67,7 +66,7 @@ export default async function ApplicantsPage({ params }: { params: { id: string 
                 </p>
                 <p className="truncate text-sm text-muted">{[a.profile?.headline, a.profile?.service_summary].filter(Boolean).join(' · ')}</p>
                 <p className="text-xs text-muted">Applied {new Date(a.applied_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}
-                  {hasResume.has(a.profile_id) && <> · <a href={`/api/resumes/${a.profile_id}`} className="text-navy underline">Résumé</a></>}</p>
+                  {a.resume_id && <> · <a href={`/api/resume-files/${a.resume_id}`} className="text-navy underline">Résumé sent with this application</a></>}</p>
               </div>
               <form action={moveApplicant.bind(null, a.id, job.id)} className="flex gap-2">
                 <select name="status" defaultValue={a.status === 'applied' ? 'viewed' : a.status} className="field py-2 text-sm">

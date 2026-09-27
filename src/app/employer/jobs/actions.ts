@@ -54,6 +54,7 @@ export async function saveJob(jobId: string | null, formData: FormData) {
     clearance_required: oneOf(t(formData, 'clearance_required', 14), ['none', 'public_trust', 'confidential', 'secret', 'top_secret', 'ts_sci'], 'none'),
     clearance_eligible: formData.get('clearance_eligible') === 'on',
     status: oneOf(t(formData, 'status', 8), ['draft', 'open'], 'open'),
+    apply_url: t(formData, 'apply_url', 500) || null,
   };
 
   // Pay transparency (required by law in several states) and scam screening before anything goes live.
@@ -82,6 +83,7 @@ export async function saveJob(jobId: string | null, formData: FormData) {
     if (error.code === 'P0003') redirect(`${back}?error=limit`);
     if (error.code === 'P0004') redirect(`${back}?error=company`);
     if (error.code === 'P0007') redirect(`${back}?error=skillbridge`);
+    if (error.code === 'P0008') redirect(`${back}?error=apply_url`);
     console.error('saveJob failed:', error.message);
     redirect(`${back}?error=save`);
   }

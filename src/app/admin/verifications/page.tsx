@@ -65,7 +65,14 @@ export default async function VerificationQueue({ searchParams }: { searchParams
               <form action={decideVerification.bind(null, r.id, 'failed')} className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-end">
                 <div className="flex-1">
                   <label htmlFor={`note-${r.id}`} className="field-label">Reason (shown to member if rejected)</label>
-                  <input id={`note-${r.id}`} name="note" maxLength={300} placeholder="e.g. Name on document doesn’t match profile" className="field" />
+                  <input id={`note-${r.id}`} name="note" list="reject-reasons" maxLength={300} placeholder="Pick or type a reason" className="field" />
+                  <datalist id="reject-reasons">
+                    <option value="Social Security number wasn’t blacked out — please redact it and resubmit" />
+                    <option value="Name on the document doesn’t match your profile" />
+                    <option value="Document is unreadable — please upload a clearer copy" />
+                    <option value="Not an accepted document type (DD-214, VA ID card, LES, orders, or NGB-22)" />
+                    <option value="Military ID cards can’t be accepted (18 U.S.C. § 701)" />
+                  </datalist>
                 </div>
                 <SubmitButton className="btn btn-outline border-signal text-signal hover:bg-signal hover:text-ivory" pendingText="Saving…">Reject</SubmitButton>
               </form>
