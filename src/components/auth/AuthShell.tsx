@@ -17,8 +17,8 @@ export default function AuthShell({ title, subtitle, children }: { title: string
         </div>
       </div>
       <div className="flex flex-col items-center justify-center px-5 pb-14 sm:px-10 lg:pt-14">
-        <div className="relative -mx-5 mb-10 h-48 w-[calc(100%+2.5rem)] overflow-hidden sm:-mx-10 sm:w-[calc(100%+5rem)] lg:hidden">
-          <Image src="/assets/lighthouse.webp" alt="" fill priority quality={90} sizes="100vw" className="object-cover object-[center_35%]" />
+        <div className="relative mb-10 h-48 w-full max-w-md overflow-hidden rounded-[6px] lg:hidden">
+          <Image src="/assets/lighthouse.webp" alt="" fill priority quality={90} sizes="(min-width: 1024px) 0px, 448px" className="object-cover object-[center_35%]" />
           <div className="absolute inset-0 bg-gradient-to-t from-paper via-transparent to-transparent" />
         </div>
         <div className="w-full max-w-md">

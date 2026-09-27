@@ -22,9 +22,9 @@ export default async function HomePage({ searchParams }: { searchParams: { delet
       {/* Hero */}
       <section className="relative overflow-hidden bg-navy-deep text-ivory">
         <div className="container-page grid items-center gap-12 py-16 lg:grid-cols-[1.25fr_1fr] lg:py-24">
-          <div>
+          <div className="min-w-0">
             <p className="eyebrow text-brass">Veteran Jobs · Built for What’s Next</p>
-            <h1 className="mt-5 font-serif text-6xl font-medium tracking-[0.06em] text-ivory sm:text-7xl lg:text-8xl">LANCENEST</h1>
+            <h1 className="mt-5 font-serif text-[clamp(2.6rem,13vw,6rem)] font-medium leading-none tracking-[0.04em] text-ivory sm:tracking-[0.06em]">LANCENEST</h1>
             <StarRule className="mt-6" />
             <p className="mt-6 max-w-xl font-serif text-2xl italic leading-snug text-cream">
               Same mission. New battlefield.
@@ -32,7 +32,7 @@ export default async function HomePage({ searchParams }: { searchParams: { delet
               Your next chapter starts here.
             </p>
 
-            <form action="/jobs" method="get" className="mt-10 flex max-w-2xl flex-col gap-2 rounded-[6px] bg-ivory p-2 shadow-lift sm:flex-row">
+            <form action="/jobs" method="get" className="mt-10 flex w-full max-w-2xl flex-col gap-2 rounded-[6px] bg-ivory p-2 shadow-lift sm:flex-row">
               <label htmlFor="hero-q" className="sr-only">Job title, keyword, or company</label>
               <input id="hero-q" name="q" placeholder="Job title, keyword, or company" className="flex-1 rounded-[3px] px-4 py-3 text-[15px] text-ink outline-none placeholder:text-muted" />
               <label htmlFor="hero-location" className="sr-only">Location</label>
@@ -46,7 +46,7 @@ export default async function HomePage({ searchParams }: { searchParams: { delet
             </div>
           </div>
 
-          <div className="relative hidden aspect-[3/5] max-h-[560px] justify-self-end lg:block">
+          <div className="relative hidden h-[540px] w-[324px] shrink-0 justify-self-end lg:block">
             <div className="absolute -inset-3 border border-brass/40" aria-hidden="true" />
             <Image
               src="/assets/veteran-silhouette.webp"
@@ -54,7 +54,7 @@ export default async function HomePage({ searchParams }: { searchParams: { delet
               fill
               priority
               quality={90}
-              sizes="(min-width: 1024px) 340px, 0px"
+              sizes="(min-width: 1024px) 324px, 0px"
               className="object-cover"
             />
           </div>

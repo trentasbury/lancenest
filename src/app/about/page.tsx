@@ -18,8 +18,8 @@ export default function AboutPage() {
             civilian world — and to connect those who served with employers who genuinely want them.
           </p>
         </div>
-        <div className="relative min-h-[360px]">
-          <Image src="/assets/lighthouse.webp" alt="A white lighthouse on a harbor at sunset" fill quality={90} sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
+        <div className="relative mx-auto min-h-[360px] w-full max-w-xl lg:max-w-none">
+          <Image src="/assets/lighthouse.webp" alt="A white lighthouse on a harbor at sunset" fill quality={90} sizes="(min-width: 1024px) 50vw, 576px" className="object-cover" />
         </div>
       </section>
 
