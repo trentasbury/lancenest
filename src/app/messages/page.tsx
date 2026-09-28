@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: 'Messages' };
 
 type Row = { conversation_id: string; profile_id: string; last_read_at: string | null; profile: { full_name: string; headline: string | null } | null };
 
-export default async function MessagesPage({ searchParams }: { searchParams: { error?: string } }) {
+export default async function MessagesPage({ searchParams }: { searchParams: { error?: string; tab?: string } }) {
   const { user, profile: me } = await requireRole(['veteran', 'employer', 'admin'], '/messages');
   const supabase = createClient();
 
@@ -23,14 +23,19 @@ export default async function MessagesPage({ searchParams }: { searchParams: { e
     ? await Promise.all([
         supabase.from('conversation_participants').select('conversation_id, profile_id, last_read_at, profile:profiles!conversation_participants_profile_id_fkey(full_name, headline)').in('conversation_id', ids).neq('profile_id', user.id),
         supabase.from('messages').select('conversation_id, body, sender_id, created_at').in('conversation_id', ids).order('created_at', { ascending: false }).limit(Math.min(ids.length * 5, 500)),
-        supabase.from('conversations').select('id, updated_at').in('id', ids).order('updated_at', { ascending: false }),
+        supabase.from('conversations').select('id, updated_at, status, requested_by').in('id', ids).order('updated_at', { ascending: false }),
       ])
     : [{ data: [] }, { data: [] }, { data: [] }];
 
   const otherBy = new Map(((others ?? []) as unknown as Row[]).map((r) => [r.conversation_id, r]));
   const lastBy = new Map<string, { body: string; sender_id: string; created_at: string }>();
   (recent ?? []).forEach((m) => { if (!lastBy.has(m.conversation_id as string)) lastBy.set(m.conversation_id as string, m as { body: string; sender_id: string; created_at: string }); });
-  const baseList = (convs ?? []).filter((c) => lastBy.has(c.id as string));
+  const withMsgs = (convs ?? []).filter((c) => lastBy.has(c.id as string));
+  // Requests: someone else started it and you haven't accepted yet. Declined requests disappear for you.
+  const isRequestForMe = (c: { status?: unknown; requested_by?: unknown }) => c.status === 'request' && c.requested_by !== user.id;
+  const requests = withMsgs.filter(isRequestForMe);
+  const tab = searchParams.tab === 'requests' ? 'requests' : 'messages';
+  const baseList = tab === 'requests' ? requests : withMsgs.filter((c) => !isRequestForMe(c) && !(c.status === 'declined' && c.requested_by !== user.id));
   // Message priority: for employers, conversations with Pro Plus / Federal members are pinned to the top.
   const otherIds = baseList.map((c) => otherBy.get(c.id as string)?.profile_id).filter(Boolean) as string[];
   const { data: prio } = me.role === 'employer' && otherIds.length
@@ -42,8 +47,18 @@ export default async function MessagesPage({ searchParams }: { searchParams: { e
 
   return (
     <div className="container-page max-w-3xl py-10">
-      <h1 className="font-serif text-4xl font-medium">Messages</h1>
-      <p className="mt-1 text-muted">Private conversations between you and other members.</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-serif text-4xl font-medium">Messages</h1>
+          <p className="mt-1 text-muted">Private conversations between you and other members.</p>
+        </div>
+        <Link href="/messages/new" className="btn btn-primary">+ New message</Link>
+      </div>
+      <div className="mt-5 flex gap-2">
+        <Link href="/messages" className={`rounded-full border px-4 py-1.5 text-sm ${tab === 'messages' ? 'border-navy bg-navy text-ivory' : 'border-line hover:border-brass'}`}>Messages</Link>
+        <Link href="/messages?tab=requests" className={`rounded-full border px-4 py-1.5 text-sm ${tab === 'requests' ? 'border-navy bg-navy text-ivory' : 'border-line hover:border-brass'}`}>Requests{requests.length ? ` (${requests.length})` : ''}</Link>
+      </div>
+      {tab === 'requests' && <p className="mt-3 text-sm text-muted">People who aren’t connected with you can send one message. Open a request to accept or decline it.</p>}
       {searchParams.error && (
         <div className="mt-4"><FormMessage error={searchParams.error === 'blocked' ? 'You can’t message this member.' : 'That conversation couldn’t be started. Please try again.'} /></div>
       )}

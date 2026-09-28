@@ -41,7 +41,14 @@ export async function startConversation(otherId: string) {
     if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
   }
 
-  const { data: conv, error } = await admin.from('conversations').insert({}).select('id').single();
+  // Connections (mutual follows) and freelance contract partners message freely; everyone else starts with a request.
+  const [{ count: iFollow }, { count: theyFollow }, { count: contracts }] = await Promise.all([
+    admin.from('user_follows').select('follower_id', { count: 'exact', head: true }).eq('follower_id', me).eq('following_id', otherId),
+    admin.from('user_follows').select('follower_id', { count: 'exact', head: true }).eq('follower_id', otherId).eq('following_id', me),
+    admin.from('contracts').select('id', { count: 'exact', head: true }).or(`and(client_id.eq.${me},freelancer_id.eq.${otherId}),and(client_id.eq.${otherId},freelancer_id.eq.${me})`),
+  ]);
+  const open = ((iFollow ?? 0) > 0 && (theyFollow ?? 0) > 0) || (contracts ?? 0) > 0;
+  const { data: conv, error } = await admin.from('conversations').insert(open ? {} : { status: 'request', requested_by: me }).select('id').single();
   if (error || !conv) redirect('/messages?error=start');
   await admin.from('conversation_participants').insert([
     { conversation_id: conv.id, profile_id: me, last_read_at: new Date().toISOString() },
@@ -58,8 +65,20 @@ export async function sendMessage(conversationId: string, formData: FormData) {
   // Row-level security confirms participation; a database trigger refuses blocked senders and sends the notification.
   const { error } = await createClient().from('messages').insert({ conversation_id: conversationId, sender_id: session.user.id, body });
   if (error) {
-    const reason = error.code === 'P0009' ? 'pii' : error.code === 'P0002' ? 'rate' : error.message.includes("can't") ? 'blocked' : 'send';
+    const reason = error.code === 'P0015' ? 'pending' : error.code === 'P0016' ? 'declined' : error.code === 'P0009' ? 'pii' : error.code === 'P0002' ? 'rate' : error.message.includes("can't") ? 'blocked' : 'send';
     redirect(`/messages/${conversationId}?error=${reason}`);
   }
   revalidatePath('/', 'layout');
+}
+
+/** Recipient accepts or declines a message request. */
+export async function respondToRequest(conversationId: string, decision: 'active' | 'declined') {
+  const session = await getSessionProfile();
+  if (!session) redirect('/login?next=/messages');
+  const admin = createAdminClient();
+  const { data: c } = await admin.from('conversations').select('status, requested_by').eq('id', conversationId).maybeSingle();
+  const { count } = await admin.from('conversation_participants').select('profile_id', { count: 'exact', head: true }).eq('conversation_id', conversationId).eq('profile_id', session.user.id);
+  if (!c || !count || c.requested_by === session.user.id || c.status !== 'request') redirect('/messages');
+  await admin.from('conversations').update({ status: decision }).eq('id', conversationId);
+  redirect(decision === 'active' ? `/messages/${conversationId}` : '/messages?tab=requests');
 }
