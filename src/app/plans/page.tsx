@@ -78,7 +78,7 @@ export default async function PlansPage() {
             );
           })}
         </div>
-        <p className="mt-8 text-center text-sm text-muted">No payment is collected yet. We’ll email you before Pro launches.</p>
+        <p className="mt-8 text-center text-sm text-muted">Cancel anytime from Manage billing. Paying for the year up front saves you 2 months.</p>
       </div>
     </>
   );

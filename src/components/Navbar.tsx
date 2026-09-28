@@ -35,7 +35,8 @@ export default async function Navbar() {
   const role = profile?.role;
   const accountLinks: NavLink[] = !session ? [] : [
     { href: roleHome(role), label: role === 'admin' ? 'Admin' : role === 'employer' ? 'Employer dashboard' : 'Dashboard' },
-    ...(role === 'veteran' && profile?.username ? [{ href: `/veterans/${profile.username}`, label: 'My profile' }] : []),
+    ...((role === 'veteran' || role === 'admin') && profile?.username ? [{ href: `/veterans/${profile.username}`, label: 'My profile' }] : []),
+    ...(role === 'admin' ? [{ href: '/dashboard/profile', label: 'Edit profile' }] : []),
     ...(role === 'veteran' ? [{ href: '/dashboard/profile', label: 'Edit profile' }, { href: '/dashboard/applications', label: 'My applications' }, { href: '/dashboard/alerts', label: 'Job alerts' }, { href: '/dashboard/resume-builder', label: 'Résumé builder' }, { href: '/dashboard/verification', label: 'Verification' }, { href: '/transition', label: 'Transition Hub & SkillBridge' }, { href: '/training', label: 'Training & certifications' }, { href: '/plans', label: 'Plans & upgrades' }] : []),
     ...(role === 'employer' ? [{ href: '/employer/jobs/new', label: 'Post a job' }, { href: '/employer/analytics', label: 'Hiring analytics' }, { href: '/employer/training', label: 'Training listings' }, { href: '/employer/talent', label: 'Talent pools' }, { href: '/employer/team', label: 'Hiring team' }, { href: '/employer/company', label: 'Company page' }, { href: '/employers', label: 'Plans & billing' }] : []),
     { href: '/network?view=saved', label: 'Saved posts' },
@@ -73,9 +74,14 @@ export default async function Navbar() {
               {dashboard && (
                 <details className="relative">
                   <summary className="flex cursor-pointer list-none items-center gap-2 text-sm text-ink hover:text-brass-dark">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full border border-brass bg-navy font-serif text-xs text-brass">
-                      {initials(profile?.full_name)}
-                    </span>
+                    {profile?.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={profile.avatar_url} alt="" className="h-8 w-8 rounded-full border border-brass object-cover" />
+                    ) : (
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full border border-brass bg-navy font-serif text-xs text-brass">
+                        {initials(profile?.full_name)}
+                      </span>
+                    )}
                     <span className="hidden xl:inline">{profile?.full_name?.split(' ')[0] ?? 'Account'}</span>
                     <span aria-hidden="true" className="text-xs text-muted">▾</span>
                   </summary>

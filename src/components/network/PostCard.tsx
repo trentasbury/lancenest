@@ -16,11 +16,11 @@ const REPORT_REASONS = [
 function AuthorLine({ post, compact = false }: { post: Post; compact?: boolean }) {
   const a = post.author;
   const name = a?.full_name || 'LanceNest member';
-  const href = a?.role === 'veteran' && a.username ? `/veterans/${a.username}` : null;
+  const href = (a?.role === 'veteran' || a?.role === 'admin') && a.username ? `/veterans/${a.username}` : null;
   const vis = VISIBILITY.find(([v]) => v === post.visibility)?.[1];
   return (
     <div className="flex min-w-0 items-start gap-3">
-      <Avatar name={name} size={compact ? 'sm' : 'md'} />
+      <Avatar name={name} src={a?.avatar_url} size={compact ? 'sm' : 'md'} />
       <div className="min-w-0">
         <p className="flex flex-wrap items-center gap-x-1.5 font-medium text-ink">
           {href ? <Link href={href} className="hover:underline">{name}</Link> : name}

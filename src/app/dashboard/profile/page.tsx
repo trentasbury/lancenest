@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireRole } from '@/lib/auth';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
@@ -51,7 +52,8 @@ function RemoveButton({ action }: { action: () => Promise<void> }) {
 }
 
 export default async function EditProfilePage({ searchParams }: { searchParams: { saved?: string; error?: string; share?: string } }) {
-  const { user, profile } = await requireRole(['veteran'], '/dashboard/profile');
+  const { user, profile } = await requireRole(['veteran', 'admin'], '/dashboard/profile');
+  if (profile.role === 'admin') await createAdminClient().from('veteran_profiles').upsert({ profile_id: user.id }, { onConflict: 'profile_id', ignoreDuplicates: true });
   const supabase = createClient();
 
   const { data: resumes } = await supabase.from('resumes').select('id, file_name, uploaded_at, is_default').eq('profile_id', user.id).order('uploaded_at', { ascending: false });

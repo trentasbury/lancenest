@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { requireRole, roleHome } from '@/lib/auth';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
-import { deleteMyAccount, signOutEverywhere } from './actions';
+import { deleteMyAccount, removeAvatar, saveAccountProfile, signOutEverywhere, uploadAvatar } from './actions';
 import { createClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = { title: 'Account settings', robots: { index: false } };
@@ -14,7 +14,7 @@ const ERRORS: Record<string, string> = {
   admin: 'Admin accounts can’t be deleted from here. Remove the admin role first.',
 };
 
-export default async function AccountPage({ searchParams }: { searchParams: { error?: string } }) {
+export default async function AccountPage({ searchParams }: { searchParams: { error?: string; photo?: string; profile?: string } }) {
   const { user, profile } = await requireRole(['veteran', 'employer', 'admin'], '/settings/account');
   const { data: strikes } = await createClient().from('member_strikes').select('level, reason, created_at').eq('profile_id', user.id).order('created_at', { ascending: false });
   const { data: devices } = await createClient().from('login_devices').select('label, first_seen, last_seen').eq('profile_id', user.id).order('last_seen', { ascending: false }).limit(10);
@@ -23,6 +23,33 @@ export default async function AccountPage({ searchParams }: { searchParams: { er
       <Link href={roleHome(profile.role)} className="text-sm text-muted hover:text-navy">← Dashboard</Link>
       <h1 className="font-serif text-4xl font-medium">Account settings</h1>
       {searchParams.error && <FormMessage error={ERRORS[searchParams.error] ?? ERRORS.failed} />}
+
+      <section className="card p-7">
+        <h2 className="font-serif text-2xl font-semibold">Your profile</h2>
+        {searchParams.photo && <p className={`mt-2 text-sm ${['saved', 'removed'].includes(searchParams.photo) ? 'text-olive' : 'text-signal'}`}>{{ saved: 'Photo updated.', removed: 'Photo removed.', type: 'Upload a JPG, PNG, or WebP image.', size: 'Photos must be under 2 MB.', failed: 'That upload didn’t go through — please try again.' }[searchParams.photo]}</p>}
+        {searchParams.profile && <p className={`mt-2 text-sm ${searchParams.profile === 'saved' ? 'text-olive' : 'text-signal'}`}>{searchParams.profile === 'saved' ? 'Profile saved.' : 'Please enter your full name.'}</p>}
+        <div className="mt-4 flex flex-wrap items-center gap-4">
+          {profile.avatar_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={profile.avatar_url} alt="" className="h-20 w-20 rounded-full border-2 border-brass object-cover" />
+          ) : <span className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-brass bg-navy font-serif text-2xl text-brass">{(profile.full_name ?? '?').split(' ').map((w) => w[0]).slice(0, 2).join('')}</span>}
+          <form action={uploadAvatar} className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input type="file" name="photo" required accept="image/jpeg,image/png,image/webp" className="field text-sm" />
+            <SubmitButton className="btn btn-outline shrink-0" pendingText="Uploading…">Upload photo</SubmitButton>
+          </form>
+          {profile.avatar_url && <form action={removeAvatar}><button className="text-xs text-muted hover:text-signal">Remove photo</button></form>}
+        </div>
+        <p className="mt-2 text-xs text-muted">A clear, professional headshot. JPG, PNG, or WebP under 2 MB. OPSEC: avoid photos showing unit insignia, locations, or equipment.</p>
+        <form action={saveAccountProfile} className="mt-5 grid gap-3 sm:grid-cols-2">
+          <div className="sm:col-span-2"><label className="field-label" htmlFor="full_name">Full name</label><input id="full_name" name="full_name" required defaultValue={profile.full_name ?? ''} className="field" /></div>
+          <div><label className="field-label" htmlFor="headline">Headline</label><input id="headline" name="headline" maxLength={140} defaultValue={profile.headline ?? ''} placeholder="e.g. Founder, LanceNest · USMC Veteran" className="field" /></div>
+          <div><label className="field-label" htmlFor="location">Location</label><input id="location" name="location" maxLength={120} defaultValue={profile.location ?? ''} placeholder="City, State" className="field" /></div>
+          <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
+            <SubmitButton className="btn btn-primary" pendingText="Saving…">Save profile</SubmitButton>
+            {(profile.role === 'veteran' || profile.role === 'admin') && <Link href="/dashboard/profile" className="text-sm text-navy underline">Edit your About, military career, résumés, and more →</Link>}
+          </div>
+        </form>
+      </section>
 
       <section className="card p-7">
         <h2 className="font-serif text-2xl font-semibold">Your account</h2>

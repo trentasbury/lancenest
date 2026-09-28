@@ -30,7 +30,7 @@ async function load(username: string) {
     .from('profiles')
     .select('id, full_name, username, headline, location, avatar_url')
     .eq('username', username)
-    .eq('role', 'veteran')
+    .in('role', ['veteran', 'admin'])
     .maybeSingle();
   if (!profile) return null;
 
@@ -113,9 +113,14 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
     <>
       <section className="bg-navy-deep text-ivory">
         <div className="container-page flex flex-col gap-6 py-12 sm:flex-row sm:items-center">
-          <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full border-2 border-brass bg-navy font-serif text-3xl text-brass">
-            {initials(profile.full_name)}
-          </div>
+          {profile.avatar_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={profile.avatar_url} alt={profile.full_name} className="h-24 w-24 shrink-0 rounded-full border-2 border-brass object-cover" />
+          ) : (
+            <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full border-2 border-brass bg-navy font-serif text-3xl text-brass">
+              {initials(profile.full_name)}
+            </div>
+          )}
           <div className="flex-1">
             <h1 className="font-serif text-4xl font-medium text-ivory sm:text-5xl">{profile.full_name}<PlanBadge plan={vet.plan} /></h1>
             {profile.headline && <p className="mt-1 text-lg text-cream/85">{profile.headline}</p>}

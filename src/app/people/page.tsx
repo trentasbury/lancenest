@@ -11,7 +11,7 @@ import { followUser, unfollowUser } from '@/app/network/actions';
 import { startConversation } from '@/app/messages/actions';
 
 export const metadata: Metadata = { title: 'People' };
-type Person = { id: string; full_name: string; username: string | null; headline: string | null; location: string | null; service_summary: string | null; verified: boolean; role: string };
+type Person = { id: string; avatar_url: string | null; full_name: string; username: string | null; headline: string | null; location: string | null; service_summary: string | null; verified: boolean; role: string };
 
 export default async function PeoplePage({ searchParams: f }: { searchParams: { q?: string; branch?: string; location?: string; mos?: string; skill?: string; type?: string } }) {
   const { user, profile } = await requireVerifiedMember('/people');
@@ -27,7 +27,7 @@ export default async function PeoplePage({ searchParams: f }: { searchParams: { 
     ids = ids === null ? s : ids.filter((x) => s.includes(x));
   }
   // Row-level security returns only members the viewer may see (verified, not removed).
-  let q = supabase.from('profiles').select('id, full_name, username, headline, location, service_summary, verified, role').neq('id', user.id).neq('role', 'admin');
+  let q = supabase.from('profiles').select('id, full_name, username, headline, location, service_summary, verified, role, avatar_url').neq('id', user.id);
   const kw = sanitizeSearch(f.q ?? '');
   if (kw) q = q.or(`full_name.ilike.%${kw}%,headline.ilike.%${kw}%`);
   if (f.branch && (BRANCHES as readonly string[]).includes(f.branch)) q = q.ilike('service_summary', `%${f.branch}%`);
@@ -58,10 +58,10 @@ export default async function PeoplePage({ searchParams: f }: { searchParams: { 
       <ul className="mt-3 grid gap-3 md:grid-cols-2">
         {people.map((p) => (
           <li key={p.id} className="card flex items-center gap-3 p-4">
-            <Avatar name={p.full_name} />
+            <Avatar name={p.full_name} src={p.avatar_url} />
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">
-                {p.role === 'veteran' && p.username ? <Link href={`/veterans/${p.username}`} className="hover:underline">{p.full_name}</Link> : p.full_name}
+                {(p.role === 'veteran' || p.role === 'admin') && p.username ? <Link href={`/veterans/${p.username}`} className="hover:underline">{p.full_name}</Link> : p.full_name}
                 {p.verified && <VerifiedMark />}
               </p>
               <p className="truncate text-xs text-muted">{[p.headline, p.service_summary, p.location].filter(Boolean).join(' · ') || (p.role === 'employer' ? 'Employer' : 'Member')}</p>
