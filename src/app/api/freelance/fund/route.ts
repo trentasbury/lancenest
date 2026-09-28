@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { stripe } from '@/lib/stripe';
 import { feeBreakdown } from '@/lib/payments';
+import { FREELANCE_FEES } from '@/lib/fees';
 
 /** Client funds a milestone. LanceNest holds the payment until the client approves (or auto-release). */
 export async function POST(request: NextRequest) {
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
   const lines = [
     { quantity: 1, price_data: { currency: 'usd', unit_amount: ms.amount_cents, product_data: { name: `${ms.contract.title} — ${ms.title}`, description: 'Protected Payment: held by LanceNest until you approve the work' } } },
     { quantity: 1, price_data: { currency: 'usd', unit_amount: fees.clientFee, product_data: { name: `LanceNest service fee (${method === 'bank' ? '3% bank transfer' : '5% card'})` } } },
-    ...(fees.platformFee ? [{ quantity: 1, price_data: { currency: 'usd', unit_amount: fees.platformFee, product_data: { name: 'Contract start fee' + (fees.platformFee > 499 ? ' + small-project fee' : '') } } }] : []),
+    ...(fees.platformFee ? [{ quantity: 1, price_data: { currency: 'usd', unit_amount: fees.platformFee, product_data: { name: 'Contract start fee' + (fees.platformFee > FREELANCE_FEES.contractStartCents ? ' + small-project fee' : '') } } }] : []),
   ];
   const meta = { kind: 'milestone', milestone_id: ms.id, contract_id: ms.contract_id };
   const checkout = await stripe().checkout.sessions.create({
