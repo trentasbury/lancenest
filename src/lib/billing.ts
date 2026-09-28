@@ -68,6 +68,10 @@ export async function applyCheckoutSession(sessionId: string) {
   const s = await stripe().checkout.sessions.retrieve(sessionId, { expand: ['subscription'] });
   if (s.status !== 'complete') return { ok: false as const };
   const kind = s.metadata?.kind;
+  if (kind === 'milestone') {
+    const { fundMilestoneFromSession } = await import('@/lib/payments');
+    return fundMilestoneFromSession(sessionId);
+  }
 
   if (s.mode === 'subscription' && s.subscription && typeof s.subscription !== 'string') {
     await syncSubscription(s.subscription);

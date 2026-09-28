@@ -24,6 +24,7 @@ export default async function FreelancePage({ searchParams }: { searchParams: { 
     : [{ data: null }, { data: null }];
   const used = isVet ? await proposalsUsedThisMonth(user.id) : 0;
   const plan = (vet?.plan as string) ?? 'free';
+  const { data: contracts } = await supabase.from('contracts').select('id, title, status').or(`client_id.eq.${user.id},freelancer_id.eq.${user.id}`).order('created_at', { ascending: false }).limit(10);
 
   let q = supabase.from('freelance_projects').select('id, title, description, category, budget_type, budget_min, budget_max, clearance_required, status, created_at, company:companies(name, is_verified)');
   const mine = !isVet && searchParams.mine !== '0';
@@ -57,6 +58,19 @@ export default async function FreelancePage({ searchParams }: { searchParams: { 
             <div className="card p-5"><p className="eyebrow">You keep</p><p className="mt-2 font-serif text-2xl text-navy">{keepPercent(plan)}% of every payment</p><p className="text-xs text-muted">Pro 90% · Pro Plus 92% · Federal 94%</p></div>
             <div className="card p-5"><p className="eyebrow">Payouts</p><p className="mt-2 font-serif text-2xl text-navy">{fp?.payouts_enabled ? 'Ready ✓' : 'Not set up'}</p>{!fp?.payouts_enabled && <Link href="/freelance/profile#payouts" className="text-xs text-navy underline">Set up payouts →</Link>}</div>
           </div>
+        )}
+
+        {(contracts ?? []).length > 0 && (
+          <section className="mb-8">
+            <p className="eyebrow">Your contracts</p>
+            <ul className="mt-3 grid gap-3 md:grid-cols-2">
+              {(contracts ?? []).map((k) => (
+                <li key={k.id as string}><Link href={`/freelance/contracts/${k.id}`} className="card flex items-center justify-between p-4 hover:border-brass">
+                  <span className="font-medium text-navy">{k.title as string}</span><span className="text-xs capitalize text-muted">{k.status as string}</span>
+                </Link></li>
+              ))}
+            </ul>
+          </section>
         )}
 
         <form method="get" className="card mb-6 grid gap-3 p-5 sm:grid-cols-4">

@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   if (dup) return NextResponse.json({ received: true, duplicate: true });
 
   try {
-    if (event.type === 'checkout.session.completed') {
+    if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
       await applyCheckoutSession((event.data.object as Stripe.Checkout.Session).id);
     } else if (event.type.startsWith('customer.subscription.')) {
       await syncSubscription(event.data.object as Stripe.Subscription);

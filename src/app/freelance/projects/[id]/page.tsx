@@ -12,6 +12,7 @@ import VerifiedMark from '@/components/VerifiedMark';
 import Avatar from '@/components/network/Avatar';
 import { startConversation } from '@/app/messages/actions';
 import { setProjectStatus, setProposalStatus, submitProposal, withdrawProposal } from '../../actions';
+import { hireFreelancer } from '../../contracts/actions';
 
 export const metadata: Metadata = { title: 'Project' };
 const ERR: Record<string, string> = { proposal: 'Add your price and a cover letter of at least 30 characters.', limit: `You’ve used your ${FREE_PROPOSALS_PER_MONTH} free proposals this month. Pro members send unlimited proposals.`, closed: 'This project is no longer accepting proposals.', duplicate: 'You’ve already sent a proposal for this project.', save: 'Your proposal didn’t send — please try again.', pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' };
@@ -76,7 +77,10 @@ export default async function ProjectPage({ params, searchParams }: { params: { 
                   <span className="text-xs capitalize text-muted">{p.status}</span>
                   {p.status !== 'shortlisted' && p.status !== 'declined' && <form action={setProposalStatus.bind(null, p.id, project.id, 'shortlisted')}><SubmitButton className="btn btn-outline py-1.5 text-xs" pendingText="…">Shortlist</SubmitButton></form>}
                   {p.status !== 'declined' && <form action={setProposalStatus.bind(null, p.id, project.id, 'declined')}><SubmitButton className="btn btn-ghost py-1.5 text-xs" pendingText="…">Decline</SubmitButton></form>}
-                  <form action={startConversation.bind(null, p.freelancer_id)}><SubmitButton className="btn btn-primary py-1.5 text-xs" pendingText="…">Message</SubmitButton></form>
+                  <form action={startConversation.bind(null, p.freelancer_id)}><SubmitButton className="btn btn-outline py-1.5 text-xs" pendingText="…">Message</SubmitButton></form>
+                  {['submitted', 'shortlisted'].includes(p.status) && project.status === 'open' && (
+                    <form action={hireFreelancer.bind(null, p.id)}><SubmitButton className="btn btn-primary py-1.5 text-xs" pendingText="Hiring…">Hire for ${p.bid_amount.toLocaleString()}</SubmitButton></form>
+                  )}
                 </div>
               </div>
             ))}

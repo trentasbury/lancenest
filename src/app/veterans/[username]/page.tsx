@@ -94,6 +94,8 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
     viewerId ? supabase.from('user_follows').select('following_id').eq('follower_id', viewerId).eq('following_id', profile.id) : Promise.resolve({ data: [] }),
   ]);
   const following = (iFollow ?? []).length > 0;
+  const { data: reviews } = await supabase.from('reviews').select('rating, body, created_at').eq('reviewee_id', profile.id).order('created_at', { ascending: false }).limit(5);
+  const avg = (reviews ?? []).length ? (reviews ?? []).reduce((a, r) => a + (r.rating as number), 0) / (reviews ?? []).length : 0;
   const [{ data: freelance }, { data: portfolio }] = await Promise.all([
     supabase.from('freelancer_profiles').select('title, bio, hourly_rate, available, clearance_work, vosb, sdvosb').eq('profile_id', profile.id).maybeSingle(),
     supabase.from('portfolio_items').select('id, title, description, url').eq('profile_id', profile.id).order('created_at', { ascending: false }).limit(6),
@@ -215,7 +217,11 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
                 {freelance.clearance_work && <span className="rounded-full border border-line px-3 py-1">Open to cleared work</span>}
                 {!freelance.available && <span className="rounded-full border border-line px-3 py-1 text-muted">Not taking new work</span>}
               </div>
+              {(reviews ?? []).length > 0 && (
+                <p className="mt-3 text-sm"><span className="text-brass">{'★'.repeat(Math.round(avg))}{'☆'.repeat(5 - Math.round(avg))}</span> <span className="font-medium">{avg.toFixed(1)}</span> <span className="text-muted">· {(reviews ?? []).length} client review{(reviews ?? []).length === 1 ? '' : 's'}</span></p>
+              )}
               {freelance.bio && <p className="mt-3 whitespace-pre-line text-sm text-ink/90">{freelance.bio as string}</p>}
+              {(reviews ?? []).filter((r) => r.body).slice(0, 3).map((r, i) => <blockquote key={i} className="mt-3 border-l-2 border-brass pl-3 text-sm italic text-ink/80">“{r.body as string}”</blockquote>)}
               {(portfolio ?? []).length > 0 && (
                 <ul className="mt-5 grid gap-3 sm:grid-cols-2">
                   {(portfolio ?? []).map((it) => (

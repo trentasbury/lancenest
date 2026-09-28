@@ -252,3 +252,20 @@ export async function decidePublicSafety(companyId: string, decision: 'approved'
   });
   revalidatePath('/admin/companies');
 }
+
+/** Dispute resolution: pay the freelancer or refund the client. Logged. */
+export async function resolveDispute(milestoneId: string, outcome: 'release' | 'refund', formData: FormData) {
+  const { user } = await requireAdmin('/admin/disputes');
+  const note = String(formData.get('note') ?? '').trim().slice(0, 500);
+  const { releaseMilestone, refundMilestone } = await import('@/lib/payments');
+  const r = outcome === 'release' ? await releaseMilestone(milestoneId, 'dispute') : await refundMilestone(milestoneId);
+  const admin = createAdminClient();
+  if (r.ok) {
+    const { data: m } = await admin.from('milestones').select('contract_id').eq('id', milestoneId).maybeSingle();
+    if (m) await admin.from('contracts').update({ status: 'active' }).eq('id', m.contract_id).eq('status', 'disputed');
+    if (m) { const { completeIfDone } = await import('@/lib/payments'); await completeIfDone(m.contract_id as string); }
+  }
+  await admin.from('admin_actions').insert({ admin_id: user.id, action: `dispute_${outcome}`, target_type: 'milestone', target_id: milestoneId, details: { note, ok: r.ok } });
+  revalidatePath('/admin/disputes');
+  redirect(`/admin/disputes?done=${r.ok ? outcome : 'failed'}`);
+}
