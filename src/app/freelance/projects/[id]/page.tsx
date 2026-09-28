@@ -32,7 +32,16 @@ export default async function ProjectPage({ params, searchParams }: { params: { 
   const { data: proposalRows } = await supabase.from('proposals')
     .select('id, freelancer_id, cover_letter, bid_amount, timeline, status, created_at, freelancer:profiles!proposals_freelancer_id_fkey(full_name, username, headline, verified, service_summary)')
     .eq('project_id', project.id).order('created_at');
-  const proposals = (proposalRows ?? []) as unknown as Proposal[];
+  const rawProposals = (proposalRows ?? []) as unknown as Proposal[];
+  const fIds = rawProposals.map((p) => p.freelancer_id);
+  const [{ data: fPlans }, { data: track }] = isOwner && fIds.length
+    ? await Promise.all([supabase.from('veteran_profiles').select('profile_id, plan').in('profile_id', fIds), supabase.rpc('verified_work_summary', { ids: fIds })])
+    : [{ data: [] }, { data: [] }];
+  const planOf = new Map((fPlans ?? []).map((r) => [r.profile_id as string, r.plan as string]));
+  const trackOf = new Map(((track ?? []) as { profile_id: string; completed: number; avg_rating: number | null }[]).map((t) => [t.profile_id, t]));
+  const topProposal = (p: Proposal) => ['pro_plus', 'federal_pro'].includes(planOf.get(p.freelancer_id) ?? '');
+  // Pro Plus and Federal members are top applicants: their proposals are listed first.
+  const proposals = [...rawProposals.filter(topProposal), ...rawProposals.filter((p) => !topProposal(p))];
   const mine = proposals.find((p) => p.freelancer_id === user.id);
   const [{ data: fp }, { data: vet }] = isVet
     ? await Promise.all([supabase.from('freelancer_profiles').select('title').eq('profile_id', user.id).maybeSingle(), supabase.from('veteran_profiles').select('plan').eq('profile_id', user.id).maybeSingle()])
@@ -68,6 +77,11 @@ export default async function ProjectPage({ params, searchParams }: { params: { 
                     <div>
                       <p className="font-medium">{p.freelancer?.username ? <Link href={`/veterans/${p.freelancer.username}`} className="hover:underline">{p.freelancer.full_name}</Link> : p.freelancer?.full_name}{p.freelancer?.verified && <VerifiedMark />}</p>
                       <p className="text-xs text-muted">{[p.freelancer?.headline, p.freelancer?.service_summary].filter(Boolean).join(' · ')}</p>
+                      <p className="mt-0.5 text-xs">
+                        {topProposal(p) && <span className="mr-2 rounded-full bg-brass px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-navy">Top applicant</span>}
+                        {trackOf.get(p.freelancer_id) ? <span className="text-olive">✓ {trackOf.get(p.freelancer_id)!.completed} verified job{trackOf.get(p.freelancer_id)!.completed === 1 ? '' : 's'}{trackOf.get(p.freelancer_id)!.avg_rating ? ` · ${trackOf.get(p.freelancer_id)!.avg_rating}★` : ''}</span> : <span className="text-muted">New to LanceNest freelance</span>}
+                        {p.freelancer?.username && <> · <Link href={`/veterans/${p.freelancer.username}`} className="text-navy underline">View work & portfolio</Link></>}
+                      </p>
                     </div>
                   </div>
                   <p className="text-right"><span className="font-serif text-2xl text-navy">${p.bid_amount.toLocaleString()}</span>{p.timeline && <span className="block text-xs text-muted">{p.timeline}</span>}</p>

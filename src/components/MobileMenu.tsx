@@ -39,7 +39,7 @@ export default function MobileMenu({
       </button>
 
       {open && (
-        <div id="mobile-menu" className="absolute inset-x-0 top-[72px] border-b border-line bg-cream shadow-card">
+        <div id="mobile-menu" className="absolute inset-x-0 top-[72px] max-h-[calc(100dvh-72px)] overflow-y-auto overscroll-contain border-b border-line bg-cream shadow-card">
           <nav className="container-page flex flex-col py-3" aria-label="Mobile">
             {dashboard && (
               <Link href={dashboard.href} className="border-b border-line py-3.5 font-medium text-navy">

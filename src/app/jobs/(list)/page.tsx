@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { US_STATES } from '@/lib/states';
 import JobCard from '@/components/JobCard';
 import EmptyState from '@/components/EmptyState';
 import { getFeaturedJobs, searchJobs, type JobFilters } from '@/lib/jobs';
@@ -40,18 +41,28 @@ export default async function JobsPage({ searchParams }: { searchParams: JobFilt
         <div className="container-page py-12">
           <p className="eyebrow text-brass">Find Jobs</p>
           <h1 className="mt-3 font-serif text-5xl font-medium text-ivory">Your next mission.</h1>
-          <form action="/jobs" method="get" className="mt-8 grid gap-2 rounded-[6px] bg-ivory p-2 shadow-lift md:grid-cols-[1fr_220px_auto]">
+          <form action="/jobs" method="get" className="mt-8 grid gap-2 rounded-[6px] bg-ivory p-2 shadow-lift md:grid-cols-[1fr_240px_auto]">
             <label htmlFor="q" className="sr-only">Job title, keyword, or company</label>
             <input id="q" name="q" defaultValue={searchParams.q} placeholder="Job title, keyword, or company" className="rounded-[3px] px-4 py-3 text-ink outline-none" />
-            <label htmlFor="location" className="sr-only">Location</label>
-            <input id="location" name="location" defaultValue={searchParams.location} placeholder="Location" className="rounded-[3px] px-4 py-3 text-ink outline-none md:border-l md:border-line" />
-            {/* Preserve filters when searching again */}
+            <label htmlFor="state" className="sr-only">Location</label>
+            <select id="state" name="state" defaultValue={searchParams.state ?? ''} className="rounded-[3px] bg-ivory px-4 py-3 text-ink outline-none md:border-l md:border-line">
+              <option value="">Any location</option>
+              <option value="multi">Multiple locations</option>
+              {US_STATES.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
+            </select>
             {searchParams.arrangement && <input type="hidden" name="arrangement" value={searchParams.arrangement} />}
             {searchParams.type && <input type="hidden" name="type" value={searchParams.type} />}
             {searchParams.clearance && <input type="hidden" name="clearance" value={searchParams.clearance} />}
             {searchParams.veteran && <input type="hidden" name="veteran" value={searchParams.veteran} />}
             <button type="submit" className="btn btn-primary">Search</button>
           </form>
+          <div className="mt-4 flex flex-wrap gap-2" aria-label="Work arrangement">
+            {([['', 'All'], ['remote', 'Remote'], ['hybrid', 'Hybrid'], ['onsite', 'On-site']] as const).map(([v, l]) => {
+              const params = new URLSearchParams(Object.entries({ ...searchParams, arrangement: v, page: '' }).filter(([, x]) => x) as [string, string][]);
+              const active = (searchParams.arrangement ?? '') === v;
+              return <Link key={l} href={`/jobs${params.toString() ? `?${params}` : ''}`} className={`rounded-full border px-4 py-1.5 text-sm ${active ? 'border-brass bg-brass text-navy' : 'border-cream/30 text-cream hover:border-brass'}`}>{l}</Link>;
+            })}
+          </div>
         </div>
       </section>
 
@@ -60,7 +71,7 @@ export default async function JobsPage({ searchParams }: { searchParams: JobFilt
           <form action="/jobs" method="get" className="card space-y-5 p-5 lg:sticky lg:top-24">
             <p className="eyebrow">Filters</p>
             {searchParams.q && <input type="hidden" name="q" value={searchParams.q} />}
-            {searchParams.location && <input type="hidden" name="location" value={searchParams.location} />}
+            {searchParams.state && <input type="hidden" name="state" value={searchParams.state} />}
             <div>
               <label htmlFor="arrangement" className="field-label">Work arrangement</label>
               <select id="arrangement" name="arrangement" defaultValue={searchParams.arrangement ?? ''} className="field">

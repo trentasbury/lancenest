@@ -5,7 +5,6 @@ import { redirect } from 'next/navigation';
 import { getSessionProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { CONTACTS_PER_MONTH, monthStart, type Plan } from '@/lib/employer';
 
 /** Opens (or reuses) a one-to-one conversation. Auth + block checks run before the service-role client is used. */
 export async function startConversation(otherId: string) {
@@ -30,33 +29,14 @@ export async function startConversation(otherId: string) {
     if (shared?.length) redirect(`/messages/${shared[0].conversation_id}`);
   }
 
-  // Employers contacting a veteran first: free if the veteran applied to them or was already
-  // contacted; otherwise it uses the plan's monthly allowance, then a purchased credit.
+  // Messaging is free for everyone. Employers must be a verified company to start a conversation with a service member.
   const [{ data: meP }, { data: otherP }] = await Promise.all([
     admin.from('profiles').select('role').eq('id', me).maybeSingle(),
     admin.from('profiles').select('role').eq('id', otherId).maybeSingle(),
   ]);
   if (meP?.role === 'employer' && otherP?.role === 'veteran') {
-    const { data: company } = await admin.from('companies').select('id, plan, contact_credits, is_verified').eq('owner_id', me).maybeSingle();
-    if (!company) redirect('/employer/dashboard');
-    if (!company.is_verified) redirect('/employer/dashboard?verify=required');
-    const [{ count: applied }, { count: contacted }] = await Promise.all([
-      admin.from('applications').select('id, jobs!inner(company_id)', { count: 'exact', head: true }).eq('profile_id', otherId).eq('jobs.company_id', company.id),
-      admin.from('employer_contacts').select('veteran_id', { count: 'exact', head: true }).eq('company_id', company.id).eq('veteran_id', otherId),
-    ]);
-    if (!applied && !contacted) {
-      const limit = CONTACTS_PER_MONTH[company.plan as Plan] ?? 0;
-      const { count: used } = await admin.from('employer_contacts').select('*', { count: 'exact', head: true })
-        .eq('company_id', company.id).eq('source', 'allowance').gte('created_at', monthStart());
-      if ((used ?? 0) < limit) {
-        await admin.from('employer_contacts').insert({ company_id: company.id, veteran_id: otherId, source: 'allowance' });
-      } else {
-        const { data: spent } = await admin.from('companies').update({ contact_credits: (company.contact_credits as number) - 1 })
-          .eq('id', company.id).gt('contact_credits', 0).eq('contact_credits', company.contact_credits).select('id');
-        if (!spent?.length) redirect('/messages?error=credits');
-        await admin.from('employer_contacts').insert({ company_id: company.id, veteran_id: otherId, source: 'credit' });
-      }
-    }
+    const { data: company } = await admin.from('companies').select('is_verified').eq('owner_id', me).maybeSingle();
+    if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
   }
 
   const { data: conv, error } = await admin.from('conversations').insert({}).select('id').single();

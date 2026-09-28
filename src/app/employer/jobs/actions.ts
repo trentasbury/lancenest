@@ -55,6 +55,7 @@ export async function saveJob(jobId: string | null, formData: FormData) {
     clearance_eligible: formData.get('clearance_eligible') === 'on',
     status: oneOf(t(formData, 'status', 8), ['draft', 'open'], 'open'),
     apply_url: t(formData, 'apply_url', 500) || null,
+    multi_location: formData.get('multi_location') === 'on',
   };
 
   // Pay transparency (required by law in several states) and scam screening before anything goes live.

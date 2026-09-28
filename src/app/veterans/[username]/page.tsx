@@ -94,6 +94,7 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
     viewerId ? supabase.from('user_follows').select('following_id').eq('follower_id', viewerId).eq('following_id', profile.id) : Promise.resolve({ data: [] }),
   ]);
   const following = (iFollow ?? []).length > 0;
+  const { data: verifiedWork } = viewer ? await supabase.rpc('verified_work', { p: profile.id }) : { data: [] };
   const { data: reviews } = await supabase.from('reviews').select('rating, body, created_at').eq('reviewee_id', profile.id).order('created_at', { ascending: false }).limit(5);
   const avg = (reviews ?? []).length ? (reviews ?? []).reduce((a, r) => a + (r.rating as number), 0) / (reviews ?? []).length : 0;
   const [{ data: freelance }, { data: portfolio }] = await Promise.all([
@@ -233,6 +234,27 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
                   ))}
                 </ul>
               )}
+            </section>
+          )}
+
+          {((verifiedWork ?? []) as unknown[]).length > 0 && (
+            <section className="card p-7">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="eyebrow">Verified work</h2>
+                <span className="rounded-full border border-olive/40 bg-olive/10 px-3 py-1 text-[11px] font-semibold text-olive">✓ Completed and paid through LanceNest</span>
+              </div>
+              <ul className="mt-4 divide-y divide-line">
+                {((verifiedWork ?? []) as { title: string; completed_at: string; client_name: string | null; rating: number | null; review: string | null }[]).map((w, i) => (
+                  <li key={i} className="py-3">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <p className="font-medium">{w.title}</p>
+                      {w.rating ? <span className="text-sm text-brass">{'★'.repeat(w.rating)}{'☆'.repeat(5 - w.rating)}</span> : null}
+                    </div>
+                    <p className="text-xs text-muted">{w.client_name ? `for ${w.client_name} · ` : ''}{new Date(w.completed_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</p>
+                    {w.review && <p className="mt-1 text-sm italic text-ink/80">“{w.review}”</p>}
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
 

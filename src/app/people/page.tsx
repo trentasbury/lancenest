@@ -8,6 +8,7 @@ import Avatar from '@/components/network/Avatar';
 import VerifiedMark from '@/components/VerifiedMark';
 import SubmitButton from '@/components/SubmitButton';
 import { followUser, unfollowUser } from '@/app/network/actions';
+import { startConversation } from '@/app/messages/actions';
 
 export const metadata: Metadata = { title: 'People' };
 type Person = { id: string; full_name: string; username: string | null; headline: string | null; location: string | null; service_summary: string | null; verified: boolean; role: string };
@@ -65,13 +66,14 @@ export default async function PeoplePage({ searchParams: f }: { searchParams: { 
               </p>
               <p className="truncate text-xs text-muted">{[p.headline, p.service_summary, p.location].filter(Boolean).join(' · ') || (p.role === 'employer' ? 'Employer' : 'Member')}</p>
             </div>
+            <form action={startConversation.bind(null, p.id)}><SubmitButton className="btn btn-ghost border border-line px-3 py-1.5 text-xs" pendingText="…">Message</SubmitButton></form>
             <form action={(followSet.has(p.id) ? unfollowUser : followUser).bind(null, p.id)}>
               <SubmitButton className={followSet.has(p.id) ? 'btn btn-outline px-3 py-1.5 text-xs' : 'btn btn-primary px-3 py-1.5 text-xs'} pendingText="…">{followSet.has(p.id) ? 'Following' : 'Follow'}</SubmitButton>
             </form>
           </li>
         ))}
       </ul>
-      {profile.role === 'employer' && <p className="mt-6 text-xs text-muted">Full service records and messaging candidates first are part of Professional and Federal plans.</p>}
+      {profile.role === 'employer' && <p className="mt-6 text-xs text-muted">Messaging is free. Full service records, candidate search filters, and analytics are part of Professional and Federal plans.</p>}
     </div>
   );
 }

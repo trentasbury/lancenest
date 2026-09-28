@@ -19,7 +19,8 @@ export default function JobForm({ job, action }: { job?: Job | null; action: (fd
         <h2 className="font-serif text-2xl font-semibold sm:col-span-2">The role</h2>
         <Field label="Job title" wide><input name="title" required maxLength={140} defaultValue={job?.title} className="field" /></Field>
         <Field label="Department"><input name="department" defaultValue={job?.department ?? ''} className="field" /></Field>
-        <Field label="Location"><input name="location" defaultValue={job?.location ?? ''} placeholder="City, State or Remote" className="field" /></Field>
+        <Field label="Location"><input name="location" defaultValue={job?.location ?? ''} placeholder="City, ST — or several: Arlington, VA; San Diego, CA" className="field" />
+          <label className="mt-2 flex items-center gap-2 text-xs text-muted"><input type="checkbox" name="multi_location" defaultChecked={!!(job as unknown as { multi_location?: boolean })?.multi_location} className="accent-navy" />Hiring in multiple locations</label></Field>
         <Field label="Work arrangement">
           <select name="work_arrangement" defaultValue={job?.work_arrangement ?? 'onsite'} className="field">
             <option value="onsite">On-site</option><option value="hybrid">Hybrid</option><option value="remote">Remote</option>

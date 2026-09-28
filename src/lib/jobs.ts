@@ -1,11 +1,13 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 import { sanitizeSearch } from '@/lib/format';
+import { US_STATES } from '@/lib/states';
 import type { JobWithCompany } from '@/lib/types';
 
 export type JobFilters = {
   q?: string;
   location?: string;
+  state?: string;
   arrangement?: string;
   type?: string;
   clearance?: string;
@@ -31,6 +33,12 @@ export async function searchJobs(filters: JobFilters, limit = 50): Promise<JobWi
 
   const location = sanitizeSearch(filters.location ?? '');
   if (location) query = query.ilike('location', `%${location}%`);
+  // State filter matches "City, VA" or "Virginia"; "multi" = jobs hiring in several locations.
+  if (filters.state === 'multi') query = query.eq('multi_location', true);
+  else if (filters.state) {
+    const st = US_STATES.find(([code]) => code === filters.state);
+    if (st) query = query.or(`location.ilike.%, ${st[0]}%,location.ilike.%${st[1]}%`);
+  }
   if (filters.arrangement && ['remote', 'hybrid', 'onsite'].includes(filters.arrangement)) {
     query = query.eq('work_arrangement', filters.arrangement);
   }

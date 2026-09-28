@@ -129,11 +129,7 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
             <nav className="grid gap-3 sm:grid-cols-3">
               <Link href="/employer/candidates" className="card p-5 hover:border-brass"><p className="eyebrow">Candidate search</p><p className="mt-2 font-serif text-xl text-navy">Find veterans →</p></Link>
               <Link href="/employer/analytics" className="card p-5 hover:border-brass"><p className="eyebrow">Hiring analytics</p><p className="mt-2 font-serif text-xl text-navy">Views & applicants →</p></Link>
-              <div className="card p-5">
-                <p className="eyebrow">Contact credits</p>
-                <p className="mt-2 font-serif text-xl text-navy">{company.contact_credits ?? 0} available</p>
-                <form action="/api/billing/checkout" method="post" className="mt-2"><input type="hidden" name="product" value="contact_pack" /><button className="text-sm text-navy underline decoration-brass underline-offset-4">Buy 5 · $59</button></form>
-              </div>
+              <Link href="/employer/training" className="card p-5 hover:border-brass"><p className="eyebrow">Training listings</p><p className="mt-2 font-serif text-xl text-navy">List programs →</p></Link>
             </nav>
 
             <section className="card flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
@@ -145,6 +141,7 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
                     : 'Thank you for hiring veterans. Manage your card, invoices, and plan anytime.'}
                 </p>
               </div>
+
               <div className="flex flex-wrap gap-2">
                 {company.plan === 'free' && (
                   <>

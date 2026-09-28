@@ -47,10 +47,10 @@ export default async function AdminPage({ searchParams }: { searchParams: { dele
       </section>
       <div className="container-page space-y-10 py-10">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <StatCard label="Veterans" value={veterans} />
-          <StatCard label="Employers" value={employers} />
-          <StatCard label="Companies" value={companies} />
-          <StatCard label="Open jobs" value={openJobs} />
+          <Link href="/admin/directory?tab=veterans" className="transition-opacity hover:opacity-80"><StatCard label="Veterans →" value={veterans} hint="Open the list" /></Link>
+          <Link href="/admin/directory?tab=employers" className="transition-opacity hover:opacity-80"><StatCard label="Employers →" value={employers} hint="Open the list" /></Link>
+          <Link href="/admin/directory?tab=companies" className="transition-opacity hover:opacity-80"><StatCard label="Companies →" value={companies} hint="Open the list" /></Link>
+          <Link href="/admin/directory?tab=jobs" className="transition-opacity hover:opacity-80"><StatCard label="Open jobs →" value={openJobs} hint="Open the list" /></Link>
           <Link href="/admin/verifications" className="transition-opacity hover:opacity-80">
             <StatCard label="Pending verifications →" value={pendingVerifications} hint="Open the review queue" />
           </Link>

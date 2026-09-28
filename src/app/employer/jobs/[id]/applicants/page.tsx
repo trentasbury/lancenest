@@ -42,6 +42,8 @@ export default async function ApplicantsPage({ params }: { params: { id: string 
   const rawApps = (data ?? []) as unknown as App[];
   const { data: plans } = rawApps.length ? await supabase.from('veteran_profiles').select('profile_id, plan').in('profile_id', rawApps.map((a) => a.profile_id)) : { data: [] };
   const planOf = new Map((plans ?? []).map((p) => [p.profile_id as string, p.plan as string]));
+  const { data: track } = rawApps.length ? await supabase.rpc('verified_work_summary', { ids: rawApps.map((a) => a.profile_id) }) : { data: [] };
+  const trackOf = new Map(((track ?? []) as { profile_id: string; completed: number; avg_rating: number | null }[]).map((t) => [t.profile_id, t]));
   const featured = (a: App) => ['pro_plus', 'federal_pro'].includes(planOf.get(a.profile_id) ?? '');
   // Pro Plus / Federal members are featured applicants: listed first, newest first within each group.
   const apps = [...rawApps.filter(featured), ...rawApps.filter((a) => !featured(a))];
@@ -74,6 +76,7 @@ export default async function ApplicantsPage({ params }: { params: { id: string 
                 <p className="truncate text-sm text-muted">{[a.profile?.headline, a.profile?.service_summary].filter(Boolean).join(' · ')}</p>
                 <p className="text-xs text-muted">Applied {new Date(a.applied_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}
                   {a.resume_id && <> · <a href={`/api/resume-files/${a.resume_id}`} className="text-navy underline">Résumé sent with this application</a></>}</p>
+                {trackOf.get(a.profile_id) && <p className="text-xs text-olive">✓ {trackOf.get(a.profile_id)!.completed} verified freelance job{trackOf.get(a.profile_id)!.completed === 1 ? '' : 's'}{trackOf.get(a.profile_id)!.avg_rating ? ` · ${trackOf.get(a.profile_id)!.avg_rating}★` : ''}</p>}
               </div>
               <form action={moveApplicant.bind(null, a.id, job.id)} className="flex gap-2">
                 <select name="status" defaultValue={a.status === 'applied' ? 'viewed' : a.status} className="field py-2 text-sm">

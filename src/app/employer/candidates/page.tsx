@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { CLEARANCE_LABEL, CLEARANCE_ORDER, CLEARANCE_SEARCH, PAID, contactUsage, getMyCompany } from '@/lib/employer';
+import { CLEARANCE_LABEL, CLEARANCE_ORDER, CLEARANCE_SEARCH, PAID, getMyCompany } from '@/lib/employer';
 import { BRANCHES } from '@/lib/military';
 import { sanitizeSearch } from '@/lib/format';
 import Upsell from '@/components/employer/Upsell';
@@ -55,7 +55,6 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
   }
 
   const supabase = createClient();
-  const usage = await contactUsage(company.id, company.plan);
   let ids: string[] | null = null;
   const q = sanitizeSearch(f.q ?? '');
   if (q) {
@@ -131,10 +130,7 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
           <Link href="/employer/dashboard" className="text-sm text-muted hover:text-navy">← Employer dashboard</Link>
           <h1 className="mt-2 font-serif text-4xl font-medium">Candidate search</h1>
         </div>
-        <p className="text-sm text-muted">
-          New contacts this month: {Number.isFinite(usage.limit) ? `${usage.used} of ${usage.limit}` : 'unlimited'}
-          {company.contact_credits > 0 && ` · ${company.contact_credits} credit${company.contact_credits > 1 ? 's' : ''}`}
-        </p>
+        <p className="text-sm text-muted">Messaging is free and unlimited.</p>
       </div>
 
       <form className="card mt-6 grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4" method="get">
@@ -173,7 +169,7 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
         <p className="eyebrow">{rows.length === 60 ? 'Top 60 matches' : `${rows.length} candidate${rows.length === 1 ? '' : 's'}`}</p>
         {rows.length === 0 ? <p className="mt-4 text-sm text-muted">No veterans match those filters yet. Try widening your search.</p> : <ul className="mt-3 space-y-3">{rows.map((r) => <Card key={r.profile_id} r={r} />)}</ul>}
       </section>
-      <p className="mt-6 text-xs text-muted">Messaging a candidate who applied to your jobs is always free. Each new candidate you contact first uses one monthly contact{company.plan === 'professional' ? ' (50 included)' : ''} or one purchased credit.</p>
+
     </div>
   );
 }

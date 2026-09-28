@@ -10,11 +10,11 @@ export const metadata: Metadata = {
 
 const PLANS = [
   { name: 'Free', price: '$0', note: 'To get started', cta: 'Create a free account',
-    features: ['Company recruiting page', '2 open job posts', 'Applicant pipeline', 'Message candidates who apply'] },
+    features: ['Company recruiting page', '2 open job posts', 'Applicant pipeline with résumés and verified work', 'Free, unlimited messaging with any verified member'] },
   { name: 'Professional', price: '$199', note: 'per month · $1,990/year (2 months free)', cta: 'Start with Professional', featured: true,
-    features: ['Unlimited job posts', 'Search every veteran profile', 'Message 50 new candidates a month', 'Hiring analytics', '5 featured jobs a month, included', 'Applicant export (CSV)'] },
+    features: ['Unlimited job posts', 'Search every verified member’s full profile', 'Transitioning talent search (separating in 12 months)', 'Hiring analytics: views, applicants, conversion', '5 featured jobs a month, included', 'Applicant export (CSV)'] },
   { name: 'Federal', price: '$499', note: 'per month · $4,990/year', cta: 'Start with Federal',
-    features: ['Everything in Professional', 'Search by security clearance', 'Cleared talent spotlight', 'Unlimited candidate messages', 'Unlimited featured jobs'] },
+    features: ['Everything in Professional', 'Search by security clearance level', 'Cleared talent spotlight', 'Unlimited featured jobs', 'Priority support from the founder'] },
   { name: 'Enterprise', price: 'Custom', note: 'from $12,000/year', cta: 'Talk to us',
     features: ['Everything in Federal', 'Volume pricing for multiple hiring teams', 'Invoice billing', 'Dedicated support'] },
 ];
@@ -81,7 +81,7 @@ export default async function EmployersPage() {
           ))}
         </div>
         <p className="mt-8 text-center text-sm text-muted">
-          Every employer account starts free. Upgrade, downgrade, or cancel anytime from your dashboard. Add-ons: featured job boost $49 · extra job slot $39/month · 5 candidate contacts $59. <strong>Public Safety rate:</strong> government police, sheriff, corrections, fire, and EMS agencies get 30% off Professional and Federal — annual invoicing available. <strong>Training providers:</strong> list programs for $149/month (featured +$99/month; sponsored info sessions $500).
+          Every employer account starts free. Upgrade, downgrade, or cancel anytime from your dashboard. Add-ons: featured job boost $49 · extra job slot $39/month. <strong>Public Safety rate:</strong> government police, sheriff, corrections, fire, and EMS agencies get 30% off Professional and Federal — annual invoicing available. <strong>Training providers:</strong> list programs for $149/month (featured +$99/month; sponsored info sessions $500).
         </p>
       </div>
     </>

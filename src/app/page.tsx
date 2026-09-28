@@ -79,15 +79,15 @@ export default async function HomePage({ searchParams }: { searchParams: { delet
 
       {/* Split */}
       <section className="grid bg-paper lg:grid-cols-2">
-        <div className="flex flex-col justify-center px-6 py-16 sm:px-12 lg:px-16 lg:py-24">
+        <div className="flex flex-col justify-center px-6 py-16 sm:px-12 lg:py-28 lg:pl-[max(4rem,calc((100vw-72rem)/2+2rem))] lg:pr-4">
           <span className="h-0.5 w-12 bg-brass" aria-hidden="true" />
           <p className="eyebrow mt-5">More Than a Job Board</p>
-          <h2 className="mt-4 font-serif text-5xl font-medium leading-[1.05]">
+          <h2 className="mt-4 font-serif text-5xl font-medium leading-[1.05] lg:text-6xl">
             Your Next Chapter
             <br />
             Starts Here.
           </h2>
-          <p className="mt-6 max-w-md text-[17px] leading-relaxed text-muted">
+          <p className="mt-6 max-w-lg text-[17px] leading-relaxed text-muted lg:text-lg">
             LanceNest connects service members and veterans with meaningful careers across government, defense,
             technology, operations, and the private sector — and shows employers exactly what your service is worth.
           </p>
@@ -105,6 +105,8 @@ export default async function HomePage({ searchParams }: { searchParams: { delet
             sizes="(min-width: 1024px) 50vw, 100vw"
             className="object-cover"
           />
+          {/* Blend the photo into the parchment background instead of a hard edge */}
+          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-paper to-transparent lg:inset-y-0 lg:left-0 lg:right-auto lg:h-auto lg:w-2/5 lg:bg-gradient-to-r" />
         </div>
       </section>
 
