@@ -9,7 +9,7 @@ import FormMessage from '../FormMessage';
 import Turnstile from './Turnstile';
 
 const OPTIONS = [
-  { value: 'veteran', title: 'I’m a Veteran', body: 'Active duty, transitioning, or veteran — build your profile and find your next role.' },
+  { value: 'veteran', title: 'I’m a service member or veteran', body: 'Active duty, National Guard, Reserve, transitioning, or veteran — build your profile and find your next role.' },
   { value: 'employer', title: 'I’m hiring', body: 'Any company or recruiter — no military background or veteran ownership required. Post roles and search verified military talent.' },
 ] as const;
 

@@ -7,7 +7,7 @@ const FEATURES = [
   { icon: '☆', title: 'Veteran Focused', body: 'Built by veterans, for veterans. Your record is read as an asset, never a gap.' },
   { icon: '◇', title: 'Top Opportunities', body: 'Employers here are looking for military talent on purpose — not by accident.' },
   { icon: '✧', title: 'Career Resources', body: 'Translate your MOS, rating, or AFSC into the civilian roles it prepares you for.' },
-  { icon: '❖', title: 'A Stronger Community', body: 'Active duty, transitioning, and veteran members in one professional network.' },
+  { icon: '❖', title: 'A Stronger Community', body: 'Active duty, National Guard, Reserve, transitioning, and veteran members in one professional network.' },
 ];
 
 const LOOP = ['Service', 'Skills', 'Translation', 'Opportunity', 'Application', 'Career'];
