@@ -99,6 +99,7 @@ export default async function TransitionPage({ searchParams }: { searchParams: {
           <div className="card p-6 text-sm">
             <p className="eyebrow">Official resources</p>
             <ul className="mt-3 space-y-2">
+              <li><Link href="/training" className="text-navy underline">Training & certifications on LanceNest</Link></li>
               <li><a href={OFFICIAL.skillbridge} target="_blank" rel="noopener noreferrer" className="text-navy underline">DoD SkillBridge ↗</a></li>
               <li><a href={OFFICIAL.tap} target="_blank" rel="noopener noreferrer" className="text-navy underline">Transition Assistance Program (TAP) ↗</a></li>
               <li><a href={OFFICIAL.vaBenefits} target="_blank" rel="noopener noreferrer" className="text-navy underline">VA benefits ↗</a></li>

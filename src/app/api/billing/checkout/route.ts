@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   if (session.profile?.role !== 'employer') return NextResponse.redirect(`${site}/employers`, 303);
 
   const supabase = createClient();
-  const { data: company } = await supabase.from('companies').select('id, name, stripe_customer_id, is_verified, public_safety_status').eq('owner_id', session.user.id).maybeSingle();
+  const { data: company } = await supabase.from('companies').select('id, name, stripe_customer_id, is_verified, public_safety_status, training_listing_active').eq('owner_id', session.user.id).maybeSingle();
   if (!company) return NextResponse.redirect(`${site}/employer/dashboard?error=company`, 303);
   if (!company.is_verified) return NextResponse.redirect(`${site}/employer/dashboard?error=verify`, 303);
 
@@ -58,6 +58,17 @@ export async function POST(request: NextRequest) {
   }
 
   const metadata: Record<string, string> = { company_id: company.id as string, kind: item.kind, product };
+  if (item.plan) metadata.plan = item.plan;
+  if (item.plan === 'training_featured' && !company.training_listing_active) return NextResponse.redirect(`${site}/employer/training?error=listing_first`, 303);
+  if (item.kind === 'training_webinar') {
+    const title = String(form.get('event_title') ?? '').trim().slice(0, 140);
+    const startsAt = new Date(String(form.get('event_starts_at') ?? ''));
+    const url = String(form.get('event_url') ?? '').trim().slice(0, 300);
+    if (title.length < 4 || Number.isNaN(startsAt.getTime()) || startsAt.getTime() < Date.now() + 86400000 || !/^https:\/\//i.test(url)) {
+      return NextResponse.redirect(`${site}/employer/training?error=event`, 303);
+    }
+    Object.assign(metadata, { event_title: title, event_starts_at: startsAt.toISOString(), event_url: url });
+  }
 
   // Founding Employer discount (first 12 months) while spots remain. Stripe applies it, then the
   // subscription renews at the standard price automatically.

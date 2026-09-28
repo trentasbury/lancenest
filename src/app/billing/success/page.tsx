@@ -17,6 +17,7 @@ export default async function BillingSuccess({ searchParams }: { searchParams: {
     result.ok && result.kind === 'job_boost' ? 'Your job is now featured for 30 days.'
     : result.ok && result.kind === 'job_slot' ? 'Your extra job slot is active.'
     : result.ok && result.kind === 'contact_pack' ? '5 contact credits were added to your account.'
+    : result.ok && result.kind === 'training_webinar' ? 'Your sponsored info session is scheduled and promoted to members.'
     : result.ok && result.kind === 'milestone' ? 'The milestone is funded. The payment is protected and held until you approve the work.'
     : result.ok ? 'Your plan is active. Thank you for supporting veteran hiring.'
     : 'We’re confirming your payment with Stripe. This usually takes a few seconds — refresh your dashboard shortly.';

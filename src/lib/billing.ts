@@ -19,7 +19,7 @@ export async function recomputeCompany(companyId: string) {
   const plans = live.filter((s) => s.kind === 'plan').map((s) => s.plan as string);
   const plan = plans.includes('enterprise') ? 'enterprise' : plans.includes('federal') ? 'federal' : plans.includes('professional') ? 'professional' : 'free';
   const slots = live.filter((s) => s.kind === 'job_slot').length;
-  await admin.from('companies').update({ plan, extra_job_slots: slots }).eq('id', companyId);
+  await admin.from('companies').update({ plan, extra_job_slots: slots, training_listing_active: plans.includes('training'), training_featured: plans.includes('training') && plans.includes('training_featured') }).eq('id', companyId);
 
   // Back on Free: keep the newest (2 + slots) open jobs, pause the rest. Nothing is deleted.
   if (plan === 'free') {
@@ -92,6 +92,15 @@ export async function applyCheckoutSession(sessionId: string) {
         company_id: s.metadata?.company_id ?? null, kind: 'job_boost', job_id: jobId,
         amount_cents: s.amount_total ?? 0, stripe_checkout_session_id: s.id,
       });
+    }
+    return { ok: true as const, kind };
+  }
+  if (kind === 'training_webinar' && s.payment_status === 'paid') {
+    const admin = createAdminClient();
+    const companyId = s.metadata?.company_id;
+    const { error } = await admin.from('purchases').insert({ company_id: companyId ?? null, kind: 'training_webinar', amount_cents: s.amount_total ?? 0, stripe_checkout_session_id: s.id });
+    if (!error && companyId) {
+      await admin.from('training_events').insert({ company_id: companyId, title: s.metadata?.event_title ?? 'Info session', starts_at: s.metadata?.event_starts_at, url: s.metadata?.event_url, stripe_checkout_session_id: s.id });
     }
     return { ok: true as const, kind };
   }
