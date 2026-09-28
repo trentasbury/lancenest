@@ -89,5 +89,30 @@ export async function GET(request: NextRequest) {
       employerEmails++;
     }
   }
-  return NextResponse.json({ memberEmails, employerEmails });
+  // ---------- Expire free Pro months earned through referrals ----------
+  const { data: expired } = await admin.from('veteran_profiles').select('profile_id').eq('plan', 'pro').lt('pro_granted_until', new Date().toISOString());
+  if (expired?.length) {
+    const { recomputeVeteran } = await import('@/lib/billing');
+    for (const e of expired) await recomputeVeteran(e.profile_id as string);
+  }
+
+  // ---------- Monday weekly digest for verified members ----------
+  let digests = 0;
+  if (new Date().getUTCDay() === 1) {
+    const weekAgo = new Date(now - 7 * 24 * H).toISOString();
+    const { count: newJobs } = await admin.from('jobs').select('id', { count: 'exact', head: true }).eq('status', 'open').gte('posted_at', weekAgo);
+    const { data: members } = await admin.from('veteran_profiles').select('profile_id').eq('verification_status', 'verified').limit(5000);
+    for (const m of members ?? []) {
+      const [{ count: views }, { data: u }] = await Promise.all([
+        admin.from('profile_views').select('viewer_id', { count: 'exact', head: true }).eq('profile_id', m.profile_id).gte('viewed_at', weekAgo),
+        admin.auth.admin.getUserById(m.profile_id as string),
+      ]);
+      if (!u?.user?.email || (!(views ?? 0) && !(newJobs ?? 0))) continue;
+      await sendEmail(u.user.email, { subject: 'Your week on LanceNest', preheader: `${newJobs ?? 0} new jobs · ${views ?? 0} profile views`, tone: 'notice', badge: 'Weekly update',
+        heading: 'Your week on LanceNest', paragraphs: [`${newJobs ?? 0} new jobs were posted by verified employers this week.`, `${views ?? 0} people viewed your profile.`, 'Your recommended jobs are matched to your whole background — take a look.'],
+        cta: { label: 'See jobs for you', url: `${SITE}/jobs` } });
+      digests++;
+    }
+  }
+  return NextResponse.json({ memberEmails, employerEmails, digests });
 }

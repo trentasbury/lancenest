@@ -23,6 +23,24 @@ async function moveApplicant(applicationId: string, jobId: string, formData: For
   if (!STAGES.some(([s]) => s === status)) return;
   // Row-level security: only the hiring company can update; the applicant is notified by a database trigger.
   await createClient().from('applications').update({ status }).eq('id', applicationId).eq('job_id', jobId);
+  // Email the applicant about meaningful stage changes (the in-app notification already fires from the database).
+  if (['interview', 'offer', 'not_selected'].includes(status)) {
+    const { createAdminClient } = await import('@/lib/supabase/admin');
+    const { sendEmail, SITE } = await import('@/lib/email');
+    const admin = createAdminClient();
+    const { data: app } = await admin.from('applications').select('profile_id, job:jobs(title, company:companies(name))').eq('id', applicationId).maybeSingle();
+    const a = app as unknown as { profile_id: string; job: { title: string; company: { name: string } | null } | null } | null;
+    const { data: u } = a ? await admin.auth.admin.getUserById(a.profile_id) : { data: null };
+    if (a && u?.user?.email) {
+      const title = a.job?.title ?? 'your application', company = a.job?.company?.name ?? 'The employer';
+      const copy = status === 'interview' ? { subject: `Interview request: ${title}`, heading: `${company} wants to interview you.`, tone: 'success' as const }
+        : status === 'offer' ? { subject: `Offer stage: ${title}`, heading: `${company} moved you to the offer stage.`, tone: 'success' as const }
+        : { subject: `Update on ${title}`, heading: `An update from ${company}.`, tone: 'notice' as const };
+      await sendEmail(u.user.email, { subject: copy.subject, preheader: copy.heading, tone: copy.tone, badge: 'Application update', heading: copy.heading,
+        paragraphs: [status === 'not_selected' ? `${company} has decided not to move forward with your application for ${title}. Keep going — new roles are posted every day.` : `Your application for ${title} moved forward. Check your messages for next steps.`],
+        cta: { label: 'View my applications', url: `${SITE}/dashboard/applications` } });
+    }
+  }
   revalidatePath(`/employer/jobs/${jobId}/applicants`);
 }
 

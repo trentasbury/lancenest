@@ -3,8 +3,13 @@ import { createClient } from '@/lib/supabase/server';
 import { FREELANCE_FEES } from '@/lib/fees';
 
 export const FREE_PROPOSALS_PER_MONTH = 10;
-export const CATEGORIES = ['Cybersecurity', 'IT & ServiceNow', 'Software development', 'Program & project management', 'Logistics & supply chain',
-  'Security consulting', 'Training & instruction', 'Intelligence & analysis', 'Writing & proposals', 'Design & media', 'Operations', 'Other'];
+export const CATEGORIES = [
+  'HVAC & refrigeration', 'Plumbing', 'Electrical', 'Construction & remodeling', 'Handyman & home repair', 'Roofing & exteriors', 'Landscaping & outdoor',
+  'Automotive & diesel', 'Welding & fabrication', 'Moving & hauling', 'Cleaning & property services', 'Security & protection services',
+  'Web design & development', 'Software development', 'Cybersecurity', 'IT support & networking', 'ServiceNow & enterprise software', 'Data & analytics',
+  'Graphic design & branding', 'Photography & video', 'Marketing & social media', 'Writing & editing', 'Proposals & grant writing',
+  'Program & project management', 'Logistics & supply chain', 'Consulting & strategy', 'Accounting & bookkeeping', 'Legal & paralegal', 'HR & recruiting',
+  'Training & instruction', 'Fitness & coaching', 'Healthcare & medical', 'Aviation & drones', 'Intelligence & analysis', 'Events & hospitality', 'Other'];
 
 /** What the veteran keeps from a payment, by plan (percent). */
 export function keepPercent(plan: string) {

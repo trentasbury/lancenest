@@ -60,7 +60,9 @@ export async function recomputeVeteran(profileId: string) {
   const admin = createAdminClient();
   const { data } = await admin.from('subscriptions').select('plan').eq('profile_id', profileId).in('status', ['active', 'trialing', 'past_due']);
   const best = (data ?? []).map((r) => VET_RANK[r.plan as string]).filter(Boolean).sort((a, b) => b[0] - a[0])[0];
-  await admin.from('veteran_profiles').update({ plan: best ? best[1] : 'free' }).eq('profile_id', profileId);
+  const { data: grant } = best ? { data: null } : await admin.from('veteran_profiles').select('pro_granted_until').eq('profile_id', profileId).maybeSingle();
+  const granted = grant?.pro_granted_until && Date.parse(grant.pro_granted_until as string) > Date.now();
+  await admin.from('veteran_profiles').update({ plan: best ? best[1] : granted ? 'pro' : 'free' }).eq('profile_id', profileId);
 }
 
 /** Applies a completed Checkout Session. Safe to call more than once (webhook + success page). */

@@ -67,6 +67,7 @@ export async function createProject(formData: FormData) {
   const { data, error } = await supabase.from('freelance_projects').insert({
     client_id: user.id, company_id: company.id, title, description,
     category: CATEGORIES.includes(category) ? category : null,
+    work_location: t(formData, 'work_location', 120) || 'Remote',
     budget_type: t(formData, 'budget_type', 6) === 'hourly' ? 'hourly' : 'fixed', budget_min: min, budget_max: max,
     clearance_required: CLEARANCES.includes(clearance) ? clearance : 'none',
   }).select('id').single();

@@ -66,7 +66,28 @@ export async function sendMessage(conversationId: string, formData: FormData) {
   const { error } = await createClient().from('messages').insert({ conversation_id: conversationId, sender_id: session.user.id, body });
   if (error) {
     const reason = error.code === 'P0015' ? 'pending' : error.code === 'P0016' ? 'declined' : error.code === 'P0009' ? 'pii' : error.code === 'P0002' ? 'rate' : error.message.includes("can't") ? 'blocked' : 'send';
-    redirect(`/messages/${conversationId}?error=${reason}`);
+  
+  // Email the other person if they're away (throttled per conversation).
+  try {
+    const admin = createAdminClient();
+    const { data: others } = await admin.from('conversation_participants').select('profile_id, last_emailed_at, profile:profiles(last_active_at)').eq('conversation_id', conversationId).neq('profile_id', session.user.id);
+    for (const o of (others ?? []) as unknown as { profile_id: string; last_emailed_at: string | null; profile: { last_active_at: string | null } | null }[]) {
+      const away = !o.profile?.last_active_at || Date.now() - Date.parse(o.profile.last_active_at) > 15 * 60000;
+      const quiet = !o.last_emailed_at || Date.now() - Date.parse(o.last_emailed_at) > 2 * 3600000;
+      if (!away || !quiet) continue;
+      const { data: u } = await admin.auth.admin.getUserById(o.profile_id);
+      if (!u?.user?.email) continue;
+      const { data: conv } = await admin.from('conversations').select('status').eq('id', conversationId).maybeSingle();
+      const name = session.profile?.full_name ?? 'A member';
+      const isRequest = conv?.status === 'request';
+      const { sendEmail, SITE } = await import('@/lib/email');
+      await sendEmail(u.user.email, { subject: isRequest ? `${name} sent you a message request` : `New message from ${name}`, preheader: 'Open LanceNest to read and reply.', tone: 'notice', badge: isRequest ? 'Message request' : 'Message',
+        heading: isRequest ? `${name} would like to connect.` : `${name} sent you a message.`, paragraphs: ['For your privacy, messages are only shown on LanceNest.'],
+        cta: { label: isRequest ? 'Review the request' : 'Read and reply', url: `${SITE}/messages/${conversationId}` } });
+      await admin.from('conversation_participants').update({ last_emailed_at: new Date().toISOString() }).eq('conversation_id', conversationId).eq('profile_id', o.profile_id);
+    }
+  } catch (err) { console.error('message email failed:', err); }
+  redirect(`/messages/${conversationId}?error=${reason}`);
   }
   revalidatePath('/', 'layout');
 }

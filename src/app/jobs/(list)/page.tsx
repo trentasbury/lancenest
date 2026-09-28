@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import RecommendedJobs from '@/components/RecommendedJobs';
 import { createClient } from '@/lib/supabase/server';
 import { US_STATES } from '@/lib/states';
 import JobCard from '@/components/JobCard';
@@ -118,6 +119,7 @@ export default async function JobsPage({ searchParams }: { searchParams: JobFilt
             />
           ) : (
             <div className="space-y-4">
+              {!Object.values(searchParams).some(Boolean) && <RecommendedJobs limit={5} />}
               {!Object.values(searchParams).some(Boolean) && featured.map((job) => <JobCard key={`f-${job.id}`} job={job} early={early.has(job.id)} />)}
               {jobs.filter((job) => Object.values(searchParams).some(Boolean) || !featuredIds.has(job.id)).map((job) => <JobCard key={job.id} job={job} early={early.has(job.id)} />)}
             </div>

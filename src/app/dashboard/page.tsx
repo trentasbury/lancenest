@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import MemberPerks from '@/components/MemberPerks';
+import RecommendedJobs from '@/components/RecommendedJobs';
+import ProfileStrength from '@/components/ProfileStrength';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import StatCard from '@/components/StatCard';
@@ -48,6 +50,8 @@ export default async function VeteranDashboard({ searchParams }: { searchParams:
 
       <div className="container-page space-y-10 py-10">
         {vet?.verification_status === 'verified' && <MemberPerks userId={user.id} boost={searchParams.boost} />}
+        {vet?.verification_status === 'verified' && <RecommendedJobs limit={4} title="Jobs for you" />}
+        <ProfileStrength userId={user.id} />
 
         {vet?.verification_status !== 'verified' && (
           <div className="card flex flex-col gap-3 border-brass p-5 sm:flex-row sm:items-center sm:justify-between">

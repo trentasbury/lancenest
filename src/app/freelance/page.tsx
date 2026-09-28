@@ -26,7 +26,7 @@ export default async function FreelancePage({ searchParams }: { searchParams: { 
   const plan = (vet?.plan as string) ?? 'free';
   const { data: contracts } = await supabase.from('contracts').select('id, title, status').or(`client_id.eq.${user.id},freelancer_id.eq.${user.id}`).order('created_at', { ascending: false }).limit(10);
 
-  let q = supabase.from('freelance_projects').select('id, title, description, category, budget_type, budget_min, budget_max, clearance_required, status, created_at, company:companies(name, is_verified)');
+  let q = supabase.from('freelance_projects').select('id, title, description, category, work_location, budget_type, budget_min, budget_max, clearance_required, status, created_at, company:companies(name, is_verified)');
   const mine = !isVet && searchParams.mine !== '0';
   if (mine) q = q.eq('client_id', user.id); else q = q.eq('status', 'open');
   const kw = sanitizeSearch(searchParams.q ?? '');
@@ -96,7 +96,7 @@ export default async function FreelancePage({ searchParams }: { searchParams: { 
                     <p className="font-medium">{budget(p)}</p>
                   </div>
                   <p className="mt-1 text-sm text-muted">
-                    {p.company?.name}{p.company?.is_verified && <span className="ml-1 text-olive">✓ verified company</span>} · {p.category ?? 'General'} · {timeAgo(p.created_at)}{mine && ` · ${p.status.replace('_', ' ')}`}
+                    {p.company?.name}{p.company?.is_verified && <span className="ml-1 text-olive">✓ verified company</span>} · {(p as unknown as { work_location?: string }).work_location ?? 'Remote'} · {p.category ?? 'General'} · {timeAgo(p.created_at)}{mine && ` · ${p.status.replace('_', ' ')}`}
                   </p>
                   <p className="mt-2 line-clamp-2 text-sm text-ink/80">{p.description}</p>
                   {p.clearance_required !== 'none' && <span className="mt-2 inline-block rounded-full border border-brass/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-brass-dark">{CLEARANCE_LABEL[p.clearance_required]} required</span>}

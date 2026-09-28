@@ -132,6 +132,19 @@ export default async function HomePage({ searchParams }: { searchParams: { delet
         <h2 className="font-serif text-3xl font-medium tracking-[0.12em] text-ivory sm:text-4xl">VETERANS TODAY. LEADERS TOMORROW.</h2>
         <p className="mt-4 text-xs tracking-[0.3em] text-brass-light">SERVICE · LEADERSHIP · OPPORTUNITY</p>
       </section>
+      <section className="border-t border-line bg-paper">
+        <div className="container-page flex flex-col items-start justify-between gap-6 py-12 md:flex-row md:items-center">
+          <div>
+            <p className="eyebrow">Support</p>
+            <h2 className="mt-2 font-serif text-3xl font-medium text-navy">Trouble signing in?</h2>
+            <p className="mt-2 max-w-xl text-muted">Reset your password in a minute, or email our team — a real person answers, usually within one business day.</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/forgot-password" className="btn btn-primary">Reset my password</Link>
+            <a href="mailto:support@lancenest.com?subject=LanceNest%20sign-in%20help" className="btn btn-outline">Email support@lancenest.com</a>
+          </div>
+        </div>
+      </section>
     </>
   );
 }

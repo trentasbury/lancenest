@@ -13,7 +13,7 @@ const OPTIONS = [
   { value: 'employer', title: 'I’m hiring', body: 'Any company or recruiter — no military background or veteran ownership required. Post roles and search verified military talent.' },
 ] as const;
 
-export default function SignupForm({ defaultRole }: { defaultRole: 'veteran' | 'employer' }) {
+export default function SignupForm({ defaultRole, referral }: { defaultRole: 'veteran' | 'employer'; referral?: string }) {
   const [role, setRole] = useState<'veteran' | 'employer'>(defaultRole);
   const [state, action] = useFormState<FormState, FormData>(signUp, {});
 
@@ -29,6 +29,7 @@ export default function SignupForm({ defaultRole }: { defaultRole: 'veteran' | '
 
   return (
     <form action={action} className="space-y-5">
+      {referral && <input type="hidden" name="ref" value={referral} />}
       <fieldset>
         <legend className="field-label">How will you use LanceNest?</legend>
         <div className="grid gap-3 sm:grid-cols-2">

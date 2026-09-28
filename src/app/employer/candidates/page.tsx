@@ -60,11 +60,15 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
   let ids: string[] | null = null;
   const q = sanitizeSearch(f.q ?? '');
   if (q) {
-    const [{ data: byName }, { data: byAbout }] = await Promise.all([
+    // Keyword search covers the whole profile: name, headline, about, civilian job titles and employers, and skills.
+    const [{ data: byName }, { data: byAbout }, { data: byExp }, { data: bySkill }] = await Promise.all([
       supabase.from('profiles').select('id').eq('role', 'veteran').or(`full_name.ilike.%${q}%,headline.ilike.%${q}%`).limit(500),
       supabase.from('veteran_profiles').select('profile_id').ilike('about', `%${q}%`).limit(500),
+      supabase.from('experience').select('profile_id').or(`position.ilike.%${q}%,company.ilike.%${q}%,description.ilike.%${q}%`).limit(500),
+      supabase.from('profile_skills').select('profile_id, skills!inner(name)').ilike('skills.name', `%${q}%`).limit(500),
     ]);
-    ids = intersect(ids, Array.from(new Set([...(byName ?? []).map((r) => r.id as string), ...(byAbout ?? []).map((r) => r.profile_id as string)])));
+    ids = intersect(ids, Array.from(new Set([...(byName ?? []).map((r) => r.id as string), ...(byAbout ?? []).map((r) => r.profile_id as string),
+      ...(byExp ?? []).map((r) => r.profile_id as string), ...(bySkill ?? []).map((r) => r.profile_id as string)])));
   }
   if (f.branch || f.mos) {
     let s = supabase.from('military_service').select('profile_id');
@@ -149,7 +153,7 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
         </div>
       )}
       <form className="card mt-6 grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4" method="get">
-        <input name="q" defaultValue={f.q} placeholder="Name, title, or keyword" className="field lg:col-span-2" />
+        <input name="q" defaultValue={f.q} placeholder="Job title, skill, employer, or name" className="field lg:col-span-2" />
         <select name="branch" defaultValue={f.branch ?? ''} className="field"><option value="">Any branch</option>{BRANCHES.map((b) => <option key={b}>{b}</option>)}</select>
         <input name="mos" defaultValue={f.mos} placeholder="MOS / rating / AFSC" className="field" />
         <input name="skill" defaultValue={f.skill} placeholder="Skill" className="field" />

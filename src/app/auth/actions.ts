@@ -92,6 +92,15 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
     return { error: 'We couldn’t create that account. Please check your details and try again.' };
   }
 
+  // Referral: remember who invited this member (credited when they're verified).
+  const ref = field(formData, 'ref').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 60);
+  if (ref && data.user) {
+    const { createAdminClient } = await import('@/lib/supabase/admin');
+    const admin = createAdminClient();
+    const { data: referrer } = await admin.from('profiles').select('id').eq('username', ref).in('role', ['veteran', 'admin']).maybeSingle();
+    if (referrer && referrer.id !== data.user.id) await admin.from('profiles').update({ referred_by: referrer.id }).eq('id', data.user.id);
+  }
+
   // Email confirmation disabled in Supabase -> a session exists immediately.
   if (data.session) {
     startSessionClock();

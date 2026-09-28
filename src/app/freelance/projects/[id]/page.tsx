@@ -57,7 +57,7 @@ export default async function ProjectPage({ params, searchParams }: { params: { 
           <h1 className="font-serif text-4xl font-medium">{project.title}</h1>
           <p className="mt-2 text-sm text-muted">
             {company && <Link href={`/companies/${company.slug}`} className="text-navy underline">{company.name}</Link>}
-            {company?.is_verified && <span className="ml-1 text-olive">✓ verified company</span>} · {project.category ?? 'General'} · posted {timeAgo(project.created_at)} · <span className="capitalize">{String(project.status).replace('_', ' ')}</span>
+            {company?.is_verified && <span className="ml-1 text-olive">✓ verified company</span>} · {(project as unknown as { work_location?: string }).work_location ?? 'Remote'} · {project.category ?? 'General'} · posted {timeAgo(project.created_at)} · <span className="capitalize">{String(project.status).replace('_', ' ')}</span>
           </p>
           {project.clearance_required !== 'none' && <p className="mt-2 inline-block rounded-full border border-brass/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-brass-dark">{CLEARANCE_LABEL[project.clearance_required as string]} clearance required</p>}
         </div>

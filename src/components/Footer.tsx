@@ -14,6 +14,7 @@ export default function Footer() {
           <ul className="mt-4 space-y-2.5 text-sm text-cream/80">
             <li><Link href="/jobs" className="hover:text-brass">Find jobs</Link></li>
             <li><Link href="/resources" className="hover:text-brass">Translate your MOS</Link></li>
+            <li><Link href="/careers" className="hover:text-brass">Military careers, translated</Link></li>
             <li><Link href="/signup?role=veteran" className="hover:text-brass">Create a profile</Link></li>
             <li><Link href="/plans" className="hover:text-brass">Veteran plans</Link></li>
           </ul>
