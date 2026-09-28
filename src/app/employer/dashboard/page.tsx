@@ -127,6 +127,8 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
             })()}
 
             <nav className="grid gap-3 sm:grid-cols-3">
+              <Link href="/employer/talent" className="card p-5 hover:border-brass"><p className="eyebrow">Talent pools</p><p className="mt-2 font-serif text-xl text-navy">Saved candidates →</p></Link>
+              <Link href="/employer/company" className="card p-5 hover:border-brass"><p className="eyebrow">Company page</p><p className="mt-2 font-serif text-xl text-navy">Logo, cover & story →</p></Link>
               <Link href="/employer/candidates" className="card p-5 hover:border-brass"><p className="eyebrow">Candidate search</p><p className="mt-2 font-serif text-xl text-navy">Find veterans →</p></Link>
               <Link href="/employer/analytics" className="card p-5 hover:border-brass"><p className="eyebrow">Hiring analytics</p><p className="mt-2 font-serif text-xl text-navy">Views & applicants →</p></Link>
               <Link href="/employer/training" className="card p-5 hover:border-brass"><p className="eyebrow">Training listings</p><p className="mt-2 font-serif text-xl text-navy">List programs →</p></Link>
@@ -145,7 +147,7 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
               <div className="flex flex-wrap gap-2">
                 {company.plan === 'free' && (
                   <>
-                    <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="employer_professional_month" /><button className="btn btn-primary">Professional · $199/mo (Founding: $149 first year)</button></form>
+                    <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="employer_professional_month" /><button className="btn btn-primary">Professional · $249/mo (Founding: $149 first year)</button></form>
                     <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="job_slot" /><button className="btn btn-outline">+1 job slot · $39/mo</button></form>
                   </>
                 )}

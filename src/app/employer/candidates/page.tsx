@@ -12,6 +12,7 @@ import Upsell from '@/components/employer/Upsell';
 import Avatar from '@/components/network/Avatar';
 import SubmitButton from '@/components/SubmitButton';
 import { startConversation } from '@/app/messages/actions';
+import { saveToPool } from '@/app/employer/talent/actions';
 
 export const metadata: Metadata = { title: 'Candidate search' };
 
@@ -117,6 +118,7 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
           {cleared && r.clearance_level !== 'none' && <span className="ml-2 rounded-full border border-brass/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-brass-dark">{CLEARANCE_LABEL[r.clearance_level]}</span>}
         </p>
       </div>
+      <form action={saveToPool.bind(null, r.profile_id, '/employer/candidates')}><SubmitButton className="btn btn-ghost border border-line" pendingText="…">Save</SubmitButton></form>
       <form action={startConversation.bind(null, r.profile_id)}>
         <SubmitButton className="btn btn-outline" pendingText="…">Message</SubmitButton>
       </form>

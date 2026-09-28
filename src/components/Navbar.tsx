@@ -37,7 +37,7 @@ export default async function Navbar() {
     { href: roleHome(role), label: role === 'admin' ? 'Admin' : role === 'employer' ? 'Employer dashboard' : 'Dashboard' },
     ...(role === 'veteran' && profile?.username ? [{ href: `/veterans/${profile.username}`, label: 'My profile' }] : []),
     ...(role === 'veteran' ? [{ href: '/dashboard/profile', label: 'Edit profile' }, { href: '/dashboard/applications', label: 'My applications' }, { href: '/dashboard/verification', label: 'Verification' }, { href: '/transition', label: 'Transition Hub & SkillBridge' }, { href: '/training', label: 'Training & certifications' }, { href: '/plans', label: 'Plans & upgrades' }] : []),
-    ...(role === 'employer' ? [{ href: '/employer/jobs/new', label: 'Post a job' }, { href: '/employer/analytics', label: 'Hiring analytics' }, { href: '/employer/training', label: 'Training listings' }, { href: '/employers', label: 'Plans & billing' }] : []),
+    ...(role === 'employer' ? [{ href: '/employer/jobs/new', label: 'Post a job' }, { href: '/employer/analytics', label: 'Hiring analytics' }, { href: '/employer/training', label: 'Training listings' }, { href: '/employer/talent', label: 'Talent pools' }, { href: '/employer/company', label: 'Company page' }, { href: '/employers', label: 'Plans & billing' }] : []),
     { href: '/network?view=saved', label: 'Saved posts' },
     { href: '/settings/account', label: 'Account settings' },
   ];

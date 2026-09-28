@@ -3,7 +3,7 @@ import type { JobWithCompany } from '@/lib/types';
 import { ARRANGEMENT_LABELS, CLEARANCE_LABELS, EMPLOYMENT_LABELS, formatSalary, postedAgo } from '@/lib/format';
 import CompanyMark from './CompanyMark';
 
-export default function JobCard({ job }: { job: JobWithCompany }) {
+export default function JobCard({ job, early }: { job: JobWithCompany; early?: boolean }) {
   const salary = formatSalary(job.salary_min, job.salary_max, job.salary_period);
   const companyName = job.company?.name ?? 'Company';
 
@@ -28,6 +28,7 @@ export default function JobCard({ job }: { job: JobWithCompany }) {
           <span className="pill">{ARRANGEMENT_LABELS[job.work_arrangement]}</span>
           <span className="pill">{EMPLOYMENT_LABELS[job.employment_type]}</span>
           {job.featured_until && new Date(job.featured_until) > new Date() && <span className="pill border-brass bg-brass text-navy-deep">Featured</span>}
+          {early && <span className="pill border-brass/60 bg-brass/10 text-brass-dark">Be an early applicant</span>}
           {job.employment_type === 'skillbridge' && <span className="pill border-olive/50 bg-olive/10 text-olive">DoD SkillBridge · keep military pay</span>}
           {job.veteran_preferred && <span className="pill border-brass/50 bg-brass/10 text-brass-dark">Veteran preferred</span>}
           {job.clearance_required !== 'none' && (

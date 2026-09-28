@@ -38,6 +38,7 @@ export default async function CompanyPage({ params }: { params: { slug: string }
 
   return (
     <>
+      {(company as unknown as { cover_url?: string | null }).cover_url && <div className="h-48 w-full bg-navy sm:h-64"><img src={(company as unknown as { cover_url: string }).cover_url} alt="" className="h-full w-full object-cover" /></div>}
       <section className="bg-navy-deep text-ivory">
         <div className="container-page flex flex-col gap-6 py-14 sm:flex-row sm:items-center">
           <CompanyMark name={company.name} logoUrl={company.logo_url} size="lg" />

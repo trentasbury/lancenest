@@ -10,6 +10,7 @@ import { PAID, getMyCompany } from '@/lib/employer';
 import Avatar from '@/components/network/Avatar';
 import SubmitButton from '@/components/SubmitButton';
 import { startConversation } from '@/app/messages/actions';
+import { saveToPool } from '@/app/employer/talent/actions';
 
 export const metadata: Metadata = { title: 'Applicants' };
 
@@ -84,6 +85,7 @@ export default async function ApplicantsPage({ params }: { params: { id: string 
                 </select>
                 <SubmitButton className="btn btn-outline py-2" pendingText="…">Update</SubmitButton>
               </form>
+              {PAID.includes(company.plan) && <form action={saveToPool.bind(null, a.profile_id, `/employer/jobs/${job.id}/applicants`)}><SubmitButton className="btn btn-ghost border border-line py-2" pendingText="…">Save</SubmitButton></form>}
               <form action={startConversation.bind(null, a.profile_id)}>
                 <SubmitButton className="btn btn-primary py-2" pendingText="…">Message</SubmitButton>
               </form>

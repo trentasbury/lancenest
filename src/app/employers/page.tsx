@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 const PLANS = [
   { name: 'Free', price: '$0', note: 'To get started', cta: 'Create a free account',
     features: ['Company recruiting page', '2 open job posts', 'Applicant pipeline with résumés and verified work', 'Free, unlimited messaging with any verified member'] },
-  { name: 'Professional', price: '$199', note: 'per month · $1,990/year (2 months free)', cta: 'Start with Professional', featured: true,
-    features: ['Unlimited job posts', 'Search every verified member’s full profile', 'Transitioning talent search (separating in 12 months)', 'Hiring analytics: views, applicants, conversion', '5 featured jobs a month, included', 'Applicant export (CSV)'] },
-  { name: 'Federal', price: '$499', note: 'per month · $4,990/year', cta: 'Start with Federal',
+  { name: 'Professional', price: '$249', note: 'per month · or $2,490/year paid up front (2 months free)', cta: 'Start with Professional', featured: true,
+    features: ['Unlimited job posts', 'Search every verified member’s full profile', 'Transitioning talent search (separating in 12 months)', 'Hiring analytics: views, applicants, conversion', '5 featured jobs a month, included', 'Talent pools: save candidates to lists with private notes', 'Branded company page: cover photo and “Why veterans work here”', 'Applicant export (CSV)'] },
+  { name: 'Federal', price: '$599', note: 'per month · or $5,990/year paid up front (2 months free)', cta: 'Start with Federal',
     features: ['Everything in Professional', 'Search by security clearance level', 'Cleared talent spotlight', 'Unlimited featured jobs', 'Priority support from the founder'] },
   { name: 'Enterprise', price: 'Custom', note: 'from $12,000/year', cta: 'Talk to us',
     features: ['Everything in Federal', 'Volume pricing for multiple hiring teams', 'Invoice billing', 'Dedicated support'] },

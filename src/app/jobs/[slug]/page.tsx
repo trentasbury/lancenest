@@ -43,6 +43,12 @@ export default async function JobDetailPage({ params }: { params: { slug: string
   if (!job) notFound();
 
   const session = await getSessionProfile();
+  const [{ data: earlyRows }, { data: insightRows }] = await Promise.all([
+    createClient().rpc('early_jobs', { ids: [job.id] }),
+    session?.profile?.role === 'veteran' ? createClient().rpc('applicant_insight', { j: job.id }) : Promise.resolve({ data: [] }),
+  ]);
+  const isEarly = ((earlyRows ?? []) as string[]).length > 0;
+  const insight = ((insightRows ?? []) as { stronger_than_pct: number; verified_pct: number; applicants_bucket: string }[])[0] ?? null;
   const { data: myResumes } = session?.profile?.role === 'veteran'
     ? await createClient().from('resumes').select('id, file_name, is_default').eq('profile_id', session.user.id).order('uploaded_at', { ascending: false })
     : { data: [] as { id: string; file_name: string; is_default: boolean }[] };
@@ -89,6 +95,15 @@ export default async function JobDetailPage({ params }: { params: { slug: string
                 ✓ Verified company — reviewed by LanceNest
               </p>
             )}
+            {isEarly && <p className="mt-2 inline-block rounded-full border border-brass/60 bg-brass/10 px-3 py-1 text-xs font-semibold text-brass-dark">Be an early applicant</p>}
+            {session?.profile?.role === 'veteran' && (insight ? (
+              <div className="mt-4 rounded-[4px] border border-navy/20 bg-paper p-4 text-sm">
+                <p className="font-semibold text-navy">Your applicant insights</p>
+                <p className="mt-1">Your skills match is stronger than or equal to <strong>{insight.stronger_than_pct}%</strong> of applicants · {insight.verified_pct}% of applicants are verified · {insight.applicants_bucket} applicants so far</p>
+              </div>
+            ) : (
+              <p className="mt-3 text-xs text-muted">See how your skills compare with other applicants — <Link href="/plans" className="text-navy underline">applicant insights with Pro</Link>.</p>
+            ))}
             {job.employment_type === 'skillbridge' && (
               <div className="mt-4 rounded-[4px] border border-olive/40 bg-olive/5 p-4 text-sm">
                 <p className="font-semibold text-olive">DoD SkillBridge program{(job as unknown as { skillbridge_weeks?: number }).skillbridge_weeks ? ` · ${(job as unknown as { skillbridge_weeks: number }).skillbridge_weeks} weeks` : ''}</p>

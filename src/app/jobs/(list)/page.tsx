@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/server';
 import { US_STATES } from '@/lib/states';
 import JobCard from '@/components/JobCard';
 import EmptyState from '@/components/EmptyState';
@@ -32,6 +33,9 @@ const CLEARANCE = [
 
 export default async function JobsPage({ searchParams }: { searchParams: JobFilters }) {
   const [jobs, featured] = await Promise.all([searchJobs(searchParams), getFeaturedJobs()]);
+  const listIds = [...jobs.map((j) => j.id), ...featured.map((j) => j.id)];
+  const { data: earlyIds } = listIds.length ? await createClient().rpc('early_jobs', { ids: listIds }) : { data: [] };
+  const early = new Set(((earlyIds ?? []) as string[]));
   const featuredIds = new Set(featured.map((j) => j.id));
   const hasFilters = Object.values(searchParams).some(Boolean);
 
@@ -114,8 +118,8 @@ export default async function JobsPage({ searchParams }: { searchParams: JobFilt
             />
           ) : (
             <div className="space-y-4">
-              {!Object.values(searchParams).some(Boolean) && featured.map((job) => <JobCard key={`f-${job.id}`} job={job} />)}
-              {jobs.filter((job) => Object.values(searchParams).some(Boolean) || !featuredIds.has(job.id)).map((job) => <JobCard key={job.id} job={job} />)}
+              {!Object.values(searchParams).some(Boolean) && featured.map((job) => <JobCard key={`f-${job.id}`} job={job} early={early.has(job.id)} />)}
+              {jobs.filter((job) => Object.values(searchParams).some(Boolean) || !featuredIds.has(job.id)).map((job) => <JobCard key={job.id} job={job} early={early.has(job.id)} />)}
             </div>
           )}
         </section>

@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: 'Messages' };
 type Row = { conversation_id: string; profile_id: string; last_read_at: string | null; profile: { full_name: string; headline: string | null } | null };
 
 export default async function MessagesPage({ searchParams }: { searchParams: { error?: string } }) {
-  const { user } = await requireRole(['veteran', 'employer', 'admin'], '/messages');
+  const { user, profile: me } = await requireRole(['veteran', 'employer', 'admin'], '/messages');
   const supabase = createClient();
 
   const { data: mine } = await supabase.from('conversation_participants').select('conversation_id, last_read_at').eq('profile_id', user.id);
@@ -30,7 +30,15 @@ export default async function MessagesPage({ searchParams }: { searchParams: { e
   const otherBy = new Map(((others ?? []) as unknown as Row[]).map((r) => [r.conversation_id, r]));
   const lastBy = new Map<string, { body: string; sender_id: string; created_at: string }>();
   (recent ?? []).forEach((m) => { if (!lastBy.has(m.conversation_id as string)) lastBy.set(m.conversation_id as string, m as { body: string; sender_id: string; created_at: string }); });
-  const list = (convs ?? []).filter((c) => lastBy.has(c.id as string));
+  const baseList = (convs ?? []).filter((c) => lastBy.has(c.id as string));
+  // Message priority: for employers, conversations with Pro Plus / Federal members are pinned to the top.
+  const otherIds = baseList.map((c) => otherBy.get(c.id as string)?.profile_id).filter(Boolean) as string[];
+  const { data: prio } = me.role === 'employer' && otherIds.length
+    ? await supabase.from('veteran_profiles').select('profile_id').in('profile_id', otherIds).in('plan', ['pro_plus', 'federal_pro'])
+    : { data: [] };
+  const priority = new Set((prio ?? []).map((r) => r.profile_id as string));
+  const isPriority = (c: { id: unknown }) => priority.has(otherBy.get(c.id as string)?.profile_id ?? '');
+  const list = [...baseList.filter(isPriority), ...baseList.filter((c) => !isPriority(c))];
 
   return (
     <div className="container-page max-w-3xl py-10">
@@ -53,6 +61,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: { e
                 <li key={c.id as string}>
                   <Link href={`/messages/${c.id}`} className="flex items-center gap-3 p-4 hover:bg-paper">
                     <Avatar name={other?.profile?.full_name} />
+                    {isPriority(c) && <span className="shrink-0 rounded-full bg-brass px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-navy">Priority</span>}
                     <div className="min-w-0 flex-1">
                       <p className={`truncate ${unread ? 'font-semibold text-ink' : 'text-ink'}`}>{other?.profile?.full_name ?? 'Member'}</p>
                       <p className={`truncate text-sm ${unread ? 'text-ink' : 'text-muted'}`}>{last.sender_id === user.id ? 'You: ' : ''}{last.body}</p>

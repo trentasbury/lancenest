@@ -13,6 +13,7 @@ import { followUser, reportContent, unfollowUser } from '@/app/network/actions';
 import { startConversation } from '@/app/messages/actions';
 import Upsell from '@/components/employer/Upsell';
 import PlanBadge from '@/components/PlanBadge';
+import { saveToPool } from '@/app/employer/talent/actions';
 
 type Profile = { id: string; full_name: string; username: string; headline: string | null; location: string | null; avatar_url: string | null };
 type Vet = { plan?: string; about: string | null; clearance_level: string; verification_status: string; willing_to_relocate: boolean };
@@ -148,6 +149,16 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
               <Link href={`/login?next=/veterans/${profile.username}`} className="btn btn-brass">Log in to connect</Link>
             )}
             <p className="text-xs text-cream/70">{followers ?? 0} follower{followers === 1 ? '' : 's'}</p>
+            {viewer?.profile?.role === 'employer' && (
+              <details className="text-xs text-cream/70">
+                <summary className="cursor-pointer hover:text-ivory">Save to talent pool</summary>
+                <form action={saveToPool.bind(null, profile.id, `/veterans/${params.username}`)} className="mt-2 flex flex-col gap-2 text-ink">
+                  <input name="list" placeholder="List name (e.g. Q1 cyber hires)" className="field py-2 text-sm" />
+                  <textarea name="note" rows={2} maxLength={1000} placeholder="Private note (optional)" className="field py-2 text-sm" />
+                  <SubmitButton className="btn border border-brass py-1.5 text-xs text-brass" pendingText="Saving…">Save</SubmitButton>
+                </form>
+              </details>
+            )}
             {session && !isOwner && (
               <details className="text-xs text-cream/60">
                 <summary className="cursor-pointer hover:text-ivory">Report this member</summary>

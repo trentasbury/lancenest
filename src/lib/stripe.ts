@@ -16,16 +16,16 @@ export type ProductKey =
 
 /** Single source of truth for what we sell. Prices in cents. */
 export const CATALOG: Record<ProductKey, { name: string; amount: number; interval?: 'month' | 'year'; plan?: 'professional' | 'federal' | 'veteran_pro' | 'veteran_pro_plus' | 'veteran_federal_pro' | 'training' | 'training_featured'; audience?: 'veteran'; kind: 'plan' | 'job_slot' | 'job_boost' | 'contact_pack' | 'training_webinar' }> = {
-  employer_professional_month: { name: 'LanceNest Professional (monthly)', amount: 19900, interval: 'month', plan: 'professional', kind: 'plan' },
-  employer_professional_year: { name: 'LanceNest Professional (annual)', amount: 199000, interval: 'year', plan: 'professional', kind: 'plan' },
-  employer_federal_month: { name: 'LanceNest Federal (monthly)', amount: 49900, interval: 'month', plan: 'federal', kind: 'plan' },
-  employer_federal_year: { name: 'LanceNest Federal (annual)', amount: 499000, interval: 'year', plan: 'federal', kind: 'plan' },
-  veteran_pro_month: { name: 'LanceNest Pro (monthly)', amount: 1900, interval: 'month', plan: 'veteran_pro', audience: 'veteran', kind: 'plan' },
-  veteran_pro_year: { name: 'LanceNest Pro (annual)', amount: 19000, interval: 'year', plan: 'veteran_pro', audience: 'veteran', kind: 'plan' },
-  veteran_pro_plus_month: { name: 'LanceNest Pro Plus (monthly)', amount: 3900, interval: 'month', plan: 'veteran_pro_plus', audience: 'veteran', kind: 'plan' },
-  veteran_pro_plus_year: { name: 'LanceNest Pro Plus (annual)', amount: 39000, interval: 'year', plan: 'veteran_pro_plus', audience: 'veteran', kind: 'plan' },
-  veteran_federal_month: { name: 'LanceNest Federal (monthly)', amount: 5900, interval: 'month', plan: 'veteran_federal_pro', audience: 'veteran', kind: 'plan' },
-  veteran_federal_year: { name: 'LanceNest Federal (annual)', amount: 59000, interval: 'year', plan: 'veteran_federal_pro', audience: 'veteran', kind: 'plan' },
+  employer_professional_month: { name: 'LanceNest Professional (monthly)', amount: 24900, interval: 'month', plan: 'professional', kind: 'plan' },
+  employer_professional_year: { name: 'LanceNest Professional (annual)', amount: 249000, interval: 'year', plan: 'professional', kind: 'plan' },
+  employer_federal_month: { name: 'LanceNest Federal (monthly)', amount: 59900, interval: 'month', plan: 'federal', kind: 'plan' },
+  employer_federal_year: { name: 'LanceNest Federal (annual)', amount: 599000, interval: 'year', plan: 'federal', kind: 'plan' },
+  veteran_pro_month: { name: 'LanceNest Pro (monthly)', amount: 2500, interval: 'month', plan: 'veteran_pro', audience: 'veteran', kind: 'plan' },
+  veteran_pro_year: { name: 'LanceNest Pro (annual)', amount: 25000, interval: 'year', plan: 'veteran_pro', audience: 'veteran', kind: 'plan' },
+  veteran_pro_plus_month: { name: 'LanceNest Pro Plus (monthly)', amount: 4500, interval: 'month', plan: 'veteran_pro_plus', audience: 'veteran', kind: 'plan' },
+  veteran_pro_plus_year: { name: 'LanceNest Pro Plus (annual)', amount: 45000, interval: 'year', plan: 'veteran_pro_plus', audience: 'veteran', kind: 'plan' },
+  veteran_federal_month: { name: 'LanceNest Federal (monthly)', amount: 6500, interval: 'month', plan: 'veteran_federal_pro', audience: 'veteran', kind: 'plan' },
+  veteran_federal_year: { name: 'LanceNest Federal (annual)', amount: 65000, interval: 'year', plan: 'veteran_federal_pro', audience: 'veteran', kind: 'plan' },
   training_listing_month: { name: 'Training & Certifications listing (monthly)', amount: 14900, interval: 'month', plan: 'training', kind: 'plan' },
   training_listing_year: { name: 'Training & Certifications listing (annual)', amount: 149000, interval: 'year', plan: 'training', kind: 'plan' },
   training_featured: { name: 'Featured training programs', amount: 9900, interval: 'month', plan: 'training_featured', kind: 'plan' },
@@ -40,11 +40,11 @@ export const BOOST_DAYS = 30;
 export const CONTACT_PACK_SIZE = 5;
 
 /** Founding Employers: first 50 Professional subscribers pay $149/mo (or $1,490/yr) for their first 12 months. */
-export const FOUNDING = { spots: 50, months: 12, monthlyOffCents: 5000, annualOffCents: 50000 };
+export const FOUNDING = { spots: 50, months: 12, monthlyOffCents: 10000, annualOffCents: 100000 };
 
 /** Stripe coupons for the founding discount, created once and reused. */
 export async function foundingCoupon(interval: 'month' | 'year') {
-  const id = interval === 'year' ? 'lancenest-founding-annual' : 'lancenest-founding-monthly';
+  const id = interval === 'year' ? 'lancenest-founding-annual-v2' : 'lancenest-founding-monthly-v2';
   try {
     await stripe().coupons.retrieve(id);
   } catch {
