@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { getMyCompany } from '@/lib/employer';
 import Link from 'next/link';
 import CompanyVerification from '@/components/employer/CompanyVerification';
 import { requestPublicSafety, requestSkillBridge } from '@/app/employer/actions';
@@ -17,7 +18,7 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
   const { user, profile } = await requireRole(['employer'], '/employer/dashboard');
   const supabase = createClient();
 
-  const { data: companyData } = await supabase.from('companies').select('*').eq('owner_id', user.id).maybeSingle();
+  const companyData = await getMyCompany(user.id);
   const company = companyData as (Company & { stripe_customer_id: string | null; contact_credits: number }) | null;
 
   let activeJobs = 0;
@@ -82,10 +83,11 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
 
             {searchParams.verify === 'submitted' && <p className="text-sm text-olive">Thanks — your company is in review.</p>}
             {searchParams.verify === 'auto' && <p className="text-sm font-medium text-olive">✓ Your company is verified — your work email matches your website. You can publish jobs now.</p>}
-            <CompanyVerification status={(company as unknown as { verification_status: string }).verification_status} note={(company as unknown as { verification_note: string | null }).verification_note} flash={searchParams.verify} />
+            {!(company as unknown as { isOwner: boolean }).isOwner && <p className="rounded-[4px] border border-line bg-paper p-4 text-sm">You’re on <strong>{company.name}</strong>’s hiring team. Billing, verification, and the company page are managed by the account owner.</p>}
+            {(company as unknown as { isOwner: boolean }).isOwner && <CompanyVerification status={(company as unknown as { verification_status: string }).verification_status} note={(company as unknown as { verification_note: string | null }).verification_note} flash={searchParams.verify} />}
             {searchParams.error === 'verify' && <p role="alert" className="text-sm text-signal">Your company needs to be verified before you can purchase a plan or add-on.</p>}
 
-            {(company as unknown as { is_verified: boolean }).is_verified && (() => {
+            {(company as unknown as { is_verified: boolean; isOwner: boolean }).is_verified && (company as unknown as { isOwner: boolean }).isOwner && (() => {
               const sbs = (company as unknown as { skillbridge_status: string; skillbridge_note: string | null }).skillbridge_status;
               return (
                 <section className="card p-6">
@@ -106,7 +108,7 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
               );
             })()}
 
-            {(company as unknown as { is_verified: boolean }).is_verified && (() => {
+            {(company as unknown as { is_verified: boolean; isOwner: boolean }).is_verified && (company as unknown as { isOwner: boolean }).isOwner && (() => {
               const ps = (company as unknown as { public_safety_status: string }).public_safety_status;
               if (ps === 'approved') return <p className="rounded-[4px] border border-olive/40 bg-olive/5 p-4 text-sm text-olive">✓ Public Safety rate active — 30% off Professional and Federal, applied automatically at checkout.</p>;
               if (ps === 'pending' || searchParams.ps === 'requested') return <p className="text-sm text-muted">Public Safety rate requested — we’ll confirm within one business day.</p>;
@@ -127,6 +129,7 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
             })()}
 
             <nav className="grid gap-3 sm:grid-cols-3">
+              <Link href="/employer/team" className="card p-5 hover:border-brass"><p className="eyebrow">Hiring team</p><p className="mt-2 font-serif text-xl text-navy">Recruiter seats →</p></Link>
               <Link href="/employer/talent" className="card p-5 hover:border-brass"><p className="eyebrow">Talent pools</p><p className="mt-2 font-serif text-xl text-navy">Saved candidates →</p></Link>
               <Link href="/employer/company" className="card p-5 hover:border-brass"><p className="eyebrow">Company page</p><p className="mt-2 font-serif text-xl text-navy">Logo, cover & story →</p></Link>
               <Link href="/employer/candidates" className="card p-5 hover:border-brass"><p className="eyebrow">Candidate search</p><p className="mt-2 font-serif text-xl text-navy">Find veterans →</p></Link>
@@ -145,7 +148,7 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {company.plan === 'free' && (
+                {(company as unknown as { isOwner: boolean }).isOwner && company.plan === 'free' && (
                   <>
                     <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="employer_professional_month" /><button className="btn btn-primary">Professional · $249/mo (Founding: $149 first year)</button></form>
                     <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="job_slot" /><button className="btn btn-outline">+1 job slot · $39/mo</button></form>
@@ -155,7 +158,7 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
                   <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="employer_federal_month" /><button className="btn btn-primary">Upgrade to Federal · $499/mo</button></form>
                 )}
                 <Link href="/settings/account" className="btn btn-ghost border border-line">Account</Link>
-                {company.stripe_customer_id && (
+                {(company as unknown as { isOwner: boolean }).isOwner && company.stripe_customer_id && (
                   <form action="/api/billing/portal" method="post"><button className="btn btn-ghost border border-line">Manage billing</button></form>
                 )}
               </div>

@@ -35,7 +35,9 @@ export async function startConversation(otherId: string) {
     admin.from('profiles').select('role').eq('id', otherId).maybeSingle(),
   ]);
   if (meP?.role === 'employer' && otherP?.role === 'veteran') {
-    const { data: company } = await admin.from('companies').select('is_verified').eq('owner_id', me).maybeSingle();
+    const { data: owned } = await admin.from('companies').select('is_verified').eq('owner_id', me).maybeSingle();
+    const { data: membership } = owned ? { data: null } : await admin.from('company_members').select('company:companies(is_verified)').eq('profile_id', me).maybeSingle();
+    const company = owned ?? (membership as unknown as { company: { is_verified: boolean } | null } | null)?.company ?? null;
     if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
   }
 

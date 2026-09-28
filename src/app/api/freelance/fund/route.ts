@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { getMyCompany } from '@/lib/employer';
 import { getSessionProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
   const contractTotal = (all ?? []).filter((x) => x.status !== 'cancelled').reduce((a, x) => a + (x.amount_cents as number), 0);
   const fees = feeBreakdown(ms.amount_cents, method, firstPayment, contractTotal);
 
-  const { data: company } = await supabase.from('companies').select('stripe_customer_id').eq('owner_id', session.user.id).maybeSingle();
+  const company = await getMyCompany(session.user.id);
   const lines = [
     { quantity: 1, price_data: { currency: 'usd', unit_amount: ms.amount_cents, product_data: { name: `${ms.contract.title} — ${ms.title}`, description: 'Protected Payment: held by LanceNest until you approve the work' } } },
     { quantity: 1, price_data: { currency: 'usd', unit_amount: fees.clientFee, product_data: { name: `LanceNest service fee (${method === 'bank' ? '3% bank transfer' : '5% card'})` } } },

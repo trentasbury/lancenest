@@ -1,5 +1,6 @@
 'use server';
 
+import { getMyCompany } from '@/lib/employer';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireRole } from '@/lib/auth';
@@ -20,7 +21,7 @@ const money = (v: string) => {
 export async function saveJob(jobId: string | null, formData: FormData) {
   const { user } = await requireRole(['employer'], '/employer/dashboard');
   const supabase = createClient();
-  const { data: company } = await supabase.from('companies').select('id').eq('owner_id', user.id).maybeSingle();
+  const company = await getMyCompany(user.id);
   if (!company) redirect('/employer/dashboard');
 
   const title = t(formData, 'title', 140);
@@ -110,7 +111,7 @@ const INCLUDED_FEATURES: Record<string, number> = { professional: 5, federal: In
 export async function featureWithPlan(jobId: string) {
   const { user } = await requireRole(['employer'], '/employer/dashboard');
   const supabase = createClient();
-  const { data: company } = await supabase.from('companies').select('id, plan').eq('owner_id', user.id).maybeSingle();
+  const company = await getMyCompany(user.id);
   const allowance = company ? INCLUDED_FEATURES[company.plan as string] ?? 0 : 0;
   if (!company || !allowance) redirect(`/employer/jobs/${jobId}?error=plan`);
   const { data: job } = await supabase.from('jobs').select('id, featured_until').eq('id', jobId).eq('company_id', company.id).eq('status', 'open').maybeSingle();

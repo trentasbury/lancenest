@@ -1,5 +1,6 @@
 'use server';
 
+import { getMyCompany } from '@/lib/employer';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireRole } from '@/lib/auth';
@@ -53,7 +54,7 @@ export async function removePortfolioItem(id: string) {
 export async function createProject(formData: FormData) {
   const { user } = await requireRole(['employer'], '/freelance/projects/new');
   const supabase = createClient();
-  const { data: company } = await supabase.from('companies').select('id, is_verified').eq('owner_id', user.id).maybeSingle();
+  const company = await getMyCompany(user.id);
   if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
   const title = t(formData, 'title', 140);
   const description = t(formData, 'description', 8000);

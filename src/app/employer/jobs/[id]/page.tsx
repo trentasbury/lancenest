@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { getMyCompany } from '@/lib/employer';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireRole } from '@/lib/auth';
@@ -20,7 +21,7 @@ export default async function ManageJobPage({ params, searchParams }: { params: 
   if (!data || (data.company as { owner_id: string }).owner_id !== user?.id) notFound();
   const job = data as unknown as Job & { featured_until: string | null };
   const featured = job.featured_until && new Date(job.featured_until) > new Date();
-  const { data: co } = await supabase.from('companies').select('plan').eq('owner_id', user!.id).maybeSingle();
+  const co = await getMyCompany(user!.id);
   const paidPlan = co?.plan && co.plan !== 'free';
   const { count: applicants } = await supabase.from('applications').select('id', { count: 'exact', head: true }).eq('job_id', job.id).neq('status', 'withdrawn');
 

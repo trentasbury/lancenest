@@ -13,6 +13,7 @@ import Avatar from '@/components/network/Avatar';
 import SubmitButton from '@/components/SubmitButton';
 import { startConversation } from '@/app/messages/actions';
 import { saveToPool } from '@/app/employer/talent/actions';
+import { deleteSavedSearch, saveSearch } from '@/app/employer/talent/searchActions';
 
 export const metadata: Metadata = { title: 'Candidate search' };
 
@@ -97,6 +98,7 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
   // Placement perks: boosted profiles first, then Federal members (for federal employers), then Pro Plus / Federal.
   const now = Date.now();
   const rank = (r: Row) => (r.boosted_until && Date.parse(r.boosted_until) > now ? 4 : 0) + (cleared && r.plan === 'federal_pro' ? 2 : 0) + (['pro_plus', 'federal_pro'].includes(r.plan) ? 1 : 0);
+  const { data: savedSearches } = await supabase.from('saved_searches').select('id, name, params').eq('company_id', company.id).order('created_at');
   const rows = ((data ?? []) as unknown as Row[]).filter((r) => r.profile).map((r, i) => ({ r, i })).sort((a, b) => rank(b.r) - rank(a.r) || a.i - b.i).map((x) => x.r);
   const spot = ((spotlight.data ?? []) as unknown as Row[]).filter((r) => r.profile);
 
@@ -135,6 +137,17 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
         <p className="text-sm text-muted">Messaging is free and unlimited.</p>
       </div>
 
+      {(savedSearches ?? []).length > 0 && (
+        <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-muted">Saved searches (daily email alerts):</span>
+          {(savedSearches ?? []).map((ss) => (
+            <span key={ss.id as string} className="inline-flex items-center gap-1 rounded-full border border-line bg-ivory px-3 py-1">
+              <Link href={`/employer/candidates?${new URLSearchParams(ss.params as Record<string, string>)}`} className="text-navy hover:underline">{ss.name as string}</Link>
+              <form action={deleteSavedSearch.bind(null, ss.id as string)}><button className="ml-1 text-muted hover:text-signal" aria-label="Delete saved search">×</button></form>
+            </span>
+          ))}
+        </div>
+      )}
       <form className="card mt-6 grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4" method="get">
         <input name="q" defaultValue={f.q} placeholder="Name, title, or keyword" className="field lg:col-span-2" />
         <select name="branch" defaultValue={f.branch ?? ''} className="field"><option value="">Any branch</option>{BRANCHES.map((b) => <option key={b}>{b}</option>)}</select>
@@ -160,6 +173,13 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
         </div>
       </form>
 
+      {Object.values(f).some(Boolean) && (
+        <form action={saveSearch} className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+          <input type="hidden" name="params" value={JSON.stringify(f)} />
+          <input name="name" required maxLength={80} placeholder="Name this search (e.g. Secret-cleared 25B, VA)" className="field py-2 text-sm sm:max-w-sm" />
+          <SubmitButton className="btn btn-outline py-2 text-sm" pendingText="Saving…">Save search & email me new matches</SubmitButton>
+        </form>
+      )}
       {spot.length > 0 && (
         <section className="mt-8">
           <p className="eyebrow">Cleared talent spotlight</p>

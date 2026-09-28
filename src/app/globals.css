@@ -30,3 +30,8 @@
   .pill { @apply inline-flex items-center rounded-full border border-line bg-paper px-3 py-1 font-sans text-xs text-ink; }
   .skeleton { @apply animate-pulse rounded-[3px] bg-line/60; }
 }
+
+@media print {
+  header, footer, nav, .print\:hidden { display: none !important; }
+  body { background: #fff !important; }
+}

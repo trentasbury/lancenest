@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { getMyCompany } from '@/lib/employer';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireRole } from '@/lib/auth';
@@ -11,7 +12,7 @@ export const metadata: Metadata = { title: 'Post a job' };
 
 export default async function NewJobPage({ searchParams }: { searchParams: { error?: string } }) {
   const { user } = await requireRole(['employer'], '/employer/jobs/new');
-  const { data: company } = await createClient().from('companies').select('id').eq('owner_id', user.id).maybeSingle();
+  const company = await getMyCompany(user.id);
   if (!company) redirect('/employer/dashboard');
   return (
     <div className="container-page max-w-3xl space-y-6 py-10">

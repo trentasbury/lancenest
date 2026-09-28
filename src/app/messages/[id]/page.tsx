@@ -5,6 +5,7 @@ import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { timeAgo } from '@/lib/network';
 import { scamSignals } from '@/lib/scam';
+import { createAdminClient } from '@/lib/supabase/admin';
 import Avatar from '@/components/network/Avatar';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
@@ -27,7 +28,7 @@ export default async function ThreadPage({ params, searchParams }: { params: { i
     .find((p) => p.profile_id !== user.id);
 
   const { data: employerCo } = other?.profile?.role === 'employer'
-    ? await supabase.from('companies').select('name, is_verified').eq('owner_id', other.profile_id).maybeSingle()
+    ? ((await createAdminClient().rpc('company_for_user', { u: other.profile_id }).maybeSingle()) as { data: { name: string; is_verified: boolean } | null })
     : { data: null };
 
   const [{ data: messages }] = await Promise.all([

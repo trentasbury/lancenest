@@ -1,14 +1,15 @@
 'use server';
 
+import { getMyCompany } from '@/lib/employer';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 
 async function companyId(userId: string) {
-  const { data } = await createClient().from('companies').select('id').eq('owner_id', userId).maybeSingle();
+  const data = await getMyCompany(userId);
   if (!data) redirect('/employer/dashboard');
-  return data.id as string;
+  return data.id;
 }
 
 /** Save a candidate to a named list (Professional and above; enforced by the database). */
