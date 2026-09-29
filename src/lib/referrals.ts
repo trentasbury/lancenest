@@ -84,9 +84,9 @@ async function rewardVeteranForCompany(vetId: string, companyOwnerId: string, na
   if (!co?.is_verified) return;   // verified AND paid
   const MONTHS = 2;
   const federal = plan === 'federal_pro';
-  // Credit what they already pay for 3 months (covers Federal, Pro Plus, or Pro bills).
+  // Credit what they already pay for MONTHS months (covers Federal, Pro Plus, or Pro bills).
   const credit = monthCents > 0 && customer ? monthCents * MONTHS : 0;
-  // Non-Federal members also get Pro Plus access for 3 months (Free and Pro are upgraded; Pro Plus is simply credited).
+  // Non-Federal members also get Pro Plus access for MONTHS months (Free and Pro are upgraded; Pro Plus is simply credited).
   const grant = !federal && plan !== 'pro_plus';
   const { error } = await admin.from('referral_rewards').insert({ referred_id: companyOwnerId, referrer_id: vetId, cents: credit,
     note: federal ? '2 months Federal (company referral)' : '2 months Pro Plus (company referral)' });
