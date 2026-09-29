@@ -21,3 +21,6 @@ export async function proposalsUsedThisMonth(profileId: string) {
   const { count } = await createClient().from('proposals').select('id', { count: 'exact', head: true }).eq('freelancer_id', profileId).gte('created_at', start);
   return count ?? 0;
 }
+
+export const PRICE_LABEL: Record<string, string> = { fixed: '', hourly: '/hr', starting_at: '+' };
+export const DELIVERY_LABEL: Record<string, string> = { remote: 'Remote', on_site: 'On-site', both: 'On-site or remote' };

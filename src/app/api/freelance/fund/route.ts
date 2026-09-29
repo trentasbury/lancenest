@@ -11,7 +11,7 @@ import { FREELANCE_FEES } from '@/lib/fees';
 export async function POST(request: NextRequest) {
   const site = (process.env.NEXT_PUBLIC_SITE_URL ?? request.nextUrl.origin).replace(/\/$/, '');
   const session = await getSessionProfile();
-  if (!session || session.profile?.role !== 'employer') return NextResponse.redirect(`${site}/login?next=/freelance`, 303);
+  if (!session || !['employer', 'veteran', 'admin'].includes(session.profile?.role ?? '')) return NextResponse.redirect(`${site}/login?next=/freelance`, 303);
   const form = await request.formData();
   const milestoneId = String(form.get('milestone_id') ?? '');
   const method = form.get('method') === 'bank' ? 'bank' : 'card';

@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import { startConversation } from '@/app/messages/actions';
-import { addMilestone, approveMilestone, cancelMilestone, leaveReview, openDispute, requestChanges, submitMilestone } from '../actions';
+import { addMilestone, approveMilestone, cancelMilestone, declineContract, leaveReview, openDispute, requestChanges, submitMilestone } from '../actions';
 
 export const metadata: Metadata = { title: 'Contract' };
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -23,10 +23,10 @@ export default async function ContractPage({ params, searchParams }: { params: {
   const { user } = await requireVerifiedMember(`/freelance/contracts/${params.id}`);
   const supabase = createClient();
   const { data: c } = await supabase.from('contracts')
-    .select('id, title, status, veteran_fee_rate, client_id, freelancer_id, project_id, client:profiles!contracts_client_id_fkey(full_name), freelancer:profiles!contracts_freelancer_id_fkey(full_name, username)')
+    .select('id, title, status, veteran_fee_rate, client_id, freelancer_id, project_id, request_note, client:profiles!contracts_client_id_fkey(full_name), freelancer:profiles!contracts_freelancer_id_fkey(full_name, username)')
     .eq('id', params.id).maybeSingle();
   if (!c) notFound();
-  const contract = c as unknown as { id: string; title: string; status: string; veteran_fee_rate: number; client_id: string; freelancer_id: string; project_id: string | null; client: { full_name: string } | null; freelancer: { full_name: string; username: string | null } | null };
+  const contract = c as unknown as { request_note?: string | null; id: string; title: string; status: string; veteran_fee_rate: number; client_id: string; freelancer_id: string; project_id: string | null; client: { full_name: string } | null; freelancer: { full_name: string; username: string | null } | null };
   const isClient = user.id === contract.client_id;
   const isFreelancer = user.id === contract.freelancer_id;
   const [{ data: mRows }, { data: myReview }] = await Promise.all([
@@ -54,6 +54,13 @@ export default async function ContractPage({ params, searchParams }: { params: {
         <strong className="text-olive">Protected Payments.</strong> The client funds each milestone before work starts. LanceNest holds the money and releases it when the client approves — or automatically 14 days after the work is submitted. Either side can open a dispute and LanceNest will decide.
       </div>
 
+      {contract.request_note && <div className="card p-5 text-sm"><p className="eyebrow">Request details</p><p className="mt-2 whitespace-pre-line">{contract.request_note}</p></div>}
+      {isFreelancer && contract.status === 'active' && ms.every((m) => ['pending', 'cancelled'].includes(m.status)) && (
+        <form action={declineContract.bind(null, contract.id)} className="flex items-center justify-between gap-3 rounded-[4px] border border-line bg-paper p-4 text-sm">
+          <span>Not a fit? You can decline before the client funds it — nothing is charged.</span>
+          <SubmitButton className="btn btn-ghost border border-line py-1.5 text-xs" pendingText="…">Decline request</SubmitButton>
+        </form>
+      )}
       <section className="space-y-3">
         <h2 className="eyebrow">Milestones</h2>
         {ms.map((m) => {

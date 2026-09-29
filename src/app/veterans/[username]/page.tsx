@@ -14,6 +14,7 @@ import { startConversation } from '@/app/messages/actions';
 import Upsell from '@/components/employer/Upsell';
 import PlanBadge from '@/components/PlanBadge';
 import VerifiedMark from '@/components/VerifiedMark';
+import { DELIVERY_LABEL, PRICE_LABEL } from '@/lib/freelance';
 import { saveToPool } from '@/app/employer/talent/actions';
 import { decideRecommendation, writeRecommendation } from '@/app/network/recommendActions';
 
@@ -104,6 +105,7 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
     supabase.from('mentor_profiles').select('available').eq('profile_id', profile.id).maybeSingle(),
     viewer?.user?.id && viewer.user.id !== profile.id ? supabase.from('recommendations').select('id').eq('author_id', viewer.user.id).eq('subject_id', profile.id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
+  const { data: offered } = await supabase.from('service_listings').select('id, title, category, price_cents, price_type, delivery, service_area').eq('profile_id', profile.id).eq('status', 'active').order('created_at', { ascending: false });
   type RecRow = { id: string; relationship: string; body: string; author: { full_name: string; username?: string | null; headline?: string | null; verified?: boolean } | null };
   const { data: reviews } = await supabase.from('reviews').select('rating, body, created_at').eq('reviewee_id', profile.id).order('created_at', { ascending: false }).limit(5);
   const avg = (reviews ?? []).length ? (reviews ?? []).reduce((a, r) => a + (r.rating as number), 0) / (reviews ?? []).length : 0;
@@ -278,6 +280,21 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
                     <p className="text-xs text-muted">{w.client_name ? `for ${w.client_name} · ` : ''}{new Date(w.completed_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</p>
                     {w.review && <p className="mt-1 text-sm italic text-ink/80">“{w.review}”</p>}
                   </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {(offered ?? []).length > 0 && (
+            <section className="card p-7">
+              <h2 className="eyebrow">Services</h2>
+              <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+                {(offered ?? []).map((sv) => (
+                  <li key={sv.id as string}><Link href={`/freelance/services/${sv.id}`} className="block rounded-[4px] border border-line p-4 hover:border-brass">
+                    <p className="font-medium text-navy">{sv.title as string}</p>
+                    <p className="text-xs text-muted">{sv.category as string} · {DELIVERY_LABEL[sv.delivery as string]}{sv.service_area ? ` · ${sv.service_area}` : ''}</p>
+                    <p className="mt-1 text-sm font-semibold">${((sv.price_cents as number) / 100).toLocaleString()}{PRICE_LABEL[sv.price_type as string]} <span className="font-normal text-olive">· Hire →</span></p>
+                  </Link></li>
                 ))}
               </ul>
             </section>

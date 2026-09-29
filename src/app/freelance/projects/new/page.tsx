@@ -13,9 +13,10 @@ const ERR: Record<string, string> = { required: 'Add a title and a description o
 
 export default async function NewProjectPage({ searchParams }: { searchParams: { error?: string } }) {
   const { user, profile } = await requireVerifiedMember('/freelance/projects/new');
-  if (profile.role !== 'employer') redirect('/freelance');
-  const company = await getMyCompany(user.id);
-  if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
+  if (profile.role === 'employer') {
+    const company = await getMyCompany(user.id);
+    if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
+  }
   return (
     <div className="container-page max-w-3xl space-y-6 py-10">
       <Link href="/freelance" className="text-sm text-muted hover:text-navy">← Freelance</Link>

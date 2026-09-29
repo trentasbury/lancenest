@@ -52,10 +52,11 @@ export async function removePortfolioItem(id: string) {
 }
 
 export async function createProject(formData: FormData) {
-  const { user } = await requireRole(['employer'], '/freelance/projects/new');
+  const { user, profile } = await requireRole(['employer', 'veteran', 'admin'], '/freelance/projects/new');
   const supabase = createClient();
-  const company = await getMyCompany(user.id);
-  if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
+  // Employers post as their verified company; service members post as themselves.
+  const company = profile.role === 'employer' ? await getMyCompany(user.id) : null;
+  if (profile.role === 'employer' && !company?.is_verified) redirect('/employer/dashboard?verify=required');
   const title = t(formData, 'title', 140);
   const description = t(formData, 'description', 8000);
   if (title.length < 4 || description.length < 20) redirect('/freelance/projects/new?error=required');
@@ -65,7 +66,7 @@ export async function createProject(formData: FormData) {
   const category = t(formData, 'category', 60);
   const clearance = t(formData, 'clearance_required', 14);
   const { data, error } = await supabase.from('freelance_projects').insert({
-    client_id: user.id, company_id: company.id, title, description,
+    client_id: user.id, company_id: company?.id ?? null, title, description,
     category: CATEGORIES.includes(category) ? category : null,
     work_location: t(formData, 'work_location', 120) || 'Remote',
     budget_type: t(formData, 'budget_type', 6) === 'hourly' ? 'hourly' : 'fixed', budget_min: min, budget_max: max,

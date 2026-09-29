@@ -19,7 +19,7 @@ async function loadMilestone(milestoneId: string) {
 
 /** Client hires a freelancer from a proposal. The veteran's fee rate is locked in at this moment. */
 export async function hireFreelancer(proposalId: string) {
-  const { user } = await requireRole(['employer'], '/freelance');
+  const { user } = await requireRole(['employer', 'veteran', 'admin'], '/freelance');
   const { data: p } = await createClient().from('proposals').select('id, bid_amount, status, freelancer_id, project:freelance_projects(id, title, client_id, status)').eq('id', proposalId).maybeSingle();
   const proposal = p as unknown as { id: string; bid_amount: number; status: string; freelancer_id: string; project: { id: string; title: string; client_id: string; status: string } } | null;
   if (!proposal || proposal.project.client_id !== user.id || !['submitted', 'shortlisted'].includes(proposal.status)) redirect('/freelance');
@@ -45,7 +45,7 @@ export async function hireFreelancer(proposalId: string) {
 }
 
 export async function addMilestone(contractId: string, formData: FormData) {
-  const { user } = await requireRole(['employer'], '/freelance');
+  const { user } = await requireRole(['employer', 'veteran', 'admin'], '/freelance');
   const { data: c } = await createClient().from('contracts').select('id, client_id, status').eq('id', contractId).maybeSingle();
   if (!c || c.client_id !== user.id || c.status !== 'active') back(contractId);
   const amount = Math.round(Number(t(formData, 'amount', 9).replace(/[$,\s]/g, '')) * 100);
@@ -57,7 +57,7 @@ export async function addMilestone(contractId: string, formData: FormData) {
 }
 
 export async function cancelMilestone(milestoneId: string) {
-  const { user } = await requireRole(['employer'], '/freelance');
+  const { user } = await requireRole(['employer', 'veteran', 'admin'], '/freelance');
   const m = await loadMilestone(milestoneId);
   if (!m || m.contract.client_id !== user.id || m.status !== 'pending') redirect('/freelance');
   await createAdminClient().from('milestones').update({ status: 'cancelled' }).eq('id', milestoneId).eq('status', 'pending');
@@ -81,7 +81,7 @@ export async function submitMilestone(milestoneId: string, formData: FormData) {
 }
 
 export async function requestChanges(milestoneId: string, formData: FormData) {
-  const { user } = await requireRole(['employer'], '/freelance');
+  const { user } = await requireRole(['employer', 'veteran', 'admin'], '/freelance');
   const m = await loadMilestone(milestoneId);
   if (!m || m.contract.client_id !== user.id || m.status !== 'submitted') redirect('/freelance');
   await createAdminClient().from('milestones').update({ status: 'funded', auto_release_at: null, change_request: t(formData, 'changes', 2000) || 'Changes requested.' }).eq('id', milestoneId).eq('status', 'submitted');
@@ -90,7 +90,7 @@ export async function requestChanges(milestoneId: string, formData: FormData) {
 }
 
 export async function approveMilestone(milestoneId: string) {
-  const { user } = await requireRole(['employer'], '/freelance');
+  const { user } = await requireRole(['employer', 'veteran', 'admin'], '/freelance');
   const m = await loadMilestone(milestoneId);
   if (!m || m.contract.client_id !== user.id || !['funded', 'submitted'].includes(m.status)) redirect('/freelance');
   const r = await releaseMilestone(milestoneId, 'approved');
@@ -122,4 +122,18 @@ export async function leaveReview(contractId: string, revieweeId: string, formDa
   await createClient().from('reviews').insert({ contract_id: contractId, reviewer_id: user.id, reviewee_id: revieweeId, rating, body: t(formData, 'body', 2000) || null });
   revalidatePath(`/freelance/contracts/${contractId}`);
   back(contractId, '?reviewed=1');
+}
+
+/** The freelancer can decline a request before any money is funded. */
+export async function declineContract(contractId: string) {
+  const { user } = await requireRole(['veteran', 'admin'], '/freelance');
+  const admin = createAdminClient();
+  const { data: c } = await admin.from('contracts').select('id, title, client_id, freelancer_id, status').eq('id', contractId).maybeSingle();
+  if (!c || c.freelancer_id !== user.id || c.status !== 'active') redirect('/freelance');
+  const { data: ms } = await admin.from('milestones').select('status').eq('contract_id', contractId);
+  if ((ms ?? []).some((m) => m.status !== 'pending' && m.status !== 'cancelled')) redirect(`/freelance/contracts/${contractId}?error=state`);
+  await admin.from('milestones').update({ status: 'cancelled' }).eq('contract_id', contractId).eq('status', 'pending');
+  await admin.from('contracts').update({ status: 'cancelled' }).eq('id', contractId);
+  await notifyMember(c.client_id as string, { type: 'contract', link: `/freelance/contracts/${contractId}`, title: `Your request for “${c.title}” was declined. Nothing was charged.` });
+  redirect(`/freelance/contracts/${contractId}`);
 }
