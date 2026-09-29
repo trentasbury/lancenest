@@ -1,6 +1,6 @@
 'use server';
 
-import { rewardReferrer } from '@/lib/referrals';
+
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { requireRole } from '@/lib/auth';
@@ -81,7 +81,6 @@ export async function submitCompanyVerification(formData: FormData) {
       verification_details: details, verification_status: 'verified', is_verified: true,
       verification_note: 'Auto-verified: confirmed work email matches the company website.',
     }).eq('id', company.id);
-    await rewardReferrer(user.id);
     await admin.from('admin_actions').insert({ admin_id: null, action: 'company_auto_verified', target_type: 'company', target_id: company.id, details: { email_domain: emailDomain, website: site, ...checks } });
     const { data: admins } = await admin.from('profiles').select('id').eq('role', 'admin');
     if (admins?.length) {

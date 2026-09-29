@@ -58,7 +58,7 @@ export async function decideVerification(requestId: string, decision: 'verified'
     details: note ? { note } : {},
   });
 
-  if (decision === 'verified') await rewardReferrer(request.profile_id);
+  if (decision === 'verified') await rewardReferrer(request.profile_id, 'member_active');
   await notifyMember(request.profile_id, decision === 'verified'
     ? { type: 'verification', link: '/dashboard', title: 'You’re verified ✓ — jobs, the network, messaging, and freelance are unlocked.',
         email: { subject: 'You’re verified on LanceNest', preheader: 'Jobs, the network, messaging, and freelance are now unlocked.', tone: 'success', badge: '✓ Verified service member',
@@ -135,7 +135,6 @@ export async function decideCompany(companyId: string, decision: 'verified' | 'r
   if (!company) return;
   const verified = decision === 'verified';
   await admin.from('companies').update({ is_verified: verified, verification_status: verified ? 'verified' : 'rejected', verification_note: note }).eq('id', companyId);
-  if (verified) { const { data: co } = await admin.from('companies').select('owner_id').eq('id', companyId).maybeSingle(); if (co) await rewardReferrer(co.owner_id as string); }
   if (!verified) await admin.from('jobs').update({ status: 'paused' }).eq('company_id', companyId).eq('status', 'open');
   if (company.owner_id) {
     const name = company.name as string;

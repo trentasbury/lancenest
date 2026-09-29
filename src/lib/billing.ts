@@ -21,6 +21,11 @@ export async function recomputeCompany(companyId: string) {
   const slots = live.filter((s) => s.kind === 'job_slot').length;
   await admin.from('companies').update({ plan, extra_job_slots: slots, training_listing_active: plans.includes('training'), training_featured: plans.includes('training') && plans.includes('training_featured') }).eq('id', companyId);
 
+  if (plan !== 'free') {
+    const { data: co } = await admin.from('companies').select('owner_id').eq('id', companyId).maybeSingle();
+    if (co) { const { rewardReferrer } = await import('@/lib/referrals'); await rewardReferrer(co.owner_id as string, 'company_paid'); }
+  }
+
   // Back on Free: keep the newest (2 + slots) open jobs, pause the rest. Nothing is deleted.
   if (plan === 'free') {
     const { data: open } = await admin.from('jobs').select('id').eq('company_id', companyId).eq('status', 'open').order('posted_at', { ascending: false });

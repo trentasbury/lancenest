@@ -89,6 +89,15 @@ export async function GET(request: NextRequest) {
       employerEmails++;
     }
   }
+  // ---------- Referral credit for referred members who have since completed their profiles ----------
+  const { data: pendingRefs } = await admin.from('profiles').select('id').not('referred_by', 'is', null).in('role', ['veteran', 'admin']).gte('created_at', new Date(now - 180 * 24 * H).toISOString()).limit(500);
+  if (pendingRefs?.length) {
+    const { data: done } = await admin.from('referral_rewards').select('referred_id').in('referred_id', pendingRefs.map((r) => r.id as string));
+    const doneSet = new Set((done ?? []).map((d) => d.referred_id as string));
+    const { rewardReferrer } = await import('@/lib/referrals');
+    for (const r of pendingRefs) if (!doneSet.has(r.id as string)) await rewardReferrer(r.id as string, 'member_active');
+  }
+
   // ---------- Expire free Pro months earned through referrals ----------
   const { data: expired } = await admin.from('veteran_profiles').select('profile_id').eq('plan', 'pro').lt('pro_granted_until', new Date().toISOString());
   if (expired?.length) {

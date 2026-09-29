@@ -43,7 +43,7 @@ export default async function ProfileStrength({ userId }: { userId: string }) {
       </section>
       <section className="card p-6">
         <p className="eyebrow">Invite fellow service members</p>
-        <p className="mt-2 text-sm text-muted">On a paid plan, earn a free month of your plan for every service member or company you invite once they’re verified.</p>
+        <p className="mt-2 text-sm text-muted">On a paid plan, earn a free month of your plan for each service member you invite once they’re verified and finish their profile — up to 3 free months a year.</p>
         {link && <input readOnly value={link} className="field mt-3 text-xs" aria-label="Your invite link" />}
         <p className="mt-2 text-xs text-muted">{invited ?? 0} joined with your link{v?.pro_granted_until && Date.parse(v.pro_granted_until as string) > Date.now() ? ` · Free Pro through ${new Date(v.pro_granted_until as string).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}</p>
       </section>

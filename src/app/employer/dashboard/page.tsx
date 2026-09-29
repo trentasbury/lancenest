@@ -130,8 +130,8 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
 
             <nav className="grid gap-3 sm:grid-cols-3">
               <div className="card p-5 sm:col-span-3">
-                <p className="eyebrow">Refer · earn a free month</p>
-                <p className="mt-1 text-sm text-muted">On a paid plan, every company or service member you invite earns you a free month of your current plan once they’re verified — credited to your next bill.</p>
+                <p className="eyebrow">Refer another employer · earn a free month</p>
+                <p className="mt-1 text-sm text-muted">On a paid plan, each company you invite earns you a free month of your current plan after their first payment — up to 3 free months a year, credited to your next bill.</p>
                 <input readOnly value={`https://lancenest.com/signup?role=employer&ref=c-${company.slug}`} className="field mt-3 text-xs" aria-label="Your employer invite link" />
               </div>
               <Link href="/employer/team" className="card p-5 hover:border-brass"><p className="eyebrow">Hiring team</p><p className="mt-2 font-serif text-xl text-navy">Recruiter seats →</p></Link>
