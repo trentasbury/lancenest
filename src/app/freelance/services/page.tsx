@@ -24,7 +24,7 @@ export default async function ServicesPage({ searchParams }: { searchParams: { c
   return (
     <div className="container-page max-w-6xl space-y-6 py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div><h1 className="font-serif text-4xl font-medium">Services</h1><p className="mt-1 text-muted">Hire verified service members for anything — auto repair, HVAC, web design, and more. Payment is protected until the work is done.</p></div>
+        <div><h1 className="font-serif text-4xl font-medium">Services</h1><p className="mt-1 text-muted">Services offered by verified service members — auto repair, HVAC, web design, and more. Verified employers hire with payment protected until the work is done.</p></div>
         <Link href="/freelance/services/mine" className="btn btn-outline">Offer a service</Link>
       </div>
       <form method="get" className="card grid gap-3 p-4 sm:grid-cols-4">

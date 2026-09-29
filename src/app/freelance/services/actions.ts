@@ -45,7 +45,8 @@ export async function deleteService(id: string) {
 
 /** A verified member or employer hires a service: creates a contract with Protected Payments (fund → work → approve → paid). */
 export async function requestService(serviceId: string, formData: FormData) {
-  const { user } = await requireVerifiedMember(`/freelance/services/${serviceId}`);
+  const { user, profile } = await requireVerifiedMember(`/freelance/services/${serviceId}`);
+  if (profile.role !== 'employer') redirect(`/freelance/services/${serviceId}`);
   const { data: s } = await createClient().from('service_listings').select('id, profile_id, title, price_cents, status').eq('id', serviceId).eq('status', 'active').maybeSingle();
   if (!s || s.profile_id === user.id) redirect('/freelance/services');
   const amount = dollars(t(formData, 'amount', 12));

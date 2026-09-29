@@ -46,9 +46,9 @@ export default async function FreelancePage({ searchParams }: { searchParams: { 
             <p className="mt-2 max-w-2xl text-cream/80">Every freelancer here is a verified service member. Cleared work, federal projects, and real skills — with payments protected until work is approved.</p>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
-            <Link href="/freelance/services" className="btn btn-brass">Browse services</Link>
-            <Link href="/freelance/projects/new" className="btn border border-cream/40 text-cream hover:border-brass">Post a job</Link>
-            {isVet && <Link href="/freelance/services/mine" className="btn border border-cream/40 text-cream hover:border-brass">Offer a service</Link>}
+            {!isVet && <Link href="/freelance/services" className="btn btn-brass">Browse services</Link>}
+            {!isVet && <Link href="/freelance/projects/new" className="btn border border-cream/40 text-cream hover:border-brass">Post a project</Link>}
+            {isVet && <Link href="/freelance/services/mine" className="btn btn-brass">Offer a service</Link>}
             {isVet && <Link href="/freelance/profile" className="btn border border-cream/40 text-cream hover:border-brass">{fp ? 'Freelancer profile' : 'Set up payouts'}</Link>}
           </div>
         </div>

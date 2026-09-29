@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: 'Service' };
 const ERR: Record<string, string> = { amount: 'Enter an amount of at least $20.', note: 'Describe what you need (at least a sentence).', payouts: 'This member hasn’t finished payout setup yet, so they can’t be hired through LanceNest yet. Message them to let them know.', save: 'That didn’t go through — please try again.' };
 
 export default async function ServicePage({ params, searchParams }: { params: { id: string }; searchParams: { error?: string } }) {
-  const { user } = await requireVerifiedMember(`/freelance/services/${params.id}`);
+  const { user, profile } = await requireVerifiedMember(`/freelance/services/${params.id}`);
   const supabase = createClient();
   const { data } = await supabase.from('service_listings').select('*, provider:profiles!service_listings_profile_id_fkey(id, full_name, username, headline, avatar_url, verified)').eq('id', params.id).maybeSingle();
   if (!data) notFound();
@@ -41,7 +41,7 @@ export default async function ServicePage({ params, searchParams }: { params: { 
       <aside>
         <div className="card sticky top-24 space-y-3 p-6">
           <p className="font-serif text-3xl text-navy">${(s.price_cents / 100).toLocaleString()}<span className="text-base text-muted">{PRICE_LABEL[s.price_type]}</span></p>
-          {own ? <Link href="/freelance/services/mine" className="btn btn-outline w-full">Manage your services</Link> : (
+          {own ? <Link href="/freelance/services/mine" className="btn btn-outline w-full">Manage your services</Link> : profile.role !== 'employer' ? <p className="text-sm text-muted">Verified employers can hire this service through LanceNest.</p> : (
             <form action={requestService.bind(null, s.id)} className="space-y-3">
               {searchParams.error && <FormMessage error={ERR[searchParams.error] ?? ERR.save} />}
               <div><label className="field-label" htmlFor="amount">Agreed amount ($)</label><input id="amount" name="amount" required inputMode="decimal" defaultValue={(s.price_cents / 100).toString()} className="field" /></div>
