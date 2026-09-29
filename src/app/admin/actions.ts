@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { rewardReferrer } from '@/lib/referrals';
 import { deleteMemberCompletely } from '@/lib/account';
 import { identityHash } from '@/lib/identity';
 import { SITE, notifyMember } from '@/lib/email';
@@ -57,17 +58,7 @@ export async function decideVerification(requestId: string, decision: 'verified'
     details: note ? { note } : {},
   });
 
-  if (decision === 'verified') {
-    const { data: me } = await admin.from('profiles').select('referred_by').eq('id', request.profile_id).maybeSingle();
-    if (me?.referred_by) {
-      const { data: rv } = await admin.from('veteran_profiles').select('plan, pro_granted_until').eq('profile_id', me.referred_by).maybeSingle();
-      if (rv) {
-        const base = rv.pro_granted_until && Date.parse(rv.pro_granted_until as string) > Date.now() ? Date.parse(rv.pro_granted_until as string) : Date.now();
-        await admin.from('veteran_profiles').update({ pro_granted_until: new Date(base + 30 * 86400000).toISOString(), ...(rv.plan === 'free' ? { plan: 'pro' } : {}) }).eq('profile_id', me.referred_by);
-        await notifyMember(me.referred_by as string, { type: 'referral', link: '/dashboard', title: 'Someone you invited was verified — you earned a free month of Pro. Thank you for bringing them in.' });
-      }
-    }
-  }
+  if (decision === 'verified') await rewardReferrer(request.profile_id);
   await notifyMember(request.profile_id, decision === 'verified'
     ? { type: 'verification', link: '/dashboard', title: 'You’re verified ✓ — jobs, the network, messaging, and freelance are unlocked.',
         email: { subject: 'You’re verified on LanceNest', preheader: 'Jobs, the network, messaging, and freelance are now unlocked.', tone: 'success', badge: '✓ Verified service member',
@@ -144,6 +135,7 @@ export async function decideCompany(companyId: string, decision: 'verified' | 'r
   if (!company) return;
   const verified = decision === 'verified';
   await admin.from('companies').update({ is_verified: verified, verification_status: verified ? 'verified' : 'rejected', verification_note: note }).eq('id', companyId);
+  if (verified) { const { data: co } = await admin.from('companies').select('owner_id').eq('id', companyId).maybeSingle(); if (co) await rewardReferrer(co.owner_id as string); }
   if (!verified) await admin.from('jobs').update({ status: 'paused' }).eq('company_id', companyId).eq('status', 'open');
   if (company.owner_id) {
     const name = company.name as string;
