@@ -76,20 +76,20 @@ const who = (name: string | null | undefined) => name ?? 'Someone you invited';
 
 /**
  * A service member brought in a company that is verified and has paid:
- * Federal members get 3 months of Federal free; everyone else gets 3 months of Pro Plus.
+ * Federal members get 2 months of Federal free; everyone else gets 2 months of Pro Plus.
  */
 async function rewardVeteranForCompany(vetId: string, companyOwnerId: string, name: string, plan: string, monthCents: number, customer: string | null) {
   const admin = createAdminClient();
   const { data: co } = await admin.from('companies').select('is_verified').eq('owner_id', companyOwnerId).maybeSingle();
   if (!co?.is_verified) return;   // verified AND paid
-  const MONTHS = 3;
+  const MONTHS = 2;
   const federal = plan === 'federal_pro';
   // Credit what they already pay for 3 months (covers Federal, Pro Plus, or Pro bills).
   const credit = monthCents > 0 && customer ? monthCents * MONTHS : 0;
   // Non-Federal members also get Pro Plus access for 3 months (Free and Pro are upgraded; Pro Plus is simply credited).
   const grant = !federal && plan !== 'pro_plus';
   const { error } = await admin.from('referral_rewards').insert({ referred_id: companyOwnerId, referrer_id: vetId, cents: credit,
-    note: federal ? '3 months Federal (company referral)' : '3 months Pro Plus (company referral)' });
+    note: federal ? '2 months Federal (company referral)' : '2 months Pro Plus (company referral)' });
   if (error) return;
   if (credit) await stripe().customers.createBalanceTransaction(customer!, { amount: -credit, currency: 'usd', description: `Referral: ${MONTHS} months ${federal ? 'of Federal' : 'toward Pro Plus'} for bringing a company` }, { idempotencyKey: `referral-${companyOwnerId}` });
   if (grant) {
