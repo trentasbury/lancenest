@@ -9,8 +9,8 @@ import { foundingSpotsLeft } from '@/lib/billing';
 export async function POST(request: NextRequest) {
   const site = (process.env.NEXT_PUBLIC_SITE_URL ?? request.nextUrl.origin).replace(/\/$/, '');
   const form = await request.formData();
-  const product = String(form.get('product') ?? '') as ProductKey;
-  const item = CATALOG[product];
+  let product = String(form.get('product') ?? '') as ProductKey;
+  let item = CATALOG[product];
   const session = await getSessionProfile();
   if (!session) return NextResponse.redirect(`${site}/login?next=/employers`, 303);
   if (!item) return NextResponse.redirect(`${site}/employer/dashboard?error=product`, 303);
@@ -56,10 +56,30 @@ export async function POST(request: NextRequest) {
     customerId = customer.id;
     await createAdminClient().from('companies').update({ stripe_customer_id: customerId }).eq('id', company.id);
   }
+  // Referral credit earned before this company had a Stripe account: apply it now (Stripe uses it on the next invoice).
+  const { data: credit } = await createAdminClient().from('companies').select('referral_credit_cents').eq('id', company.id).maybeSingle();
+  if ((credit?.referral_credit_cents as number) > 0) {
+    await stripe().customers.createBalanceTransaction(customerId, { amount: -(credit!.referral_credit_cents as number), currency: 'usd', description: 'LanceNest referral credit' });
+    await createAdminClient().from('companies').update({ referral_credit_cents: 0 }).eq('id', company.id);
+  }
 
+  if (item.kind === 'fair_booth') {
+    const { data: planRow } = await createAdminClient().from('companies').select('plan').eq('id', company.id).maybeSingle();
+    product = (['professional', 'federal', 'enterprise'].includes(planRow?.plan as string) ? 'fair_booth_member' : 'fair_booth') as typeof product;
+    item = CATALOG[product];
+  }
   const metadata: Record<string, string> = { company_id: company.id as string, kind: item.kind, product };
   if (item.plan) metadata.plan = item.plan;
   if (item.plan === 'training_featured' && !company.training_listing_active) return NextResponse.redirect(`${site}/employer/training?error=listing_first`, 303);
+  if (item.kind === 'fair_booth') {
+    const fairId = String(form.get('fair_id') ?? '');
+    const { data: fair } = await createAdminClient().from('career_fairs').select('id, slug, starts_at').eq('id', fairId).maybeSingle();
+    if (!fair || Date.parse(fair.starts_at as string) < Date.now()) return NextResponse.redirect(`${site}/fairs`, 303);
+    const { data: owned } = await createAdminClient().from('fair_booths').select('id').eq('fair_id', fairId).eq('company_id', company.id).maybeSingle();
+    if (owned) return NextResponse.redirect(`${site}/fairs/${fair.slug}`, 303);
+    const video = String(form.get('video_url') ?? '').trim().slice(0, 300);
+    Object.assign(metadata, { fair_id: fairId, fair_slug: fair.slug as string, pitch: String(form.get('pitch') ?? '').trim().slice(0, 450), video_url: /^https:\/\//i.test(video) ? video : '' });
+  }
   if (item.kind === 'training_webinar') {
     const title = String(form.get('event_title') ?? '').trim().slice(0, 140);
     const startsAt = new Date(String(form.get('event_starts_at') ?? ''));

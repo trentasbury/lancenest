@@ -97,8 +97,11 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   if (ref && data.user) {
     const { createAdminClient } = await import('@/lib/supabase/admin');
     const admin = createAdminClient();
-    const { data: referrer } = await admin.from('profiles').select('id').eq('username', ref).in('role', ['veteran', 'admin']).maybeSingle();
-    if (referrer && referrer.id !== data.user.id) await admin.from('profiles').update({ referred_by: referrer.id }).eq('id', data.user.id);
+    // Member links use a username; employer links use "c-" plus the company's slug.
+    const { data: referrer } = ref.startsWith('c-')
+      ? await admin.from('companies').select('id:owner_id').eq('slug', ref.slice(2)).maybeSingle()
+      : await admin.from('profiles').select('id').eq('username', ref).in('role', ['veteran', 'admin']).maybeSingle();
+    if (referrer?.id && referrer.id !== data.user.id) await admin.from('profiles').update({ referred_by: referrer.id }).eq('id', data.user.id);
   }
 
   // Email confirmation disabled in Supabase -> a session exists immediately.

@@ -12,6 +12,8 @@ function periodEnd(sub: Stripe.Subscription): string | null {
 }
 
 /** Recomputes a company's plan and extra slots from its subscriptions (highest active plan wins). */
+export const REFERRAL_CREDIT_CENTS = 24900;
+
 export async function recomputeCompany(companyId: string) {
   const admin = createAdminClient();
   const { data: subs } = await admin.from('subscriptions').select('kind, plan, status').eq('company_id', companyId);
@@ -21,6 +23,22 @@ export async function recomputeCompany(companyId: string) {
   const slots = live.filter((s) => s.kind === 'job_slot').length;
   await admin.from('companies').update({ plan, extra_job_slots: slots, training_listing_active: plans.includes('training'), training_featured: plans.includes('training') && plans.includes('training_featured') }).eq('id', companyId);
 
+  // Employer referral: the first time a referred company is on a paid plan, the referring company earns one Professional month.
+  if (plan !== 'free') {
+    const { data: me } = await admin.from('companies').select('owner_id, name, referral_rewarded_at').eq('id', companyId).maybeSingle();
+    const { data: owner } = me && !me.referral_rewarded_at ? await admin.from('profiles').select('referred_by').eq('id', me.owner_id).maybeSingle() : { data: null };
+    const { data: ref } = owner?.referred_by ? await admin.from('companies').select('id, owner_id, stripe_customer_id, referral_credit_cents').eq('owner_id', owner.referred_by).maybeSingle() : { data: null };
+    if (me && ref && ref.id !== companyId) {
+      await admin.from('companies').update({ referral_rewarded_at: new Date().toISOString() }).eq('id', companyId).is('referral_rewarded_at', null);
+      if (ref.stripe_customer_id) {
+        await stripe().customers.createBalanceTransaction(ref.stripe_customer_id as string, { amount: -REFERRAL_CREDIT_CENTS, currency: 'usd', description: `Referral credit: ${me.name} joined LanceNest` }, { idempotencyKey: `referral-${companyId}` });
+      } else {
+        await admin.from('companies').update({ referral_credit_cents: (ref.referral_credit_cents as number) + REFERRAL_CREDIT_CENTS }).eq('id', ref.id);
+      }
+      const { notifyMember } = await import('@/lib/email');
+      await notifyMember(ref.owner_id as string, { type: 'referral', link: '/employer/dashboard', title: `${me.name} joined LanceNest on your referral — a $249 credit (one Professional month) is on your account. Thank you.` });
+    }
+  }
   // Back on Free: keep the newest (2 + slots) open jobs, pause the rest. Nothing is deleted.
   if (plan === 'free') {
     const { data: open } = await admin.from('jobs').select('id').eq('company_id', companyId).eq('status', 'open').order('posted_at', { ascending: false });
@@ -94,6 +112,15 @@ export async function applyCheckoutSession(sessionId: string) {
         company_id: s.metadata?.company_id ?? null, kind: 'job_boost', job_id: jobId,
         amount_cents: s.amount_total ?? 0, stripe_checkout_session_id: s.id,
       });
+    }
+    return { ok: true as const, kind };
+  }
+  if (kind === 'fair_booth' && s.payment_status === 'paid') {
+    const admin = createAdminClient();
+    const companyId = s.metadata?.company_id;
+    const { error } = await admin.from('purchases').insert({ company_id: companyId ?? null, kind: 'fair_booth', amount_cents: s.amount_total ?? 0, stripe_checkout_session_id: s.id });
+    if (!error && companyId && s.metadata?.fair_id) {
+      await admin.from('fair_booths').insert({ fair_id: s.metadata.fair_id, company_id: companyId, pitch: s.metadata.pitch || null, video_url: s.metadata.video_url || null, stripe_checkout_session_id: s.id });
     }
     return { ok: true as const, kind };
   }
