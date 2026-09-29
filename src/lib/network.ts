@@ -97,11 +97,12 @@ export function mediaUrl(path: string) {
 /** Cursor-paginated feed. Row-level security guarantees only posts the viewer may see are returned. */
 export async function getFeed(opts: {
   viewerId: string | null; scope?: 'following' | 'everyone'; type?: string; cursor?: string;
-  authorId?: string; savedOnly?: boolean; limit?: number;
+  authorId?: string; savedOnly?: boolean; limit?: number; groupId?: string;
 }): Promise<{ posts: Post[]; nextCursor: string | null }> {
   const supabase = createClient();
   const limit = opts.limit ?? PAGE_SIZE;
   let q = supabase.from('network_posts').select(POST_SELECT);
+  q = opts.groupId ? q.eq('group_id', opts.groupId) : q.is('group_id', null);
 
   if (opts.viewerId && !opts.authorId) {
     const { data: muted } = await supabase.from('user_mutes').select('muted_id').eq('muter_id', opts.viewerId);

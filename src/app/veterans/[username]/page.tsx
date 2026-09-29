@@ -13,7 +13,9 @@ import { followUser, reportContent, unfollowUser } from '@/app/network/actions';
 import { startConversation } from '@/app/messages/actions';
 import Upsell from '@/components/employer/Upsell';
 import PlanBadge from '@/components/PlanBadge';
+import VerifiedMark from '@/components/VerifiedMark';
 import { saveToPool } from '@/app/employer/talent/actions';
+import { decideRecommendation, writeRecommendation } from '@/app/network/recommendActions';
 
 type Profile = { id: string; full_name: string; username: string; headline: string | null; location: string | null; avatar_url: string | null };
 type Vet = { plan?: string; about: string | null; clearance_level: string; verification_status: string; willing_to_relocate: boolean };
@@ -52,7 +54,7 @@ export async function generateMetadata({ params }: { params: { username: string 
   };
 }
 
-export default async function VeteranProfilePage({ params }: { params: { username: string } }) {
+export default async function VeteranProfilePage({ params, searchParams }: { params: { username: string }; searchParams: { rec?: string } }) {
   const data = await load(params.username);
   if (!data) notFound();
   const { supabase, profile } = data;
@@ -96,6 +98,13 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
   ]);
   const following = (iFollow ?? []).length > 0;
   const { data: verifiedWork } = viewer ? await supabase.rpc('verified_work', { p: profile.id }) : { data: [] };
+  const [{ data: recs }, { data: myPendingRecs }, { data: mentorRow }, { data: wroteOne }] = await Promise.all([
+    supabase.from('recommendations').select('id, relationship, body, created_at, author:profiles!recommendations_author_id_fkey(full_name, username, headline, verified)').eq('subject_id', profile.id).eq('status', 'accepted').order('created_at', { ascending: false }),
+    viewer?.user?.id === profile.id ? supabase.from('recommendations').select('id, relationship, body, author:profiles!recommendations_author_id_fkey(full_name)').eq('subject_id', profile.id).eq('status', 'pending') : Promise.resolve({ data: [] }),
+    supabase.from('mentor_profiles').select('available').eq('profile_id', profile.id).maybeSingle(),
+    viewer?.user?.id && viewer.user.id !== profile.id ? supabase.from('recommendations').select('id').eq('author_id', viewer.user.id).eq('subject_id', profile.id).maybeSingle() : Promise.resolve({ data: null }),
+  ]);
+  type RecRow = { id: string; relationship: string; body: string; author: { full_name: string; username?: string | null; headline?: string | null; verified?: boolean } | null };
   const { data: reviews } = await supabase.from('reviews').select('rating, body, created_at').eq('reviewee_id', profile.id).order('created_at', { ascending: false }).limit(5);
   const avg = (reviews ?? []).length ? (reviews ?? []).reduce((a, r) => a + (r.rating as number), 0) / (reviews ?? []).length : 0;
   const [{ data: freelance }, { data: portfolio }] = await Promise.all([
@@ -122,7 +131,7 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
             </div>
           )}
           <div className="flex-1">
-            <h1 className="font-serif text-4xl font-medium text-ivory sm:text-5xl">{profile.full_name}<PlanBadge plan={vet.plan} /></h1>
+            <h1 className="font-serif text-4xl font-medium text-ivory sm:text-5xl">{profile.full_name}<PlanBadge plan={vet.plan} />{mentorRow?.available && <span className="ml-1.5 inline-block rounded-full border border-olive bg-olive/20 px-2 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-[0.1em] text-ivory">Mentor</span>}</h1>
             {profile.headline && <p className="mt-1 text-lg text-cream/85">{profile.headline}</p>}
             <p className="mt-2 text-sm text-cream/70">
               {[primary ? `${primary.branch}${primary.rank ? ` · ${primary.rank}` : ''}` : null, profile.location, vet.willing_to_relocate ? 'Open to relocation' : null]
@@ -271,6 +280,39 @@ export default async function VeteranProfilePage({ params }: { params: { usernam
                   </li>
                 ))}
               </ul>
+            </section>
+          )}
+
+          {(((recs ?? []) as unknown as RecRow[]).length > 0 || ((myPendingRecs ?? []) as unknown[]).length > 0 || (viewer?.profile && ['veteran', 'admin'].includes(viewer.profile.role) && viewer.user.id !== profile.id && !wroteOne)) && (
+            <section id="recommendations" className="card scroll-mt-24 p-7">
+              <h2 className="eyebrow">Recommendations from fellow service members</h2>
+              {searchParams.rec && <p className={`mt-2 text-sm ${searchParams.rec === 'sent' ? 'text-olive' : 'text-signal'}`}>{({ sent: 'Sent — it appears once they accept it.', short: 'Add how you know them and at least a couple of sentences.', exists: 'You’ve already recommended this member.', error: 'That didn’t send — please try again.' } as Record<string, string>)[searchParams.rec] ?? ''}</p>}
+              {((myPendingRecs ?? []) as unknown as RecRow[]).map((r) => (
+                <div key={r.id} className="mt-4 rounded-[4px] border border-brass bg-brass/10 p-4 text-sm">
+                  <p><strong>{r.author?.full_name}</strong> · {r.relationship}</p><p className="mt-1 italic">“{r.body}”</p>
+                  <div className="mt-3 flex gap-2">
+                    <form action={decideRecommendation.bind(null, r.id, 'accepted', params.username)}><SubmitButton className="btn btn-primary py-1.5 text-xs" pendingText="…">Show on my profile</SubmitButton></form>
+                    <form action={decideRecommendation.bind(null, r.id, 'hidden', params.username)}><SubmitButton className="btn btn-ghost border border-line py-1.5 text-xs" pendingText="…">Hide</SubmitButton></form>
+                  </div>
+                </div>
+              ))}
+              <ul className="mt-4 space-y-4">
+                {((recs ?? []) as unknown as RecRow[]).map((r) => (
+                  <li key={r.id} className="border-l-2 border-brass pl-4">
+                    <p className="text-sm italic text-ink/85">“{r.body}”</p>
+                    <p className="mt-1 text-xs text-muted">— {r.author?.username ? <Link href={`/veterans/${r.author.username}`} className="text-navy hover:underline">{r.author.full_name}</Link> : r.author?.full_name}{r.author?.verified && <VerifiedMark />} · {r.relationship}</p>
+                  </li>
+                ))}
+              </ul>
+              {viewer?.profile && ['veteran', 'admin'].includes(viewer.profile.role) && viewer.user.id !== profile.id && !wroteOne && (
+                <details className="mt-4 text-sm"><summary className="cursor-pointer text-navy">Recommend {profile.full_name.split(' ')[0]}</summary>
+                  <form action={writeRecommendation.bind(null, profile.id, params.username)} className="mt-3 space-y-2">
+                    <input name="relationship" required maxLength={140} placeholder="How you know them (e.g. Served together, 2nd Bn 6th Marines, 2019–2021)" className="field" />
+                    <textarea name="body" required rows={3} minLength={20} maxLength={2000} placeholder="What they’re like to serve or work with" className="field" />
+                    <SubmitButton className="btn btn-primary" pendingText="Sending…">Send recommendation</SubmitButton>
+                  </form>
+                </details>
+              )}
             </section>
           )}
 

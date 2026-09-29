@@ -7,7 +7,9 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 /** Opens (or reuses) a one-to-one conversation. Auth + block checks run before the service-role client is used. */
-export async function startConversation(otherId: string) {
+export async function startConversation(otherId: string, formData?: FormData) {
+  const draft = formData ? String(formData.get('draft') ?? '').slice(0, 1000) : '';
+  const q = draft ? `?draft=${encodeURIComponent(draft)}` : '';
   const session = await getSessionProfile();
   if (!session) redirect('/login?next=/messages');
   const me = session.user.id;
@@ -26,7 +28,7 @@ export async function startConversation(otherId: string) {
   const myConvs = (mine ?? []).map((r) => r.conversation_id as string);
   if (myConvs.length) {
     const { data: shared } = await admin.from('conversation_participants').select('conversation_id').eq('profile_id', otherId).in('conversation_id', myConvs).limit(1);
-    if (shared?.length) redirect(`/messages/${shared[0].conversation_id}`);
+    if (shared?.length) redirect(`/messages/${shared[0].conversation_id}${q}`);
   }
 
   // Messaging is free for everyone. Employers must be a verified company to start a conversation with a service member.
@@ -54,7 +56,7 @@ export async function startConversation(otherId: string) {
     { conversation_id: conv.id, profile_id: me, last_read_at: new Date().toISOString() },
     { conversation_id: conv.id, profile_id: otherId },
   ]);
-  redirect(`/messages/${conv.id}`);
+  redirect(`/messages/${conv.id}${q}`);
 }
 
 export async function sendMessage(conversationId: string, formData: FormData) {

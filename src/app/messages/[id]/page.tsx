@@ -14,7 +14,7 @@ import { blockUser, reportContent } from '@/app/network/actions';
 
 export const metadata: Metadata = { title: 'Conversation' };
 
-export default async function ThreadPage({ params, searchParams }: { params: { id: string }; searchParams: { error?: string } }) {
+export default async function ThreadPage({ params, searchParams }: { params: { id: string }; searchParams: { error?: string; draft?: string } }) {
   const { user } = await requireRole(['veteran', 'employer', 'admin'], '/messages');
   const supabase = createClient();
 
@@ -119,7 +119,7 @@ export default async function ThreadPage({ params, searchParams }: { params: { i
       {searchParams.error && <div className="mb-3"><FormMessage error={searchParams.error === 'pending' ? 'Your message request is waiting for a reply — you can send more once they accept.' : searchParams.error === 'declined' ? 'This message request wasn’t accepted.' : searchParams.error === 'blocked' ? 'This conversation is closed because one of you has blocked the other.' : searchParams.error === 'rate' ? 'You’re sending messages very quickly. Please wait a few minutes.' : searchParams.error === 'pii' ? 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' : 'Your message didn’t send. Please try again.'} /></div>}
       {!(conv?.requested_by === user.id && ((conv?.status === 'request' && mySent > 0) || conv?.status === 'declined')) && <form action={sendMessage.bind(null, params.id)} className="sticky bottom-4 flex gap-2 rounded-[6px] border border-line bg-ivory p-2 shadow-card">
         <label htmlFor="msg" className="sr-only">Message</label>
-        <textarea id="msg" name="body" required rows={2} maxLength={4000} placeholder="Write a message…" className="field resize-none border-0 focus:ring-0" />
+        <textarea id="msg" name="body" required rows={2} maxLength={4000} defaultValue={searchParams.draft} placeholder="Write a message…" className="field resize-none border-0 focus:ring-0" />
         <SubmitButton className="btn btn-primary shrink-0 self-end" pendingText="Sending…">Send</SubmitButton>
       </form>}
       <p className="mt-3 text-center text-xs text-muted">Never share classified or Controlled Unclassified Information (CUI) in messages.</p>
