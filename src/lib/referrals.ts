@@ -35,7 +35,9 @@ export async function rewardReferrer(referredProfileId: string, event: 'member_a
   if (!ref) return;
   const refIsMember = MEMBER.includes(ref.role as string), referredIsMember = MEMBER.includes(referred.role as string);
   if (event === 'member_active' && !(refIsMember && referredIsMember)) return;
-  if (event === 'company_paid' && !(ref.role === 'employer' && referred.role === 'employer')) return;
+  if (event === 'company_paid' && referred.role !== 'employer') return;
+  const vetBringsCompany = event === 'company_paid' && refIsMember;   // a service member brought in a paying company
+  if (event === 'company_paid' && !vetBringsCompany && ref.role !== 'employer') return;
   if (event === 'member_active' && !(await memberIsActive(referredProfileId))) return;
   const { count: already } = await admin.from('referral_rewards').select('referred_id', { count: 'exact', head: true }).eq('referred_id', referredProfileId);
   if (already) return;
@@ -53,17 +55,39 @@ export async function rewardReferrer(referredProfileId: string, event: 'member_a
   }
   const { count: recent } = await admin.from('referral_rewards').select('referred_id', { count: 'exact', head: true })
     .eq('referrer_id', ref.id).gt('cents', 0).gte('created_at', new Date(Date.now() - 365 * 86400000).toISOString());
+  // A service member who brings a paying company earns 2 months, outside the yearly cap (every one is a new paying customer).
+  if (vetBringsCompany) return rewardVeteranForCompany(ref.id as string, referredProfileId, who(referred.full_name), plan, cents, customer);
   const capped = (recent ?? 0) >= REFERRAL_CAP_PER_YEAR;
   const pay = cents > 0 && !!customer && !capped;
   // Record first (primary key on referred_id makes this pay out at most once).
   const { error } = await admin.from('referral_rewards').insert({ referred_id: referredProfileId, referrer_id: ref.id, cents: pay ? cents : 0, note: pay ? LABEL[plan] : capped ? 'cap reached' : 'free plan' });
   if (error) return;
-  const who = referred.full_name ?? 'Someone you invited';
+  const whoName = who(referred.full_name);
   if (!pay) {
     await notifyMember(ref.id as string, { type: 'referral', link: refIsMember ? '/dashboard' : '/employer/dashboard',
-      title: capped ? `${who} joined on your referral — thank you. You’ve earned the maximum of ${REFERRAL_CAP_PER_YEAR} free months this year.` : `${who} joined on your referral — thank you. On a paid plan, each referral like this earns a free month of your plan.` });
+      title: capped ? `${whoName} joined on your referral — thank you. You’ve earned the maximum of ${REFERRAL_CAP_PER_YEAR} free months this year.` : `${whoName} joined on your referral — thank you. On a paid plan, each referral like this earns a free month of your plan.` });
     return;
   }
   await stripe().customers.createBalanceTransaction(customer!, { amount: -cents, currency: 'usd', description: `Referral credit: one month of ${LABEL[plan]}` }, { idempotencyKey: `referral-${referredProfileId}` });
-  await notifyMember(ref.id as string, { type: 'referral', link: refIsMember ? '/dashboard' : '/employer/dashboard', title: `${who} joined on your referral — a free month of ${LABEL[plan]} ($${(cents / 100).toFixed(0)}) is credited to your next bill.` });
+  await notifyMember(ref.id as string, { type: 'referral', link: refIsMember ? '/dashboard' : '/employer/dashboard', title: `${whoName} joined on your referral — a free month of ${LABEL[plan]} ($${(cents / 100).toFixed(0)}) is credited to your next bill.` });
+}
+
+const who = (name: string | null | undefined) => name ?? 'Someone you invited';
+
+async function rewardVeteranForCompany(vetId: string, companyOwnerId: string, name: string, plan: string, monthCents: number, customer: string | null) {
+  const admin = createAdminClient();
+  const paid = monthCents > 0 && !!customer;
+  const { error } = await admin.from('referral_rewards').insert({ referred_id: companyOwnerId, referrer_id: vetId, cents: paid ? monthCents * 2 : 0, note: paid ? `2 months ${LABEL[plan]} (company referral)` : '2 months Pro access (company referral)' });
+  if (error) return;
+  if (paid) {
+    await stripe().customers.createBalanceTransaction(customer!, { amount: -monthCents * 2, currency: 'usd', description: `Referral credit: 2 months of ${LABEL[plan]} for bringing a company` }, { idempotencyKey: `referral-${companyOwnerId}` });
+    await notifyMember(vetId, { type: 'referral', link: '/dashboard', title: `${name} joined LanceNest on your referral — 2 free months of ${LABEL[plan]} ($${((monthCents * 2) / 100).toFixed(0)}) are credited to your bill. Thank you.` });
+    return;
+  }
+  // On Free: two months of Pro access instead (the daily job ends it automatically).
+  const { data: v } = await admin.from('veteran_profiles').select('pro_granted_until').eq('profile_id', vetId).maybeSingle();
+  const base = v?.pro_granted_until && Date.parse(v.pro_granted_until as string) > Date.now() ? Date.parse(v.pro_granted_until as string) : Date.now();
+  await admin.from('veteran_profiles').update({ pro_granted_until: new Date(base + 60 * 86400000).toISOString(), plan: 'pro' }).eq('profile_id', vetId).eq('plan', 'free');
+  await admin.from('veteran_profiles').update({ pro_granted_until: new Date(base + 60 * 86400000).toISOString() }).eq('profile_id', vetId).eq('plan', 'pro');
+  await notifyMember(vetId, { type: 'referral', link: '/dashboard', title: `${name} joined LanceNest on your referral — you’ve earned 2 free months of Pro. Thank you.` });
 }
