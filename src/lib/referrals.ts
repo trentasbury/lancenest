@@ -74,20 +74,30 @@ export async function rewardReferrer(referredProfileId: string, event: 'member_a
 
 const who = (name: string | null | undefined) => name ?? 'Someone you invited';
 
+/**
+ * A service member brought in a company that is verified and has paid:
+ * Federal members get 3 months of Federal free; everyone else gets 3 months of Pro Plus.
+ */
 async function rewardVeteranForCompany(vetId: string, companyOwnerId: string, name: string, plan: string, monthCents: number, customer: string | null) {
   const admin = createAdminClient();
-  const paid = monthCents > 0 && !!customer;
-  const { error } = await admin.from('referral_rewards').insert({ referred_id: companyOwnerId, referrer_id: vetId, cents: paid ? monthCents * 2 : 0, note: paid ? `2 months ${LABEL[plan]} (company referral)` : '2 months Pro access (company referral)' });
+  const { data: co } = await admin.from('companies').select('is_verified').eq('owner_id', companyOwnerId).maybeSingle();
+  if (!co?.is_verified) return;   // verified AND paid
+  const MONTHS = 3;
+  const federal = plan === 'federal_pro';
+  // Credit what they already pay for 3 months (covers Federal, Pro Plus, or Pro bills).
+  const credit = monthCents > 0 && customer ? monthCents * MONTHS : 0;
+  // Non-Federal members also get Pro Plus access for 3 months (Free and Pro are upgraded; Pro Plus is simply credited).
+  const grant = !federal && plan !== 'pro_plus';
+  const { error } = await admin.from('referral_rewards').insert({ referred_id: companyOwnerId, referrer_id: vetId, cents: credit,
+    note: federal ? '3 months Federal (company referral)' : '3 months Pro Plus (company referral)' });
   if (error) return;
-  if (paid) {
-    await stripe().customers.createBalanceTransaction(customer!, { amount: -monthCents * 2, currency: 'usd', description: `Referral credit: 2 months of ${LABEL[plan]} for bringing a company` }, { idempotencyKey: `referral-${companyOwnerId}` });
-    await notifyMember(vetId, { type: 'referral', link: '/dashboard', title: `${name} joined LanceNest on your referral — 2 free months of ${LABEL[plan]} ($${((monthCents * 2) / 100).toFixed(0)}) are credited to your bill. Thank you.` });
-    return;
+  if (credit) await stripe().customers.createBalanceTransaction(customer!, { amount: -credit, currency: 'usd', description: `Referral: ${MONTHS} months ${federal ? 'of Federal' : 'toward Pro Plus'} for bringing a company` }, { idempotencyKey: `referral-${companyOwnerId}` });
+  if (grant) {
+    const { data: v } = await admin.from('veteran_profiles').select('pro_granted_until, granted_plan').eq('profile_id', vetId).maybeSingle();
+    const base = v?.pro_granted_until && Date.parse(v.pro_granted_until as string) > Date.now() ? Date.parse(v.pro_granted_until as string) : Date.now();
+    await admin.from('veteran_profiles').update({ granted_plan: 'pro_plus', pro_granted_until: new Date(base + MONTHS * 30 * 86400000).toISOString() }).eq('profile_id', vetId);
+    const { recomputeVeteran } = await import('@/lib/billing');
+    await recomputeVeteran(vetId);
   }
-  // On Free: two months of Pro access instead (the daily job ends it automatically).
-  const { data: v } = await admin.from('veteran_profiles').select('pro_granted_until').eq('profile_id', vetId).maybeSingle();
-  const base = v?.pro_granted_until && Date.parse(v.pro_granted_until as string) > Date.now() ? Date.parse(v.pro_granted_until as string) : Date.now();
-  await admin.from('veteran_profiles').update({ pro_granted_until: new Date(base + 60 * 86400000).toISOString(), plan: 'pro' }).eq('profile_id', vetId).eq('plan', 'free');
-  await admin.from('veteran_profiles').update({ pro_granted_until: new Date(base + 60 * 86400000).toISOString() }).eq('profile_id', vetId).eq('plan', 'pro');
-  await notifyMember(vetId, { type: 'referral', link: '/dashboard', title: `${name} joined LanceNest on your referral — you’ve earned 2 free months of Pro. Thank you.` });
+  await notifyMember(vetId, { type: 'referral', link: '/dashboard', title: `${name} joined LanceNest on your referral — you’ve earned ${MONTHS} free months of ${federal ? 'Federal' : 'Pro Plus'}. Thank you.` });
 }

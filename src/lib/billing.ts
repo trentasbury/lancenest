@@ -65,9 +65,13 @@ export async function recomputeVeteran(profileId: string) {
   const admin = createAdminClient();
   const { data } = await admin.from('subscriptions').select('plan').eq('profile_id', profileId).in('status', ['active', 'trialing', 'past_due']);
   const best = (data ?? []).map((r) => VET_RANK[r.plan as string]).filter(Boolean).sort((a, b) => b[0] - a[0])[0];
-  const { data: grant } = best ? { data: null } : await admin.from('veteran_profiles').select('pro_granted_until').eq('profile_id', profileId).maybeSingle();
-  const granted = grant?.pro_granted_until && Date.parse(grant.pro_granted_until as string) > Date.now();
-  await admin.from('veteran_profiles').update({ plan: best ? best[1] : granted ? 'pro' : 'free' }).eq('profile_id', profileId);
+  // Referral grants (Pro / Pro Plus / Federal access) apply while active; the member gets whichever is higher.
+  const { data: grant } = await admin.from('veteran_profiles').select('pro_granted_until, granted_plan').eq('profile_id', profileId).maybeSingle();
+  const activeGrant = grant?.granted_plan && grant.pro_granted_until && Date.parse(grant.pro_granted_until as string) > Date.now() ? (grant.granted_plan as string) : null;
+  const RANK: Record<string, number> = { free: 0, pro: 1, pro_plus: 2, federal_pro: 3 };
+  const paidPlan = best ? best[1] : 'free';
+  const plan = activeGrant && RANK[activeGrant] > RANK[paidPlan] ? activeGrant : paidPlan;
+  await admin.from('veteran_profiles').update({ plan, ...(activeGrant ? {} : { granted_plan: null }) }).eq('profile_id', profileId);
 }
 
 /** Applies a completed Checkout Session. Safe to call more than once (webhook + success page). */

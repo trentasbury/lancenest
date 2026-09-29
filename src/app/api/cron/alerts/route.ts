@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
   }
 
   // ---------- Expire free Pro months earned through referrals ----------
-  const { data: expired } = await admin.from('veteran_profiles').select('profile_id').eq('plan', 'pro').lt('pro_granted_until', new Date().toISOString());
+  const { data: expired } = await admin.from('veteran_profiles').select('profile_id').not('granted_plan', 'is', null).lt('pro_granted_until', new Date().toISOString());
   if (expired?.length) {
     const { recomputeVeteran } = await import('@/lib/billing');
     for (const e of expired) await recomputeVeteran(e.profile_id as string);
