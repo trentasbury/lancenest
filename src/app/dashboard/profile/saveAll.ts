@@ -3,14 +3,14 @@
 import { revalidatePath } from 'next/cache';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { BRANCHES, CLEARANCES, COMPONENTS, yearToDate } from '@/lib/military';
+import { BRANCHES, CLEARANCES, CLEARANCE_STATUS, COMPONENTS, POLYGRAPH, yearToDate } from '@/lib/military';
 import { ensureOccupationsLoaded } from '@/lib/occupations';
 
 type Svc = { id?: string; branch: string; component: string; rank: string; duty_title: string; unit: string; occupation_code: string; start_year: string; end_year: string; description: string; deployments: string };
 type Exp = { id?: string; company: string; position: string; start_year: string; end_year: string; description: string };
 type Edu = { id?: string; school: string; degree: string; field: string; graduation_year: string };
 export type ProfilePayload = {
-  basics: { full_name: string; headline: string; city: string; state: string; about: string; clearance_level: string; willing_to_relocate: boolean; is_public: boolean; desired_titles: string };
+  basics: { full_name: string; headline: string; city: string; state: string; about: string; clearance_level: string; clearance_status: string; polygraph: string; willing_to_relocate: boolean; is_public: boolean; desired_titles: string };
   service: Svc[]; experience: Exp[]; education: Edu[]; skills: string[];
 };
 const s = (v: unknown, max: number) => String(v ?? '').trim().slice(0, max);
@@ -27,6 +27,8 @@ export async function saveFullProfile(p: ProfilePayload): Promise<{ ok: boolean;
   const { error: e2 } = await supabase.from('veteran_profiles').update({
     about: s(b.about, 3000) || null, city: city || null, state: state || null,
     clearance_level: CLEARANCES.some(([v]) => v === b.clearance_level) ? b.clearance_level : 'none',
+    clearance_status: b.clearance_level !== 'none' && CLEARANCE_STATUS.some(([v]) => v === b.clearance_status) ? b.clearance_status : null,
+    polygraph: b.clearance_level !== 'none' && POLYGRAPH.some(([v]) => v === b.polygraph) ? b.polygraph : 'none',
     willing_to_relocate: !!b.willing_to_relocate, is_public: !!b.is_public,
     desired_titles: s(b.desired_titles, 400).split(',').map((t) => t.trim()).filter(Boolean).slice(0, 8),
   }).eq('profile_id', user.id);

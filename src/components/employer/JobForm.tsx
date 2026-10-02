@@ -86,6 +86,7 @@ export default function JobForm({ job, action }: { job?: Job | null; action: (fd
           <select name="clearance_required" defaultValue={job?.clearance_required ?? 'none'} className="field">
             {CLEARANCES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
+          <select name="polygraph_required" defaultValue={(job as unknown as { polygraph_required?: string })?.polygraph_required ?? 'none'} className="field mt-2" aria-label="Polygraph required"><option value="none">No polygraph required</option><option value="ci">CI polygraph required</option><option value="full_scope">Full-scope / lifestyle polygraph required</option></select>
         </Field>
         <label className="flex items-center gap-2.5 text-sm sm:pt-6"><input type="checkbox" name="clearance_eligible" defaultChecked={job?.clearance_eligible ?? false} className="h-4 w-4 accent-navy" />Will sponsor a clearance</label>
       </section>

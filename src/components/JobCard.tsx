@@ -32,7 +32,7 @@ export default function JobCard({ job, early }: { job: JobWithCompany; early?: b
           {job.employment_type === 'skillbridge' && <span className="pill border-olive/50 bg-olive/10 text-olive">DoD SkillBridge · keep military pay</span>}
           {job.veteran_preferred && <span className="pill border-brass/50 bg-brass/10 text-brass-dark">Veteran preferred</span>}
           {job.clearance_required !== 'none' && (
-            <span className="pill border-navy/30 bg-navy/5 text-navy">{CLEARANCE_LABELS[job.clearance_required]} clearance</span>
+            <span className="pill border-navy/30 bg-navy/5 text-navy">{CLEARANCE_LABELS[job.clearance_required]}{(job as unknown as { polygraph_required?: string }).polygraph_required === 'full_scope' ? ' w/ Full-Scope Poly' : (job as unknown as { polygraph_required?: string }).polygraph_required === 'ci' ? ' w/ CI Poly' : ''} clearance</span>
           )}
           {job.employment_type === 'skillbridge' && (
             <span className="pill border-olive/40 bg-olive/10 text-olive">For service members</span>

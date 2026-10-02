@@ -58,6 +58,7 @@ export default async function JobsPage({ searchParams }: { searchParams: JobFilt
             {searchParams.arrangement && <input type="hidden" name="arrangement" value={searchParams.arrangement} />}
             {searchParams.type && <input type="hidden" name="type" value={searchParams.type} />}
             {searchParams.clearance && <input type="hidden" name="clearance" value={searchParams.clearance} />}
+            {searchParams.poly && <input type="hidden" name="poly" value={searchParams.poly} />}
             {searchParams.veteran && <input type="hidden" name="veteran" value={searchParams.veteran} />}
             <button type="submit" className="btn btn-primary">Search</button>
           </form>
@@ -93,6 +94,12 @@ export default async function JobsPage({ searchParams }: { searchParams: JobFilt
               <label htmlFor="clearance" className="field-label">Clearance</label>
               <select id="clearance" name="clearance" defaultValue={searchParams.clearance ?? ''} className="field">
                 {CLEARANCE.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="poly" className="field-label">Polygraph</label>
+              <select id="poly" name="poly" defaultValue={searchParams.poly ?? ''} className="field">
+                <option value="">Any</option><option value="any">Polygraph required</option><option value="none">No polygraph</option>
               </select>
             </div>
             <label className="flex items-center gap-2.5 text-sm text-ink">

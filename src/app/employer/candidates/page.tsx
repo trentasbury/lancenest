@@ -1,3 +1,4 @@
+import { CLEARANCE_STATUS, POLY_SHORT } from '@/lib/military';
 import PlanBadge from '@/components/PlanBadge';
 import VerifiedMark from '@/components/VerifiedMark';
 import type { Metadata } from 'next';
@@ -18,11 +19,11 @@ import { deleteSavedSearch, saveSearch } from '@/app/employer/talent/searchActio
 export const metadata: Metadata = { title: 'Candidate search' };
 
 type Row = {
-  profile_id: string; city: string | null; state: string | null; clearance_level: string; verification_status: string; willing_to_relocate: boolean; separation_date: string | null; skillbridge_interest: boolean; open_to_transition_hiring: boolean; plan: string; boosted_until: string | null;
+  profile_id: string; city: string | null; state: string | null; clearance_level: string; clearance_status: string | null; polygraph: string; verification_status: string; willing_to_relocate: boolean; separation_date: string | null; skillbridge_interest: boolean; open_to_transition_hiring: boolean; plan: string; boosted_until: string | null;
   profile: { full_name: string; username: string | null; headline: string | null; service_summary: string | null } | null;
 };
 type F = { q?: string; branch?: string; mos?: string; state?: string; skill?: string; clearance?: string; verified?: string; relocate?: string; transitioning?: string };
-const SELECT = 'profile_id, city, state, clearance_level, verification_status, willing_to_relocate, separation_date, skillbridge_interest, open_to_transition_hiring, plan, boosted_until, profile:profiles!veteran_profiles_profile_id_fkey(full_name, username, headline, service_summary)';
+const SELECT = 'profile_id, city, state, clearance_level, clearance_status, polygraph, verification_status, willing_to_relocate, separation_date, skillbridge_interest, open_to_transition_hiring, plan, boosted_until, profile:profiles!veteran_profiles_profile_id_fkey(full_name, username, headline, service_summary)';
 
 function intersect(a: string[] | null, b: string[]) {
   return a === null ? b : a.filter((x) => b.includes(x));
@@ -93,6 +94,10 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
     query = query.eq('open_to_transition_hiring', true).gte('separation_date', today).lte('separation_date', inAYear);
   }
   if (cleared && f.clearance && CLEARANCE_ORDER.includes(f.clearance)) query = query.in('clearance_level', CLEARANCE_ORDER.slice(CLEARANCE_ORDER.indexOf(f.clearance)));
+  if (cleared && (f as Record<string, string | undefined>).status === 'active') query = query.eq('clearance_status', 'active');
+  if (cleared && (f as Record<string, string | undefined>).status === 'active_current') query = query.in('clearance_status', ['active', 'current']);
+  if (cleared && (f as Record<string, string | undefined>).poly === 'any') query = query.in('polygraph', ['ci', 'full_scope']);
+  if (cleared && (f as Record<string, string | undefined>).poly === 'full_scope') query = query.eq('polygraph', 'full_scope');
   const [{ data }, spotlight] = await Promise.all([
     query.order('verification_status', { ascending: false }).order('updated_at', { ascending: false }).limit(60),
     cleared && !Object.values(f).some(Boolean)
@@ -121,7 +126,7 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
           {r.willing_to_relocate && ' · Open to relocation'}
           {r.open_to_transition_hiring && r.separation_date && ` · Separating ${new Date(`${r.separation_date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`}
           {r.open_to_transition_hiring && r.skillbridge_interest && <span className="ml-2 rounded-full border border-olive/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-olive">SkillBridge interested</span>}
-          {cleared && r.clearance_level !== 'none' && <span className="ml-2 rounded-full border border-brass/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-brass-dark" title="Self-reported by the member — confirm eligibility through official systems">{CLEARANCE_LABEL[r.clearance_level]} · self-reported</span>}
+          {cleared && r.clearance_level !== 'none' && <span className="ml-2 rounded-full border border-brass/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-brass-dark" title="Self-reported by the member — confirm eligibility through official systems">{[CLEARANCE_LABEL[r.clearance_level], r.clearance_status && CLEARANCE_STATUS.find(([v]) => v === r.clearance_status)?.[1].split(' ')[0], POLY_SHORT[r.polygraph]].filter(Boolean).join(' · ')} · self-reported</span>}
         </p>
       </div>
       <form action={saveToPool.bind(null, r.profile_id, '/employer/candidates')}><SubmitButton className="btn btn-ghost border border-line" pendingText="…">Save</SubmitButton></form>
@@ -159,10 +164,14 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
         <input name="skill" defaultValue={f.skill} placeholder="Skill" className="field" />
         <input name="state" defaultValue={f.state} placeholder="State (e.g. VA)" className="field" />
         {cleared ? (
+          <>
+          <select name="status" defaultValue={(f as Record<string, string | undefined>).status ?? ''} className="field"><option value="">Any status (self-reported)</option><option value="active">Active only</option><option value="active_current">Active or current</option></select>
+          <select name="poly" defaultValue={(f as Record<string, string | undefined>).poly ?? ''} className="field"><option value="">Any polygraph</option><option value="any">CI or full-scope poly</option><option value="full_scope">Full-scope poly</option></select>
           <select name="clearance" defaultValue={f.clearance ?? ''} className="field">
             <option value="">Any clearance (self-reported)</option>
             {CLEARANCE_ORDER.slice(1).map((c) => <option key={c} value={c}>{CLEARANCE_LABEL[c]} or higher</option>)}
           </select>
+          </>
         ) : (
           <Link href="/employers" className="field flex items-center text-sm text-muted">Clearance filter · Federal plan</Link>
         )}

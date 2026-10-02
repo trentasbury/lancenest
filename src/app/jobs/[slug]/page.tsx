@@ -136,7 +136,7 @@ export default async function JobDetailPage({ params, searchParams }: { params: 
           {salary && <span className="pill font-semibold text-navy">{salary}</span>}
           {job.veteran_preferred && <span className="pill border-brass/50 bg-brass/10 text-brass-dark">Veteran preferred</span>}
           {job.clearance_required !== 'none' && (
-            <span className="pill border-navy/30 bg-navy/5 text-navy">{CLEARANCE_LABELS[job.clearance_required]} clearance required</span>
+            <span className="pill border-navy/30 bg-navy/5 text-navy">{CLEARANCE_LABELS[job.clearance_required]}{(job as unknown as { polygraph_required?: string }).polygraph_required === 'full_scope' ? ' w/ Full-Scope Poly' : (job as unknown as { polygraph_required?: string }).polygraph_required === 'ci' ? ' w/ CI Poly' : ''} clearance required</span>
           )}
           {job.clearance_eligible && job.clearance_required === 'none' && <span className="pill">Clearance eligible</span>}
         </div>

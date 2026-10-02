@@ -22,3 +22,8 @@ export function yearToDate(value: FormDataEntryValue | null): string | null {
 export function yearOf(date: string | null): string {
   return date ? date.slice(0, 4) : '';
 }
+
+// ClearanceJobs-style details (self-reported).
+export const CLEARANCE_STATUS: [string, string][] = [['active', 'Active'], ['current', 'Current (reinstatable)'], ['expired', 'Expired']];
+export const POLYGRAPH: [string, string][] = [['none', 'No polygraph'], ['ci', 'CI polygraph'], ['full_scope', 'Full-scope / lifestyle polygraph']];
+export const POLY_SHORT: Record<string, string> = { ci: 'CI poly', full_scope: 'Full-scope poly' };

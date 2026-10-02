@@ -11,6 +11,7 @@ export type JobFilters = {
   arrangement?: string;
   type?: string;
   clearance?: string;
+  poly?: string;
   veteran?: string;
 };
 
@@ -47,6 +48,8 @@ export async function searchJobs(filters: JobFilters, limit = 50): Promise<JobWi
   }
   if (filters.clearance === 'required') query = query.neq('clearance_required', 'none');
   if (filters.clearance === 'none') query = query.eq('clearance_required', 'none');
+  if (filters.poly === 'any') query = query.neq('polygraph_required', 'none');
+  if (filters.poly === 'none') query = query.eq('polygraph_required', 'none');
   if (filters.veteran === '1') query = query.eq('veteran_preferred', true);
 
   const { data, error } = await query.order('posted_at', { ascending: false }).limit(limit);

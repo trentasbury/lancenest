@@ -52,6 +52,7 @@ export async function saveJob(jobId: string | null, formData: FormData) {
     benefits: t(formData, 'benefits', 2000) || null,
     veteran_preferred: formData.get('veteran_preferred') === 'on',
     military_transferable: formData.get('military_transferable') === 'on',
+    polygraph_required: oneOf(t(formData, 'polygraph_required', 12), ['none', 'ci', 'full_scope'], 'none'),
     clearance_required: oneOf(t(formData, 'clearance_required', 14), ['none', 'public_trust', 'confidential', 'secret', 'top_secret', 'ts_sci'], 'none'),
     clearance_eligible: formData.get('clearance_eligible') === 'on',
     status: oneOf(t(formData, 'status', 8), ['draft', 'open'], 'open'),

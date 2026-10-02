@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { BRANCHES, CLEARANCES, COMPONENTS } from '@/lib/military';
+import { BRANCHES, CLEARANCE_STATUS, CLEARANCES, COMPONENTS, POLYGRAPH } from '@/lib/military';
 import { saveFullProfile, type ProfilePayload } from '@/app/dashboard/profile/saveAll';
 
 const blankSvc = { branch: 'Army', component: 'active', rank: '', duty_title: '', unit: '', occupation_code: '', start_year: '', end_year: '', description: '', deployments: '' };
@@ -43,6 +43,10 @@ export default function ProfileEditor({ initial }: { initial: ProfilePayload }) 
           <div className="sm:col-span-2"><label className={L}>Roles you want next (comma-separated)</label><input value={p.basics.desired_titles} onChange={(e) => setBasics('desired_titles', e.target.value)} placeholder="e.g. Project Manager, HVAC Technician" className={F} />
             <p className="mt-1 text-xs text-muted">Changing fields? List the roles you want — job matches use them as much as your past titles.</p></div>
           <div><label className={L}>Security clearance (self-reported)</label><select value={p.basics.clearance_level} onChange={(e) => setBasics('clearance_level', e.target.value)} className={F}>{CLEARANCES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
+          {p.basics.clearance_level !== 'none' && <>
+            <div><label className={L}>Clearance status</label><select value={p.basics.clearance_status} onChange={(e) => setBasics('clearance_status', e.target.value)} className={F}><option value="">Choose…</option>{CLEARANCE_STATUS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
+            <div><label className={L}>Polygraph</label><select value={p.basics.polygraph} onChange={(e) => setBasics('polygraph', e.target.value)} className={F}>{POLYGRAPH.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
+          </>}
           <p className="text-xs text-muted sm:col-span-2 sm:order-last">List only a clearance you currently hold or held within the last two years. Employers confirm eligibility through official systems, and misrepresenting a clearance leads to removal.</p>
           <div className="flex flex-col justify-end gap-2 text-sm">
             <label className="flex items-center gap-2"><input type="checkbox" checked={p.basics.willing_to_relocate} onChange={(e) => setBasics('willing_to_relocate', e.target.checked)} className="accent-navy" />Open to relocating</label>
