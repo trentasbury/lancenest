@@ -8,7 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getMyCompany } from '@/lib/employer';
 import { sendEmail, SITE } from '@/lib/email';
 
-const PLACEMENT_RATE = 0.15;
+const PLACEMENT_RATE = 0.10;
 
 async function myRequest(requestId: string) {
   const { user } = await requireRole(['employer'], '/employer/shortlists');
@@ -23,7 +23,7 @@ async function tellAdmins(title: string) {
   if (admins?.length) await admin.from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'shortlist', title, link: '/admin/shortlists' })));
 }
 
-/** Employer reports a hire from the shortlist: 15% of first-year base salary, minus the shortlist fee already paid. */
+/** Employer reports a hire from the shortlist: 10% of first-year base salary, minus the shortlist fee already paid. */
 export async function reportHire(requestId: string, formData: FormData) {
   const { r, company } = await myRequest(requestId);
   const profileId = String(formData.get('profile_id') ?? '');
@@ -33,7 +33,7 @@ export async function reportHire(requestId: string, formData: FormData) {
   await createAdminClient().from('shortlist_requests').update({ status: 'hired', hired_profile_id: profileId, placement_salary_cents: salary, placement_fee_cents: fee }).eq('id', requestId);
   await tellAdmins(`${company.name} hired from the “${r.role_title}” shortlist — placement fee $${(fee / 100).toLocaleString()} to invoice.`);
   await sendEmail('support@lancenest.com', { subject: `Placement: ${company.name} — ${r.role_title}`, preheader: `Invoice $${(fee / 100).toLocaleString()}`, tone: 'success', badge: 'Placement',
-    heading: `${company.name} made a hire`, paragraphs: [`Role: ${r.role_title}`, `First-year base salary: $${(salary / 100).toLocaleString()}`, `Placement fee (15% minus the shortlist fee): $${(fee / 100).toLocaleString()}`, 'Send the invoice from Stripe → Invoices. 90-day replacement guarantee applies.'],
+    heading: `${company.name} made a hire`, paragraphs: [`Role: ${r.role_title}`, `First-year base salary: $${(salary / 100).toLocaleString()}`, `Placement fee (10% minus the shortlist fee): $${(fee / 100).toLocaleString()}`, 'Send the invoice from Stripe → Invoices. 90-day replacement guarantee applies.'],
     cta: { label: 'Open shortlists', url: `${SITE}/admin/shortlists` } });
   revalidatePath('/employer/shortlists');
   redirect('/employer/shortlists?hired=1');

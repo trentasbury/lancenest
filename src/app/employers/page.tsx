@@ -10,11 +10,11 @@ export const metadata: Metadata = {
 
 const PLANS = [
   { name: 'Free', price: '$0', note: 'To get started', cta: 'Create a free account',
-    features: ['Company recruiting page', '2 open job posts', 'Applicant pipeline with résumés and verified work', 'Free, unlimited messaging with any verified member'] },
+    features: ['No placement fees on your hires', 'Company recruiting page', '2 open job posts', 'Applicant pipeline with résumés and verified work', 'Free, unlimited messaging with any verified member'] },
   { name: 'Professional', price: '$249', note: 'per month · or $2,490/year paid up front (2 months free)', cta: 'Start with Professional', featured: true,
     features: ['Unlimited job posts', 'Search every verified member’s full profile', 'Transitioning talent search (separating in 12 months)', 'Hiring analytics: views, applicants, conversion', '5 featured jobs a month, included', 'Talent pools: save candidates to lists with private notes', 'Saved searches with daily new-match emails', '2 team seats', 'Branded company page: cover photo and “Why veterans work here”', 'Applicant export (CSV)'] },
   { name: 'Federal', price: '$999', note: 'per month · or $9,990/year paid up front (2 months free) · Founding Employers: $800/month for the first 12 months', cta: 'Start with Federal',
-    features: ['Everything in Professional', 'Built for primes, subs, and GovCon small businesses', 'Search by self-reported clearance level (you confirm eligibility in official systems)', 'Cleared talent spotlight', '5 team seats', 'Unlimited featured jobs', 'Priority support from the founder'] },
+    features: ['Everything in Professional', 'Built for primes, subs, and GovCon small businesses', '1 free Verified Shortlist every quarter', 'Search by self-reported clearance level (you confirm eligibility in official systems)', 'Cleared talent spotlight', '5 team seats', 'Unlimited featured jobs', 'Priority support from the founder'] },
   { name: 'Enterprise', price: 'Custom', note: 'from $15,000/year', cta: 'Talk to us',
     features: ['Everything in Federal', 'Volume pricing for multiple hiring teams', 'Invoice billing', 'Dedicated support'] },
 ];
@@ -34,24 +34,18 @@ export default async function EmployersPage() {
             Verified, federal-ready veteran talent — in days, not months.
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-cream/80">
-            Built for federal primes, subcontractors, and GovCon small businesses. Every candidate’s military service is verified,
-            and our team can hand-deliver a shortlist of interested, available service members in 3 business days.
+            Built for federal primes, subcontractors, and GovCon small businesses. Every candidate’s military service is verified. Post jobs, search, and hire directly —
+            subscriptions only, like the job boards you already use.
           </p>
+          <p className="mx-auto mt-6 inline-block rounded-full border border-brass bg-brass/15 px-5 py-2 text-sm font-semibold text-brass">No placement fees on hires you make yourself — ever.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Link href="/employer/shortlists" className="btn btn-brass">Get a Verified Shortlist</Link>
+            <Link href="/signup?role=employer" className="btn btn-brass">Post a job free</Link>
             <Link href="/contact-sales?plan=federal" className="btn border border-cream/40 text-cream hover:border-brass">Book a call</Link>
           </div>
           <p className="mx-auto mt-4 max-w-2xl rounded-[4px] border border-brass/40 bg-white/5 px-4 py-3 text-sm text-cream/90">
             <strong className="text-brass">Any company can hire here.</strong> You don’t need to be veteran-owned or have served — if you want to hire
             service members, you belong on LanceNest. We simply verify that your company is real to keep veterans safe.
           </p>
-        </div>
-      </section>
-      <section className="border-b border-line bg-paper">
-        <div className="container-page grid gap-6 py-10 md:grid-cols-3">
-          <div><p className="eyebrow">Verified Shortlist</p><p className="mt-2 font-serif text-2xl text-navy">$750 per role</p><p className="mt-1 text-sm text-muted">3 verified, interested, available candidates in 3 business days — free re-run if none fit. $500 on Professional and Federal.</p></div>
-          <div><p className="eyebrow">Placement</p><p className="mt-2 font-serif text-2xl text-navy">15% of first-year salary</p><p className="mt-1 text-sm text-muted">Only when you hire from a shortlist — agencies typically charge 15–25%. Shortlist fee credited; 90-day replacement guarantee.</p></div>
-          <div><p className="eyebrow">Contract & freelance</p><p className="mt-2 font-serif text-2xl text-navy">Protected Payments</p><p className="mt-1 text-sm text-muted">Fund milestones, approve the work, and convert to full-time anytime (10% within 12 months, free after).</p></div>
         </div>
       </section>
 
@@ -93,9 +87,16 @@ export default async function EmployersPage() {
           ))}
         </div>
         <p className="mt-8 text-center text-sm text-muted">
-          Every employer account starts free. Upgrade, downgrade, or cancel anytime from your dashboard. Add-ons: featured job boost $49 · extra job slot $39/month. <strong>Public Safety rate:</strong> government police, sheriff, corrections, fire, and EMS agencies get 30% off Professional and Federal — annual invoicing available. <strong>Virtual career fair booths:</strong> $499, or $399 on Professional and Federal. <strong>Training providers:</strong> list programs for $149/month (featured +$99/month; sponsored info sessions $500).
+          Every employer account starts free, and no plan ever charges a fee when you hire. Upgrade, downgrade, or cancel anytime. Add-ons: featured job boost $49 · extra job slot $39/month. <strong>Public Safety rate:</strong> government police, sheriff, corrections, fire, and EMS agencies get 30% off Professional and Federal — annual invoicing available. <strong>Virtual career fair booths:</strong> $499, or $399 on Professional and Federal. <strong>Training providers:</strong> list programs for $149/month (featured +$99/month; sponsored info sessions $500).
         </p>
       </div>
+      <section className="border-y border-line bg-paper">
+        <div className="container-page py-10"><p className="eyebrow">Optional services — when you want us to do the finding</p><div className="mt-4 grid gap-6 md:grid-cols-3">
+          <div><p className="eyebrow">Verified Shortlist</p><p className="mt-2 font-serif text-2xl text-navy">$750 per role</p><p className="mt-1 text-sm text-muted">3 verified, interested, available candidates in 3 business days — free re-run if none fit. $500 on Professional; one free every quarter on Federal.</p></div>
+          <div><p className="eyebrow">Placement</p><p className="mt-2 font-serif text-2xl text-navy">10% of first-year salary</p><p className="mt-1 text-sm text-muted">Only when you hire from a shortlist — agencies typically charge 15–25%. Shortlist fee credited; 90-day replacement guarantee.</p></div>
+          <div><p className="eyebrow">Contract & freelance</p><p className="mt-2 font-serif text-2xl text-navy">Protected Payments</p><p className="mt-1 text-sm text-muted">Fund milestones, approve the work, and convert to full-time anytime (10% within 12 months, free after).</p></div>
+        </div></div>
+      </section>
     </>
   );
 }

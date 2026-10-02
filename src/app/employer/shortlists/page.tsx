@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: 'Verified Shortlists' };
 const STATUS: Record<string, string> = { awaiting_payment: 'Awaiting payment', sourcing: 'We’re sourcing', delivered: 'Delivered', hired: 'Hired', closed: 'Closed' };
 type Cand = { profile_id: string; note: string | null; profile: { full_name: string; username: string | null; headline: string | null; verified: boolean } | null };
 
-export default async function ShortlistsPage({ searchParams }: { searchParams: { error?: string; hired?: string; rerun?: string } }) {
+export default async function ShortlistsPage({ searchParams }: { searchParams: { error?: string; hired?: string; rerun?: string; free?: string } }) {
   const { user } = await requireRole(['employer'], '/employer/shortlists');
   const company = await getMyCompany(user.id);
   if (!company) redirect('/employer/dashboard');
@@ -21,6 +21,8 @@ export default async function ShortlistsPage({ searchParams }: { searchParams: {
   const { data: reqs } = await supabase.from('shortlist_requests').select('*').eq('company_id', company.id).neq('status', 'awaiting_payment').order('created_at', { ascending: false });
   const ids = (reqs ?? []).map((r) => r.id as string);
   const { data: cands } = ids.length ? await supabase.from('shortlist_candidates').select('request_id, profile_id, note, profile:profiles(full_name, username, headline, verified)').in('request_id', ids) : { data: [] };
+  const qStart = new Date(new Date().getFullYear(), Math.floor(new Date().getMonth() / 3) * 3, 1).getTime();
+  const freeAvailable = ['federal', 'enterprise'].includes(company.plan) && !(reqs ?? []).some((r) => r.amount_cents === 0 && Date.parse(r.created_at as string) >= qStart);
   const price = PAID.includes(company.plan) ? 500 : 750;
   return (
     <div className="container-page max-w-4xl space-y-6 py-10">
@@ -30,18 +32,19 @@ export default async function ShortlistsPage({ searchParams }: { searchParams: {
       {searchParams.error && <p className="text-sm text-signal">{searchParams.error === 'hire' ? 'Choose the person you hired and enter their first-year base salary.' : 'Please add a role title.'}</p>}
       {searchParams.hired && <p className="text-sm text-olive">Congratulations on the hire. We’ll send the placement invoice — and if it doesn’t work out within 90 days, we’ll find a replacement at no charge.</p>}
       {searchParams.rerun && <p className="text-sm text-olive">We’re on it — a fresh shortlist within 3 business days.</p>}
+      {searchParams.free && <p className="text-sm text-olive">Your included Federal shortlist is in — candidates within 3 business days.</p>}
 
       <form action="/api/billing/checkout" method="post" className="card grid gap-3 p-6 sm:grid-cols-2">
         <input type="hidden" name="product" value="shortlist" />
-        <p className="eyebrow sm:col-span-2">Request a shortlist · ${price}</p>
+        <p className="eyebrow sm:col-span-2">Request a shortlist · {freeAvailable ? 'Included with your plan this quarter' : `$${price}`}</p>
         <input name="role_title" required placeholder="Role (e.g. Cleared Network Engineer)" className="field sm:col-span-2" />
         <select name="engagement" className="field"><option value="full_time">Full-time hire</option><option value="contract_to_hire">Contract-to-hire</option><option value="contract">Contract / freelance</option></select>
         <select name="clearance_required" className="field"><option value="none">No clearance needed</option><option value="public_trust">Public Trust</option><option value="secret">Secret</option><option value="top_secret">Top Secret</option><option value="ts_sci">TS/SCI</option></select>
         <input name="location" placeholder="Location (or Remote)" className="field" />
         <input name="pay" placeholder="Pay range (e.g. $95–115K or $70/hr)" className="field" />
         <textarea name="details" rows={3} placeholder="Must-haves, certifications, start date" className="field sm:col-span-2" />
-        <div className="sm:col-span-2"><button className="btn btn-primary" disabled={!company.is_verified}>Request and pay ${price}</button>
-          <p className="mt-2 text-xs text-muted">Free re-run if none fit. Full-time hires: 15% of first-year base salary (agencies typically charge 15–25%), with your ${price} credited and a 90-day replacement guarantee. Contract hires: standard Protected Payments fees. Clearances are self-reported — you confirm eligibility.</p></div>
+        <div className="sm:col-span-2"><button className="btn btn-primary" disabled={!company.is_verified}>{freeAvailable ? 'Request my included shortlist' : `Request and pay $${price}`}</button>
+          <p className="mt-2 text-xs text-muted">Free re-run if none fit. Only if you hire from a shortlist: 10% of first-year base salary (agencies typically charge 15–25%), with any shortlist fee credited and a 90-day replacement guarantee. Hires from your own job posts and searches never carry a fee. Contract hires: standard Protected Payments fees. Clearances are self-reported — you confirm eligibility.</p></div>
       </form>
 
       {(reqs ?? []).map((r) => {
