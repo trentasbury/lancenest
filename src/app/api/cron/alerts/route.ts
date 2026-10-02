@@ -89,6 +89,14 @@ export async function GET(request: NextRequest) {
       employerEmails++;
     }
   }
+  // ---------- Verification documents never reviewed: delete after 30 days (logged) ----------
+  const { data: stale } = await admin.from('verification_requests').select('id, profile_id, document_path').eq('status', 'pending').not('document_path', 'is', null).lt('created_at', new Date(now - 30 * 24 * H).toISOString()).limit(200);
+  for (const v of stale ?? []) {
+    await admin.storage.from('verification-docs').remove([v.document_path as string]);
+    await admin.from('verification_requests').update({ document_path: null, status: 'rejected', notes: 'Expired after 30 days without review — please upload again.', reviewed_at: new Date().toISOString() }).eq('id', v.id);
+    await admin.from('admin_actions').insert({ admin_id: null, action: 'document_auto_deleted', target_type: 'verification_request', target_id: v.id, details: { reason: '30-day retention limit' } });
+  }
+
   // ---------- Referral credit for referred members who have since completed their profiles ----------
   const { data: pendingRefs } = await admin.from('profiles').select('id').not('referred_by', 'is', null).in('role', ['veteran', 'admin']).gte('created_at', new Date(now - 180 * 24 * H).toISOString()).limit(500);
   if (pendingRefs?.length) {

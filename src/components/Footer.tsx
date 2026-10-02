@@ -34,6 +34,8 @@ export default function Footer() {
           <span>© {new Date().getFullYear()} LANCENEST</span>
           <span className="flex gap-5">
             <Link href="/privacy" className="hover:text-brass">PRIVACY</Link>
+            <Link href="/security" className="hover:text-brass">SECURITY</Link>
+            <Link href="/accessibility" className="hover:text-brass">ACCESSIBILITY</Link>
             <Link href="/terms" className="hover:text-brass">TERMS</Link>
             <Link href="/conduct" className="hover:text-brass">CODE OF CONDUCT</Link>
           </span>

@@ -11,6 +11,11 @@ export default function TermsPage() {
         <p>These Terms govern your use of LanceNest. By creating an account or using the site, you agree to them and to our <Link href="/privacy" className="text-navy underline">Privacy Policy</Link>.</p>
       </section>
       <section>
+        <h2>Information you may not share</h2>
+        <p>Never post, message, upload, or attach classified information, Controlled Unclassified Information (CUI), Federal Contract Information (FCI), export-controlled data, procurement-sensitive material, government system credentials, or clearance records. LanceNest is not designed or authorized to handle them, and we remove such content when we find it.</p>
+        <p>For employers: LanceNest is a sourcing and hiring tool. It does not replace your own legal obligations — for example, federal contractors’ VEVRAA job-listing and affirmative-action duties, pay-transparency rules, equal employment opportunity laws, USERRA, or worker-classification rules. You are responsible for the lawfulness of your job posts, screening questions, and hiring decisions.</p>
+      </section>
+      <section>
         <h2>Security clearances</h2>
         <p>LanceNest verifies military service; it does not verify security clearances or clearance eligibility. Clearance information on profiles is self-reported. Members must list only a clearance they currently hold or held within the last two years, must never share classified information, and agree that misrepresenting a clearance is grounds for removal. Employers are responsible for confirming eligibility through official government systems before relying on it.</p>
       </section>

@@ -114,7 +114,9 @@ export default async function VerificationPage({ searchParams }: { searchParams:
             <p className="eyebrow text-signal">Never upload</p>
             <p className="mt-3 text-sm leading-relaxed text-ink/85">
               Your CAC or any military ID card. Photographing or copying a military ID is prohibited by federal law (18 U.S.C. § 701).
+              Also never upload security clearance records, DISS printouts, or anything classified or controlled (CUI) — LanceNest verifies service only.
             </p>
+            <p className="mt-3 text-sm leading-relaxed text-ink/85"><strong>Before you upload:</strong> cover your Social Security number, VA file number, and home address. We only need your name, branch, and dates of service.</p>
           </div>
           <div className="card p-6">
             <p className="eyebrow">How your document is handled</p>

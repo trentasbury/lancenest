@@ -109,6 +109,7 @@ export default async function JobDetailPage({ params, searchParams }: { params: 
                 <p className="font-semibold text-olive">DoD SkillBridge program{(job as unknown as { skillbridge_weeks?: number }).skillbridge_weeks ? ` · ${(job as unknown as { skillbridge_weeks: number }).skillbridge_weeks} weeks` : ''}</p>
                 <p className="mt-1 text-ink/80">You keep your full military pay and benefits; the company doesn’t pay you. You’ll need an approved separation date, completed TAP, and written approval from your first O-4 commander, and you can start up to 180 days before separation.</p>
                 <Link href="/transition" className="mt-2 inline-block text-navy underline">Plan it in your Transition Hub →</Link>
+                <p className="mt-2 text-xs text-muted">LanceNest listing — not a DoD endorsement. Confirm the organization on the official SkillBridge site before applying.</p>
               </div>
             )}
             {(!!session && ['veteran', 'admin'].includes(session.profile?.role ?? '')) && (

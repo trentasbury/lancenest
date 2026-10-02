@@ -3,6 +3,7 @@ import FormMessage from '../FormMessage';
 
 const MESSAGES: Record<string, string> = {
   required: 'A job title and overview are required.',
+  question: 'A screening question touches a protected or high-risk topic (for example disability, medical, VA rating, age, religion, family, discharge status, criminal history, or citizenship). Ask about skills, availability, certifications, or work authorization instead.',
   salary: 'The maximum salary can’t be lower than the minimum.',
   save: 'That didn’t save. Please try again.',
   apply_url: 'That application link isn’t allowed. Use a link on your verified company website or a standard applicant-tracking system (Workday, Greenhouse, Lever, iCIMS…). This protects veterans from phishing.',
