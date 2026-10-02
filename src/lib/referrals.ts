@@ -5,7 +5,7 @@ import { notifyMember } from '@/lib/email';
 
 // A free month of the referrer's CURRENT plan. Free plans earn nothing.
 const MEMBER_MONTH: Record<string, number> = { pro: 2500, pro_plus: 4500, federal_pro: 6500 };
-const COMPANY_MONTH: Record<string, number> = { professional: 24900, federal: 59900, enterprise: 59900 };
+const COMPANY_MONTH: Record<string, number> = { professional: 24900, federal: 99900, enterprise: 125000 };
 const LABEL: Record<string, string> = { pro: 'Pro', pro_plus: 'Pro Plus', federal_pro: 'Federal', professional: 'Professional', federal: 'Federal', enterprise: 'Enterprise' };
 export const REFERRAL_CAP_PER_YEAR = 3;
 const MEMBER = ['veteran', 'admin'];

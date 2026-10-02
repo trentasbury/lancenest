@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireRole } from '@/lib/auth';
+import AvatarUpload from '@/components/AvatarUpload';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import SubmitButton from '@/components/SubmitButton';
@@ -51,7 +52,7 @@ function RemoveButton({ action }: { action: () => Promise<void> }) {
   );
 }
 
-export default async function EditProfilePage({ searchParams }: { searchParams: { saved?: string; error?: string; share?: string } }) {
+export default async function EditProfilePage({ searchParams }: { searchParams: { saved?: string; error?: string; share?: string; photo?: string } }) {
   const { user, profile } = await requireRole(['veteran', 'admin'], '/dashboard/profile');
   if (profile.role === 'admin') await createAdminClient().from('veteran_profiles').upsert({ profile_id: user.id }, { onConflict: 'profile_id', ignoreDuplicates: true });
   const supabase = createClient();
@@ -91,6 +92,18 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
       </section>
 
       <div className="container-page max-w-3xl space-y-6 py-10">
+        <section className="card flex flex-wrap items-center gap-5 p-6">
+          {profile.avatar_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={profile.avatar_url} alt="" className="h-20 w-20 rounded-full border-2 border-brass object-cover" />
+          ) : <span className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-brass bg-navy font-serif text-2xl text-brass">{(profile.full_name ?? '?').split(' ').map((w) => w[0]).slice(0, 2).join('')}</span>}
+          <div>
+            <p className="eyebrow">Profile photo</p>
+            <p className="mb-2 text-xs text-muted">A clear, professional headshot. Avoid unit insignia, locations, or equipment.</p>
+            <AvatarUpload back="/dashboard/profile" />
+            {searchParams.photo && <p className={`mt-2 text-sm ${searchParams.photo === 'saved' ? 'text-olive' : 'text-signal'}`}>{searchParams.photo === 'saved' ? 'Photo updated.' : 'That photo didn’t upload — please try another.'}</p>}
+          </div>
+        </section>
         {error && <FormMessage error={error} />}
         {searchParams.saved && !error && !searchParams.share && <FormMessage message="Saved." />}
         {shareKind && shareId && (
@@ -274,7 +287,7 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
           </div>
           <form action={addSkill} className="flex gap-2">
             <label htmlFor="skill" className="sr-only">Skill</label>
-            <input id="skill" name="skill" placeholder="e.g. Logistics, Team leadership, ServiceNow" className="field" />
+            <input id="skill" name="skill" placeholder="e.g. Logistics, Team leadership, Enterprise software" className="field" />
             <SubmitButton className="btn btn-outline shrink-0" pendingText="Adding…">Add</SubmitButton>
           </form>
         </Section>

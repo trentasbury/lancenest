@@ -23,7 +23,7 @@ export default async function NewProjectPage({ searchParams }: { searchParams: {
       <p className="text-muted">Only verified service members can send proposals. You’ll fund each milestone before work starts, and the money is released when you approve it.</p>
       {searchParams.error && <FormMessage error={ERR[searchParams.error] ?? ERR.save} />}
       <form action={createProject} className="card grid gap-5 p-7 sm:grid-cols-2">
-        <div className="sm:col-span-2"><label className="field-label" htmlFor="title">Project title</label><input id="title" name="title" required maxLength={140} placeholder="e.g. ServiceNow ITSM configuration for a federal program" className="field" /></div>
+        <div className="sm:col-span-2"><label className="field-label" htmlFor="title">Project title</label><input id="title" name="title" required maxLength={140} placeholder="e.g. enterprise software ITSM configuration for a federal program" className="field" /></div>
         <div className="sm:col-span-2"><label className="field-label" htmlFor="description">Scope of work</label><textarea id="description" name="description" required rows={7} maxLength={8000} placeholder="Deliverables, timeline, tools, and anything a freelancer needs to know." className="field" /></div>
         <div><label className="field-label" htmlFor="work_location">Where</label><input id="work_location" name="work_location" maxLength={120} placeholder="Remote — or on-site: Clermont, FL" className="field" />
           <p className="mt-1 text-xs text-muted">Trades like HVAC, plumbing, and electrical: enter the job site city and state.</p></div>

@@ -6,7 +6,7 @@ export const FREE_PROPOSALS_PER_MONTH = 10;
 export const CATEGORIES = [
   'HVAC & refrigeration', 'Plumbing', 'Electrical', 'Construction & remodeling', 'Handyman & home repair', 'Roofing & exteriors', 'Landscaping & outdoor',
   'Automotive & diesel', 'Welding & fabrication', 'Moving & hauling', 'Cleaning & property services', 'Security & protection services',
-  'Web design & development', 'Software development', 'Cybersecurity', 'IT support & networking', 'ServiceNow & enterprise software', 'Data & analytics',
+  'Web design & development', 'Software development', 'Cybersecurity', 'IT support & networking', 'Enterprise software (ITSM, ERP, CRM)', 'Data & analytics',
   'Graphic design & branding', 'Photography & video', 'Marketing & social media', 'Writing & editing', 'Proposals & grant writing',
   'Program & project management', 'Logistics & supply chain', 'Consulting & strategy', 'Accounting & bookkeeping', 'Legal & paralegal', 'HR & recruiting',
   'Training & instruction', 'Fitness & coaching', 'Healthcare & medical', 'Aviation & drones', 'Intelligence & analysis', 'Events & hospitality', 'Other'];

@@ -70,7 +70,7 @@ export default async function VerificationQueue({ searchParams }: { searchParams
                     <option value="Social Security number wasn’t blacked out — please redact it and resubmit" />
                     <option value="Name on the document doesn’t match your profile" />
                     <option value="Document is unreadable — please upload a clearer copy" />
-                    <option value="Not an accepted document type (DD-214, VA ID card, LES, orders, or NGB-22)" />
+                    <option value="Not an accepted document type (DD-214, VA benefit summary letter, LES, orders, or NGB-22)" />
                     <option value="Military ID cards can’t be accepted (18 U.S.C. § 701)" />
                   </datalist>
                 </div>

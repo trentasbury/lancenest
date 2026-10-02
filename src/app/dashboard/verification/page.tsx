@@ -19,7 +19,7 @@ const ERRORS: Record<string, string> = {
 };
 
 const ACCEPTED = [
-  ['Veterans', 'DD-214 (Member-4 copy preferred) or VA Health / Veteran ID card.'],
+  ['Veterans', 'DD-214 (Member-4 copy preferred) or a VA benefit summary letter.'],
   ['Active duty & transitioning', 'A recent LES (Leave and Earnings Statement) or your separation / retirement orders.'],
   ['Guard & Reserve', 'NGB-22, a recent LES, or current orders.'],
 ];
@@ -82,7 +82,7 @@ export default async function VerificationPage({ searchParams }: { searchParams:
                 <label htmlFor="doc_type" className="field-label">Document type</label>
                 <select id="doc_type" name="doc_type" className="field" defaultValue="DD-214">
                   <option>DD-214</option>
-                  <option>VA ID card</option>
+                  <option>VA benefit summary letter</option>
                   <option>LES</option>
                   <option>Orders</option>
                   <option>NGB-22</option>

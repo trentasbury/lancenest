@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { requireRole, roleHome } from '@/lib/auth';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
-import { deleteMyAccount, removeAvatar, saveAccountProfile, signOutEverywhere, uploadAvatar } from './actions';
+import { deleteMyAccount, removeAvatar, saveAccountProfile, signOutEverywhere } from './actions';
+import AvatarUpload from '@/components/AvatarUpload';
 import { createClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = { title: 'Account settings', robots: { index: false } };
@@ -33,13 +34,10 @@ export default async function AccountPage({ searchParams }: { searchParams: { er
             // eslint-disable-next-line @next/next/no-img-element
             <img src={profile.avatar_url} alt="" className="h-20 w-20 rounded-full border-2 border-brass object-cover" />
           ) : <span className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-brass bg-navy font-serif text-2xl text-brass">{(profile.full_name ?? '?').split(' ').map((w) => w[0]).slice(0, 2).join('')}</span>}
-          <form action={uploadAvatar} className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <input type="file" name="photo" required accept="image/jpeg,image/png,image/webp" className="field text-sm" />
-            <SubmitButton className="btn btn-outline shrink-0" pendingText="Uploading…">Upload photo</SubmitButton>
-          </form>
+          <AvatarUpload />
           {profile.avatar_url && <form action={removeAvatar}><button className="text-xs text-muted hover:text-signal">Remove photo</button></form>}
         </div>
-        <p className="mt-2 text-xs text-muted">A clear, professional headshot. JPG, PNG, or WebP under 2 MB. OPSEC: avoid photos showing unit insignia, locations, or equipment.</p>
+        <p className="mt-2 text-xs text-muted">A clear, professional headshot. Any photo from your phone or computer works. OPSEC: avoid photos showing unit insignia, locations, or equipment.</p>
         <form action={saveAccountProfile} className="mt-5 grid gap-3 sm:grid-cols-2">
           <div className="sm:col-span-2"><label className="field-label" htmlFor="full_name">Full name</label><input id="full_name" name="full_name" required defaultValue={profile.full_name ?? ''} className="field" /></div>
           <div><label className="field-label" htmlFor="headline">Headline</label><input id="headline" name="headline" maxLength={140} defaultValue={profile.headline ?? ''} placeholder="e.g. Founder, LanceNest · USMC Veteran" className="field" /></div>

@@ -54,6 +54,9 @@ export default async function AdminPage({ searchParams }: { searchParams: { dele
           <Link href="/admin/verifications" className="transition-opacity hover:opacity-80">
             <StatCard label="Pending verifications →" value={pendingVerifications} hint="Open the review queue" />
           </Link>
+          <Link href="/admin/leads" className="transition-opacity hover:opacity-80">
+            <StatCard label="Call requests →" value="Sales" hint="Federal & Enterprise prospects" />
+          </Link>
           <Link href="/admin/fairs" className="transition-opacity hover:opacity-80">
             <StatCard label="Career fairs →" value="Schedule" hint="Create fairs; employers buy booths" />
           </Link>

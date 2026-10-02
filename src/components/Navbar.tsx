@@ -72,7 +72,7 @@ export default async function Navbar() {
                 )}
               </Link>
               {dashboard && (
-                <details className="relative">
+                <details className="relative" data-autoclose>
                   <summary className="flex cursor-pointer list-none items-center gap-2 text-sm text-ink hover:text-brass-dark">
                     {profile?.avatar_url ? (
                       // eslint-disable-next-line @next/next/no-img-element

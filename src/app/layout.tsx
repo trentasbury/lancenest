@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import PageViewBeacon from '@/components/PageViewBeacon';
+import AutoCloseDetails from '@/components/AutoCloseDetails';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
         <Footer />
               <PageViewBeacon />
+        <AutoCloseDetails />
       </body>
     </html>
   );

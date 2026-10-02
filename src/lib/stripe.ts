@@ -18,8 +18,8 @@ export type ProductKey =
 export const CATALOG: Record<ProductKey, { name: string; amount: number; interval?: 'month' | 'year'; plan?: 'professional' | 'federal' | 'veteran_pro' | 'veteran_pro_plus' | 'veteran_federal_pro' | 'training' | 'training_featured'; audience?: 'veteran'; kind: 'plan' | 'job_slot' | 'job_boost' | 'contact_pack' | 'training_webinar' | 'fair_booth' }> = {
   employer_professional_month: { name: 'LanceNest Professional (monthly)', amount: 24900, interval: 'month', plan: 'professional', kind: 'plan' },
   employer_professional_year: { name: 'LanceNest Professional (annual)', amount: 249000, interval: 'year', plan: 'professional', kind: 'plan' },
-  employer_federal_month: { name: 'LanceNest Federal (monthly)', amount: 59900, interval: 'month', plan: 'federal', kind: 'plan' },
-  employer_federal_year: { name: 'LanceNest Federal (annual)', amount: 599000, interval: 'year', plan: 'federal', kind: 'plan' },
+  employer_federal_month: { name: 'LanceNest Federal (monthly)', amount: 99900, interval: 'month', plan: 'federal', kind: 'plan' },
+  employer_federal_year: { name: 'LanceNest Federal (annual)', amount: 999000, interval: 'year', plan: 'federal', kind: 'plan' },
   veteran_pro_month: { name: 'LanceNest Pro (monthly)', amount: 2500, interval: 'month', plan: 'veteran_pro', audience: 'veteran', kind: 'plan' },
   veteran_pro_year: { name: 'LanceNest Pro (annual)', amount: 25000, interval: 'year', plan: 'veteran_pro', audience: 'veteran', kind: 'plan' },
   veteran_pro_plus_month: { name: 'LanceNest Pro Plus (monthly)', amount: 4500, interval: 'month', plan: 'veteran_pro_plus', audience: 'veteran', kind: 'plan' },
@@ -43,8 +43,18 @@ export const CONTACT_PACK_SIZE = 5;
 
 /** Founding Employers: first 50 Professional subscribers pay $149/mo (or $1,490/yr) for their first 12 months. */
 export const FOUNDING = { spots: 50, months: 12, monthlyOffCents: 10000, annualOffCents: 100000 };
+export const FOUNDING_FEDERAL = { monthlyOffCents: 19900, annualOffCents: 199000 };
 
 /** Stripe coupons for the founding discount, created once and reused. */
+export async function foundingFederalCoupon(interval: 'month' | 'year') {
+  const id = interval === 'year' ? 'lancenest-founding-federal-annual' : 'lancenest-founding-federal-monthly';
+  try { return (await stripe().coupons.retrieve(id)).id; } catch {
+    return (await stripe().coupons.create(interval === 'year'
+      ? { id, name: 'Founding Employer — Federal first year', amount_off: FOUNDING_FEDERAL.annualOffCents, currency: 'usd', duration: 'once' }
+      : { id, name: 'Founding Employer — Federal first 12 months', amount_off: FOUNDING_FEDERAL.monthlyOffCents, currency: 'usd', duration: 'repeating', duration_in_months: FOUNDING.months })).id;
+  }
+}
+
 export async function foundingCoupon(interval: 'month' | 'year') {
   const id = interval === 'year' ? 'lancenest-founding-annual-v2' : 'lancenest-founding-monthly-v2';
   try {

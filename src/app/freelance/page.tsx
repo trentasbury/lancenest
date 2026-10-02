@@ -77,7 +77,7 @@ export default async function FreelancePage({ searchParams }: { searchParams: { 
         )}
 
         <form method="get" className="card mb-6 grid gap-3 p-5 sm:grid-cols-4">
-          <input name="q" defaultValue={searchParams.q} placeholder="Search projects (e.g. ServiceNow, logistics, cyber)" className="field sm:col-span-2" />
+          <input name="q" defaultValue={searchParams.q} placeholder="Search projects (e.g. enterprise software, logistics, cyber)" className="field sm:col-span-2" />
           <select name="category" defaultValue={searchParams.category ?? ''} className="field"><option value="">All categories</option>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="cleared" value="1" defaultChecked={!!searchParams.cleared} className="accent-navy" />Cleared work only</label>
           {!isVet && <input type="hidden" name="mine" value={mine ? '1' : '0'} />}

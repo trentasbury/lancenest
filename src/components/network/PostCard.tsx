@@ -4,6 +4,7 @@ import type { Post } from '@/lib/network';
 import { MILESTONE_EYEBROW, REACTIONS, VISIBILITY, mediaUrl, timeAgo } from '@/lib/network';
 import SubmitButton from '@/components/SubmitButton';
 import Avatar from './Avatar';
+import ReactionPicker from './ReactionPicker';
 import {
   blockUser, deletePost, followUser, muteUser, reactToPost, reportContent, sharePost, toggleSavePost, unfollowUser, updatePost,
 } from '@/app/network/actions';
@@ -82,7 +83,7 @@ export default function PostCard({ post, signedIn, detail = false }: { post: Pos
         <div className="flex items-start justify-between gap-3">
           <AuthorLine post={post} />
           {signedIn && v && (
-            <details className="relative">
+            <details className="relative" data-autoclose>
               <summary className="cursor-pointer list-none rounded-[3px] px-2 py-1 text-lg leading-none text-muted hover:bg-cream" aria-label="More options">⋯</summary>
               <div className="absolute right-0 z-20 mt-1 w-72 space-y-1 rounded-[4px] border border-line bg-ivory p-2 text-sm shadow-card">
                 {v.isAuthor ? (
@@ -157,23 +158,10 @@ export default function PostCard({ post, signedIn, detail = false }: { post: Pos
 
         {signedIn && (
           <div className="mt-3 flex flex-wrap items-center gap-1 border-t border-line pt-3 text-sm">
-            <details className="relative">
-              <summary className={`cursor-pointer list-none rounded-[3px] px-3 py-2 hover:bg-cream ${myReaction ? 'font-semibold text-brass-dark' : 'text-ink'}`}>
-                {myReaction ? `${myReaction[2]} ${myReaction[1]}` : '✦ React'}
-              </summary>
-              <div className="absolute bottom-full left-0 z-20 mb-1 flex flex-wrap gap-1 rounded-[4px] border border-line bg-ivory p-2 shadow-card sm:w-max">
-                {REACTIONS.map(([key, label, glyph]) => (
-                  <form key={key} action={reactToPost.bind(null, post.id, key)}>
-                    <button type="submit" className={`rounded-full border px-3 py-1.5 text-xs ${v?.reaction === key ? 'border-brass bg-brass/15 text-brass-dark' : 'border-line hover:border-brass'}`}>
-                      <span aria-hidden="true">{glyph}</span> {label}
-                    </button>
-                  </form>
-                ))}
-              </div>
-            </details>
+            <ReactionPicker postId={post.id} initial={v?.reaction ?? null} reactions={REACTIONS.map(([k, l, g]) => [k, l, g] as [string, string, string])} />
             <Link href={`/network/${post.id}#comments`} className="rounded-[3px] px-3 py-2 text-ink hover:bg-cream">Comment</Link>
             {canShare && (
-              <details className="relative">
+              <details className="relative" data-autoclose>
                 <summary className="cursor-pointer list-none rounded-[3px] px-3 py-2 text-ink hover:bg-cream">Share</summary>
                 <form action={sharePost.bind(null, post.id)} className="absolute bottom-full left-0 z-20 mb-1 w-72 space-y-2 rounded-[4px] border border-line bg-ivory p-3 shadow-card">
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Share to your network</p>

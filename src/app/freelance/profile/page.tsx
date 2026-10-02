@@ -39,7 +39,7 @@ export default async function FreelancerProfilePage({ searchParams }: { searchPa
       {searchParams.saved && <FormMessage message="Saved." />}
 
       <form action={saveFreelancerProfile} className="card grid gap-5 p-7 sm:grid-cols-2">
-        <div className="sm:col-span-2"><label className="field-label" htmlFor="title">Professional title</label><input id="title" name="title" required defaultValue={fp?.title ?? profile.headline ?? ''} placeholder="e.g. ServiceNow Developer · Cyber Analyst" className="field" /></div>
+        <div className="sm:col-span-2"><label className="field-label" htmlFor="title">Professional title</label><input id="title" name="title" required defaultValue={fp?.title ?? profile.headline ?? ''} placeholder="e.g. enterprise software Developer · Cyber Analyst" className="field" /></div>
         <div className="sm:col-span-2"><label className="field-label" htmlFor="bio">What you do for clients</label><textarea id="bio" name="bio" rows={5} maxLength={3000} defaultValue={fp?.bio ?? ''} className="field" /></div>
         <div><label className="field-label" htmlFor="hourly_rate">Hourly rate (USD)</label><input id="hourly_rate" name="hourly_rate" inputMode="numeric" defaultValue={fp?.hourly_rate ?? ''} placeholder="85" className="field" /></div>
         <div><label className="field-label" htmlFor="sam_uei">SAM.gov UEI (if your business has one)</label><input id="sam_uei" name="sam_uei" maxLength={12} defaultValue={fp?.sam_uei ?? ''} className="field uppercase" /></div>

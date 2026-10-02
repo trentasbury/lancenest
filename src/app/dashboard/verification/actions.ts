@@ -39,5 +39,11 @@ export async function submitVerification(formData: FormData) {
 
   revalidatePath(PAGE);
   revalidatePath('/dashboard');
+  try {
+    const { notifyMember } = await import('@/lib/email');
+    await notifyMember(user.id, { type: 'verification', link: '/dashboard/verification', title: 'We received your verification documents. Most reviews are finished within 48 hours.',
+      email: { subject: 'We received your verification documents', preheader: 'Most reviews are finished within 48 hours.', tone: 'notice', badge: 'Verification',
+        heading: 'Your documents are in review.', paragraphs: ['Thank you for verifying your service. A LanceNest reviewer will check your documents — most reviews are finished within 48 hours.', 'Your documents are deleted as soon as the review is complete. We’ll email you the moment you’re verified.'] } });
+  } catch (err) { console.error('verification receipt failed:', err); }
   redirect(`${PAGE}?submitted=1`);
 }

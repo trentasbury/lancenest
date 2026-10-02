@@ -47,16 +47,17 @@ export async function uploadAvatar(formData: FormData) {
   const session = await getSessionProfile();
   if (!session) redirect('/login');
   const file = formData.get('photo');
-  if (!(file instanceof File) || !PHOTO_TYPES[file.type]) redirect('/settings/account?photo=type');
-  if (file.size > 2 * 1024 * 1024) redirect('/settings/account?photo=size');
+  const back = String(formData.get('back') ?? '').startsWith('/dashboard/profile') ? '/dashboard/profile' : '/settings/account';
+  if (!(file instanceof File) || !PHOTO_TYPES[file.type]) redirect(`${back}?photo=type`);
+  if (file.size > 2 * 1024 * 1024) redirect(`${back}?photo=size`);
   const supabase = createClient();
   const path = `${session.user.id}/avatar-${Date.now()}.${PHOTO_TYPES[file.type]}`;
   const { error } = await supabase.storage.from('avatars').upload(path, file, { contentType: file.type });
-  if (error) redirect('/settings/account?photo=failed');
+  if (error) redirect(`${back}?photo=failed`);
   const url = supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
   await createAdminClient().from('profiles').update({ avatar_url: url }).eq('id', session.user.id);
   revalidatePath('/', 'layout');
-  redirect('/settings/account?photo=saved');
+  redirect(`${back}?photo=saved`);
 }
 
 export async function removeAvatar() {
