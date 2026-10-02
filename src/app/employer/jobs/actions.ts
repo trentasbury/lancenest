@@ -56,6 +56,7 @@ export async function saveJob(jobId: string | null, formData: FormData) {
     clearance_eligible: formData.get('clearance_eligible') === 'on',
     status: oneOf(t(formData, 'status', 8), ['draft', 'open'], 'open'),
     apply_url: t(formData, 'apply_url', 500) || null,
+    screening_questions: [0, 1, 2, 3, 4].map((n) => ({ q: t(formData, `question_${n}`, 200), type: formData.get(`question_type_${n}`) === 'yesno' ? 'yesno' : 'text' })).filter((x) => x.q.length >= 3),
     multi_location: formData.get('multi_location') === 'on',
   };
 

@@ -44,7 +44,7 @@ async function moveApplicant(applicationId: string, jobId: string, formData: For
   revalidatePath(`/employer/jobs/${jobId}/applicants`);
 }
 
-type App = { id: string; status: string; applied_at: string; profile_id: string; resume_id: string | null; profile: { full_name: string; username: string | null; headline: string | null; service_summary: string | null; verified: boolean } | null };
+type App = { answers?: { q: string; a: string }[]; id: string; status: string; applied_at: string; profile_id: string; resume_id: string | null; profile: { full_name: string; username: string | null; headline: string | null; service_summary: string | null; verified: boolean } | null };
 
 export default async function ApplicantsPage({ params }: { params: { id: string } }) {
   const { user } = await requireRole(['employer'], '/employer/dashboard');
@@ -56,7 +56,7 @@ export default async function ApplicantsPage({ params }: { params: { id: string 
   // Opening the pipeline marks new applications as "Reviewing" (the applicant is told their application was viewed).
   await supabase.from('applications').update({ status: 'viewed' }).eq('job_id', job.id).eq('status', 'applied').eq('source', 'lancenest');
   const { data } = await supabase.from('applications')
-    .select('id, status, applied_at, profile_id, resume_id, profile:profiles!applications_profile_id_fkey(full_name, username, headline, service_summary, verified)')
+    .select('id, status, applied_at, profile_id, resume_id, answers, profile:profiles!applications_profile_id_fkey(full_name, username, headline, service_summary, verified)')
     .eq('job_id', job.id).eq('source', 'lancenest').neq('status', 'withdrawn').order('applied_at', { ascending: false });
   const rawApps = (data ?? []) as unknown as App[];
   const { data: plans } = rawApps.length ? await supabase.from('veteran_profiles').select('profile_id, plan').in('profile_id', rawApps.map((a) => a.profile_id)) : { data: [] };
@@ -95,6 +95,9 @@ export default async function ApplicantsPage({ params }: { params: { id: string 
                 <p className="truncate text-sm text-muted">{[a.profile?.headline, a.profile?.service_summary].filter(Boolean).join(' · ')}</p>
                 <p className="text-xs text-muted">Applied {new Date(a.applied_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}
                   {a.resume_id && <> · <a href={`/api/resume-files/${a.resume_id}`} className="text-navy underline">Résumé sent with this application</a></>}</p>
+                {(a.answers ?? []).length > 0 && (
+                  <dl className="mt-2 space-y-1 rounded-[3px] bg-paper p-3 text-xs">{(a.answers ?? []).map((x, i) => <div key={i}><dt className="font-semibold text-ink">{x.q}</dt><dd className="text-ink/80">{x.a}</dd></div>)}</dl>
+                )}
                 {trackOf.get(a.profile_id) && <p className="text-xs text-olive">✓ {trackOf.get(a.profile_id)!.completed} verified freelance job{trackOf.get(a.profile_id)!.completed === 1 ? '' : 's'}{trackOf.get(a.profile_id)!.avg_rating ? ` · ${trackOf.get(a.profile_id)!.avg_rating}★` : ''}</p>}
               </div>
               <form action={moveApplicant.bind(null, a.id, job.id)} className="flex gap-2">

@@ -42,6 +42,19 @@ export default function JobForm({ job, action }: { job?: Job | null; action: (fd
           <input name="apply_url" type="url" defaultValue={(job as unknown as { apply_url?: string | null })?.apply_url ?? ''} placeholder="https://careers.yourcompany.com/job/123" className="field" />
           <p className="mt-1 text-xs text-muted">Must be on your verified company domain or a standard applicant-tracking system (Workday, Greenhouse, Lever, iCIMS, and similar). Veterans can still apply on LanceNest.</p>
         </Field>
+        <div className="sm:col-span-2">
+          <p className="field-label">Screening questions (optional, up to 5)</p>
+          <p className="mb-2 text-xs text-muted">Applicants answer these when they Easy Apply. Don’t ask about age, religion, disability, or other protected traits.</p>
+          {[0, 1, 2, 3, 4].map((n) => {
+            const q = ((job as unknown as { screening_questions?: { q: string; type: string }[] })?.screening_questions ?? [])[n];
+            return (
+              <div key={n} className="mb-2 flex flex-col gap-2 sm:flex-row">
+                <input name={`question_${n}`} defaultValue={q?.q ?? ''} maxLength={200} placeholder={n === 0 ? 'e.g. Do you hold an active Secret clearance?' : 'Another question (optional)'} className="field text-sm" />
+                <select name={`question_type_${n}`} defaultValue={q?.type ?? 'text'} className="field text-sm sm:w-40"><option value="text">Short answer</option><option value="yesno">Yes / No</option></select>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       <section className="card grid gap-5 p-7 sm:grid-cols-3">

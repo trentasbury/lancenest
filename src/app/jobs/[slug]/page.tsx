@@ -38,7 +38,7 @@ function Section({ title, text }: { title: string; text: string | null }) {
   );
 }
 
-export default async function JobDetailPage({ params }: { params: { slug: string } }) {
+export default async function JobDetailPage({ params, searchParams }: { params: { slug: string }; searchParams?: { apply?: string } }) {
   const job = await getJobBySlug(params.slug);
   if (!job) notFound();
 
@@ -169,6 +169,9 @@ export default async function JobDetailPage({ params }: { params: { slug: string
             </>
           )}
 
+          {searchParams?.apply === 'done' && <p className="rounded-[3px] bg-olive/10 px-4 py-3 text-sm text-olive">✓ Application sent. Track it under My applications.</p>}
+          {searchParams?.apply === 'answers' && <p className="rounded-[3px] bg-signal/10 px-4 py-3 text-sm text-signal">Please answer every question to apply.</p>}
+          {searchParams?.apply === 'error' && <p className="rounded-[3px] bg-signal/10 px-4 py-3 text-sm text-signal">Your application didn’t go through. Make sure your profile is verified, then try again.</p>}
           {isVeteran && (
             <>
               {applied ? (
@@ -187,7 +190,15 @@ export default async function JobDetailPage({ params }: { params: { slug: string
                       <p className="mt-1 text-[11px] text-muted">Only {job.company?.name ?? 'this company'} will see it.</p>
                     </div>
                   ) : <p className="text-xs text-muted"><Link href="/dashboard/profile#resume" className="underline">Add a résumé</Link> to stand out.</p>}
-                  <SubmitButton pendingText="Submitting…">{(job as unknown as { apply_url?: string }).apply_url ? 'Easy Apply on LanceNest' : 'Apply now'}</SubmitButton>
+                  {((job as unknown as { screening_questions?: { q: string; type: string }[] }).screening_questions ?? []).map((q, i) => (
+                    <div key={i}>
+                      <label className="field-label" htmlFor={`answer_${i}`}>{q.q}</label>
+                      {q.type === 'yesno'
+                        ? <select id={`answer_${i}`} name={`answer_${i}`} required defaultValue="" className="field text-sm"><option value="" disabled>Choose…</option><option>Yes</option><option>No</option></select>
+                        : <textarea id={`answer_${i}`} name={`answer_${i}`} required rows={2} maxLength={1000} className="field text-sm" />}
+                    </div>
+                  ))}
+                  <SubmitButton pendingText="Submitting…">{(job as unknown as { apply_url?: string }).apply_url ? 'Easy Apply on LanceNest' : 'Easy Apply'}</SubmitButton>
                 </form>
               )}
               {!applied && (job as unknown as { apply_url?: string }).apply_url && (
