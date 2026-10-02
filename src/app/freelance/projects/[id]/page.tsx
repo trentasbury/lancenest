@@ -39,7 +39,7 @@ export default async function ProjectPage({ params, searchParams }: { params: { 
     : [{ data: [] }, { data: [] }];
   const planOf = new Map((fPlans ?? []).map((r) => [r.profile_id as string, r.plan as string]));
   const trackOf = new Map(((track ?? []) as { profile_id: string; completed: number; avg_rating: number | null }[]).map((t) => [t.profile_id, t]));
-  const topProposal = (p: Proposal) => ['pro_plus', 'federal_pro'].includes(planOf.get(p.freelancer_id) ?? '');
+  const topProposal = (p: Proposal) => ['pro', 'pro_plus', 'federal_pro'].includes(planOf.get(p.freelancer_id) ?? '');
   // Pro Plus and Federal members are top applicants: their proposals are listed first.
   const proposals = [...rawProposals.filter(topProposal), ...rawProposals.filter((p) => !topProposal(p))];
   const mine = proposals.find((p) => p.freelancer_id === user.id);

@@ -1,8 +1,9 @@
+import { SHORTLISTS_ENABLED } from '@/lib/flags';
 import { NextResponse, type NextRequest } from 'next/server';
 import { getSessionProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { CATALOG, foundingCoupon, foundingFederalCoupon, publicSafetyCoupon, stripe, type ProductKey } from '@/lib/stripe';
+import { CATALOG, foundingCoupon, publicSafetyCoupon, stripe, type ProductKey } from '@/lib/stripe';
 import { foundingSpotsLeft } from '@/lib/billing';
 
 /** Starts a Stripe Checkout for an employer plan, an extra job slot, or a job boost. */
@@ -63,6 +64,7 @@ export async function POST(request: NextRequest) {
     await createAdminClient().from('companies').update({ referral_credit_cents: 0 }).eq('id', company.id);
   }
 
+  if (item.kind === 'shortlist' && !SHORTLISTS_ENABLED) return NextResponse.redirect(`${site}/contact-sales`, 303);
   if (item.kind === 'shortlist') {
     const { data: planRow } = await createAdminClient().from('companies').select('plan').eq('id', company.id).maybeSingle();
     product = (['professional', 'federal', 'enterprise'].includes(planRow?.plan as string) ? 'shortlist_member' : 'shortlist') as typeof product;
@@ -130,8 +132,8 @@ export async function POST(request: NextRequest) {
   if ((item.plan === 'professional' || item.plan === 'federal') && company.public_safety_status === 'approved') {
     coupon = await publicSafetyCoupon();
     metadata.public_safety = 'true';
-  } else if ((item.plan === 'professional' || item.plan === 'federal') && item.interval && (await foundingSpotsLeft()) > 0) {
-    coupon = item.plan === 'federal' ? await foundingFederalCoupon(item.interval) : await foundingCoupon(item.interval);
+  } else if (item.plan === 'professional' && item.interval && (await foundingSpotsLeft()) > 0) {
+    coupon = await foundingCoupon(item.interval);
     metadata.founding = 'true';
   }
 

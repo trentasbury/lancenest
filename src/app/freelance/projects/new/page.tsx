@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireVerifiedMember } from '@/lib/auth';
 import { getMyCompany } from '@/lib/employer';
-import { CATEGORIES } from '@/lib/freelance';
+import { OPEN_CATEGORIES } from '@/lib/freelance';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import { createProject } from '../../actions';
@@ -27,12 +27,12 @@ export default async function NewProjectPage({ searchParams }: { searchParams: {
         <div className="sm:col-span-2"><label className="field-label" htmlFor="description">Scope of work</label><textarea id="description" name="description" required rows={7} maxLength={8000} placeholder="Deliverables, timeline, tools, and anything a freelancer needs to know." className="field" /></div>
         <div><label className="field-label" htmlFor="work_location">Where</label><input id="work_location" name="work_location" maxLength={120} placeholder="Remote — or on-site: Clermont, FL" className="field" />
           <p className="mt-1 text-xs text-muted">Trades like HVAC, plumbing, and electrical: enter the job site city and state.</p></div>
-        <div><label className="field-label" htmlFor="category">Category</label><select id="category" name="category" className="field">{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></div>
+        <div><label className="field-label" htmlFor="category">Category</label><select id="category" name="category" className="field">{OPEN_CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></div>
         <div><label className="field-label" htmlFor="clearance_required">Clearance required</label>
           <select id="clearance_required" name="clearance_required" className="field"><option value="none">None</option><option value="public_trust">Public Trust</option><option value="confidential">Confidential</option><option value="secret">Secret</option><option value="top_secret">Top Secret</option><option value="ts_sci">TS/SCI</option></select></div>
         <div><label className="field-label" htmlFor="budget_type">Budget type</label><select id="budget_type" name="budget_type" className="field"><option value="fixed">Fixed price</option><option value="hourly">Hourly</option></select></div>
         <div className="grid grid-cols-2 gap-3"><div><label className="field-label" htmlFor="budget_min">Min ($)</label><input id="budget_min" name="budget_min" inputMode="numeric" className="field" /></div><div><label className="field-label" htmlFor="budget_max">Max ($)</label><input id="budget_max" name="budget_max" inputMode="numeric" className="field" /></div></div>
-        <p className="text-xs text-muted sm:col-span-2">Client fees: 5% by card or 3% by bank transfer, plus a $9.99 contract-start fee ($2.50 extra on projects under $200). Shown again before you pay.</p>
+        <p className="text-xs text-muted sm:col-span-2">Client fees: 5% by card or 3% by bank transfer, plus $9.99 per contract. </p>
         <div className="sm:col-span-2"><SubmitButton className="btn btn-primary" pendingText="Posting…">Post project</SubmitButton></div>
       </form>
     </div>

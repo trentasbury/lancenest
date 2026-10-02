@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { CATEGORIES } from '@/lib/freelance';
+import { OPEN_CATEGORIES, CATEGORIES } from '@/lib/freelance';
 import { scamSignals } from '@/lib/scam';
 
 const t = (fd: FormData, k: string, max: number) => String(fd.get(k) ?? '').trim().slice(0, max);
@@ -66,7 +66,7 @@ export async function createProject(formData: FormData) {
   const clearance = t(formData, 'clearance_required', 14);
   const { data, error } = await supabase.from('freelance_projects').insert({
     client_id: user.id, company_id: company.id, title, description,
-    category: CATEGORIES.includes(category) ? category : null,
+    category: OPEN_CATEGORIES.includes(category) ? category : null,
     work_location: t(formData, 'work_location', 120) || 'Remote',
     budget_type: t(formData, 'budget_type', 6) === 'hourly' ? 'hourly' : 'fixed', budget_min: min, budget_max: max,
     clearance_required: CLEARANCES.includes(clearance) ? clearance : 'none',

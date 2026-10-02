@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { requireVerifiedMember } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { CATEGORIES } from '@/lib/freelance';
+import { OPEN_CATEGORIES } from '@/lib/freelance';
 import { vetRateFor } from '@/lib/payments';
 import { SITE, notifyMember } from '@/lib/email';
 import { scamSignals } from '@/lib/scam';
@@ -23,7 +23,7 @@ export async function saveService(formData: FormData) {
   if (scamSignals(`${title}\n${description}`, 'block').length) redirect('/freelance/services/mine?error=scam');
   const priceType = t(formData, 'price_type', 12), delivery = t(formData, 'delivery', 10);
   const { error } = await createClient().from('service_listings').insert({
-    profile_id: user.id, title, description, category: CATEGORIES.includes(category) ? category : 'Other', price_cents: price,
+    profile_id: user.id, title, description, category: OPEN_CATEGORIES.includes(category) ? category : 'Other', price_cents: price,
     price_type: ['fixed', 'hourly', 'starting_at'].includes(priceType) ? priceType : 'fixed', delivery: ['remote', 'on_site', 'both'].includes(delivery) ? delivery : 'remote',
     service_area: t(formData, 'service_area', 120) || null,
   });

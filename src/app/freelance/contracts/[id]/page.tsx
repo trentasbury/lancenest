@@ -1,3 +1,4 @@
+import { CONVERSION_FEES_ENABLED } from '@/lib/flags';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -116,7 +117,7 @@ export default async function ContractPage({ params, searchParams }: { params: {
       </section>
 
       {searchParams.converted && <FormMessage message="Thanks — we’ll confirm the conversion and send any invoice by email." />}
-      {isClient && ['active', 'completed'].includes(contract.status) && (
+      {CONVERSION_FEES_ENABLED && isClient && ['active', 'completed'].includes(contract.status) && (
         <details className="card p-5 text-sm"><summary className="cursor-pointer font-medium text-navy">Hire this freelancer full-time</summary>
           <p className="mt-2 text-muted">Converting a LanceNest contractor to a full-time employee within 12 months of your first contract carries a one-time fee of 10% of first-year base salary. After 12 months, it’s free.</p>
           <form action={requestConversion.bind(null, contract.id)} className="mt-3 flex flex-col gap-2 sm:flex-row"><input name="salary" required inputMode="decimal" placeholder="First-year base salary ($)" className="field" /><SubmitButton className="btn btn-primary shrink-0" pendingText="…">Request conversion</SubmitButton></form>

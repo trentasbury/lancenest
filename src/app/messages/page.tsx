@@ -39,7 +39,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: { e
   // Message priority: for employers, conversations with Pro Plus / Federal members are pinned to the top.
   const otherIds = baseList.map((c) => otherBy.get(c.id as string)?.profile_id).filter(Boolean) as string[];
   const { data: prio } = me.role === 'employer' && otherIds.length
-    ? await supabase.from('veteran_profiles').select('profile_id').in('profile_id', otherIds).in('plan', ['pro_plus', 'federal_pro'])
+    ? await supabase.from('veteran_profiles').select('profile_id').in('profile_id', otherIds).neq('plan', 'free')
     : { data: [] };
   const priority = new Set((prio ?? []).map((r) => r.profile_id as string));
   const isPriority = (c: { id: unknown }) => priority.has(otherBy.get(c.id as string)?.profile_id ?? '');

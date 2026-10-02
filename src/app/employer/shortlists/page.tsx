@@ -1,3 +1,4 @@
+import { SHORTLISTS_ENABLED } from '@/lib/flags';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -15,6 +16,7 @@ type Cand = { profile_id: string; note: string | null; profile: { full_name: str
 
 export default async function ShortlistsPage({ searchParams }: { searchParams: { error?: string; hired?: string; rerun?: string; free?: string } }) {
   const { user } = await requireRole(['employer'], '/employer/shortlists');
+  if (!SHORTLISTS_ENABLED) return <div className="container-page max-w-2xl py-16 text-center"><h1 className="font-serif text-4xl font-medium">Sourcing help</h1><p className="mt-3 text-muted">Tell us about a hard-to-fill role and we’ll help you reach the right verified members.</p><Link href="/contact-sales" className="btn btn-primary mt-6">Book a call</Link></div>;
   const company = await getMyCompany(user.id);
   if (!company) redirect('/employer/dashboard');
   const supabase = createClient();

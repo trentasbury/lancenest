@@ -25,7 +25,7 @@ export async function getMyCompany(userId: string) {
 }
 
 type MyCompany = { id: string; name: string; slug: string; plan: Plan; is_verified: boolean; verification_status: string; contact_credits: number; extra_job_slots: number; stripe_customer_id: string | null; isOwner: boolean } & Record<string, unknown>;
-export const SEATS: Record<string, number> = { free: 1, professional: 2, federal: 5, enterprise: 20 };
+export const SEATS: Record<string, number> = { free: 1, professional: 3, federal: 5, enterprise: 20 };
 
 export async function contactUsage(companyId: string, plan: Plan) {
   const { count } = await createClient().from('employer_contacts').select('*', { count: 'exact', head: true })

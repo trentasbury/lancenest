@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   (alerts ?? []).forEach((a) => byProfile.set(a.profile_id as string, [...(byProfile.get(a.profile_id as string) ?? []), a]));
   const { data: plans } = byProfile.size ? await admin.from('veteran_profiles').select('profile_id, plan').in('profile_id', Array.from(byProfile.keys())).neq('plan', 'free') : { data: [] };
   for (const { profile_id, plan } of plans ?? []) {
-    const federal = plan === 'federal_pro';
+    const federal = plan !== 'free';   // all paid members get the 48-hour early window
     const matches = new Map<string, Job>();
     for (const a of byProfile.get(profile_id as string) ?? []) {
       for (const j of jobs) {

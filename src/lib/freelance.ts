@@ -27,3 +27,7 @@ export async function proposalsUsedThisMonth(profileId: string) {
 
 export const PRICE_LABEL: Record<string, string> = { fixed: '', hourly: '/hr', starting_at: '+' };
 export const DELIVERY_LABEL: Record<string, string> = { remote: 'Remote', on_site: 'On-site', both: 'On-site or remote' };
+
+import { LICENSED_TRADES } from '@/lib/flags';
+/** Categories open for new listings (licensed trades return when license verification ships). */
+export const OPEN_CATEGORIES = CATEGORIES.filter((c) => !LICENSED_TRADES.includes(c));

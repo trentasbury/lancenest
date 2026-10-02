@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireVerifiedMember } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { CATEGORIES } from '@/lib/freelance';
+import { OPEN_CATEGORIES } from '@/lib/freelance';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import { deleteService, saveService, setServiceStatus } from '../actions';
@@ -40,7 +40,7 @@ export default async function MyServicesPage({ searchParams }: { searchParams: {
       <form action={saveService} className="card grid gap-3 p-6 sm:grid-cols-2">
         <p className="font-medium sm:col-span-2">Add a service</p>
         <input name="title" required maxLength={100} placeholder="e.g. Mobile auto repair — brakes, oil, diagnostics" className="field sm:col-span-2" />
-        <select name="category" className="field">{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select>
+        <select name="category" className="field">{OPEN_CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select>
         <select name="delivery" className="field"><option value="on_site">On-site</option><option value="remote">Remote</option><option value="both">On-site or remote</option></select>
         <input name="price" required inputMode="decimal" placeholder="Price ($)" className="field" />
         <select name="price_type" className="field"><option value="fixed">Fixed price</option><option value="starting_at">Starting at</option><option value="hourly">Per hour</option></select>
