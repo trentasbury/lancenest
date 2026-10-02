@@ -91,6 +91,10 @@ export default function JobForm({ job, action }: { job?: Job | null; action: (fd
         <label className="flex items-center gap-2.5 text-sm sm:pt-6"><input type="checkbox" name="clearance_eligible" defaultChecked={job?.clearance_eligible ?? false} className="h-4 w-4 accent-navy" />Will sponsor a clearance</label>
       </section>
 
+      <label className="flex items-start gap-2 rounded-[4px] border border-line bg-paper p-3 text-xs text-ink/85">
+        <input type="checkbox" name="attest" required className="mt-0.5 accent-navy" />
+        I confirm this posting, its pay information, its screening questions, and how we classify the role (employee or contractor) comply with applicable law, and that the work won’t require sharing classified information or CUI on LanceNest.
+      </label>
       <div className="flex flex-wrap items-center gap-3">
         <select name="status" defaultValue={job?.status === 'draft' ? 'draft' : 'open'} className="field w-auto">
           <option value="open">Publish now</option><option value="draft">Save as draft</option>

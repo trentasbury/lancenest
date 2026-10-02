@@ -28,6 +28,7 @@ export async function saveJob(jobId: string | null, formData: FormData) {
   const description = t(formData, 'description', 8000);
   const back = jobId ? `/employer/jobs/${jobId}` : '/employer/jobs/new';
   if (!title || !description) redirect(`${back}?error=required`);
+  if (formData.get('status') !== 'draft' && formData.get('attest') !== 'on') redirect(`${back}?error=attest`);
   // Screening questions may not ask about protected or high-risk topics (disability, medical, VA rating, age, religion, family, discharge, criminal history, citizenship beyond work authorization).
   const RISKY = /disab|medical|health|diagnos|va rating|disability rating|percent rating|pregnan|religio|church|age\b|birth|how old|married|spouse|children|kids|discharge|arrest|convict|criminal|felon|citizen|national origin|race|ethnic|gender|sexual|ptsd|tbi|medication|genetic|union/i;
   for (let n = 0; n < 5; n++) { const q = String(formData.get(`question_${n}`) ?? ''); if (q && RISKY.test(q) && !/authorized to work/i.test(q)) redirect(`${back}?error=question`); }
