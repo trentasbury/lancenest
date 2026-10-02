@@ -11,6 +11,10 @@ export default function TermsPage() {
         <p>These Terms govern your use of LanceNest. By creating an account or using the site, you agree to them and to our <Link href="/privacy" className="text-navy underline">Privacy Policy</Link>.</p>
       </section>
       <section>
+        <h2>Security clearances</h2>
+        <p>LanceNest verifies military service; it does not verify security clearances or clearance eligibility. Clearance information on profiles is self-reported. Members must list only a clearance they currently hold or held within the last two years, must never share classified information, and agree that misrepresenting a clearance is grounds for removal. Employers are responsible for confirming eligibility through official government systems before relying on it.</p>
+      </section>
+      <section>
         <h2>Freelance work and Protected Payments</h2>
         <p>Freelancers are independent contractors, not employees of LanceNest or of their clients through LanceNest. Clients fund each milestone before work begins. LanceNest holds the funds through its payment processor (Stripe) and releases them to the freelancer when the client approves the work, or automatically 14 days after the work is submitted if the client doesn’t approve, request changes, or open a dispute. LanceNest is not an escrow agent or a party to the work agreement.</p>
         <p>Either party may open a dispute on a funded milestone; LanceNest reviews the contract, messages, and delivered work and decides whether to release the funds to the freelancer or refund the client, and that decision is final on LanceNest. Refunds return the milestone amount and the client’s percentage fee; the flat contract-start and small-project fees are non-refundable. Fees are shown before every payment. Stripe verifies freelancers’ identity and may issue tax forms (such as Form 1099-K) as required by law.</p>

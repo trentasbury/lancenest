@@ -63,6 +63,11 @@ export async function POST(request: NextRequest) {
     await createAdminClient().from('companies').update({ referral_credit_cents: 0 }).eq('id', company.id);
   }
 
+  if (item.kind === 'shortlist') {
+    const { data: planRow } = await createAdminClient().from('companies').select('plan').eq('id', company.id).maybeSingle();
+    product = (['professional', 'federal', 'enterprise'].includes(planRow?.plan as string) ? 'shortlist_member' : 'shortlist') as typeof product;
+    item = CATALOG[product];
+  }
   if (item.kind === 'fair_booth') {
     const { data: planRow } = await createAdminClient().from('companies').select('plan').eq('id', company.id).maybeSingle();
     product = (['professional', 'federal', 'enterprise'].includes(planRow?.plan as string) ? 'fair_booth_member' : 'fair_booth') as typeof product;
@@ -71,6 +76,19 @@ export async function POST(request: NextRequest) {
   const metadata: Record<string, string> = { company_id: company.id as string, kind: item.kind, product };
   if (item.plan) metadata.plan = item.plan;
   if (item.plan === 'training_featured' && !company.training_listing_active) return NextResponse.redirect(`${site}/employer/training?error=listing_first`, 303);
+  if (item.kind === 'shortlist') {
+    const f = (k: string, max: number) => String(form.get(k) ?? '').trim().slice(0, max);
+    const engagement = f('engagement', 20);
+    const role = f('role_title', 140);
+    if (role.length < 3) return NextResponse.redirect(`${site}/employer/shortlists?error=role`, 303);
+    const { data: req } = await createAdminClient().from('shortlist_requests').insert({
+      company_id: company.id, requested_by: session.user.id, role_title: role,
+      engagement: ['full_time', 'contract', 'contract_to_hire'].includes(engagement) ? engagement : 'full_time',
+      clearance_required: f('clearance_required', 20) || 'none', location: f('location', 120) || null, pay: f('pay', 120) || null, details: f('details', 3000) || null,
+    }).select('id').single();
+    if (!req) return NextResponse.redirect(`${site}/employer/shortlists?error=save`, 303);
+    metadata.request_id = req.id as string;
+  }
   if (item.kind === 'fair_booth') {
     const fairId = String(form.get('fair_id') ?? '');
     const { data: fair } = await createAdminClient().from('career_fairs').select('id, slug, starts_at').eq('id', fairId).maybeSingle();

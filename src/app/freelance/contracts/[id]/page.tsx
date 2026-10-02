@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import { startConversation } from '@/app/messages/actions';
-import { addMilestone, approveMilestone, cancelMilestone, declineContract, leaveReview, openDispute, requestChanges, submitMilestone } from '../actions';
+import { addMilestone, approveMilestone, cancelMilestone, declineContract, requestConversion, leaveReview, openDispute, requestChanges, submitMilestone } from '../actions';
 
 export const metadata: Metadata = { title: 'Contract' };
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -14,7 +14,7 @@ const LABEL: Record<string, [string, string]> = {
   pending: ['Awaiting funding', 'text-muted'], funded: ['Funded — protected', 'text-olive'], submitted: ['Submitted for review', 'text-navy'],
   released: ['Paid', 'text-olive'], refunded: ['Refunded', 'text-muted'], disputed: ['In dispute — under review', 'text-signal'], cancelled: ['Cancelled', 'text-muted'],
 };
-const ERR: Record<string, string> = { payouts: 'The freelancer’s payout account isn’t ready yet — we’ve let them know.', transfer: 'Payment couldn’t be released just now. Please try again in a few minutes.',
+const ERR: Record<string, string> = { salary: 'Enter the first-year base salary.', payouts: 'The freelancer’s payout account isn’t ready yet — we’ve let them know.', transfer: 'Payment couldn’t be released just now. Please try again in a few minutes.',
   state: 'That milestone has already changed — refresh to see the latest.', milestone: 'Milestones need a title and at least $20.', dispute: 'Please describe the problem (at least 10 characters).', review: 'Choose a rating from 1 to 5.' };
 
 type M = { id: string; title: string; amount_cents: number; status: string; client_fee_cents: number; submission_note: string | null; change_request: string | null; dispute_reason: string | null; auto_release_at: string | null; released_at: string | null };
@@ -115,6 +115,13 @@ export default async function ContractPage({ params, searchParams }: { params: {
         )}
       </section>
 
+      {searchParams.converted && <FormMessage message="Thanks — we’ll confirm the conversion and send any invoice by email." />}
+      {isClient && ['active', 'completed'].includes(contract.status) && (
+        <details className="card p-5 text-sm"><summary className="cursor-pointer font-medium text-navy">Hire this freelancer full-time</summary>
+          <p className="mt-2 text-muted">Converting a LanceNest contractor to a full-time employee within 12 months of your first contract carries a one-time fee of 10% of first-year base salary. After 12 months, it’s free.</p>
+          <form action={requestConversion.bind(null, contract.id)} className="mt-3 flex flex-col gap-2 sm:flex-row"><input name="salary" required inputMode="decimal" placeholder="First-year base salary ($)" className="field" /><SubmitButton className="btn btn-primary shrink-0" pendingText="…">Request conversion</SubmitButton></form>
+        </details>
+      )}
       {contract.status === 'completed' && (isClient || isFreelancer) && (
         myReview ? <p className="card p-5 text-sm text-olive">✓ Thanks — your review is posted.</p> : (
           <form action={leaveReview.bind(null, contract.id, other)} className="card space-y-3 p-6">

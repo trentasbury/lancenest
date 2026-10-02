@@ -4,12 +4,15 @@ import { FREELANCE_FEES } from '@/lib/fees';
 
 export const FREE_PROPOSALS_PER_MONTH = 10;
 export const CATEGORIES = [
-  'HVAC & refrigeration', 'Plumbing', 'Electrical', 'Construction & remodeling', 'Handyman & home repair', 'Roofing & exteriors', 'Landscaping & outdoor',
-  'Automotive & diesel', 'Welding & fabrication', 'Moving & hauling', 'Cleaning & property services', 'Security & protection services',
-  'Web design & development', 'Software development', 'Cybersecurity', 'IT support & networking', 'Enterprise software (ITSM, ERP, CRM)', 'Data & analytics',
-  'Graphic design & branding', 'Photography & video', 'Marketing & social media', 'Writing & editing', 'Proposals & grant writing',
-  'Program & project management', 'Logistics & supply chain', 'Consulting & strategy', 'Accounting & bookkeeping', 'Legal & paralegal', 'HR & recruiting',
-  'Training & instruction', 'Fitness & coaching', 'Healthcare & medical', 'Aviation & drones', 'Intelligence & analysis', 'Events & hospitality', 'Other'];
+  // Federal-ready work leads the brand
+  'Cybersecurity', 'IT support & networking', 'Enterprise software (ITSM, ERP, CRM)', 'Software development', 'Data & analytics', 'Intelligence & analysis',
+  'Program & project management', 'Proposals & grant writing', 'Logistics & supply chain', 'Consulting & strategy', 'Training & instruction',
+  'Security & protection services', 'Aviation & drones', 'Healthcare & medical', 'Accounting & bookkeeping', 'Legal & paralegal', 'HR & recruiting',
+  // Creative and marketing
+  'Web design & development', 'Graphic design & branding', 'Marketing & social media', 'Writing & editing', 'Photography & video', 'Events & hospitality', 'Fitness & coaching',
+  // Skilled trades and on-site services
+  'HVAC & refrigeration', 'Electrical', 'Plumbing', 'Construction & remodeling', 'Welding & fabrication', 'Automotive & diesel', 'Roofing & exteriors',
+  'Handyman & home repair', 'Landscaping & outdoor', 'Moving & hauling', 'Cleaning & property services', 'Other'];
 
 /** What the veteran keeps from a payment, by plan (percent). */
 export function keepPercent(plan: string) {

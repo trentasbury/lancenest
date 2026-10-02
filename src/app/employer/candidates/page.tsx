@@ -121,7 +121,7 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
           {r.willing_to_relocate && ' · Open to relocation'}
           {r.open_to_transition_hiring && r.separation_date && ` · Separating ${new Date(`${r.separation_date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`}
           {r.open_to_transition_hiring && r.skillbridge_interest && <span className="ml-2 rounded-full border border-olive/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-olive">SkillBridge interested</span>}
-          {cleared && r.clearance_level !== 'none' && <span className="ml-2 rounded-full border border-brass/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-brass-dark">{CLEARANCE_LABEL[r.clearance_level]}</span>}
+          {cleared && r.clearance_level !== 'none' && <span className="ml-2 rounded-full border border-brass/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-brass-dark" title="Self-reported by the member — confirm eligibility through official systems">{CLEARANCE_LABEL[r.clearance_level]} · self-reported</span>}
         </p>
       </div>
       <form action={saveToPool.bind(null, r.profile_id, '/employer/candidates')}><SubmitButton className="btn btn-ghost border border-line" pendingText="…">Save</SubmitButton></form>
@@ -160,7 +160,7 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
         <input name="state" defaultValue={f.state} placeholder="State (e.g. VA)" className="field" />
         {cleared ? (
           <select name="clearance" defaultValue={f.clearance ?? ''} className="field">
-            <option value="">Any clearance</option>
+            <option value="">Any clearance (self-reported)</option>
             {CLEARANCE_ORDER.slice(1).map((c) => <option key={c} value={c}>{CLEARANCE_LABEL[c]} or higher</option>)}
           </select>
         ) : (
@@ -184,9 +184,10 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
           <SubmitButton className="btn btn-outline py-2 text-sm" pendingText="Saving…">Save search & email me new matches</SubmitButton>
         </form>
       )}
+      {cleared && <p className="mt-4 rounded-[4px] border border-line bg-paper p-3 text-xs text-muted"><strong className="text-ink">Clearances on LanceNest are self-reported.</strong> LanceNest verifies military service, not security clearance eligibility. Confirm eligibility through the official government system your facility security officer uses before relying on it for a hiring decision.</p>}
       {spot.length > 0 && (
         <section className="mt-8">
-          <p className="eyebrow">Cleared talent spotlight</p>
+          <p className="eyebrow">Cleared talent spotlight · self-reported clearances</p>
           <ul className="mt-3 space-y-3">{spot.map((r) => <Card key={`s-${r.profile_id}`} r={r} />)}</ul>
         </section>
       )}

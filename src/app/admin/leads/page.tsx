@@ -7,11 +7,17 @@ export const metadata: Metadata = { title: 'Call requests', robots: { index: fal
 
 export default async function LeadsPage() {
   await requireAdmin('/admin/leads');
+  const { data: conv } = await createAdminClient().from('conversion_requests').select('id, fee_cents, salary_cents, status, created_at, contract:contracts(title)').order('created_at', { ascending: false }).limit(50);
   const { data } = await createAdminClient().from('sales_leads').select('*').order('created_at', { ascending: false }).limit(100);
   return (
     <div className="container-page max-w-4xl space-y-6 py-10">
       <Link href="/admin" className="text-sm text-muted hover:text-navy">← Admin</Link>
       <h1 className="font-serif text-4xl font-medium">Call requests</h1>
+      {(conv ?? []).length > 0 && (
+        <section className="card p-5 text-sm"><p className="eyebrow">Contract-to-hire conversions</p>
+          <ul className="mt-2 divide-y divide-line">{((conv ?? []) as unknown as { id: string; fee_cents: number; salary_cents: number; created_at: string; contract: { title: string } | null }[]).map((c) => <li key={c.id} className="flex justify-between py-2"><span>{c.contract?.title} · salary ${(c.salary_cents / 100).toLocaleString()}</span><strong>{c.fee_cents ? `Invoice $${(c.fee_cents / 100).toLocaleString()}` : 'No fee'}</strong></li>)}</ul>
+        </section>
+      )}
       {(data ?? []).length === 0 && <p className="card p-8 text-center text-muted">No call requests yet.</p>}
       {(data ?? []).map((l) => (
         <div key={l.id as string} className="card space-y-1 p-5 text-sm">

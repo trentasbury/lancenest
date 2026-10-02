@@ -14,7 +14,7 @@ const PLANS = [
   { name: 'Professional', price: '$249', note: 'per month · or $2,490/year paid up front (2 months free)', cta: 'Start with Professional', featured: true,
     features: ['Unlimited job posts', 'Search every verified member’s full profile', 'Transitioning talent search (separating in 12 months)', 'Hiring analytics: views, applicants, conversion', '5 featured jobs a month, included', 'Talent pools: save candidates to lists with private notes', 'Saved searches with daily new-match emails', '2 team seats', 'Branded company page: cover photo and “Why veterans work here”', 'Applicant export (CSV)'] },
   { name: 'Federal', price: '$999', note: 'per month · or $9,990/year paid up front (2 months free) · Founding Employers: $800/month for the first 12 months', cta: 'Start with Federal',
-    features: ['Everything in Professional', 'Search by security clearance level', 'Cleared talent spotlight', '5 team seats', 'Unlimited featured jobs', 'Priority support from the founder'] },
+    features: ['Everything in Professional', 'Built for primes, subs, and GovCon small businesses', 'Search by self-reported clearance level (you confirm eligibility in official systems)', 'Cleared talent spotlight', '5 team seats', 'Unlimited featured jobs', 'Priority support from the founder'] },
   { name: 'Enterprise', price: 'Custom', note: 'from $15,000/year', cta: 'Talk to us',
     features: ['Everything in Federal', 'Volume pricing for multiple hiring teams', 'Invoice billing', 'Dedicated support'] },
 ];
@@ -31,16 +31,27 @@ export default async function EmployersPage() {
         <div className="container-page py-16 text-center">
           <p className="eyebrow text-brass">For Employers</p>
           <h1 className="mx-auto mt-4 max-w-3xl font-serif text-5xl font-medium leading-tight text-ivory">
-            Hire people who’ve already proven they deliver.
+            Verified, federal-ready veteran talent — in days, not months.
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-cream/80">
-            LanceNest translates military experience into the language your hiring managers use — so you see leaders,
-            operators, and specialists instead of unfamiliar acronyms.
+            Built for federal primes, subcontractors, and GovCon small businesses. Every candidate’s military service is verified,
+            and our team can hand-deliver a shortlist of interested, available service members in 3 business days.
           </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Link href="/employer/shortlists" className="btn btn-brass">Get a Verified Shortlist</Link>
+            <Link href="/contact-sales?plan=federal" className="btn border border-cream/40 text-cream hover:border-brass">Book a call</Link>
+          </div>
           <p className="mx-auto mt-4 max-w-2xl rounded-[4px] border border-brass/40 bg-white/5 px-4 py-3 text-sm text-cream/90">
             <strong className="text-brass">Any company can hire here.</strong> You don’t need to be veteran-owned or have served — if you want to hire
             service members, you belong on LanceNest. We simply verify that your company is real to keep veterans safe.
           </p>
+        </div>
+      </section>
+      <section className="border-b border-line bg-paper">
+        <div className="container-page grid gap-6 py-10 md:grid-cols-3">
+          <div><p className="eyebrow">Verified Shortlist</p><p className="mt-2 font-serif text-2xl text-navy">$750 per role</p><p className="mt-1 text-sm text-muted">3 verified, interested, available candidates in 3 business days — free re-run if none fit. $500 on Professional and Federal.</p></div>
+          <div><p className="eyebrow">Placement</p><p className="mt-2 font-serif text-2xl text-navy">15% of first-year salary</p><p className="mt-1 text-sm text-muted">Only when you hire from a shortlist — agencies typically charge 15–25%. Shortlist fee credited; 90-day replacement guarantee.</p></div>
+          <div><p className="eyebrow">Contract & freelance</p><p className="mt-2 font-serif text-2xl text-navy">Protected Payments</p><p className="mt-1 text-sm text-muted">Fund milestones, approve the work, and convert to full-time anytime (10% within 12 months, free after).</p></div>
         </div>
       </section>
 

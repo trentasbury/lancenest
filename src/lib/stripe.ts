@@ -10,12 +10,12 @@ export function stripe() {
 export type ProductKey =
   | 'employer_professional_month' | 'employer_professional_year'
   | 'employer_federal_month' | 'employer_federal_year'
-  | 'training_listing_month' | 'training_listing_year' | 'training_featured' | 'training_webinar' | 'fair_booth' | 'fair_booth_member'
+  | 'training_listing_month' | 'training_listing_year' | 'training_featured' | 'training_webinar' | 'fair_booth' | 'fair_booth_member' | 'shortlist' | 'shortlist_member'
   | 'veteran_pro_month' | 'veteran_pro_year' | 'veteran_pro_plus_month' | 'veteran_pro_plus_year' | 'veteran_federal_month' | 'veteran_federal_year'
   | 'job_slot' | 'job_boost' | 'contact_pack';
 
 /** Single source of truth for what we sell. Prices in cents. */
-export const CATALOG: Record<ProductKey, { name: string; amount: number; interval?: 'month' | 'year'; plan?: 'professional' | 'federal' | 'veteran_pro' | 'veteran_pro_plus' | 'veteran_federal_pro' | 'training' | 'training_featured'; audience?: 'veteran'; kind: 'plan' | 'job_slot' | 'job_boost' | 'contact_pack' | 'training_webinar' | 'fair_booth' }> = {
+export const CATALOG: Record<ProductKey, { name: string; amount: number; interval?: 'month' | 'year'; plan?: 'professional' | 'federal' | 'veteran_pro' | 'veteran_pro_plus' | 'veteran_federal_pro' | 'training' | 'training_featured'; audience?: 'veteran'; kind: 'plan' | 'job_slot' | 'job_boost' | 'contact_pack' | 'training_webinar' | 'fair_booth' | 'shortlist' }> = {
   employer_professional_month: { name: 'LanceNest Professional (monthly)', amount: 24900, interval: 'month', plan: 'professional', kind: 'plan' },
   employer_professional_year: { name: 'LanceNest Professional (annual)', amount: 249000, interval: 'year', plan: 'professional', kind: 'plan' },
   employer_federal_month: { name: 'LanceNest Federal (monthly)', amount: 99900, interval: 'month', plan: 'federal', kind: 'plan' },
@@ -31,6 +31,8 @@ export const CATALOG: Record<ProductKey, { name: string; amount: number; interva
   training_featured: { name: 'Featured training programs', amount: 9900, interval: 'month', plan: 'training_featured', kind: 'plan' },
   training_webinar: { name: 'Sponsored info session', amount: 50000, kind: 'training_webinar' },
   fair_booth: { name: 'Virtual career fair booth', amount: 49900, kind: 'fair_booth' },
+  shortlist: { name: 'Verified Shortlist (3 candidates in 3 business days)', amount: 75000, kind: 'shortlist' },
+  shortlist_member: { name: 'Verified Shortlist (plan member price)', amount: 50000, kind: 'shortlist' },
   fair_booth_member: { name: 'Virtual career fair booth (plan member price)', amount: 39900, kind: 'fair_booth' },
   job_slot: { name: 'Extra open job slot', amount: 3900, interval: 'month', kind: 'job_slot' },
   job_boost: { name: 'Featured job boost (30 days)', amount: 4900, kind: 'job_boost' },

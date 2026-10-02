@@ -137,3 +137,21 @@ export async function declineContract(contractId: string) {
   await notifyMember(c.client_id as string, { type: 'contract', link: `/freelance/contracts/${contractId}`, title: `Your request for “${c.title}” was declined. Nothing was charged.` });
   redirect(`/freelance/contracts/${contractId}`);
 }
+
+/** Client converts a LanceNest contractor to a full-time hire: 10% of first-year salary within 12 months of their first contract; free after that. */
+export async function requestConversion(contractId: string, formData: FormData) {
+  const { user } = await requireRole(['employer'], '/freelance');
+  const admin = createAdminClient();
+  const { data: c } = await admin.from('contracts').select('id, title, client_id, freelancer_id').eq('id', contractId).maybeSingle();
+  if (!c || c.client_id !== user.id) redirect('/freelance');
+  const salary = Math.round(Number(String(formData.get('salary') ?? '').replace(/[$,\s]/g, '')) * 100);
+  if (!Number.isFinite(salary) || salary < 1000000) redirect(`/freelance/contracts/${contractId}?error=salary`);
+  const { data: first } = await admin.from('contracts').select('created_at').eq('client_id', c.client_id).eq('freelancer_id', c.freelancer_id).order('created_at').limit(1).maybeSingle();
+  const withinYear = first && Date.now() - Date.parse(first.created_at as string) < 365 * 86400000;
+  const fee = withinYear ? Math.round(salary * 0.10) : 0;
+  await admin.from('conversion_requests').insert({ contract_id: c.id, client_id: c.client_id, freelancer_id: c.freelancer_id, salary_cents: salary, fee_cents: fee });
+  const { data: admins } = await admin.from('profiles').select('id').eq('role', 'admin');
+  if (admins?.length) await admin.from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'conversion', title: `Contract-to-hire on “${c.title}” — ${fee ? `invoice $${(fee / 100).toLocaleString()}` : 'no fee (12+ months on LanceNest)'}.`, link: '/admin/leads' })));
+  await notifyMember(c.freelancer_id as string, { type: 'contract', link: `/freelance/contracts/${c.id}`, title: `Congratulations — your client wants to hire you full-time from “${c.title}”.` });
+  redirect(`/freelance/contracts/${contractId}?converted=1`);
+}

@@ -22,7 +22,7 @@ export const GUIDES: Guide[] = [
   { slug: 'security-clearance-jobs-guide', title: 'Getting a cleared job after the military', description: 'How security clearances carry over to civilian work, and how to stand out to federal contractors.',
     sections: [
       { h: 'How clearances carry over', p: ['A clearance belongs to the government, not to you, and it is held through a sponsoring employer. Generally, a clearance can be reinstated without a new investigation if you return to a cleared position within about two years of leaving one — confirm with the hiring company’s security officer.'] },
-      { h: 'Stand out to cleared employers', list: ['List your clearance level and the date of your last investigation.', 'Never share classified details — describe your role at an unclassified level.', 'Apply early: on LanceNest, Federal-plan members see jobs requiring a clearance 48 hours before everyone else.'] },
+      { h: 'Stand out to cleared employers', list: ['Clearance levels on LanceNest are self-reported — employers confirm eligibility through official government systems, so list yours accurately.', 'List your clearance level and the date of your last investigation.', 'Never share classified details — describe your role at an unclassified level.', 'Apply early: on LanceNest, Federal-plan members see jobs requiring a clearance 48 hours before everyone else.'] },
     ], links: [['Browse cleared jobs', '/jobs?clearance=secret'], ['LanceNest plans', '/plans']] },
   { slug: 'freelancing-while-transitioning', title: 'Freelancing while you transition', description: 'How to earn on the side with the skills you already have — legally, safely, and paid on time.',
     sections: [
