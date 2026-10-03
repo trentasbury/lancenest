@@ -51,7 +51,7 @@ export async function requestService(serviceId: string, formData: FormData) {
   if (!s || s.profile_id === user.id) redirect('/freelance/services');
   const amount = dollars(t(formData, 'amount', 12));
   const note = t(formData, 'note', 2000);
-  if (!Number.isFinite(amount) || amount < 2000) redirect(`/freelance/services/${serviceId}?error=amount`);
+  if (!Number.isFinite(amount) || amount < 2500) redirect(`/freelance/services/${serviceId}?error=amount`);
   if (note.length < 10) redirect(`/freelance/services/${serviceId}?error=note`);
   const admin = createAdminClient();
   const [{ data: fp }, { data: vet }] = await Promise.all([

@@ -76,7 +76,8 @@ export async function refundMilestone(milestoneId: string) {
   const { data: locked } = await admin.from('milestones').update({ status: 'refunded' }).eq('id', m.id).eq('status', m.status).select('id').maybeSingle();
   if (!locked) return { ok: false as const };
   try {
-    await stripe().refunds.create({ payment_intent: m.stripe_payment_intent_id, amount: m.amount_cents + m.client_fee_cents }, { idempotencyKey: `refund-${m.id}` });
+    // Refunds return the milestone amount; the client service fee (percentage + contract fee) covers processing and is not refunded.
+    await stripe().refunds.create({ payment_intent: m.stripe_payment_intent_id, amount: m.amount_cents }, { idempotencyKey: `refund-${m.id}` });
   } catch (err) {
     console.error('refund failed:', err);
     await admin.from('milestones').update({ status: m.status }).eq('id', m.id);

@@ -11,7 +11,7 @@ import FormMessage from '@/components/FormMessage';
 import { requestService } from '../actions';
 
 export const metadata: Metadata = { title: 'Service' };
-const ERR: Record<string, string> = { amount: 'Enter an amount of at least $20.', note: 'Describe what you need (at least a sentence).', payouts: 'This member hasn’t finished payout setup yet, so they can’t be hired through LanceNest yet. Message them to let them know.', save: 'That didn’t go through — please try again.' };
+const ERR: Record<string, string> = { amount: 'Enter an amount of at least $25.', note: 'Describe what you need (at least a sentence).', payouts: 'This member hasn’t finished payout setup yet, so they can’t be hired through LanceNest yet. Message them to let them know.', save: 'That didn’t go through — please try again.' };
 
 export default async function ServicePage({ params, searchParams }: { params: { id: string }; searchParams: { error?: string } }) {
   const { user, profile } = await requireVerifiedMember(`/freelance/services/${params.id}`);

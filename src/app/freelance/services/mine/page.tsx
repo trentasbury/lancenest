@@ -8,7 +8,7 @@ import FormMessage from '@/components/FormMessage';
 import { deleteService, saveService, setServiceStatus } from '../actions';
 
 export const metadata: Metadata = { title: 'My services' };
-const ERR: Record<string, string> = { ack: 'Please confirm both acknowledgments.', required: 'Add a title, a description of at least 20 characters, and a price of at least $20.', scam: 'That listing contains wording we don’t allow.', save: 'That didn’t save — please try again.' };
+const ERR: Record<string, string> = { ack: 'Please confirm both acknowledgments.', required: 'Add a title, a description of at least 20 characters, and a price of at least $25.', scam: 'That listing contains wording we don’t allow.', save: 'That didn’t save — please try again.' };
 
 export default async function MyServicesPage({ searchParams }: { searchParams: { error?: string; saved?: string } }) {
   const { user } = await requireVerifiedMember('/freelance/services/mine');

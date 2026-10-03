@@ -16,7 +16,7 @@ const LABEL: Record<string, [string, string]> = {
   released: ['Paid', 'text-olive'], refunded: ['Refunded', 'text-muted'], disputed: ['In dispute — under review', 'text-signal'], cancelled: ['Cancelled', 'text-muted'],
 };
 const ERR: Record<string, string> = { delivery: 'Describe what you delivered and where to find it (a link or file name).', changes: 'Say what doesn’t match the agreed scope, so the freelancer knows exactly what to fix.', salary: 'Enter the first-year base salary.', payouts: 'The freelancer’s payout account isn’t ready yet — we’ve let them know.', transfer: 'Payment couldn’t be released just now. Please try again in a few minutes.',
-  state: 'That milestone has already changed — refresh to see the latest.', milestone: 'Milestones need a title and at least $20.', dispute: 'Please describe the problem (at least 10 characters).', review: 'Choose a rating from 1 to 5.' };
+  state: 'That milestone has already changed — refresh to see the latest.', milestone: 'Milestones need a title and at least $25.', dispute: 'Please describe the problem (at least 10 characters).', review: 'Choose a rating from 1 to 5.' };
 
 type M = { id: string; title: string; amount_cents: number; status: string; client_fee_cents: number; submission_note: string | null; change_request: string | null; dispute_reason: string | null; auto_release_at: string | null; released_at: string | null };
 

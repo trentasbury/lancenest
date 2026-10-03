@@ -50,7 +50,7 @@ export async function addMilestone(contractId: string, formData: FormData) {
   if (!c || c.client_id !== user.id || c.status !== 'active') back(contractId);
   const amount = Math.round(Number(t(formData, 'amount', 9).replace(/[$,\s]/g, '')) * 100);
   const title = t(formData, 'title', 140);
-  if (!Number.isFinite(amount) || amount < 2000 || title.length < 2) back(contractId, '?error=milestone');
+  if (!Number.isFinite(amount) || amount < 2500 || title.length < 2) back(contractId, '?error=milestone');
   await createAdminClient().from('milestones').insert({ contract_id: contractId, title, amount_cents: amount });
   revalidatePath(`/freelance/contracts/${contractId}`);
   back(contractId);
