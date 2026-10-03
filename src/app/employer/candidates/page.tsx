@@ -19,11 +19,11 @@ import { deleteSavedSearch, saveSearch } from '@/app/employer/talent/searchActio
 export const metadata: Metadata = { title: 'Candidate search' };
 
 type Row = {
-  profile_id: string; city: string | null; state: string | null; clearance_level: string; clearance_status: string | null; polygraph: string; verification_status: string; willing_to_relocate: boolean; separation_date: string | null; skillbridge_interest: boolean; open_to_transition_hiring: boolean; plan: string; boosted_until: string | null;
+  profile_id: string; city: string | null; state: string | null; clearance_level: string; clearance_status: string | null; polygraph: string; availability: string; target_pay: string | null; verification_status: string; willing_to_relocate: boolean; separation_date: string | null; skillbridge_interest: boolean; open_to_transition_hiring: boolean; plan: string; boosted_until: string | null;
   profile: { full_name: string; username: string | null; headline: string | null; service_summary: string | null } | null;
 };
 type F = { q?: string; branch?: string; mos?: string; state?: string; skill?: string; clearance?: string; verified?: string; relocate?: string; transitioning?: string };
-const SELECT = 'profile_id, city, state, clearance_level, clearance_status, polygraph, verification_status, willing_to_relocate, separation_date, skillbridge_interest, open_to_transition_hiring, plan, boosted_until, profile:profiles!veteran_profiles_profile_id_fkey(full_name, username, headline, service_summary)';
+const SELECT = 'profile_id, city, state, clearance_level, clearance_status, polygraph, availability, target_pay, verification_status, willing_to_relocate, separation_date, skillbridge_interest, open_to_transition_hiring, plan, boosted_until, profile:profiles!veteran_profiles_profile_id_fkey(full_name, username, headline, service_summary)';
 
 function intersect(a: string[] | null, b: string[]) {
   return a === null ? b : a.filter((x) => b.includes(x));
@@ -93,6 +93,8 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
     const inAYear = new Date(Date.now() + 365 * 86400000).toISOString().slice(0, 10);
     query = query.eq('open_to_transition_hiring', true).gte('separation_date', today).lte('separation_date', inAYear);
   }
+  if ((f as Record<string, string | undefined>).avail === 'open_now') query = query.eq('availability', 'open_now');
+  else query = query.neq('availability', 'not_looking');
   if (cleared && f.clearance && CLEARANCE_ORDER.includes(f.clearance)) query = query.in('clearance_level', CLEARANCE_ORDER.slice(CLEARANCE_ORDER.indexOf(f.clearance)));
   if (cleared && (f as Record<string, string | undefined>).status === 'active') query = query.eq('clearance_status', 'active');
   if (cleared && (f as Record<string, string | undefined>).status === 'active_current') query = query.in('clearance_status', ['active', 'current']);
@@ -118,6 +120,8 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
         <p className="font-medium">
           {r.profile!.username ? <Link href={`/veterans/${r.profile!.username}`} className="hover:underline">{r.profile!.full_name}</Link> : r.profile!.full_name}
           {r.verification_status === 'verified' && <VerifiedMark />}<PlanBadge plan={r.plan} />
+          {r.availability === 'open_now' && <span className="ml-1.5 rounded-full bg-olive/15 px-2 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-[0.1em] text-olive">Open now</span>}
+          {r.target_pay && <span className="ml-2 align-middle text-xs text-muted">Target {r.target_pay}</span>}
           {r.boosted_until && Date.parse(r.boosted_until) > Date.now() && <span className="ml-1.5 rounded-full bg-brass px-2 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-[0.1em] text-navy">Featured</span>}
         </p>
         <p className="truncate text-sm text-muted">{[r.profile!.headline, r.profile!.service_summary].filter(Boolean).join(' · ')}</p>
@@ -165,6 +169,7 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
         <input name="state" defaultValue={f.state} placeholder="State (e.g. VA)" className="field" />
         {cleared ? (
           <>
+          <select name="avail" defaultValue={(f as Record<string, string | undefined>).avail ?? ''} className="field"><option value="">Open now or soon</option><option value="open_now">Open to work now</option></select>
           <select name="status" defaultValue={(f as Record<string, string | undefined>).status ?? ''} className="field"><option value="">Any status (self-reported)</option><option value="active">Active only</option><option value="active_current">Active or current</option></select>
           <select name="poly" defaultValue={(f as Record<string, string | undefined>).poly ?? ''} className="field"><option value="">Any polygraph</option><option value="any">CI or full-scope poly</option><option value="full_scope">Full-scope poly</option></select>
           <select name="clearance" defaultValue={f.clearance ?? ''} className="field">

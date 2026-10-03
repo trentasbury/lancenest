@@ -35,6 +35,7 @@ export default function Footer() {
           <span className="flex flex-wrap justify-center gap-x-5 gap-y-2">
             <Link href="/privacy" className="hover:text-brass">PRIVACY</Link>
             <Link href="/trust" className="hover:text-brass">TRUST</Link>
+            <Link href="/payments-protection" className="hover:text-brass">PAYMENTS</Link>
             <Link href="/security" className="hover:text-brass">SECURITY</Link>
             <Link href="/accessibility" className="hover:text-brass">ACCESSIBILITY</Link>
             <Link href="/terms" className="hover:text-brass">TERMS</Link>

@@ -97,6 +97,17 @@ export default async function EmployersPage() {
           Every employer account starts free, and no plan ever charges a fee when you hire. Upgrade, downgrade, or cancel anytime. Add-ons: featured job boost $49 · extra job slot $39/month. <strong>Public Safety rate:</strong> government police, sheriff, corrections, fire, and EMS agencies get 30% off Professional and Federal — annual invoicing available. <strong>Virtual career fair booths:</strong> $499, or $399 on Professional and Federal. <strong>Training providers:</strong> list programs for $149/month (featured +$99/month; sponsored info sessions $500).
         </p>
       </div>
+      <section className="bg-paper">
+        <div className="container-page grid gap-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
+          {[['Candidate quality', 'Verified military service — not a background check or clearance verification.'],
+            ['Candidate readiness', 'See availability, target roles, location, target pay, and civilian skills before you reach out.'],
+            ['Employer trust', 'Every employer is verified before posting a job or contacting members.'],
+            ['Hiring workflow', 'Post jobs with screening questions, track applicants, save candidates to talent pools, and message directly.']].map(([h, b]) => (
+            <div key={h} className="card p-5"><p className="font-semibold text-navy">{h}</p><p className="mt-1 text-sm text-muted">{b}</p></div>
+          ))}
+          <p className="text-sm text-muted sm:col-span-2 lg:col-span-4">Founding employers work directly with the LanceNest team while the verified network grows. <Link href="/trust" className="text-navy underline">What “verified” means →</Link></p>
+        </div>
+      </section>
       <section className="border-y border-line bg-paper">
         <div className="container-page flex flex-col items-start justify-between gap-4 py-10 md:flex-row md:items-center">
           <div><p className="eyebrow">Need help finding someone?</p><p className="mt-2 font-serif text-2xl text-navy">Talk with our team about a hard-to-fill role.</p>

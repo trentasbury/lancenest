@@ -15,7 +15,7 @@ const LABEL: Record<string, [string, string]> = {
   pending: ['Awaiting funding', 'text-muted'], funded: ['Funded — protected', 'text-olive'], submitted: ['Submitted for review', 'text-navy'],
   released: ['Paid', 'text-olive'], refunded: ['Refunded', 'text-muted'], disputed: ['In dispute — under review', 'text-signal'], cancelled: ['Cancelled', 'text-muted'],
 };
-const ERR: Record<string, string> = { salary: 'Enter the first-year base salary.', payouts: 'The freelancer’s payout account isn’t ready yet — we’ve let them know.', transfer: 'Payment couldn’t be released just now. Please try again in a few minutes.',
+const ERR: Record<string, string> = { delivery: 'Describe what you delivered and where to find it (a link or file name).', changes: 'Say what doesn’t match the agreed scope, so the freelancer knows exactly what to fix.', salary: 'Enter the first-year base salary.', payouts: 'The freelancer’s payout account isn’t ready yet — we’ve let them know.', transfer: 'Payment couldn’t be released just now. Please try again in a few minutes.',
   state: 'That milestone has already changed — refresh to see the latest.', milestone: 'Milestones need a title and at least $20.', dispute: 'Please describe the problem (at least 10 characters).', review: 'Choose a rating from 1 to 5.' };
 
 type M = { id: string; title: string; amount_cents: number; status: string; client_fee_cents: number; submission_note: string | null; change_request: string | null; dispute_reason: string | null; auto_release_at: string | null; released_at: string | null };
@@ -52,7 +52,7 @@ export default async function ContractPage({ params, searchParams }: { params: {
       {searchParams.hired && <FormMessage message="Contract created. Fund the first milestone so work can begin — the payment is held until you approve." />}
       {searchParams.released && <FormMessage message="Payment released to the freelancer. Thank you!" />}
       <div className="rounded-[4px] border border-olive/30 bg-olive/5 p-4 text-sm text-ink/85">
-        <strong className="text-olive">Protected Payments.</strong> The client funds each milestone before work starts. LanceNest holds the money and releases it when the client approves — or automatically 14 days after the work is submitted. Either side can open a dispute and LanceNest will decide.
+        <strong className="text-olive">Protected Payments.</strong> <a href="/payments-protection" className="text-navy underline">How it works</a> · The client funds each milestone before work starts. LanceNest holds the money and releases it when the client approves — or automatically 14 days after the work is submitted. Either side can open a dispute and LanceNest will decide.
       </div>
 
       {contract.request_note && <div className="card p-5 text-sm"><p className="eyebrow">Request details</p><p className="mt-2 whitespace-pre-line">{contract.request_note}</p></div>}
@@ -87,7 +87,7 @@ export default async function ContractPage({ params, searchParams }: { params: {
               )}
               {isFreelancer && m.status === 'funded' && (
                 <form action={submitMilestone.bind(null, m.id)} className="space-y-2">
-                  <textarea name="note" rows={2} maxLength={2000} placeholder="What you delivered and where to find it" className="field text-sm" />
+                  <textarea name="note" rows={2} maxLength={2000} placeholder="What you delivered and where to find it (link or file name) — required" required minLength={10} className="field text-sm" />
                   <SubmitButton className="btn btn-primary" pendingText="Submitting…">Submit work for approval</SubmitButton>
                 </form>
               )}
@@ -95,7 +95,7 @@ export default async function ContractPage({ params, searchParams }: { params: {
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
                   <form action={approveMilestone.bind(null, m.id)}><SubmitButton className="btn btn-primary" pendingText="Releasing…">Approve & release {usd(m.amount_cents)}</SubmitButton></form>
                   {m.status === 'submitted' && (
-                    <form action={requestChanges.bind(null, m.id)} className="flex flex-1 gap-2"><input name="changes" placeholder="What needs to change?" className="field py-2 text-sm" /><SubmitButton className="btn btn-outline shrink-0" pendingText="…">Request changes</SubmitButton></form>
+                    <form action={requestChanges.bind(null, m.id)} className="flex flex-1 gap-2"><input name="changes" required minLength={10} placeholder="What doesn’t match the agreed scope?" className="field py-2 text-sm" /><SubmitButton className="btn btn-outline shrink-0" pendingText="…">Request changes</SubmitButton></form>
                   )}
                 </div>
               )}

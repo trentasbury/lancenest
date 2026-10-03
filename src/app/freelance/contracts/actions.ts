@@ -69,6 +69,7 @@ export async function submitMilestone(milestoneId: string, formData: FormData) {
   const { user } = await requireRole(['veteran'], '/freelance');
   const m = await loadMilestone(milestoneId);
   if (!m || m.contract.freelancer_id !== user.id || m.status !== 'funded') redirect('/freelance');
+  if (t(formData, 'note', 2000).length < 10) redirect(`/freelance/contracts/${m.contract_id}?error=delivery`);
   await createAdminClient().from('milestones').update({
     status: 'submitted', submitted_at: new Date().toISOString(), submission_note: t(formData, 'note', 2000) || null, change_request: null,
     auto_release_at: new Date(Date.now() + AUTO_RELEASE_DAYS * 86400000).toISOString(),
@@ -84,6 +85,7 @@ export async function requestChanges(milestoneId: string, formData: FormData) {
   const { user } = await requireRole(['employer'], '/freelance');
   const m = await loadMilestone(milestoneId);
   if (!m || m.contract.client_id !== user.id || m.status !== 'submitted') redirect('/freelance');
+  if (t(formData, 'changes', 2000).length < 10) redirect(`/freelance/contracts/${m.contract_id}?error=changes`);
   await createAdminClient().from('milestones').update({ status: 'funded', auto_release_at: null, change_request: t(formData, 'changes', 2000) || 'Changes requested.' }).eq('id', milestoneId).eq('status', 'submitted');
   await notifyMember(m.contract.freelancer_id, { type: 'milestone', link: `/freelance/contracts/${m.contract_id}`, title: `Changes requested on “${m.title}”.` });
   back(m.contract_id);

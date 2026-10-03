@@ -59,6 +59,9 @@ export async function createProject(formData: FormData) {
   const title = t(formData, 'title', 140);
   const description = t(formData, 'description', 8000);
   if (title.length < 4 || description.length < 20) redirect('/freelance/projects/new?error=required');
+  // Classification check: employer-like control suggests a W-2/staffing role, not a freelance project.
+  const risky = ['set_hours', 'supervise', 'indefinite', 'exclusive'].some((k) => formData.get(k) === 'on');
+  if (risky && formData.get('classification_ack') !== 'on') redirect('/freelance/projects/new?error=classification');
   if (scamSignals(`${title}\n${description}`, 'block').length) redirect('/freelance/projects/new?error=scam');
   const min = money(t(formData, 'budget_min', 9)); const max = money(t(formData, 'budget_max', 9));
   if (min && max && max < min) redirect('/freelance/projects/new?error=budget');

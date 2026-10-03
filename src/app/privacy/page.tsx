@@ -9,6 +9,19 @@ export default function PrivacyPage() {
       <section>
         <p>LanceNest (“we,” “us”) is a professional network and job platform for active duty, transitioning, and veteran service members and the employers who hire them. This policy explains what we collect, why, and the choices you have.</p>
       </section>
+      <section className="rounded-[6px] border border-brass/50 bg-paper p-5">
+        <h2>The short version</h2>
+        <ul>
+          <li><strong>Service documents</strong> (DD-214, LES, orders, NGB-22, VA letters) are used only to verify service, seen only by an authorized reviewer, and deleted after review — or automatically after 30 days if never reviewed. Never upload military ID cards or clearance records.</li>
+          <li><strong>Your profile</strong> is visible to verified members and verified employers. You can hide it from employers entirely or from specific companies in Account settings.</li>
+          <li><strong>Clearances</strong> you list are self-reported and labeled that way.</li>
+          <li><strong>Payments</strong> are processed by Stripe; we never store card numbers.</li>
+          <li><strong>Analytics</strong> are first-party and cookie-free; we don’t sell your data or show ads.</li>
+          <li><strong>Service providers:</strong> Vercel (hosting), Supabase (database and storage), Stripe (payments), Resend (email), Cloudflare Turnstile (bot protection).</li>
+          <li><strong>AI:</strong> LanceNest does not send your profile or documents to AI services, and does not use your data to train AI models.</li>
+          <li><strong>Your choices:</strong> edit or delete your profile anytime, and delete your account in Account settings. Questions or requests: support@lancenest.com.</li>
+        </ul>
+      </section>
       <section>
         <h2>What we collect</h2>
         <ul>
