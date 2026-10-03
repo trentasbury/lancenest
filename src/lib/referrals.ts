@@ -4,8 +4,8 @@ import { stripe } from '@/lib/stripe';
 import { notifyMember } from '@/lib/email';
 
 // A free month of the referrer's CURRENT plan. Free plans earn nothing.
-const MEMBER_MONTH: Record<string, number> = { pro: 2400, pro_plus: 2400, federal_pro: 2400 };
-const COMPANY_MONTH: Record<string, number> = { professional: 24900, federal: 59900, enterprise: 125000 };
+const MEMBER_MONTH: Record<string, number> = { pro: 2500, pro_plus: 4500, federal_pro: 6500 };
+const COMPANY_MONTH: Record<string, number> = { professional: 24900, federal: 99900, enterprise: 125000 };
 const LABEL: Record<string, string> = { pro: 'Pro', pro_plus: 'Pro Plus', federal_pro: 'Federal', professional: 'Professional', federal: 'Federal', enterprise: 'Enterprise' };
 export const REFERRAL_CAP_PER_YEAR = 3;
 const MEMBER = ['veteran', 'admin'];
@@ -83,11 +83,11 @@ async function rewardVeteranForCompany(vetId: string, companyOwnerId: string, na
   const { data: co } = await admin.from('companies').select('is_verified').eq('owner_id', companyOwnerId).maybeSingle();
   if (!co?.is_verified) return;   // verified AND paid
   const MONTHS = 2;
-  const federal = false;   // single Pro tier: everyone earns 2 months of Pro
+  const federal = plan === 'federal_pro';
   // Credit what they already pay for MONTHS months (covers Federal, Pro Plus, or Pro bills).
   const credit = monthCents > 0 && customer ? monthCents * MONTHS : 0;
   // Non-Federal members also get Pro Plus access for MONTHS months (Free and Pro are upgraded; Pro Plus is simply credited).
-  const grant = plan === 'free';
+  const grant = !federal && plan !== 'pro_plus';
   const { error } = await admin.from('referral_rewards').insert({ referred_id: companyOwnerId, referrer_id: vetId, cents: credit,
     note: federal ? '2 months Federal (company referral)' : '2 months Pro Plus (company referral)' });
   if (error) return;
@@ -95,9 +95,9 @@ async function rewardVeteranForCompany(vetId: string, companyOwnerId: string, na
   if (grant) {
     const { data: v } = await admin.from('veteran_profiles').select('pro_granted_until, granted_plan').eq('profile_id', vetId).maybeSingle();
     const base = v?.pro_granted_until && Date.parse(v.pro_granted_until as string) > Date.now() ? Date.parse(v.pro_granted_until as string) : Date.now();
-    await admin.from('veteran_profiles').update({ granted_plan: 'pro', pro_granted_until: new Date(base + MONTHS * 30 * 86400000).toISOString() }).eq('profile_id', vetId);
+    await admin.from('veteran_profiles').update({ granted_plan: 'pro_plus', pro_granted_until: new Date(base + MONTHS * 30 * 86400000).toISOString() }).eq('profile_id', vetId);
     const { recomputeVeteran } = await import('@/lib/billing');
     await recomputeVeteran(vetId);
   }
-  await notifyMember(vetId, { type: 'referral', link: '/dashboard', title: `${name} joined LanceNest on your referral — you’ve earned ${MONTHS} free months of Pro. Thank you.` });
+  await notifyMember(vetId, { type: 'referral', link: '/dashboard', title: `${name} joined LanceNest on your referral — you’ve earned ${MONTHS} free months of ${federal ? 'Federal' : 'Pro Plus'}. Thank you.` });
 }

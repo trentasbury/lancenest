@@ -10,11 +10,16 @@ export const metadata: Metadata = {
 
 const PLANS = [
   { id: null, key: 'free', name: 'Free', price: '$0', note: 'Always, for every verified service member',
-    features: ['Verified profile with military & civilian career', 'Apply to every job — Easy Apply with up to 3 résumés', 'Whole-career job matching', 'Network, messaging, groups, and mentors',
-      'Transition Hub, SkillBridge, and training', 'See how many people viewed your profile', 'Freelance: 10 proposals a month · 12% fee'] },
-  { id: 'veteran_pro' as const, key: 'pro', name: 'Pro', price: '$24', note: 'per month · or $199/year paid up front (save 31%)', month: 'veteran_pro_month', year: 'veteran_pro_year', featured: true,
-    features: ['Everything in Free', 'See exactly who viewed your profile', 'Applicant insights on every job', 'Featured applicant — listed first for employers', 'Daily job alerts (10), including cleared-only',
-      '48-hour early access to jobs requiring a clearance', 'Profile boost twice a month · priority messages', 'Military résumé builder', 'Freelance: unlimited proposals · 8% fee'] },
+    features: ['Verified profile with military & professional career', 'Apply to every job with up to 3 résumés', 'Network, messaging, and People search',
+      'Transition Hub & SkillBridge', 'See how many people viewed your profile', '10 freelance proposals a month', 'Freelance fee: 15%'] },
+  { id: 'veteran_pro' as const, key: 'pro', name: 'Pro', price: '$25', note: 'per month · or $250/year paid up front (2 months free)', month: 'veteran_pro_month', year: 'veteran_pro_year',
+    features: ['Everything in Free', 'See exactly who viewed your profile', 'Applicant insights: how you compare on every job', 'Daily job alerts by email (3)', 'Unlimited freelance proposals', 'Pro badge on your profile', 'Freelance fee: 10%'] },
+  { id: 'veteran_pro_plus' as const, key: 'pro_plus', name: 'Pro Plus', price: '$45', note: 'per month · or $450/year paid up front (2 months free)', month: 'veteran_pro_plus_month', year: 'veteran_pro_plus_year', featured: true,
+    features: ['Everything in Pro', 'Featured applicant — you appear first in employers’ applicant lists', 'Profile boost twice a month — featured at the top of employer searches for 7 days',
+      'Priority placement in employer candidate search', 'Priority messages: yours show first in employers’ inboxes', 'Military résumé builder: civilian résumé in one click', '5 job alerts', 'Pro Plus badge', 'Freelance fee: 8%'] },
+  { id: 'veteran_federal_pro' as const, key: 'federal_pro', name: 'Federal', price: '$65', note: 'per month · or $650/year paid up front (2 months free)', month: 'veteran_federal_month', year: 'veteran_federal_year',
+    features: ['Everything in Pro Plus', 'See jobs requiring a clearance 48 hours before everyone else', 'Cleared-job alerts (10 alerts)', 'Top placement in cleared-talent searches by federal employers',
+      'Federal badge on your profile', 'Freelance fee: 6% — lowest on LanceNest'] },
 ];
 
 export default async function PlansPage() {
@@ -60,7 +65,7 @@ export default async function PlansPage() {
                     <Link href="/login?next=/plans" className="btn btn-primary w-full">Log in to upgrade</Link>
                   ) : !isVeteran ? (
                     <p className="text-center text-sm text-muted">Member plans are for service member accounts.</p>
-                  ) : (plan.key === 'pro' ? currentPlan !== 'free' : currentPlan === plan.key) ? (
+                  ) : currentPlan === plan.key ? (
                     <form action="/api/billing/portal" method="post"><button className="btn btn-outline w-full">✓ Your plan · Manage billing</button></form>
                   ) : (
                     <div className="space-y-2">

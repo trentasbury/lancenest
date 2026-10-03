@@ -40,7 +40,7 @@ export default async function MemberPerks({ userId, boost }: { userId: string; b
               </section>
               <section className="card p-6">
                 <p className="eyebrow">Profile boost</p>
-                {['pro', 'pro_plus', 'federal_pro'].includes(plan) ? (
+                {['pro_plus', 'federal_pro'].includes(plan) ? (
                   boosted ? <p className="mt-2 text-sm text-olive">✓ Boosted — you’re featured at the top of employer searches until {new Date(me!.boosted_until as string).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}.</p> : (
                     <form action={boostProfile} className="mt-2 space-y-2">
                       <p className="text-sm text-muted">Be featured at the top of employer searches for 7 days. 2 boosts each month.</p>

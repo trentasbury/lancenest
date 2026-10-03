@@ -16,7 +16,7 @@ export default async function ResumeBuilderPage() {
   const { user, profile } = await requireVerifiedMember('/dashboard/resume-builder');
   const supabase = createClient();
   const { data: vet } = await supabase.from('veteran_profiles').select('plan, about, clearance_level, city, state').eq('profile_id', user.id).maybeSingle();
-  const allowed = ['pro', 'pro_plus', 'federal_pro'].includes((vet?.plan as string) ?? '');
+  const allowed = ['pro_plus', 'federal_pro'].includes((vet?.plan as string) ?? '');
   if (!allowed) {
     return (
       <div className="container-page max-w-2xl py-12 text-center">

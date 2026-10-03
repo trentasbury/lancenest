@@ -63,7 +63,7 @@ export default async function ApplicantsPage({ params }: { params: { id: string 
   const planOf = new Map((plans ?? []).map((p) => [p.profile_id as string, p.plan as string]));
   const { data: track } = rawApps.length ? await supabase.rpc('verified_work_summary', { ids: rawApps.map((a) => a.profile_id) }) : { data: [] };
   const trackOf = new Map(((track ?? []) as { profile_id: string; completed: number; avg_rating: number | null }[]).map((t) => [t.profile_id, t]));
-  const featured = (a: App) => ['pro', 'pro_plus', 'federal_pro'].includes(planOf.get(a.profile_id) ?? '');
+  const featured = (a: App) => ['pro_plus', 'federal_pro'].includes(planOf.get(a.profile_id) ?? '');
   // Pro Plus / Federal members are featured applicants: listed first, newest first within each group.
   const apps = [...rawApps.filter(featured), ...rawApps.filter((a) => !featured(a))];
 

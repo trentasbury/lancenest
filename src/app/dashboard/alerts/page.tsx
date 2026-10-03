@@ -8,7 +8,7 @@ import FormMessage from '@/components/FormMessage';
 import { createAlert, deleteAlert } from './actions';
 
 export const metadata: Metadata = { title: 'Job alerts' };
-const CAP: Record<string, number> = { pro: 10, pro_plus: 10, federal_pro: 10 };
+const CAP: Record<string, number> = { pro: 3, pro_plus: 5, federal_pro: 10 };
 
 export default async function AlertsPage({ searchParams }: { searchParams: { error?: string; saved?: string } }) {
   const { user } = await requireRole(['veteran'], '/dashboard/alerts');
@@ -23,7 +23,7 @@ export default async function AlertsPage({ searchParams }: { searchParams: { err
     <div className="container-page max-w-3xl space-y-6 py-10">
       <Link href="/dashboard" className="text-sm text-muted hover:text-navy">← Dashboard</Link>
       <h1 className="font-serif text-4xl font-medium">Job alerts</h1>
-      <p className="text-muted">Get a daily email when new jobs match. {plan !== 'free' ? 'Your cleared-job alerts include roles during your 48-hour early-access window.' : ''}</p>
+      <p className="text-muted">Get a daily email when new jobs match. {plan === 'federal_pro' ? 'Your cleared-job alerts include roles during your 48-hour early-access window.' : ''}</p>
       {cap === 0 ? (
         <div className="card p-6"><p className="font-medium">Job alerts are part of Pro.</p><p className="mt-1 text-sm text-muted">Pro includes 3 alerts, Pro Plus 5, and Federal 10 plus cleared-job alerts.</p><Link href="/plans" className="btn btn-primary mt-4">See plans</Link></div>
       ) : (
@@ -44,7 +44,7 @@ export default async function AlertsPage({ searchParams }: { searchParams: { err
               <input name="keywords" placeholder="Keywords (e.g. cybersecurity, logistics)" className="field sm:col-span-2" />
               <select name="state" className="field"><option value="">Any state</option>{US_STATES.map(([c, n]) => <option key={c} value={c}>{n}</option>)}</select>
               <select name="arrangement" className="field"><option value="">Any arrangement</option><option value="remote">Remote</option><option value="hybrid">Hybrid</option><option value="onsite">On-site</option></select>
-              {plan !== 'free' && <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="cleared_only" className="accent-navy" />Only jobs that require a security clearance</label>}
+              {plan === 'federal_pro' && <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="cleared_only" className="accent-navy" />Only jobs that require a security clearance</label>}
               <div className="sm:col-span-2"><SubmitButton className="btn btn-primary" pendingText="Saving…">Create alert</SubmitButton></div>
             </form>
           )}

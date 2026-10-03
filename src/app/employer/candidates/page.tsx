@@ -106,7 +106,7 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
   ]);
   // Placement perks: boosted profiles first, then Federal members (for federal employers), then Pro Plus / Federal.
   const now = Date.now();
-  const rank = (r: Row) => (r.boosted_until && Date.parse(r.boosted_until) > now ? 4 : 0) + (cleared && r.plan !== 'free' ? 2 : 0) + (r.plan !== 'free' ? 1 : 0);
+  const rank = (r: Row) => (r.boosted_until && Date.parse(r.boosted_until) > now ? 4 : 0) + (cleared && r.plan === 'federal_pro' ? 2 : 0) + (['pro_plus', 'federal_pro'].includes(r.plan) ? 1 : 0);
   const { data: savedSearches } = await supabase.from('saved_searches').select('id, name, params').eq('company_id', company.id).order('created_at');
   const rows = ((data ?? []) as unknown as Row[]).filter((r) => r.profile).map((r, i) => ({ r, i })).sort((a, b) => rank(b.r) - rank(a.r) || a.i - b.i).map((x) => x.r);
   const spot = ((spotlight.data ?? []) as unknown as Row[]).filter((r) => r.profile);
