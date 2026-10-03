@@ -60,6 +60,10 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
   if (!data) notFound();
   const { supabase, profile } = data;
   const viewer = await getSessionProfile();
+  if (viewer?.profile?.role === 'employer') {
+    const { data: hiding } = await supabase.rpc('members_hiding_me');
+    if (((hiding ?? []) as string[]).includes(profile.id)) notFound();
+  }
   if (viewer?.profile?.role === 'veteran' && viewer.user.id !== profile.id) {
     const { data: me } = await supabase.from('veteran_profiles').select('verification_status').eq('profile_id', viewer.user.id).maybeSingle();
     if (me?.verification_status !== 'verified') redirect('/dashboard/verification?required=1');

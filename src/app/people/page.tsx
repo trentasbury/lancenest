@@ -28,6 +28,11 @@ export default async function PeoplePage({ searchParams: f }: { searchParams: { 
   }
   // Row-level security returns only members the viewer may see (verified, not removed).
   let q = supabase.from('profiles').select('id, full_name, username, headline, location, service_summary, verified, role, avatar_url').neq('id', user.id);
+  if (profile.role === 'employer') {
+    const { data: hiding } = await supabase.rpc('members_hiding_me');
+    const hid = ((hiding ?? []) as string[]);
+    if (hid.length) q = q.not('id', 'in', `(${hid.join(',')})`);
+  }
   const kw = sanitizeSearch(f.q ?? '');
   if (kw) q = q.or(`full_name.ilike.%${kw}%,headline.ilike.%${kw}%`);
   if (f.branch && (BRANCHES as readonly string[]).includes(f.branch)) q = q.ilike('service_summary', `%${f.branch}%`);

@@ -144,6 +144,36 @@ export default async function InsightsPage() {
           </div>
           <p className="mt-3 text-xs text-muted">Private analytics: no cookies, no cross-site tracking. Visitors are counted with an anonymous code that resets daily.</p>
         </section>
+        {await (async () => {
+          const { createAdminClient: adminDb } = await import('@/lib/supabase/admin');
+          const db = adminDb();
+          const since = new Date(Date.now() - 30 * 86400000).toISOString();
+          const c = async (q: PromiseLike<{ count: number | null }>) => (await q).count ?? 0;
+          const [members, verified, withProfile, applied, employers, verifiedCo, paying] = await Promise.all([
+            c(db.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'veteran')),
+            c(db.from('veteran_profiles').select('profile_id', { count: 'exact', head: true }).eq('verification_status', 'verified')),
+            c(db.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'veteran').not('headline', 'is', null)),
+            c(db.from('applications').select('id', { count: 'exact', head: true }).eq('source', 'lancenest')),
+            c(db.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'employer')),
+            c(db.from('companies').select('id', { count: 'exact', head: true }).eq('is_verified', true)),
+            c(db.from('companies').select('id', { count: 'exact', head: true }).neq('plan', 'free')),
+          ]);
+          const { data: clicks } = await db.from('page_views').select('event').not('event', 'is', null).gte('created_at', since).limit(20000);
+          const tally = new Map<string, number>(); (clicks ?? []).forEach((r) => tally.set(r.event as string, (tally.get(r.event as string) ?? 0) + 1));
+          const row = (label: string, n: number, of?: number) => <li className="flex justify-between py-2"><span>{label}</span><span className="font-medium">{n.toLocaleString()}{of ? <span className="ml-2 text-xs text-muted">{Math.round((n / of) * 100)}%</span> : null}</span></li>;
+          return (
+            <section className="grid gap-6 lg:grid-cols-2">
+              <div className="card p-6"><p className="eyebrow">Funnel (all time)</p>
+                <ul className="mt-3 divide-y divide-line text-sm">
+                  {row('Service members signed up', members)}{row('Verified', verified, members)}{row('Profile started (headline)', withProfile, members)}{row('Applications sent', applied)}
+                  {row('Employers signed up', employers)}{row('Companies verified', verifiedCo, employers)}{row('Companies paying', paying, verifiedCo || undefined)}
+                </ul></div>
+              <div className="card p-6"><p className="eyebrow">Button clicks (last 30 days)</p>
+                {tally.size === 0 ? <p className="mt-3 text-sm text-muted">No tracked clicks yet.</p> : <ul className="mt-3 divide-y divide-line text-sm">{Array.from(tally.entries()).sort((a, b) => b[1] - a[1]).map(([k, n]) => <li key={k} className="flex justify-between py-2"><span>{k.replace(/^cta_/, '').replace(/_/g, ' ')}</span><span className="font-medium">{n}</span></li>)}</ul>}
+              </div>
+            </section>
+          );
+        })()}
       </div>
     </>
   );

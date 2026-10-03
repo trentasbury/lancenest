@@ -22,6 +22,8 @@ const PLANS = [
 const CHECKOUT: Record<string, string> = { Professional: 'employer_professional', Federal: 'employer_federal' };
 
 export default async function EmployersPage() {
+  const { foundingSpotsLeft } = await import('@/lib/billing');
+  const spotsLeft = await foundingSpotsLeft().catch(() => 0);
   const session = await getSessionProfile();
   const isEmployer = session?.profile?.role === 'employer';
   const founding = await foundingSpotsLeft();
@@ -38,9 +40,14 @@ export default async function EmployersPage() {
             subscriptions only, like the job boards you already use.
           </p>
           <p className="mx-auto mt-6 inline-block rounded-full border border-brass bg-brass/15 px-5 py-2 text-sm font-semibold text-brass">No placement fees on hires you make yourself — ever.</p>
+          {spotsLeft > 0 && (
+            <div className="mx-auto mt-5 max-w-2xl rounded-[6px] border border-brass/60 bg-navy/60 p-4 text-sm text-cream">
+              <strong className="text-brass">Founding Employer offer · {spotsLeft} of 50 spots left.</strong> Professional for <strong>$1,490 your first year</strong> (save $1,000), or Federal at $599/month for 12 months. Pay up front, lock in launch pricing.
+            </div>
+          )}
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Link href="/signup?role=employer" className="btn btn-brass">Post a job free</Link>
-            <Link href="/contact-sales?plan=federal" className="btn border border-cream/40 text-cream hover:border-brass">Book a call</Link>
+            <Link href="/signup?role=employer" className="btn btn-brass" data-track="cta_employer_post_free">Post a job free</Link>
+            <Link href="/contact-sales?plan=federal" className="btn border border-cream/40 text-cream hover:border-brass" data-track="cta_employer_book_call">Book a call</Link>
           </div>
           <p className="mx-auto mt-4 max-w-2xl rounded-[4px] border border-brass/40 bg-white/5 px-4 py-3 text-sm text-cream/90">
             <strong className="text-brass">Any company can hire here.</strong> You don’t need to be veteran-owned or have served — if you want to hire

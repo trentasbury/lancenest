@@ -41,6 +41,8 @@ export async function startConversation(otherId: string, formData?: FormData) {
     const { data: membership } = owned ? { data: null } : await admin.from('company_members').select('company:companies(is_verified)').eq('profile_id', me).maybeSingle();
     const company = owned ?? (membership as unknown as { company: { is_verified: boolean } | null } | null)?.company ?? null;
     if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
+    const { data: hiddenRow } = await admin.from('hidden_companies').select('profile_id').eq('profile_id', otherId).in('company_id', (await admin.from('company_members').select('company_id').eq('profile_id', me)).data?.map((r) => r.company_id as string).concat((await admin.from('companies').select('id').eq('owner_id', me)).data?.map((r) => r.id as string) ?? []) ?? []).maybeSingle();
+    if (hiddenRow) redirect('/messages?error=unavailable');
   }
 
   // Connections (mutual follows) and freelance contract partners message freely; everyone else starts with a request.

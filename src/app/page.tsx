@@ -55,8 +55,8 @@ export default async function HomePage({ searchParams }: { searchParams: { delet
             </form>
 
             <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-cream/80">
-              <Link href="/signup?role=veteran" className="underline decoration-brass/60 underline-offset-4 hover:text-brass">I served — build my profile</Link>
-              <Link href="/signup?role=employer" className="underline decoration-brass/60 underline-offset-4 hover:text-brass">I’m hiring veterans</Link>
+              <Link href="/signup?role=veteran" className="underline decoration-brass/60 underline-offset-4 hover:text-brass" data-track="cta_home_member_signup">I served — build my profile</Link>
+              <Link href="/signup?role=employer" className="underline decoration-brass/60 underline-offset-4 hover:text-brass" data-track="cta_home_employer_signup">I’m hiring veterans</Link>
             </div>
           </div>
 
@@ -169,7 +169,7 @@ export default async function HomePage({ searchParams }: { searchParams: { delet
             <ul className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
               {['Program & project management', 'Proposal & capture support', 'Logistics & supply chain', 'IT support & cyber operations', 'Operations & analysis', 'Training & instructional design', 'Business development', 'Executive & administrative operations'].map((r) => <li key={r} className="rounded-[4px] border border-line bg-ivory px-3 py-2">{r}</li>)}
             </ul>
-            <div className="mt-5 flex flex-wrap gap-3"><Link href="/employers" className="btn btn-primary">Hire verified veterans</Link><Link href="/contact-sales" className="btn btn-outline">Book a call</Link></div>
+            <div className="mt-5 flex flex-wrap gap-3"><Link href="/employers" className="btn btn-primary" data-track="cta_home_hire">Hire verified veterans</Link><Link href="/contact-sales" className="btn btn-outline" data-track="cta_home_book_call">Book a call</Link></div>
             <p className="mt-3 text-xs text-muted">No placement fees on hires you make yourself. Clearances shown on profiles are self-reported.</p>
           </div>
         </div>

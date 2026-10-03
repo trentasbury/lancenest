@@ -13,7 +13,8 @@ export async function POST(request: NextRequest) {
   try {
     const ua = request.headers.get('user-agent') ?? '';
     if (!ua || BOT.test(ua)) return new NextResponse(null, { status: 204 });
-    const { path, referrer } = (await request.json().catch(() => ({}))) as { path?: string; referrer?: string };
+    const { path, referrer, event } = (await request.json().catch(() => ({}))) as { path?: string; referrer?: string; event?: string };
+    const ev = event && /^[a-z0-9_]{2,60}$/.test(event) ? event : null;
     if (!path || !path.startsWith('/') || path.startsWith('/api')) return new NextResponse(null, { status: 204 });
 
     const ip = (request.headers.get('x-forwarded-for') ?? '').split(',')[0].trim();
@@ -27,7 +28,8 @@ export async function POST(request: NextRequest) {
 
     const { data: { user } } = await createClient().auth.getUser();
     const admin = createAdminClient();
-    await admin.from('page_views').insert({ path: path.split('?')[0].slice(0, 300), visitor, profile_id: user?.id ?? null, referrer_host: referrerHost });
+    await admin.from('page_views').insert({ path: path.split('?')[0].slice(0, 300), visitor, profile_id: user?.id ?? null, referrer_host: ev ? null : referrerHost, event: ev });
+    if (ev) return new NextResponse(null, { status: 204 });
     if (user) {
       const fiveMinAgo = new Date(Date.now() - 5 * 60000).toISOString();
       await admin.from('profiles').update({ last_active_at: new Date().toISOString() }).eq('id', user.id).or(`last_active_at.is.null,last_active_at.lt.${fiveMinAgo}`);

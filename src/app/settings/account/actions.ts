@@ -79,3 +79,19 @@ export async function saveAccountProfile(formData: FormData) {
   revalidatePath('/', 'layout');
   redirect('/settings/account?profile=saved');
 }
+
+/** Hide your profile from a specific company (and its recruiters). */
+export async function hideCompany(companyId: string) {
+  const session = await getSessionProfile();
+  if (!session) redirect('/login');
+  await createClient().from('hidden_companies').upsert({ profile_id: session.user.id, company_id: companyId }, { ignoreDuplicates: true });
+  revalidatePath('/settings/account');
+  redirect('/settings/account?hidden=1#privacy');
+}
+export async function unhideCompany(companyId: string) {
+  const session = await getSessionProfile();
+  if (!session) redirect('/login');
+  await createClient().from('hidden_companies').delete().eq('profile_id', session.user.id).eq('company_id', companyId);
+  revalidatePath('/settings/account');
+  redirect('/settings/account#privacy');
+}

@@ -3,7 +3,9 @@ import Link from 'next/link';
 import { requireRole, roleHome } from '@/lib/auth';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
-import { deleteMyAccount, removeAvatar, saveAccountProfile, signOutEverywhere } from './actions';
+import { deleteMyAccount, hideCompany, removeAvatar, saveAccountProfile, signOutEverywhere, unhideCompany } from './actions';
+import { createClient as createServerClient } from '@/lib/supabase/server';
+import { sanitizeSearch } from '@/lib/format';
 import AvatarUpload from '@/components/AvatarUpload';
 import { createClient } from '@/lib/supabase/server';
 
@@ -15,7 +17,7 @@ const ERRORS: Record<string, string> = {
   admin: 'Admin accounts can’t be deleted from here. Remove the admin role first.',
 };
 
-export default async function AccountPage({ searchParams }: { searchParams: { error?: string; photo?: string; profile?: string } }) {
+export default async function AccountPage({ searchParams }: { searchParams: { error?: string; photo?: string; profile?: string; hq?: string; hidden?: string } }) {
   const { user, profile } = await requireRole(['veteran', 'employer', 'admin'], '/settings/account');
   const { data: strikes } = await createClient().from('member_strikes').select('level, reason, created_at').eq('profile_id', user.id).order('created_at', { ascending: false });
   const { data: devices } = await createClient().from('login_devices').select('label, first_seen, last_seen').eq('profile_id', user.id).order('last_seen', { ascending: false }).limit(10);
@@ -48,6 +50,32 @@ export default async function AccountPage({ searchParams }: { searchParams: { er
           </div>
         </form>
       </section>
+
+      {(profile.role === 'veteran' || profile.role === 'admin') && await (async () => {
+        const db = createServerClient();
+        const hq = sanitizeSearch(searchParams.hq ?? '');
+        const [{ data: hidden }, { data: found }] = await Promise.all([
+          db.from('hidden_companies').select('company_id, company:companies(name)').eq('profile_id', profile.id),
+          hq ? db.from('companies').select('id, name').ilike('name', `%${hq}%`).limit(8) : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+        ]);
+        const hiddenIds = new Set((hidden ?? []).map((h) => h.company_id as string));
+        return (
+          <section id="privacy" className="card scroll-mt-24 p-7">
+            <h2 className="font-serif text-2xl font-semibold">Hide your profile from companies</h2>
+            <p className="mt-1 text-sm text-muted">Job hunting quietly? Companies you hide — and their recruiters — can’t find you in search, open your full profile, or see you in People.</p>
+            {searchParams.hidden && <p className="mt-2 text-sm text-olive">Hidden.</p>}
+            {(hidden ?? []).length > 0 && (
+              <ul className="mt-3 divide-y divide-line text-sm">{((hidden ?? []) as unknown as { company_id: string; company: { name: string } | null }[]).map((h) => (
+                <li key={h.company_id} className="flex items-center justify-between py-2"><span>{h.company?.name}</span><form action={unhideCompany.bind(null, h.company_id)}><button className="text-xs text-navy underline">Unhide</button></form></li>
+              ))}</ul>
+            )}
+            <form method="get" className="mt-3 flex gap-2"><input name="hq" defaultValue={searchParams.hq} placeholder="Search for a company (e.g. your current employer)" className="field" /><button className="btn btn-outline shrink-0">Search</button></form>
+            {hq && <ul className="mt-2 space-y-1 text-sm">{(found ?? []).length === 0 ? <li className="text-muted">No companies on LanceNest match. If they join later, you can hide them then.</li> : (found ?? []).map((c) => (
+              <li key={c.id as string} className="flex items-center justify-between rounded-[3px] border border-line px-3 py-2"><span>{c.name as string}</span>{hiddenIds.has(c.id as string) ? <span className="text-xs text-olive">Hidden</span> : <form action={hideCompany.bind(null, c.id as string)}><button className="text-xs text-navy underline">Hide from this company</button></form>}</li>
+            ))}</ul>}
+          </section>
+        );
+      })()}
 
       <section className="card p-7">
         <h2 className="font-serif text-2xl font-semibold">Your account</h2>

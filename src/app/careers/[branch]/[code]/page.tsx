@@ -5,6 +5,20 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { branchFromSlug, publicDb } from '@/lib/careers';
 
 export const revalidate = 86400;
+const CERT_RULES: [RegExp, string[]][] = [
+  [/cyber|security|network|information|it\b|computer|system/i, ['CompTIA Security+', 'CompTIA Network+', 'CompTIA A+']],
+  [/logistic|supply|inventory|procure|warehouse/i, ['APICS CPIM or CSCP', 'Certified Professional in Supply Management (CPSM)']],
+  [/project|program|operations|manage|admin/i, ['PMP or CAPM (Project Management Institute)', 'Lean Six Sigma Green Belt']],
+  [/maint|mechanic|aircraft|aviation|vehicle|engine/i, ['FAA Airframe & Powerplant (aviation)', 'ASE certifications (automotive)']],
+  [/medic|health|medical|nurs|clinic/i, ['NREMT (EMT/Paramedic)', 'Certified Medical Assistant (CMA)']],
+  [/intel|analy/i, ['CompTIA Security+', 'GIAC or analyst certifications by specialty']],
+  [/construct|engineer|electric|hvac|plumb/i, ['OSHA 30-Hour', 'State trade license (requirements vary)']],
+  [/transport|driver|motor/i, ['Commercial Driver’s License (CDL)']],
+  [/food|culinary/i, ['ServSafe Manager']],
+  [/train|instruct|education/i, ['Certified Professional in Training Management (CPTM)', 'ATD Associate Professional in Talent Development']],
+];
+function certsFor(text: string) { const out = new Set<string>(); for (const [re, c] of CERT_RULES) if (re.test(text)) c.forEach((x) => out.add(x)); return Array.from(out).slice(0, 6); }
+
 type Occ = { id: string; code: string; branch: string; title: string; civilian_categories: string[] | null; civilian_skills: string[] | null };
 
 async function load(branchSlug: string, code: string) {
@@ -48,6 +62,24 @@ export default async function CareerPage({ params }: { params: { branch: string;
         <div className="space-y-6">
           {cats.length > 0 && <section className="card p-7"><h2 className="eyebrow">Civilian career paths</h2><ul className="mt-4 grid gap-2 sm:grid-cols-2">{cats.map((c) => <li key={c} className="rounded-[4px] border border-line bg-paper px-4 py-3 font-medium text-navy">{c}</li>)}</ul></section>}
           {skills.length > 0 && <section className="card p-7"><h2 className="eyebrow">Skills employers recognize</h2><div className="mt-4 flex flex-wrap gap-2">{skills.map((s) => <span key={s} className="pill">{s}</span>)}</div></section>}
+          {(() => {
+            const certs = certsFor(`${o.title} ${cats.join(' ')} ${skills.join(' ')}`);
+            const s1 = skills[0] ?? 'mission-critical operations', s2 = skills[1] ?? 'team leadership', s3 = skills[2] ?? 'process improvement';
+            return (
+              <>
+                {certs.length > 0 && <section className="card p-7"><h2 className="eyebrow">Certifications employers value</h2><ul className="mt-3 list-disc space-y-1 pl-6 text-ink/85">{certs.map((c) => <li key={c}>{c}</li>)}</ul>
+                  <p className="mt-3 text-xs text-muted">Many can be funded while serving (Credentialing Assistance / COOL) or with the GI Bill. See <Link href="/guides/gi-bill-vs-certifications" className="text-navy underline">GI Bill vs. certifications</Link>.</p></section>}
+                <section className="card p-7"><h2 className="eyebrow">Résumé lines to adapt</h2>
+                  <ul className="mt-3 list-disc space-y-2 pl-6 text-ink/85">
+                    <li>Led {s1.toLowerCase()} for a team of [number] personnel, achieving [measurable result] under tight deadlines.</li>
+                    <li>Applied {s2.toLowerCase()} to manage equipment and resources valued at $[amount] with zero loss or discrepancies.</li>
+                    <li>Improved {s3.toLowerCase()}, reducing [time, cost, or errors] by [percent] across [scope].</li>
+                  </ul>
+                  <p className="mt-3 text-xs text-muted">Replace the brackets with your real numbers. Never include classified details. <Link href="/guides/translate-military-experience-resume" className="text-navy underline">Full résumé guide</Link></p></section>
+                <section className="card p-7"><h2 className="eyebrow">Research pay</h2><p className="mt-2 text-ink/85">Compare pay and job outlook for {cats.slice(0, 2).join(' and ') || 'these roles'} in the U.S. Bureau of Labor Statistics <a href="https://www.bls.gov/ooh/" target="_blank" rel="noopener noreferrer" className="text-navy underline">Occupational Outlook Handbook ↗</a>.</p></section>
+              </>
+            );
+          })()}
           <section className="card p-7">
             <h2 className="eyebrow">Your whole career counts</h2>
             <p className="mt-3 text-ink/85">Your military job is a starting point, not a box. On LanceNest, jobs are matched to your entire background — civilian roles, skills, certifications, and the work you want next. Your military experience counts most while you’re serving or recently out.</p>
@@ -57,9 +89,9 @@ export default async function CareerPage({ params }: { params: { branch: string;
           <div className="card p-6">
             {openRoles > 0 && <p className="font-serif text-3xl text-navy">{openRoles} <span className="text-base text-muted">open role{openRoles === 1 ? '' : 's'} match this career</span></p>}
             <p className="mt-2 text-sm text-muted">Verified employers, cleared roles, SkillBridge, and freelance work — for service members and veterans only.</p>
-            <Link href="/signup?role=veteran" className="btn btn-primary mt-4 w-full">Join free & see matching jobs</Link>
+            <Link href="/signup?role=veteran" className="btn btn-primary mt-4 w-full" data-track="cta_career_join">Join free & see matching jobs</Link>
           </div>
-          <div className="card p-6"><p className="eyebrow">Hiring?</p><p className="mt-2 text-sm text-muted">Hire verified service members and veterans with this experience.</p><Link href="/employers" className="btn btn-outline mt-3 w-full">Hire people with this experience</Link></div>
+          <div className="card p-6"><p className="eyebrow">Hiring?</p><p className="mt-2 text-sm text-muted">Hire verified service members and veterans with this experience.</p><Link href="/employers" className="btn btn-outline mt-3 w-full" data-track="cta_career_hire">Hire people with this experience</Link></div>
           <div className="card p-5 text-sm"><p className="eyebrow">Guides</p><ul className="mt-2 space-y-1"><li><Link href="/guides/translate-military-experience-resume" className="text-navy underline">Translate your experience for a résumé</Link></li><li><Link href="/guides/how-to-use-dod-skillbridge" className="text-navy underline">How to use SkillBridge</Link></li><li><Link href="/guides/gi-bill-vs-certifications" className="text-navy underline">GI Bill vs. certifications</Link></li></ul></div>
           <p className="text-xs text-muted">Translations are general guidance. LanceNest is not affiliated with the Department of Defense or any military branch.</p>
         </aside>
