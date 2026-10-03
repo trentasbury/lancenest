@@ -42,7 +42,7 @@ export default async function EmployersPage() {
           <p className="mx-auto mt-6 inline-block rounded-full border border-brass bg-brass/15 px-5 py-2 text-sm font-semibold text-brass">No placement fees on hires you make yourself — ever.</p>
           {spotsLeft > 0 && (
             <div className="mx-auto mt-5 max-w-2xl rounded-[6px] border border-brass/60 bg-navy/60 p-4 text-sm text-cream">
-              <strong className="text-brass">Founding Employer offer · {spotsLeft} of 50 spots left.</strong> Professional for <strong>$1,490 your first year</strong> (save $1,000), or Federal at $599/month for 12 months. Pay up front, lock in launch pricing.
+              <strong className="text-brass">Founding Employer offer · {spotsLeft} of 50 spots left.</strong> Professional for <strong>$1,490 your first year</strong> (save $1,000), or Federal at $599/month for 12 months (regularly $999). Pay up front, lock in launch pricing.
             </div>
           )}
           <div className="mt-6 flex flex-wrap justify-center gap-3">
