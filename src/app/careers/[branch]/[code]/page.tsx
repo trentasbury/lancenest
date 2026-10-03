@@ -59,6 +59,7 @@ export default async function CareerPage({ params }: { params: { branch: string;
             <p className="mt-2 text-sm text-muted">Verified employers, cleared roles, SkillBridge, and freelance work — for service members and veterans only.</p>
             <Link href="/signup?role=veteran" className="btn btn-primary mt-4 w-full">Join free & see matching jobs</Link>
           </div>
+          <div className="card p-6"><p className="eyebrow">Hiring?</p><p className="mt-2 text-sm text-muted">Hire verified service members and veterans with this experience.</p><Link href="/employers" className="btn btn-outline mt-3 w-full">Hire people with this experience</Link></div>
           <div className="card p-5 text-sm"><p className="eyebrow">Guides</p><ul className="mt-2 space-y-1"><li><Link href="/guides/translate-military-experience-resume" className="text-navy underline">Translate your experience for a résumé</Link></li><li><Link href="/guides/how-to-use-dod-skillbridge" className="text-navy underline">How to use SkillBridge</Link></li><li><Link href="/guides/gi-bill-vs-certifications" className="text-navy underline">GI Bill vs. certifications</Link></li></ul></div>
           <p className="text-xs text-muted">Translations are general guidance. LanceNest is not affiliated with the Department of Defense or any military branch.</p>
         </aside>

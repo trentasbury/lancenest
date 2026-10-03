@@ -32,8 +32,9 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="container-page flex flex-col items-center justify-between gap-3 py-6 text-xs tracking-[0.14em] text-cream/60 sm:flex-row">
           <span>© {new Date().getFullYear()} LANCENEST</span>
-          <span className="flex gap-5">
+          <span className="flex flex-wrap justify-center gap-x-5 gap-y-2">
             <Link href="/privacy" className="hover:text-brass">PRIVACY</Link>
+            <Link href="/trust" className="hover:text-brass">TRUST</Link>
             <Link href="/security" className="hover:text-brass">SECURITY</Link>
             <Link href="/accessibility" className="hover:text-brass">ACCESSIBILITY</Link>
             <Link href="/terms" className="hover:text-brass">TERMS</Link>

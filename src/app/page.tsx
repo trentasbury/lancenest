@@ -12,7 +12,21 @@ const FEATURES = [
 
 const LOOP = ['Service', 'Skills', 'Translation', 'Opportunity', 'Application', 'Career'];
 
+async function getStats() {
+  try {
+    const { createAdminClient } = await import('@/lib/supabase/admin');
+    const admin = createAdminClient();
+    const [m, j, c] = await Promise.all([
+      admin.from('veteran_profiles').select('profile_id', { count: 'exact', head: true }).eq('verification_status', 'verified'),
+      admin.from('jobs').select('id', { count: 'exact', head: true }).eq('status', 'open'),
+      admin.from('companies').select('id', { count: 'exact', head: true }).eq('is_verified', true),
+    ]);
+    return { members: m.count ?? 0, jobs: j.count ?? 0, companies: c.count ?? 0 };
+  } catch { return null; }
+}
+
 export default async function HomePage({ searchParams }: { searchParams: { deleted?: string } }) {
+  const stats = await getStats();
   await ensureOccupationsLoaded();
   return (
     <>
@@ -128,6 +142,56 @@ export default async function HomePage({ searchParams }: { searchParams: { delet
       </section>
 
       {/* Closing statement */}
+      <section className="bg-paper">
+        <div className="container-page grid gap-10 py-16 lg:grid-cols-2">
+          <div>
+            <p className="eyebrow">See it before you sign up</p>
+            <h2 className="mt-2 font-serif text-3xl font-medium text-navy">Your military job, in civilian terms.</h2>
+            <div className="mt-5 overflow-x-auto rounded-[6px] border border-line bg-ivory">
+              <table className="w-full min-w-[420px] text-left text-sm">
+                <thead className="border-b border-line text-xs uppercase tracking-[0.12em] text-muted"><tr><th className="p-3">Military job</th><th className="p-3">Civilian roles</th></tr></thead>
+                <tbody className="divide-y divide-line">
+                  {[['Army 92Y · Unit Supply Specialist', 'Supply chain coordinator · Inventory control · Procurement assistant', '/careers/army/92y'],
+                    ['Army 25B · IT Specialist', 'Help desk lead · Systems administrator · IT project coordinator', '/careers/army/25b'],
+                    ['Marine 0311 · Rifleman', 'Operations coordinator · Site supervisor · Security operations', '/careers/marine-corps/0311'],
+                    ['Air Force 2A5X1 · Aerospace Maintenance', 'Field service technician · Maintenance planner · Quality assurance', '/careers/air-force/2a5x1']].map(([m, c, href]) => (
+                    <tr key={m}><td className="p-3 font-medium"><Link href={href} className="text-navy hover:underline">{m}</Link></td><td className="p-3 text-ink/80">{c}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Link href="/careers" className="mt-4 inline-block text-sm text-navy underline decoration-brass underline-offset-4">Find yours — 1,469 military jobs translated →</Link>
+          </div>
+          <div>
+            <p className="eyebrow">For employers</p>
+            <h2 className="mt-2 font-serif text-3xl font-medium text-navy">Verified military talent for federal-ready professional work.</h2>
+            <p className="mt-3 text-muted">Built for government contractors, defense subcontractors, and veteran-owned firms hiring for:</p>
+            <ul className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+              {['Program & project management', 'Proposal & capture support', 'Logistics & supply chain', 'IT support & cyber operations', 'Operations & analysis', 'Training & instructional design', 'Business development', 'Executive & administrative operations'].map((r) => <li key={r} className="rounded-[4px] border border-line bg-ivory px-3 py-2">{r}</li>)}
+            </ul>
+            <div className="mt-5 flex flex-wrap gap-3"><Link href="/employers" className="btn btn-primary">Hire verified veterans</Link><Link href="/contact-sales" className="btn btn-outline">Book a call</Link></div>
+            <p className="mt-3 text-xs text-muted">No placement fees on hires you make yourself. Clearances shown on profiles are self-reported.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-line bg-cream">
+        <div className="container-page py-14">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div><p className="eyebrow">Trust</p><h2 className="mt-2 font-serif text-3xl font-medium text-navy">How verification works</h2></div>
+            <Link href="/trust" className="text-sm text-navy underline decoration-brass underline-offset-4">What we verify — and what we don’t →</Link>
+          </div>
+          <div className="mt-6 grid gap-5 md:grid-cols-3">
+            <div className="card p-5"><p className="font-semibold text-navy">Every member</p><p className="mt-1 text-sm text-muted">A person reviews proof of service — DD-214, LES, orders, NGB-22, or a VA letter. Documents are deleted after review. Military ID cards are never accepted.</p></div>
+            <div className="card p-5"><p className="font-semibold text-navy">Every employer</p><p className="mt-1 text-sm text-muted">Company domain or business documents are verified before anyone can post a job, search, or message members.</p></div>
+            <div className="card p-5"><p className="font-semibold text-navy">What’s self-reported</p><p className="mt-1 text-sm text-muted">Security clearances are self-reported and labeled that way. Employers confirm eligibility through official channels.</p></div>
+          </div>
+          {stats && (
+            <p className="mt-6 text-sm text-muted">{stats.members >= 100 ? `${stats.members.toLocaleString()} verified members · ${stats.jobs.toLocaleString()} open roles · ${stats.companies.toLocaleString()} verified employers` : 'Founding period: LanceNest opened in 2026. Join early — Founding Employers lock in launch pricing, and early members get seen first.'}</p>
+          )}
+        </div>
+      </section>
+
       <section className="bg-navy-deep py-20 text-center text-ivory">
         <h2 className="font-serif text-3xl font-medium tracking-[0.12em] text-ivory sm:text-4xl">VETERANS TODAY. LEADERS TOMORROW.</h2>
         <p className="mt-4 text-xs tracking-[0.3em] text-brass-light">SERVICE · LEADERSHIP · OPPORTUNITY</p>

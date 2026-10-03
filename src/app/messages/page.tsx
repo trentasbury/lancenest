@@ -7,7 +7,7 @@ import Avatar from '@/components/network/Avatar';
 import EmptyState from '@/components/EmptyState';
 import FormMessage from '@/components/FormMessage';
 
-export const metadata: Metadata = { title: 'Messages' };
+export const metadata: Metadata = { title: 'Messages', robots: { index: false, follow: false } };
 
 type Row = { conversation_id: string; profile_id: string; last_read_at: string | null; profile: { full_name: string; headline: string | null } | null };
 
