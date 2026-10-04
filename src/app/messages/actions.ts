@@ -43,6 +43,25 @@ export async function startConversation(otherId: string, formData?: FormData) {
     if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
     const { data: hiddenRow } = await admin.from('hidden_companies').select('profile_id').eq('profile_id', otherId).in('company_id', (await admin.from('company_members').select('company_id').eq('profile_id', me)).data?.map((r) => r.company_id as string).concat((await admin.from('companies').select('id').eq('owner_id', me)).data?.map((r) => r.id as string) ?? []) ?? []).maybeSingle();
     if (hiddenRow) redirect('/messages?error=unavailable');
+    // Outreach by plan: Free reaches applicants only; paid plans get a monthly allowance of new conversations.
+    const { data: ownCo } = await admin.from('companies').select('id, plan, owner_id').eq('owner_id', me).maybeSingle();
+    const { data: memCo } = ownCo ? { data: null } : await admin.from('company_members').select('company:companies(id, plan, owner_id)').eq('profile_id', me).maybeSingle();
+    const co = ownCo ?? (memCo as unknown as { company: { id: string; plan: string; owner_id: string } | null } | null)?.company ?? null;
+    if (co) {
+      const { data: jobIds } = await admin.from('jobs').select('id').eq('company_id', co.id);
+      const { count: applied } = (jobIds ?? []).length ? await admin.from('applications').select('id', { count: 'exact', head: true }).eq('profile_id', otherId).in('job_id', (jobIds ?? []).map((j) => j.id as string)) : { count: 0 };
+      const { count: proposed } = await admin.from('proposals').select('id, project:freelance_projects!inner(client_id)', { count: 'exact', head: true }).eq('freelancer_id', otherId).eq('project.client_id', me);
+      const isApplicant = (applied ?? 0) > 0 || (proposed ?? 0) > 0;
+      if (!isApplicant) {
+        if (co.plan === 'free') redirect('/messages?error=plan');
+        const CAP: Record<string, number> = { professional: 100, federal: 500, enterprise: 2000 };
+        const { data: team } = await admin.from('company_members').select('profile_id').eq('company_id', co.id);
+        const ids = [co.owner_id, ...(team ?? []).map((t) => t.profile_id as string)];
+        const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+        const { count: used } = await admin.from('conversations').select('id', { count: 'exact', head: true }).in('requested_by', ids).gte('created_at', monthStart);
+        if ((used ?? 0) >= (CAP[co.plan] ?? 100)) redirect('/messages?error=limit');
+      }
+    }
   }
 
   // Connections (mutual follows) and freelance contract partners message freely; everyone else starts with a request.

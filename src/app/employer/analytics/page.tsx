@@ -17,6 +17,7 @@ export default async function AnalyticsPage() {
     return (
       <div className="container-page max-w-3xl py-12">
         <h1 className="mb-6 font-serif text-4xl font-medium">Hiring analytics</h1>
+        {company && ['federal', 'enterprise'].includes(company.plan) && <a href="/api/employer/compliance-export" className="btn btn-outline mb-6" data-track="employer_compliance_export">Download hiring records (CSV)</a>}
         <Upsell title="See what’s working." body="Views, applicants, and conversion for every job over the last 30 days — so you know which roles to boost and which to rewrite." />
       </div>
     );

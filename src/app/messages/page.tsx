@@ -60,7 +60,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: { e
       </div>
       {tab === 'requests' && <p className="mt-3 text-sm text-muted">People who aren’t connected with you can send one message. Open a request to accept or decline it.</p>}
       {searchParams.error && (
-        <div className="mt-4"><FormMessage error={searchParams.error === 'blocked' ? 'You can’t message this member.' : 'That conversation couldn’t be started. Please try again.'} /></div>
+        <div className="mt-4"><FormMessage error={searchParams.error === 'blocked' ? 'You can’t message this member.' : searchParams.error === 'plan' ? 'Free employer accounts can message people who apply to your jobs or projects. Upgrade to Professional to reach any verified member.' : searchParams.error === 'limit' ? 'You’ve reached this month’s new-conversation allowance for your plan. It resets on the 1st — or upgrade for more.' : searchParams.error === 'unavailable' ? 'This member isn’t available to message.' : 'That conversation couldn’t be started. Please try again.'} /></div>
       )}
       <div className="mt-6">
         {list.length === 0 ? (

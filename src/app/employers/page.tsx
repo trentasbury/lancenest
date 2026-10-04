@@ -13,7 +13,7 @@ const PLANS = [
     features: ['No placement fees on your hires', 'Company recruiting page', '2 open job posts', 'Applicant pipeline with résumés and verified work', 'Free, unlimited messaging with any verified member'] },
   { name: 'Professional', price: '$249', note: 'per month · or $2,490/year paid up front (2 months free)', cta: 'Start with Professional', featured: true,
     features: ['Unlimited job posts', 'Search every verified member’s full profile', 'Transitioning talent search (separating in 12 months)', 'Hiring analytics: views, applicants, conversion', '5 featured jobs a month, included', 'Talent pools: save candidates to lists with private notes', 'Saved searches with daily new-match emails', '3 team seats', 'Branded company page: cover photo and “Why veterans work here”', 'Applicant export (CSV)'] },
-  { name: 'Federal', price: '$999', note: 'per month · or $9,990/year paid up front (2 months free) · Founding Employers: $599/month for the first 12 months', cta: 'Start with Federal',
+  { name: 'Federal', price: '$999', note: 'per month · or $9,990/year paid up front (2 months free) · Founding Employers: $7,500 for the first year, paid up front', cta: 'Start with Federal',
     features: ['Everything in Professional', 'Built for primes, subs, and GovCon small businesses', 'Search by self-reported clearance level (you confirm eligibility in official systems)', 'Cleared talent spotlight', '5 team seats', 'Unlimited featured jobs', 'Priority support from the founder'] },
   { name: 'Enterprise', price: 'Custom', note: 'from $15,000/year', cta: 'Talk to us',
     features: ['Everything in Federal', 'Volume pricing for multiple hiring teams', 'Invoice billing', 'Dedicated support'] },
@@ -42,7 +42,7 @@ export default async function EmployersPage() {
           <p className="mx-auto mt-6 inline-block rounded-full border border-brass bg-brass/15 px-5 py-2 text-sm font-semibold text-brass">No placement fees on hires you make yourself — ever.</p>
           {spotsLeft > 0 && (
             <div className="mx-auto mt-5 max-w-2xl rounded-[6px] border border-brass/60 bg-navy/60 p-4 text-sm text-cream">
-              <strong className="text-brass">Founding Employer offer · {spotsLeft} of 50 spots left.</strong> Professional for <strong>$1,490 your first year</strong> (save $1,000), or Federal at $599/month for 12 months (regularly $999). Pay up front, lock in launch pricing.
+              <strong className="text-brass">Founding Employer offer · {spotsLeft} of 50 spots left.</strong> Professional for <strong>$1,490 your first year</strong> (save $1,000), or Federal for <strong>$7,500 your first year</strong> (regularly $11,988). Paid up front, launch pricing locked in.
             </div>
           )}
           <div className="mt-6 flex flex-wrap justify-center gap-3">
@@ -93,6 +93,26 @@ export default async function EmployersPage() {
             </div>
           ))}
         </div>
+
+          <div className="mt-12 overflow-x-auto rounded-[6px] border border-line bg-ivory" tabIndex={0} role="region" aria-label="Plan comparison">
+            <table className="w-full min-w-[640px] text-left text-sm">
+              <thead className="border-b border-line bg-paper text-xs uppercase tracking-[0.12em] text-muted"><tr><th className="p-3">Compare plans</th><th className="p-3">Free</th><th className="p-3">Professional</th><th className="p-3">Federal</th><th className="p-3">Enterprise</th></tr></thead>
+              <tbody className="divide-y divide-line">
+                <tr><td className="p-3 font-medium">Verified company page</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
+                <tr><td className="p-3 font-medium">Team seats</td><td className="p-3">1</td><td className="p-3">3</td><td className="p-3">5</td><td className="p-3">Custom</td></tr>
+                <tr><td className="p-3 font-medium">Open jobs</td><td className="p-3">2</td><td className="p-3">Unlimited</td><td className="p-3">Unlimited</td><td className="p-3">Unlimited</td></tr>
+                <tr><td className="p-3 font-medium">Screening questions and applicant pipeline</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
+                <tr><td className="p-3 font-medium">Message applicants</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
+                <tr><td className="p-3 font-medium">Search all verified members</td><td className="p-3">Preview</td><td className="p-3">✓</td><td className="p-3">✓ + clearance filters</td><td className="p-3">✓</td></tr>
+                <tr><td className="p-3 font-medium">New conversations with any member</td><td className="p-3">—</td><td className="p-3">100/month</td><td className="p-3">500/month</td><td className="p-3">2,000/month</td></tr>
+                <tr><td className="p-3 font-medium">Saved searches, talent pools, notes</td><td className="p-3">—</td><td className="p-3">✓</td><td className="p-3">✓ (team-shared)</td><td className="p-3">✓</td></tr>
+                <tr><td className="p-3 font-medium">Featured jobs</td><td className="p-3">Add-on</td><td className="p-3">5/month</td><td className="p-3">Unlimited</td><td className="p-3">Unlimited</td></tr>
+                <tr><td className="p-3 font-medium">Reports and CSV export</td><td className="p-3">Basic</td><td className="p-3">✓</td><td className="p-3">✓ + compliance export</td><td className="p-3">Custom</td></tr>
+                <tr><td className="p-3 font-medium">Support</td><td className="p-3">Email</td><td className="p-3">Email</td><td className="p-3">Priority</td><td className="p-3">Dedicated contact</td></tr>
+                <tr><td className="p-3 font-medium">Invoicing, security review, custom terms</td><td className="p-3">—</td><td className="p-3">—</td><td className="p-3">—</td><td className="p-3">✓</td></tr>
+              </tbody>
+            </table>
+          </div>
         <p className="mt-8 text-center text-sm text-muted">
           Every employer account starts free, and no plan ever charges a fee when you hire. Upgrade, downgrade, or cancel anytime. Add-ons: featured job boost $49 · extra job slot $39/month. <strong>Public Safety rate:</strong> government police, sheriff, corrections, fire, and EMS agencies get 30% off Professional and Federal — annual invoicing available. <strong>Virtual career fair booths:</strong> $499, or $399 on Professional and Federal. <strong>Training providers:</strong> list programs for $149/month (featured +$99/month; sponsored info sessions $500).
         </p>

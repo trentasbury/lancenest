@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
   if ((item.plan === 'professional' || item.plan === 'federal') && company.public_safety_status === 'approved') {
     coupon = await publicSafetyCoupon();
     metadata.public_safety = 'true';
-  } else if ((item.plan === 'professional' || item.plan === 'federal') && item.interval && (await foundingSpotsLeft()) > 0) {
+  } else if ((item.plan === 'professional' || (item.plan === 'federal' && item.interval === 'year')) && item.interval && (await foundingSpotsLeft()) > 0) {
     coupon = item.plan === 'federal' ? await foundingFederalCoupon(item.interval) : await foundingCoupon(item.interval);
     metadata.founding = 'true';
   }

@@ -45,11 +45,11 @@ export const CONTACT_PACK_SIZE = 5;
 
 /** Founding Employers: first 50 Professional subscribers pay $149/mo (or $1,490/yr) for their first 12 months. */
 export const FOUNDING = { spots: 50, months: 12, monthlyOffCents: 10000, annualOffCents: 100000 };
-export const FOUNDING_FEDERAL = { monthlyOffCents: 40000, annualOffCents: 400000 };
+export const FOUNDING_FEDERAL = { monthlyOffCents: 0, annualOffCents: 249000 };   // $9,990 - $2,490 = $7,500 first year, paid up front
 
 /** Stripe coupons for the founding discount, created once and reused. */
 export async function foundingFederalCoupon(interval: 'month' | 'year') {
-  const id = interval === 'year' ? 'lancenest-founding-federal-annual-v2' : 'lancenest-founding-federal-monthly-v2';
+  const id = interval === 'year' ? 'lancenest-founding-federal-annual-v3' : 'lancenest-founding-federal-monthly-v3';
   try { return (await stripe().coupons.retrieve(id)).id; } catch {
     return (await stripe().coupons.create(interval === 'year'
       ? { id, name: 'Founding Employer — Federal first year', amount_off: FOUNDING_FEDERAL.annualOffCents, currency: 'usd', duration: 'once' }
