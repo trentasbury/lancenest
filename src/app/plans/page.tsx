@@ -16,7 +16,7 @@ const PLANS = [
     features: ['Everything in Free', 'See exactly who viewed your profile', 'Applicant insights: how you compare on every job', 'Daily job alerts by email (3)', 'Unlimited freelance proposals', 'Pro badge on your profile', 'Freelance fee: 10%'] },
   { id: 'veteran_pro_plus' as const, key: 'pro_plus', name: 'Pro Plus', price: '$45', note: 'per month · or $399/year paid up front (save 26%)', month: 'veteran_pro_plus_month', year: 'veteran_pro_plus_year', featured: true,
     features: ['Everything in Pro', 'Featured applicant — you appear first in employers’ applicant lists', 'Profile boost twice a month — featured at the top of employer searches for 7 days',
-      'Priority placement in employer candidate search', 'Priority messages: yours show first in employers’ inboxes', 'Military résumé builder: civilian résumé in one click', '48-hour early access to jobs requiring a clearance', 'Top placement in cleared-talent searches', '10 job alerts, including cleared-only', 'Pro Plus badge', 'Freelance fee: 8%'] },
+      'Priority placement in employer candidate search', 'Priority messages: yours show first in employers’ inboxes', 'Military résumé builder: civilian résumé in one click', '48-hour early access to jobs requiring a clearance (clearance self-reported)', 'Top placement in self-reported clearance searches', '10 job alerts, including cleared-only', 'Pro Plus badge', 'Freelance fee: 8%'] },
 ];
 
 export default async function PlansPage() {
@@ -67,7 +67,7 @@ export default async function PlansPage() {
                   ) : (
                     <div className="space-y-2">
                       <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value={plan.month} /><button className={`btn w-full ${plan.featured ? 'btn-primary' : 'btn-outline'}`}>{currentPlan !== 'free' ? 'Switch' : 'Upgrade'} · {plan.price}/mo</button></form>
-                      <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value={plan.year} /><button className="w-full text-center text-xs text-navy underline decoration-brass underline-offset-4">or pay yearly — 2 months free</button></form>
+                      <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value={plan.year} /><button className="w-full text-center text-xs text-navy underline decoration-brass underline-offset-4">or pay yearly and save 24–26%</button></form>
                     </div>
                   )}
                 </div>
@@ -75,7 +75,7 @@ export default async function PlansPage() {
             );
           })}
         </div>
-        <p className="mt-8 text-center text-sm text-muted">Cancel anytime from Manage billing. Paying for the year up front saves you 2 months.</p>
+        <p className="mt-8 text-center text-sm text-muted">Cancel anytime from Manage billing. Paying yearly saves 24% on Pro ($229 vs. $300) and 26% on Pro Plus ($399 vs. $540). Clearances on LanceNest are self-reported; employers confirm eligibility through official channels.</p>
       </div>
     </>
   );

@@ -76,7 +76,7 @@ export default function TermsPage() {
       </section>
       <section>
         <h2>Ending your use</h2>
-        <p>You may close your account at any time by contacting us. We may suspend or end access for violations of these Terms or to protect members and the service.</p>
+        <p>You may delete your account at any time in Account settings, or ask us to by email. We may suspend or end access for violations of these Terms or to protect members and the service.</p>
       </section>
       <section>
         <h2>Changes, law, and contact</h2>
