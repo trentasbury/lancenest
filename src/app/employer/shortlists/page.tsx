@@ -10,7 +10,7 @@ import VerifiedMark from '@/components/VerifiedMark';
 import { startConversation } from '@/app/messages/actions';
 import { reportHire, requestRerun } from './actions';
 
-export const metadata: Metadata = { title: 'Verified Shortlists' };
+export const metadata: Metadata = { title: 'Search Sprint' };
 const STATUS: Record<string, string> = { awaiting_payment: 'Awaiting payment', sourcing: 'We’re sourcing', delivered: 'Delivered', hired: 'Hired', closed: 'Closed' };
 type Cand = { profile_id: string; note: string | null; profile: { full_name: string; username: string | null; headline: string | null; verified: boolean } | null };
 
@@ -23,14 +23,13 @@ export default async function ShortlistsPage({ searchParams }: { searchParams: {
   const { data: reqs } = await supabase.from('shortlist_requests').select('*').eq('company_id', company.id).neq('status', 'awaiting_payment').order('created_at', { ascending: false });
   const ids = (reqs ?? []).map((r) => r.id as string);
   const { data: cands } = ids.length ? await supabase.from('shortlist_candidates').select('request_id, profile_id, note, profile:profiles(full_name, username, headline, verified)').in('request_id', ids) : { data: [] };
-  const qStart = new Date(new Date().getFullYear(), Math.floor(new Date().getMonth() / 3) * 3, 1).getTime();
-  const freeAvailable = ['federal', 'enterprise'].includes(company.plan) && !(reqs ?? []).some((r) => r.amount_cents === 0 && Date.parse(r.created_at as string) >= qStart);
-  const price = PAID.includes(company.plan) ? 500 : 750;
+  const freeAvailable = ['federal', 'enterprise'].includes(company.plan) && !(reqs ?? []).some((r) => r.amount_cents === 150000 && Date.parse(r.created_at as string) >= Date.now() - 365 * 86400000);
+  const price = ['federal', 'enterprise'].includes(company.plan) ? 2000 : company.plan === 'professional' ? 2250 : 2500;
   return (
     <div className="container-page max-w-4xl space-y-6 py-10">
       <Link href="/employer/dashboard" className="text-sm text-muted hover:text-navy">← Employer dashboard</Link>
-      <div><h1 className="font-serif text-4xl font-medium">Verified Shortlists</h1>
-        <p className="mt-1 text-muted">Tell us the role. Within 3 business days you get 3 verified service members who’ve confirmed they’re interested and available — hand-picked by our team.</p></div>
+      <div><h1 className="font-serif text-4xl font-medium">Search Sprint</h1>
+        <p className="mt-1 text-muted">A fixed-price search for one role: up to 5 screened introductions to verified service members within 15 business days, hand-picked by our team. Not a guarantee of hire — and no placement fees.</p></div>
       {searchParams.error && <p className="text-sm text-signal">{searchParams.error === 'hire' ? 'Choose the person you hired and enter their first-year base salary.' : 'Please add a role title.'}</p>}
       {searchParams.hired && <p className="text-sm text-olive">Congratulations on the hire. We’ll send the placement invoice — and if it doesn’t work out within 90 days, we’ll find a replacement at no charge.</p>}
       {searchParams.rerun && <p className="text-sm text-olive">We’re on it — a fresh shortlist within 3 business days.</p>}
@@ -38,15 +37,15 @@ export default async function ShortlistsPage({ searchParams }: { searchParams: {
 
       <form action="/api/billing/checkout" method="post" className="card grid gap-3 p-6 sm:grid-cols-2">
         <input type="hidden" name="product" value="shortlist" />
-        <p className="eyebrow sm:col-span-2">Request a shortlist · {freeAvailable ? 'Included with your plan this quarter' : `$${price}`}</p>
+        <p className="eyebrow sm:col-span-2">Request a shortlist · {`$${price.toLocaleString()}`}{freeAvailable ? ' · $500 yearly credit applied at checkout' : ''}</p>
         <input name="role_title" required placeholder="Role (e.g. Cleared Network Engineer)" className="field sm:col-span-2" />
         <select name="engagement" className="field"><option value="full_time">Full-time hire</option><option value="contract_to_hire">Contract-to-hire</option><option value="contract">Contract / freelance</option></select>
         <select name="clearance_required" className="field"><option value="none">No clearance needed</option><option value="public_trust">Public Trust</option><option value="secret">Secret</option><option value="top_secret">Top Secret</option><option value="ts_sci">TS/SCI</option></select>
         <input name="location" placeholder="Location (or Remote)" className="field" />
         <input name="pay" placeholder="Pay range (e.g. $95–115K or $70/hr)" className="field" />
         <textarea name="details" rows={3} placeholder="Must-haves, certifications, start date" className="field sm:col-span-2" />
-        <div className="sm:col-span-2"><button className="btn btn-primary" disabled={!company.is_verified}>{freeAvailable ? 'Request my included shortlist' : `Request and pay $${price}`}</button>
-          <p className="mt-2 text-xs text-muted">Free re-run if none fit. Only if you hire from a shortlist: 10% of first-year base salary (agencies typically charge 15–25%), with any shortlist fee credited and a 90-day replacement guarantee. Hires from your own job posts and searches never carry a fee. Contract hires: standard Protected Payments fees. Clearances are self-reported — you confirm eligibility.</p></div>
+        <div className="sm:col-span-2"><button className="btn btn-primary" disabled={!company.is_verified}>{`Book and pay ${freeAvailable ? '$' + (price - 500).toLocaleString() : '$' + price.toLocaleString()}`}</button>
+          <p className="mt-2 text-xs text-muted">Free re-run if none fit. Your part: respond to introductions within 2 business days and share feedback within 5. If we can’t deliver qualified introductions, we extend the search once at no charge. Clearances are self-reported — you confirm eligibility.</p></div>
       </form>
 
       {(reqs ?? []).map((r) => {
@@ -72,7 +71,7 @@ export default async function ShortlistsPage({ searchParams }: { searchParams: {
                   <input name="salary" required inputMode="decimal" placeholder="First-year base salary ($)" className="field text-sm" />
                   <SubmitButton className="btn btn-primary shrink-0 text-sm" pendingText="…">We hired</SubmitButton>
                 </form>
-                {!r.rerun_used && <form action={requestRerun.bind(null, r.id as string)}><button className="btn btn-ghost border border-line text-sm">None fit — free re-run</button></form>}
+                {!r.rerun_used && <form action={requestRerun.bind(null, r.id as string)}><button className="btn btn-ghost border border-line text-sm">None fit — extend the search once</button></form>}
               </div>
             )}
           </section>

@@ -111,12 +111,12 @@ export async function applyCheckoutSession(sessionId: string) {
     const companyId = s.metadata?.company_id, requestId = s.metadata?.request_id;
     const { error } = await admin.from('purchases').insert({ company_id: companyId ?? null, kind: 'shortlist', amount_cents: s.amount_total ?? 0, stripe_checkout_session_id: s.id });
     if (!error && requestId) {
-      // Due in 3 business days.
+      // Due in 15 business days.
       const due = new Date(); let added = 0;
-      while (added < 3) { due.setDate(due.getDate() + 1); if (due.getDay() !== 0 && due.getDay() !== 6) added++; }
+      while (added < 15) { due.setDate(due.getDate() + 1); if (due.getDay() !== 0 && due.getDay() !== 6) added++; }
       await admin.from('shortlist_requests').update({ status: 'sourcing', amount_cents: s.amount_total ?? 0, stripe_checkout_session_id: s.id, due_at: due.toISOString() }).eq('id', requestId).eq('status', 'awaiting_payment');
       const { data: admins } = await admin.from('profiles').select('id').eq('role', 'admin');
-      if (admins?.length) await admin.from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'shortlist', title: 'New paid shortlist request — due in 3 business days.', link: '/admin/shortlists' })));
+      if (admins?.length) await admin.from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'shortlist', title: 'New Search Sprint — up to 5 introductions due in 15 business days.', link: '/admin/shortlists' })));
     }
     return { ok: true as const, kind };
   }

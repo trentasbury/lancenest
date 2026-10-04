@@ -17,7 +17,7 @@ export default async function BillingSuccess({ searchParams }: { searchParams: {
     result.ok && result.kind === 'job_boost' ? 'Your job is now featured for 30 days.'
     : result.ok && result.kind === 'job_slot' ? 'Your extra job slot is active.'
     : result.ok && result.kind === 'contact_pack' ? '5 contact credits were added to your account.'
-    : result.ok && result.kind === 'shortlist' ? 'Your Verified Shortlist request is in. You’ll have 3 verified, interested candidates within 3 business days.'
+    : result.ok && result.kind === 'shortlist' ? 'Your Search Sprint is booked. You’ll receive up to 5 screened introductions within 15 business days.'
     : result.ok && result.kind === 'fair_booth' ? 'Your career fair booth is booked. Add your pitch and video link from the fair page.'
     : result.ok && result.kind === 'training_webinar' ? 'Your sponsored info session is scheduled and promoted to members.'
     : result.ok && result.kind === 'milestone' ? 'The milestone is funded. The payment is protected and held until you approve the work.'

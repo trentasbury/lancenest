@@ -66,8 +66,13 @@ export async function POST(request: NextRequest) {
 
   if (item.kind === 'shortlist' && !SHORTLISTS_ENABLED) return NextResponse.redirect(`${site}/contact-sales`, 303);
   if (item.kind === 'shortlist') {
+    // Search Sprint price by plan; Federal/Enterprise get $500 off their first sprint each 12 months.
     const { data: planRow } = await createAdminClient().from('companies').select('plan').eq('id', company.id).maybeSingle();
-    product = (['professional', 'federal', 'enterprise'].includes(planRow?.plan as string) ? 'shortlist_member' : 'shortlist') as typeof product;
+    const plan = planRow?.plan as string;
+    if (['federal', 'enterprise'].includes(plan)) {
+      const { count: credited } = await createAdminClient().from('shortlist_requests').select('id', { count: 'exact', head: true }).eq('company_id', company.id).eq('amount_cents', 150000).gte('created_at', new Date(Date.now() - 365 * 86400000).toISOString());
+      product = (credited ? 'shortlist_federal' : 'shortlist_federal_credit') as typeof product;
+    } else product = (plan === 'professional' ? 'shortlist_member' : 'shortlist') as typeof product;
     item = CATALOG[product];
   }
   if (item.kind === 'fair_booth') {
@@ -90,21 +95,6 @@ export async function POST(request: NextRequest) {
     }).select('id').single();
     if (!req) return NextResponse.redirect(`${site}/employer/shortlists?error=save`, 303);
     metadata.request_id = req.id as string;
-    // Federal and Enterprise include one free Verified Shortlist per calendar quarter.
-    const { data: planRow2 } = await createAdminClient().from('companies').select('plan').eq('id', company.id).maybeSingle();
-    if (['federal', 'enterprise'].includes(planRow2?.plan as string)) {
-      const now = new Date(), qStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1).toISOString();
-      const { count } = await createAdminClient().from('shortlist_requests').select('id', { count: 'exact', head: true })
-        .eq('company_id', company.id).eq('amount_cents', 0).neq('status', 'awaiting_payment').gte('created_at', qStart);
-      if (!count) {
-        const due = new Date(); let added = 0;
-        while (added < 3) { due.setDate(due.getDate() + 1); if (due.getDay() !== 0 && due.getDay() !== 6) added++; }
-        await createAdminClient().from('shortlist_requests').update({ status: 'sourcing', amount_cents: 0, due_at: due.toISOString() }).eq('id', req.id);
-        const { data: admins } = await createAdminClient().from('profiles').select('id').eq('role', 'admin');
-        if (admins?.length) await createAdminClient().from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'shortlist', title: 'New shortlist request (included with Federal) — due in 3 business days.', link: '/admin/shortlists' })));
-        return NextResponse.redirect(`${site}/employer/shortlists?free=1`, 303);
-      }
-    }
   }
   if (item.kind === 'fair_booth') {
     const fairId = String(form.get('fair_id') ?? '');

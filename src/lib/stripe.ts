@@ -10,7 +10,7 @@ export function stripe() {
 export type ProductKey =
   | 'employer_professional_month' | 'employer_professional_year'
   | 'employer_federal_month' | 'employer_federal_year'
-  | 'training_listing_month' | 'training_listing_year' | 'training_featured' | 'training_webinar' | 'fair_booth' | 'fair_booth_member' | 'shortlist' | 'shortlist_member'
+  | 'training_listing_month' | 'training_listing_year' | 'training_featured' | 'training_webinar' | 'fair_booth' | 'fair_booth_member' | 'shortlist' | 'shortlist_member' | 'shortlist_federal' | 'shortlist_federal_credit'
   | 'veteran_pro_month' | 'veteran_pro_year' | 'veteran_pro_plus_month' | 'veteran_pro_plus_year' | 'veteran_federal_month' | 'veteran_federal_year'
   | 'job_slot' | 'job_boost' | 'contact_pack';
 
@@ -31,8 +31,10 @@ export const CATALOG: Record<ProductKey, { name: string; amount: number; interva
   training_featured: { name: 'Featured training programs', amount: 9900, interval: 'month', plan: 'training_featured', kind: 'plan' },
   training_webinar: { name: 'Sponsored info session', amount: 50000, kind: 'training_webinar' },
   fair_booth: { name: 'Virtual career fair booth', amount: 49900, kind: 'fair_booth' },
-  shortlist: { name: 'Verified Shortlist (3 candidates in 3 business days)', amount: 75000, kind: 'shortlist' },
-  shortlist_member: { name: 'Verified Shortlist (plan member price)', amount: 50000, kind: 'shortlist' },
+  shortlist: { name: 'Search Sprint (up to 5 introductions in 15 business days)', amount: 250000, kind: 'shortlist' },
+  shortlist_member: { name: 'Search Sprint (Professional price)', amount: 225000, kind: 'shortlist' },
+  shortlist_federal: { name: 'Search Sprint (Federal price)', amount: 200000, kind: 'shortlist' },
+  shortlist_federal_credit: { name: 'Search Sprint (Federal, with your yearly $500 credit)', amount: 150000, kind: 'shortlist' },
   fair_booth_member: { name: 'Virtual career fair booth (plan member price)', amount: 39900, kind: 'fair_booth' },
   job_slot: { name: 'Extra open job slot', amount: 3900, interval: 'month', kind: 'job_slot' },
   job_boost: { name: 'Featured job boost (30 days)', amount: 4900, kind: 'job_boost' },

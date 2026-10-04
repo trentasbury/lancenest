@@ -8,7 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getMyCompany } from '@/lib/employer';
 import { sendEmail, SITE } from '@/lib/email';
 
-const PLACEMENT_RATE = 0.10;
+const PLACEMENT_RATE = 0;   // Search Sprint is a fixed fee: no placement or success fee
 
 async function myRequest(requestId: string) {
   const { user } = await requireRole(['employer'], '/employer/shortlists');
@@ -43,8 +43,8 @@ export async function reportHire(requestId: string, formData: FormData) {
 export async function requestRerun(requestId: string) {
   const { r, company } = await myRequest(requestId);
   if (r.status !== 'delivered' || r.rerun_used) redirect('/employer/shortlists');
-  await createAdminClient().from('shortlist_requests').update({ status: 'sourcing', rerun_used: true, due_at: new Date(Date.now() + 3 * 86400000).toISOString() }).eq('id', requestId);
-  await tellAdmins(`${company.name} asked for a free re-run of the “${r.role_title}” shortlist.`);
+  await createAdminClient().from('shortlist_requests').update({ status: 'sourcing', rerun_used: true, due_at: new Date(Date.now() + 21 * 86400000).toISOString() }).eq('id', requestId);
+  await tellAdmins(`${company.name} asked for the one included search extension on the “${r.role_title}” shortlist.`);
   revalidatePath('/employer/shortlists');
   redirect('/employer/shortlists?rerun=1');
 }

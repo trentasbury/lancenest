@@ -20,8 +20,8 @@ export default function JobErrors({ error, saved }: { error?: string; saved?: st
   if (error === 'limit') {
     return (
       <div className="card border-brass p-5">
-        <p className="font-medium">The Free plan includes 2 open job posts.</p>
-        <p className="mt-1 text-sm text-muted">Close one, add an extra slot for $39/month, or upgrade for unlimited posts. Saved drafts don’t count.</p>
+        <p className="font-medium">You’ve reached your plan’s open-job limit (Free: 2 · Professional: 10).</p>
+        <p className="mt-1 text-sm text-muted">Close one, add an extra slot for $39/month, or upgrade — Federal includes unlimited open jobs. Saved drafts don’t count.</p>
         <div className="mt-3 flex flex-wrap gap-2">
           <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="job_slot" /><button className="btn btn-outline">Add a slot · $39/mo</button></form>
           <Link href="/employers" className="btn btn-primary">See plans</Link>

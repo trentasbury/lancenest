@@ -12,7 +12,7 @@ const PLANS = [
   { name: 'Free', price: '$0', note: 'To get started', cta: 'Create a free account',
     features: ['No placement fees on your hires', 'Company recruiting page', '2 open job posts', 'Applicant pipeline with résumés and verified work', 'Free, unlimited messaging with any verified member'] },
   { name: 'Professional', price: '$249', note: 'per month · or $2,490/year paid up front (2 months free)', cta: 'Start with Professional', featured: true,
-    features: ['Unlimited job posts', 'Search every verified member’s full profile', 'Transitioning talent search (separating in 12 months)', 'Hiring analytics: views, applicants, conversion', '5 featured jobs a month, included', 'Talent pools: save candidates to lists with private notes', 'Saved searches with daily new-match emails', '3 team seats', 'Branded company page: cover photo and “Why veterans work here”', 'Applicant export (CSV)'] },
+    features: ['10 open job posts (extra slots $39/mo)', 'Search every verified member’s full profile', 'Transitioning talent search (separating in 12 months)', 'Hiring analytics: views, applicants, conversion', '5 featured jobs a month, included', 'Talent pools: save candidates to lists with private notes', 'Saved searches with daily new-match emails', '2 team seats', 'Branded company page: cover photo and “Why veterans work here”', 'Applicant export (CSV)'] },
   { name: 'Federal', price: '$999', note: 'per month · or $9,990/year paid up front (2 months free) · Founding Employers: $7,500 for the first year, paid up front', cta: 'Start with Federal',
     features: ['Everything in Professional', 'Built for primes, subs, and GovCon small businesses', 'Search by self-reported clearance level (you confirm eligibility in official systems)', 'Cleared talent spotlight', '5 team seats', 'Unlimited featured jobs', 'Priority support from the founder'] },
   { name: 'Enterprise', price: 'Custom', note: 'from $15,000/year', cta: 'Talk to us',
@@ -99,8 +99,8 @@ export default async function EmployersPage() {
               <thead className="border-b border-line bg-paper text-xs uppercase tracking-[0.12em] text-muted"><tr><th className="p-3">Compare plans</th><th className="p-3">Free</th><th className="p-3">Professional</th><th className="p-3">Federal</th><th className="p-3">Enterprise</th></tr></thead>
               <tbody className="divide-y divide-line">
                 <tr><td className="p-3 font-medium">Verified company page</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
-                <tr><td className="p-3 font-medium">Team seats</td><td className="p-3">1</td><td className="p-3">3</td><td className="p-3">5</td><td className="p-3">Custom</td></tr>
-                <tr><td className="p-3 font-medium">Open jobs</td><td className="p-3">2</td><td className="p-3">Unlimited</td><td className="p-3">Unlimited</td><td className="p-3">Unlimited</td></tr>
+                <tr><td className="p-3 font-medium">Team seats</td><td className="p-3">1</td><td className="p-3">2</td><td className="p-3">5</td><td className="p-3">Custom</td></tr>
+                <tr><td className="p-3 font-medium">Open jobs</td><td className="p-3">2</td><td className="p-3">10</td><td className="p-3">Unlimited</td><td className="p-3">Unlimited</td></tr>
                 <tr><td className="p-3 font-medium">Screening questions and applicant pipeline</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
                 <tr><td className="p-3 font-medium">Message applicants</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
                 <tr><td className="p-3 font-medium">Search all verified members</td><td className="p-3">Preview</td><td className="p-3">✓</td><td className="p-3">✓ + clearance filters</td><td className="p-3">✓</td></tr>
