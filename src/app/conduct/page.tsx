@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import LegalPage from '@/components/LegalPage';
 
-export const metadata: Metadata = { title: 'Code of Conduct' };
+export const metadata: Metadata = { alternates: { canonical: '/conduct' }, title: 'Code of Conduct' };
 
 export default function ConductPage() {
   return (

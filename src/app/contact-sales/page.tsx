@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import SubmitButton from '@/components/SubmitButton';
 import { requestCall } from './actions';
 
-export const metadata: Metadata = { title: 'Book a call', description: 'Talk with LanceNest about Federal and Enterprise hiring plans for verified service members and cleared talent.' };
+export const metadata: Metadata = { alternates: { canonical: '/contact-sales' }, title: 'Book a call', description: 'Talk with LanceNest about Federal and Enterprise hiring plans for verified service members and cleared talent.' };
 
 export default function ContactSalesPage({ searchParams }: { searchParams: { plan?: string; sent?: string; error?: string } }) {
   return (

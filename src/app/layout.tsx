@@ -1,3 +1,4 @@
+import { CANONICAL_ORIGIN } from '@/lib/seo';
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import PageViewBeacon from '@/components/PageViewBeacon';
@@ -5,15 +6,24 @@ import AutoCloseDetails from '@/components/AutoCloseDetails';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+
+const ORG_JSONLD = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'Organization', '@id': `${CANONICAL_ORIGIN}/#org`, name: 'LanceNest', url: CANONICAL_ORIGIN, logo: `${CANONICAL_ORIGIN}/icon.svg`,
+      description: 'Verified career network and hiring platform for U.S. service members, veterans, and employers hiring military talent for federal-ready professional work.', email: 'support@lancenest.com' },
+    { '@type': 'WebSite', '@id': `${CANONICAL_ORIGIN}/#website`, name: 'LanceNest', url: CANONICAL_ORIGIN, publisher: { '@id': `${CANONICAL_ORIGIN}/#org` } },
+  ],
+};
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(CANONICAL_ORIGIN),
   title: { default: 'LanceNest — Veteran Jobs. Built for What’s Next.', template: '%s — LanceNest' },
   description:
-    'The career platform for active duty, transitioning, and veteran service members. Translate your military experience and find your next mission.',
+    'LanceNest is the verified career network for active duty, Guard, Reserve, transitioning, and veteran service members — translate your military experience into civilian roles, and hire verified military talent for federal-ready work.',
   icons: { icon: '/icon.svg' },
-  openGraph: { siteName: 'LanceNest', type: 'website' },
+  openGraph: { siteName: 'LanceNest', type: 'website', locale: 'en_US' },
+  twitter: { card: 'summary_large_image' },
 };
 
 export const viewport: Viewport = { themeColor: '#102431' };
@@ -39,7 +49,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
         <Footer />
-              <PageViewBeacon />
+              <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSONLD) }} />
+        <PageViewBeacon />
         <AutoCloseDetails />
       </body>
     </html>

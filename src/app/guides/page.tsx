@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { GUIDES } from '@/lib/guides';
 
-export const metadata: Metadata = { title: 'Transition guides for service members and veterans', description: 'Plain-English guides to SkillBridge, the GI Bill, cleared jobs, résumés, freelancing, and Guard & Reserve careers.' };
+export const metadata: Metadata = { alternates: { canonical: '/guides' }, title: 'Transition guides for service members and veterans', description: 'Plain-English guides to SkillBridge, the GI Bill, cleared jobs, résumés, freelancing, and Guard & Reserve careers.' };
 
 export default function GuidesPage() {
   return (

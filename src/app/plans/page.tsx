@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { getSessionProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = { alternates: { canonical: '/plans' },
   title: 'Plans for Veterans',
   description: 'LanceNest is free for every service member. Pro plans add visibility and tools for your job search.',
 };

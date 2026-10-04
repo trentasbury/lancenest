@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = { title: 'Accessibility', description: 'LanceNest’s commitment to an accessible site for every service member and veteran.' };
+export const metadata: Metadata = { alternates: { canonical: '/accessibility' }, title: 'Accessibility', description: 'LanceNest’s commitment to an accessible site for every service member and veteran.' };
 
 export default function AccessibilityPage() {
   return (

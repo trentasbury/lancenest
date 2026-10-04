@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ensureOccupationsLoaded } from '@/lib/occupations';
@@ -24,6 +25,8 @@ async function getStats() {
     return { members: m.count ?? 0, jobs: j.count ?? 0, companies: c.count ?? 0 };
   } catch { return null; }
 }
+
+export const metadata: Metadata = { alternates: { canonical: '/' } };
 
 export default async function HomePage({ searchParams }: { searchParams: { deleted?: string } }) {
   const stats = await getStats();

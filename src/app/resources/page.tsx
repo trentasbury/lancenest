@@ -5,7 +5,7 @@ import { ensureOccupationsLoaded } from '@/lib/occupations';
 import { sanitizeSearch } from '@/lib/format';
 import type { MilitaryOccupation } from '@/lib/types';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = { alternates: { canonical: '/resources' },
   title: 'Translate Your Military Occupation',
   description: 'See the civilian careers and skills your MOS, rating, or AFSC prepares you for.',
 };

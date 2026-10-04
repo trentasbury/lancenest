@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import StarRule from '@/components/StarRule';
 
-export const metadata: Metadata = { title: 'About', description: 'LanceNest is a veteran-founded career platform for those who served.' };
+export const metadata: Metadata = { alternates: { canonical: '/about' }, title: 'About', description: 'LanceNest is a veteran-founded career platform for those who served.' };
 
 export default function AboutPage() {
   return (

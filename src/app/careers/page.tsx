@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { BRANCH_SLUGS, publicDb, slugFromBranch } from '@/lib/careers';
 
 export const revalidate = 86400;
-export const metadata: Metadata = { title: 'Military to civilian careers: every MOS, rating, and AFSC', description: 'Civilian career translations for 1,469 Army, Marine Corps, Navy, Air Force, Space Force, and Coast Guard jobs.' };
+export const metadata: Metadata = { alternates: { canonical: '/careers' }, title: 'Military to civilian careers: every MOS, rating, and AFSC', description: 'Civilian career translations for 1,469 Army, Marine Corps, Navy, Air Force, Space Force, and Coast Guard jobs.' };
 
 export default async function CareersIndex({ searchParams }: { searchParams: { branch?: string } }) {
   const branch = BRANCH_SLUGS.find(([s]) => s === searchParams.branch)?.[1] ?? 'Army';

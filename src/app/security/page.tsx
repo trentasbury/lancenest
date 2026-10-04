@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = { title: 'Security', description: 'How LanceNest protects members, employers, and their data.' };
+export const metadata: Metadata = { alternates: { canonical: '/security' }, title: 'Security', description: 'How LanceNest protects members, employers, and their data.' };
 
 export default function SecurityPage() {
   const S = ({ h, children }: { h: string; children: React.ReactNode }) => <section><h2 className="font-serif text-2xl text-navy">{h}</h2><div className="mt-2 space-y-2">{children}</div></section>;

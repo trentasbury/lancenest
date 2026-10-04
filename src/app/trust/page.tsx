@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-export const metadata: Metadata = { title: 'Trust & verification', description: 'What LanceNest verifies, what it doesn’t, and how member documents and data are protected.' };
+export const metadata: Metadata = { alternates: { canonical: '/trust' }, title: 'Trust & verification', description: 'What LanceNest verifies, what it doesn’t, and how member documents and data are protected.' };
 
 export default function TrustPage() {
   const S = ({ h, children }: { h: string; children: React.ReactNode }) => <section><h2 className="font-serif text-2xl text-navy">{h}</h2><div className="mt-2 space-y-2">{children}</div></section>;

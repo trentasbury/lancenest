@@ -3,7 +3,8 @@ import { publicDb, slugFromBranch } from '@/lib/careers';
 import { GUIDES } from '@/lib/guides';
 
 export const revalidate = 86400;
-const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://lancenest.com').replace(/\/$/, '');
+import { CANONICAL_ORIGIN } from '@/lib/seo';
+const SITE = CANONICAL_ORIGIN;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { data } = await publicDb().from('military_occupations').select('code, branch').limit(5000);

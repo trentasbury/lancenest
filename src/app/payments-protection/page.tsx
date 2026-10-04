@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-export const metadata: Metadata = { title: 'Protected Payments & disputes', description: 'How LanceNest holds, releases, and resolves freelance milestone payments.' };
+export const metadata: Metadata = { alternates: { canonical: '/payments-protection' }, title: 'Protected Payments & disputes', description: 'How LanceNest holds, releases, and resolves freelance milestone payments.' };
 
 export default function PaymentsProtectionPage() {
   const steps: [string, string][] = [
