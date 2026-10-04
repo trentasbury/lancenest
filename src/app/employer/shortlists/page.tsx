@@ -32,8 +32,7 @@ export default async function ShortlistsPage({ searchParams }: { searchParams: {
         <p className="mt-1 text-muted">A fixed-price search for one role: up to 5 screened introductions to verified service members within 15 business days, hand-picked by our team. Not a guarantee of hire — and no placement fees.</p></div>
       {searchParams.error && <p className="text-sm text-signal">{searchParams.error === 'hire' ? 'Choose the person you hired and enter their first-year base salary.' : 'Please add a role title.'}</p>}
       {searchParams.hired && <p className="text-sm text-olive">Congratulations on the hire. We’ll send the placement invoice — and if it doesn’t work out within 90 days, we’ll find a replacement at no charge.</p>}
-      {searchParams.rerun && <p className="text-sm text-olive">We’re on it — a fresh shortlist within 3 business days.</p>}
-      {searchParams.free && <p className="text-sm text-olive">Your included Federal shortlist is in — candidates within 3 business days.</p>}
+      {searchParams.rerun && <p className="text-sm text-olive">We’re on it — your search is extended, with new introductions within 15 business days.</p>}
 
       <form action="/api/billing/checkout" method="post" className="card grid gap-3 p-6 sm:grid-cols-2">
         <input type="hidden" name="product" value="shortlist" />

@@ -23,7 +23,7 @@ async function tellAdmins(title: string) {
   if (admins?.length) await admin.from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'shortlist', title, link: '/admin/shortlists' })));
 }
 
-/** Employer reports a hire from the shortlist: 10% of first-year base salary, minus the shortlist fee already paid. */
+/** Employer reports a hire from a Search Sprint (recorded for outcomes; no placement fee). */
 export async function reportHire(requestId: string, formData: FormData) {
   const { r, company } = await myRequest(requestId);
   const profileId = String(formData.get('profile_id') ?? '');

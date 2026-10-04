@@ -57,7 +57,7 @@ export default async function VerificationPage({ searchParams }: { searchParams:
             </div>
           )}
           {searchParams.error && <FormMessage error={ERRORS[searchParams.error] ?? ERRORS.upload} />}
-          {searchParams.submitted && <FormMessage message="Received. We’ll review it and update your badge — usually within 3 business days." />}
+          {searchParams.submitted && <FormMessage message="Received. We’ll review it and update your badge — usually within 48 hours." />}
 
           <div className="card p-7">
             <div className="flex items-center justify-between gap-4">
