@@ -106,11 +106,13 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
       ? supabase.from('veteran_profiles').select(SELECT).in('clearance_level', ['secret', 'top_secret', 'ts_sci']).order('verification_status', { ascending: false }).order('updated_at', { ascending: false }).limit(6)
       : Promise.resolve({ data: [] }),
   ]);
-  // Placement perks: boosted profiles first, then Federal members (for federal employers), then Pro Plus / Federal.
+  // Placement perks: boosted profiles first, then Federal members (for federal employers), then Career Accelerator / Federal.
   const now = Date.now();
-  const rank = (r: Row) => (r.boosted_until && Date.parse(r.boosted_until) > now ? 4 : 0) + (cleared && ['pro_plus', 'federal_pro'].includes(r.plan) ? 2 : 0) + (['pro_plus', 'federal_pro'].includes(r.plan) ? 1 : 0);
+  // Paid visibility is shown in a labeled Featured row; the main list is ordered by match only.
+  const isFeatured = (r: Row) => (r.boosted_until && Date.parse(r.boosted_until) > now) || ['pro_plus', 'federal_pro'].includes(r.plan);
   const { data: savedSearches } = await supabase.from('saved_searches').select('id, name, params').eq('company_id', company.id).order('created_at');
-  const rows = ((data ?? []) as unknown as Row[]).filter((r) => r.profile).map((r, i) => ({ r, i })).sort((a, b) => rank(b.r) - rank(a.r) || a.i - b.i).map((x) => x.r);
+  const rows = ((data ?? []) as unknown as Row[]).filter((r) => r.profile);
+  const featured = rows.filter(isFeatured).slice(0, 5);
   const spot = ((spotlight.data ?? []) as unknown as Row[]).filter((r) => r.profile);
 
   const Card = ({ r }: { r: Row }) => (
@@ -208,7 +210,15 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
 
       <section className="mt-8">
         <p className="eyebrow">{rows.length === 60 ? 'Top 60 matches' : `${rows.length} candidate${rows.length === 1 ? '' : 's'}`}</p>
-        {rows.length === 0 ? <p className="mt-4 text-sm text-muted">No veterans match those filters yet. Try widening your search.</p> : <ul className="mt-3 space-y-3">{rows.map((r) => <Card key={r.profile_id} r={r} />)}</ul>}
+        {rows.length === 0 ? <p className="mt-4 text-sm text-muted">No veterans match those filters yet. Try widening your search.</p> : <>
+          {featured.length > 0 && (
+            <div className="mt-3 rounded-[6px] border border-brass/50 bg-paper p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brass-dark">Featured · members with a paid profile boost or Career Accelerator</p>
+              <ul className="mt-2 space-y-3">{featured.map((r) => <Card key={`f-${r.profile_id}`} r={r} />)}</ul>
+            </div>
+          )}
+          <p className="mt-4 text-xs text-muted">All matches, ordered by fit — not by plan.</p>
+          <ul className="mt-2 space-y-3">{rows.map((r) => <Card key={r.profile_id} r={r} />)}</ul></>}
       </section>
 
     </div>

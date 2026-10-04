@@ -59,7 +59,7 @@ export default async function FreelancePage({ searchParams }: { searchParams: { 
         {isVet && (
           <div className="mb-6 grid gap-3 sm:grid-cols-3">
             <div className="card p-5"><p className="eyebrow">Proposals this month</p><p className="mt-2 font-serif text-2xl text-navy">{plan === 'free' ? `${used} of ${FREE_PROPOSALS_PER_MONTH}` : `${used} · unlimited`}</p>{plan === 'free' && <Link href="/plans" className="text-xs text-navy underline">Unlimited with Pro →</Link>}</div>
-            <div className="card p-5"><p className="eyebrow">You keep</p><p className="mt-2 font-serif text-2xl text-navy">{keepPercent(plan)}% of every payment</p><p className="text-xs text-muted">Pro 90% · Pro Plus 92% · Federal 94%</p></div>
+            <div className="card p-5"><p className="eyebrow">You keep</p><p className="mt-2 font-serif text-2xl text-navy">{keepPercent(plan)}% of every payment</p><p className="text-xs text-muted">Pro 90% · Career Accelerator 92% · Federal 94%</p></div>
             <div className="card p-5"><p className="eyebrow">Payouts</p><p className="mt-2 font-serif text-2xl text-navy">{fp?.payouts_enabled ? 'Ready ✓' : 'Not set up'}</p>{!fp?.payouts_enabled && <Link href="/freelance/profile#payouts" className="text-xs text-navy underline">Set up payouts →</Link>}</div>
           </div>
         )}

@@ -24,7 +24,7 @@ export default function PaymentsProtectionPage() {
           <li>Card-network chargebacks, payment-processor rules, and the law can override a platform decision.</li>
         </ul></section>
       <section><h2 className="font-serif text-2xl text-navy">Fees</h2>
-        <p className="mt-2">Clients pay 5% by card or 3% by bank transfer, plus $9.99 per contract, shown before payment. Freelancers pay 15% on Free, 10% on Pro, or 8% on Pro Plus. Each milestone is at least $25. On a refund, the milestone amount is returned in full; the client service fee (the percentage and the $9.99 contract fee) is not, because it covers payment processing.</p></section>
+        <p className="mt-2">Clients pay 5% by card or 3% by bank transfer, plus $9.99 per contract, shown before payment. Freelancers pay 15% on Free, 10% on Pro, or 8% on Career Accelerator. Each milestone is at least $25. On a refund, the milestone amount is returned in full; the client service fee (the percentage and the $9.99 contract fee) is not, because it covers payment processing.</p></section>
       <p className="text-sm text-muted">Full terms: <Link href="/terms" className="text-navy underline">Terms of Service</Link> · <Link href="/trust" className="text-navy underline">Trust & verification</Link></p>
     </article>
   );

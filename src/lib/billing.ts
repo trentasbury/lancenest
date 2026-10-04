@@ -65,7 +65,7 @@ export async function recomputeVeteran(profileId: string) {
   const admin = createAdminClient();
   const { data } = await admin.from('subscriptions').select('plan').eq('profile_id', profileId).in('status', ['active', 'trialing', 'past_due']);
   const best = (data ?? []).map((r) => VET_RANK[r.plan as string]).filter(Boolean).sort((a, b) => b[0] - a[0])[0];
-  // Referral grants (Pro / Pro Plus / Federal access) apply while active; the member gets whichever is higher.
+  // Referral grants (Pro / Career Accelerator / Federal access) apply while active; the member gets whichever is higher.
   const { data: grant } = await admin.from('veteran_profiles').select('pro_granted_until, granted_plan').eq('profile_id', profileId).maybeSingle();
   const activeGrant = grant?.granted_plan && grant.pro_granted_until && Date.parse(grant.pro_granted_until as string) > Date.now() ? (grant.granted_plan as string) : null;
   const RANK: Record<string, number> = { free: 0, pro: 1, pro_plus: 2, federal_pro: 3 };

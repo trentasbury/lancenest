@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   (alerts ?? []).forEach((a) => byProfile.set(a.profile_id as string, [...(byProfile.get(a.profile_id as string) ?? []), a]));
   const { data: plans } = byProfile.size ? await admin.from('veteran_profiles').select('profile_id, plan').in('profile_id', Array.from(byProfile.keys())).neq('plan', 'free') : { data: [] };
   for (const { profile_id, plan } of plans ?? []) {
-    const federal = ['pro_plus', 'federal_pro'].includes(plan as string);   // early cleared window: Pro Plus and above
+    const federal = ['pro_plus', 'federal_pro'].includes(plan as string);   // early cleared window: Career Accelerator and above
     const matches = new Map<string, Job>();
     for (const a of byProfile.get(profile_id as string) ?? []) {
       for (const j of jobs) {

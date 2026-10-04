@@ -25,7 +25,7 @@ export default async function AlertsPage({ searchParams }: { searchParams: { err
       <h1 className="font-serif text-4xl font-medium">Job alerts</h1>
       <p className="text-muted">Get a daily email when new jobs match. {['pro_plus', 'federal_pro'].includes(plan) ? 'Your cleared-job alerts include roles during your 48-hour early-access window.' : ''}</p>
       {cap === 0 ? (
-        <div className="card p-6"><p className="font-medium">Job alerts are part of Pro.</p><p className="mt-1 text-sm text-muted">Pro includes 3 alerts, Pro Plus 5, and Federal 10 plus cleared-job alerts.</p><Link href="/plans" className="btn btn-primary mt-4">See plans</Link></div>
+        <div className="card p-6"><p className="font-medium">Job alerts are part of Pro.</p><p className="mt-1 text-sm text-muted">Pro includes 3 alerts, Career Accelerator 5, and Federal 10 plus cleared-job alerts.</p><Link href="/plans" className="btn btn-primary mt-4">See plans</Link></div>
       ) : (
         <>
           {searchParams.error && <FormMessage error={searchParams.error === 'limit' ? `You’ve used all ${cap} alerts on your plan.` : 'Job alerts are part of paid plans.'} />}

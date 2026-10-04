@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import PlanBadge from '@/components/PlanBadge';
 import { boostProfile } from '@/app/dashboard/actions';
 
-/** Member perks on the dashboard: who viewed your profile (Pro+) and profile boosts (Pro Plus+). */
+/** Member perks on the dashboard: who viewed your profile (Pro+) and profile boosts (Career Accelerator+). */
 export default async function MemberPerks({ userId, boost }: { userId: string; boost?: string }) {
   const user = { id: userId };
   const searchParams = { boost };
@@ -48,7 +48,7 @@ export default async function MemberPerks({ userId, boost }: { userId: string; b
                       <button className="btn btn-brass w-full">Boost my profile</button>
                     </form>
                   )
-                ) : <p className="mt-2 text-sm text-muted">Get featured at the top of employer searches with <Link href="/plans" className="text-navy underline">Pro Plus</Link>.</p>}
+                ) : <p className="mt-2 text-sm text-muted">Get featured at the top of employer searches with <Link href="/plans" className="text-navy underline">Career Accelerator</Link>.</p>}
               </section>
             </div>
           );

@@ -8,7 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 const BOOSTS_PER_MONTH = 2;
 
-/** Pro Plus / Federal: feature your profile at the top of employer searches for 7 days (2 per calendar month). */
+/** Career Accelerator / Federal: feature your profile at the top of employer searches for 7 days (2 per calendar month). */
 export async function boostProfile() {
   const { user } = await requireRole(['veteran'], '/dashboard');
   const { data: vet } = await createClient().from('veteran_profiles').select('plan').eq('profile_id', user.id).maybeSingle();

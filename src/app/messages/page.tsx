@@ -36,7 +36,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: { e
   const requests = withMsgs.filter(isRequestForMe);
   const tab = searchParams.tab === 'requests' ? 'requests' : 'messages';
   const baseList = tab === 'requests' ? requests : withMsgs.filter((c) => !isRequestForMe(c) && !(c.status === 'declined' && c.requested_by !== user.id));
-  // Message priority: for employers, conversations with Pro Plus / Federal members are pinned to the top.
+  // Message priority: for employers, conversations with Career Accelerator / Federal members are pinned to the top.
   const otherIds = baseList.map((c) => otherBy.get(c.id as string)?.profile_id).filter(Boolean) as string[];
   const { data: prio } = me.role === 'employer' && otherIds.length
     ? await supabase.from('veteran_profiles').select('profile_id').in('profile_id', otherIds).in('plan', ['pro_plus', 'federal_pro'])

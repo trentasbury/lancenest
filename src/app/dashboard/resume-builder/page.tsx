@@ -20,10 +20,10 @@ export default async function ResumeBuilderPage() {
   if (!allowed) {
     return (
       <div className="container-page max-w-2xl py-12 text-center">
-        <p className="eyebrow">Pro Plus</p>
+        <p className="eyebrow">Career Accelerator</p>
         <h1 className="mt-3 font-serif text-4xl font-medium">Military résumé builder</h1>
         <p className="mt-3 text-muted">Turn your military career into a clean civilian résumé in one click — your billets translated into civilian titles and skills, ready to save as a PDF.</p>
-        <Link href="/plans" className="btn btn-primary mt-6">Upgrade to Pro Plus</Link>
+        <Link href="/plans" className="btn btn-primary mt-6">Upgrade to Career Accelerator</Link>
       </div>
     );
   }
