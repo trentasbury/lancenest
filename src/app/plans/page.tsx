@@ -15,7 +15,7 @@ const PLANS = [
   { id: 'veteran_pro' as const, key: 'pro', name: 'Pro', price: '$25', note: 'per month · or $229/year paid up front (save 24%)', month: 'veteran_pro_month', year: 'veteran_pro_year',
     features: ['Everything in Free', 'See exactly who viewed your profile', 'Applicant insights: how you compare on every job', 'Daily job alerts by email (3)', 'Unlimited freelance proposals', 'Pro badge on your profile', 'Freelance fee: 10%'] },
   { id: 'veteran_pro_plus' as const, key: 'pro_plus', name: 'Career Accelerator', price: '$45', note: 'per month · or $399/year paid up front (save 26%)', month: 'veteran_pro_plus_month', year: 'veteran_pro_plus_year', featured: true,
-    features: ['Everything in Pro', 'Military résumé builder: civilian résumé in one click', 'Applicant insights and 10 job alerts, including cleared-only', '48-hour early access to jobs requiring a clearance (clearance self-reported)', 'Top applicant tag on jobs and freelance proposals', 'Featured profile boost twice a month — clearly labeled for employers', 'Priority messages in employer inboxes', 'Freelance: unlimited proposals · 8% fee'] },
+    features: ['Everything in Pro', 'Military résumé builder: a civilian-ready résumé draft in one click — then edit and tailor it', 'Applicant insights and 10 job alerts, including cleared-only', '48-hour early access to jobs that list a clearance requirement (your clearance is self-reported)', 'Top applicant tag on jobs and freelance proposals', 'Featured profile boost twice a month — clearly labeled for employers', 'Priority messages in employer inboxes', 'Freelance: unlimited proposals · 8% fee'] },
 ];
 
 export default async function PlansPage() {
@@ -74,7 +74,7 @@ export default async function PlansPage() {
             );
           })}
         </div>
-        <p className="mt-8 text-center text-sm text-muted">Cancel anytime from Manage billing. Paying yearly saves 24% on Pro ($229 vs. $300) and 26% on Career Accelerator ($399 vs. $540). Clearances on LanceNest are self-reported; employers confirm eligibility through official channels.</p>
+        <p className="mt-8 text-center text-sm text-muted">Cancel anytime from Manage billing. Paying yearly saves $71 on Pro ($229 vs. $300) and $141 on Career Accelerator ($399 vs. $540). Freelancing? At $500 a month in LanceNest project earnings, Pro pays for itself through its 5-point lower fee. Clearances on LanceNest are self-reported; employers confirm eligibility through official channels.</p>
       </div>
     </>
   );

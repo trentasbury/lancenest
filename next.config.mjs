@@ -37,7 +37,7 @@ const nextConfig = {
   },
   async redirects() {
     // Old site URLs still in search results
-    return [{ source: '/directory', destination: '/careers', permanent: true }, { source: '/freelancers', destination: '/careers', permanent: true }];
+    return [{ source: '/directory', destination: '/careers', permanent: true }, { source: '/freelancers', destination: '/careers', permanent: true }, { source: '/pricing', destination: '/employers', permanent: false }, { source: '/employers/pricing', destination: '/employers', permanent: false }];
   },
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }];

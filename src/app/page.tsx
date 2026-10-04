@@ -165,11 +165,11 @@ export default async function HomePage({ searchParams }: { searchParams: { delet
           <div>
             <p className="eyebrow">For employers</p>
             <h2 className="mt-2 font-serif text-3xl font-medium text-navy">Verified military talent for federal-ready professional work.</h2>
-            <p className="mt-3 text-muted">Built for government contractors, defense subcontractors, and veteran-owned firms hiring for:</p>
+            <p className="mt-3 text-muted"><strong className="text-ink">Search verified talent. Post jobs. Message candidates. Manage applicants.</strong> Built for government contractors, defense subcontractors, and veteran-owned firms hiring for:</p>
             <ul className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
               {['Program & project management', 'Proposal & capture support', 'Logistics & supply chain', 'IT support & cyber operations', 'Operations & analysis', 'Training & instructional design', 'Business development', 'Executive & administrative operations'].map((r) => <li key={r} className="rounded-[4px] border border-line bg-ivory px-3 py-2">{r}</li>)}
             </ul>
-            <div className="mt-5 flex flex-wrap gap-3"><Link href="/employers" className="btn btn-primary" data-track="cta_home_hire">Hire verified veterans</Link><Link href="/contact-sales" className="btn btn-outline" data-track="cta_home_book_call">Book a call</Link></div>
+            <div className="mt-5 flex flex-wrap gap-3"><Link href="/signup?role=employer" className="btn btn-primary" data-track="cta_home_hire">Start free</Link><Link href="/employers" className="btn btn-ghost border border-line" data-track="cta_home_plans">See employer plans</Link><Link href="/contact-sales" className="btn btn-outline" data-track="cta_home_book_call">Book a call</Link></div>
             <p className="mt-3 text-xs text-muted">No placement fees on hires you make yourself. Clearances shown on profiles are self-reported.</p>
           </div>
         </div>
@@ -187,7 +187,7 @@ export default async function HomePage({ searchParams }: { searchParams: { delet
             <div className="card p-5"><p className="font-semibold text-navy">What’s self-reported</p><p className="mt-1 text-sm text-muted">Security clearances are self-reported and labeled that way. Employers confirm eligibility through official channels.</p></div>
           </div>
           {stats && (
-            <p className="mt-6 text-sm text-muted">{stats.members >= 100 ? `${stats.members.toLocaleString()} verified members · ${stats.jobs.toLocaleString()} open roles · ${stats.companies.toLocaleString()} verified employers` : 'Founding period: LanceNest opened in 2026. Join early — Founding Employers lock in launch pricing, and early members get seen first.'}</p>
+            <p className="mt-6 text-sm text-muted">{stats.members >= 100 ? `${stats.members.toLocaleString()} verified members · ${stats.jobs.toLocaleString()} open roles · ${stats.companies.toLocaleString()} verified employers` : 'Founding period: LanceNest opened in 2026. Founding Employers get launch pricing plus direct onboarding with our founder; early members get seen first.'}</p>
           )}
         </div>
       </section>
