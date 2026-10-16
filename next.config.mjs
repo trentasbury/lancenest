@@ -38,6 +38,8 @@ const nextConfig = {
   async redirects() {
     // Old site URLs still in search results
     return [{ source: '/directory', destination: '/careers', permanent: true }, { source: '/freelancers', destination: '/careers', permanent: true }, { source: '/pricing', destination: '/employers', permanent: false }, { source: '/verification', destination: '/trust', permanent: true }, { source: '/employers/pricing', destination: '/employers', permanent: false },
+      // The default Vercel address shows the same site: send visitors and search engines to the real domain.
+      { source: '/:path*', has: [{ type: 'host', value: 'lancenest.vercel.app' }], destination: 'https://www.lancenest.com/:path*', permanent: true },
       // Career translator: one pre-built page per branch (was ?branch=).
       { source: '/careers/army', destination: '/careers', permanent: true },
       { source: '/careers', has: [{ type: 'query', key: 'branch', value: '(?<branch>marine-corps|navy|air-force|space-force|coast-guard)' }], destination: '/careers/:branch', permanent: true }];

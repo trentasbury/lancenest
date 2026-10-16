@@ -152,7 +152,7 @@ export default async function HomePage() {
       {/* Closing statement */}
       <section className="bg-paper">
         <div className="container-page grid gap-10 py-16 lg:grid-cols-2">
-          <div>
+          <div className="min-w-0">
             <p className="eyebrow">See it before you sign up</p>
             <h2 className="mt-2 font-serif text-3xl font-medium text-navy">Your military job, in civilian terms.</h2>
             <div className="mt-5 overflow-x-auto rounded-[6px] border border-line bg-ivory">
@@ -170,7 +170,7 @@ export default async function HomePage() {
             </div>
             <Link href="/careers" className="mt-4 inline-block text-sm text-navy underline decoration-brass underline-offset-4">Find yours — 1,469 military jobs translated →</Link>
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="eyebrow">For employers</p>
             <h2 className="mt-2 font-serif text-3xl font-medium text-navy">Verified military talent for federal-ready professional work.</h2>
             <p className="mt-3 text-muted"><strong className="text-ink">Search verified talent. Post jobs. Message candidates. Manage applicants.</strong> Built for government contractors, defense subcontractors, and veteran-owned firms hiring for:</p>

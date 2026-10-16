@@ -42,8 +42,8 @@ export default async function ResourcesPage({ searchParams }: { searchParams: { 
           </p>
           <form action="/resources" method="get" className="mt-8 flex max-w-xl gap-2 rounded-[6px] bg-ivory p-2 shadow-lift">
             <label htmlFor="code" className="sr-only">Military occupation code or title</label>
-            <input id="code" name="code" defaultValue={searchParams.code} placeholder="e.g. 11B, 0311, LS, 3P0X1, Infantryman" className="flex-1 rounded-[3px] px-4 py-3 text-ink outline-none" />
-            <button type="submit" className="btn btn-primary">Translate</button>
+            <input id="code" name="code" defaultValue={searchParams.code} placeholder="e.g. 11B, 0311, LS, 3P0X1, Infantryman" className="min-w-0 flex-1 rounded-[3px] px-4 py-3 text-ink outline-none" />
+            <button type="submit" className="btn btn-primary shrink-0">Translate</button>
           </form>
         </div>
       </section>

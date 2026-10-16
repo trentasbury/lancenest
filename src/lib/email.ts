@@ -8,7 +8,12 @@ type Tone = 'success' | 'notice' | 'alert';
 export type EmailContent = {
   subject: string; preheader: string; heading: string; paragraphs: string[];
   cta?: { label: string; url: string }; tone?: Tone; badge?: string;
+  /** Optional mailing list (e.g. the weekly update): adds an unsubscribe link and one-click unsubscribe headers. */
+  unsubscribe?: { page: string; oneClick: string; reason: string };
 };
+
+/** Business mailing address for email footers (CAN-SPAM). Set BUSINESS_MAILING_ADDRESS in Vercel. */
+const ADDRESS = (process.env.BUSINESS_MAILING_ADDRESS ?? '').trim();
 
 const BADGE: Record<Tone, [string, string, string]> = {
   success: ['#e8f1ea', '#2f7a3e', '#2f7a3e'], notice: ['#f6efe2', '#8a6a33', '#b08d57'], alert: ['#f8e9e7', '#a33a2c', '#a33a2c'],
@@ -37,10 +42,11 @@ ${paras}${button}</td></tr>
 <tr><td style="padding:18px 32px 28px;font-family:Helvetica,Arial,sans-serif;font-size:12px;line-height:1.7;color:#7a746a;">
 Questions? Just reply, or write <a href="mailto:support@lancenest.com" style="color:#0f2233;">support@lancenest.com</a>.<br>
 <strong style="color:#0f2233;">LanceNest</strong> &middot; The professional network for verified service members<br>
-Independent — not affiliated with the DoD, the VA, or any branch of service.
+Independent — not affiliated with the DoD, the VA, or any branch of service.${ADDRESS ? `<br>${esc(ADDRESS)}` : ''}${c.unsubscribe ? `<br>${esc(c.unsubscribe.reason)} <a href="${esc(c.unsubscribe.page)}" style="color:#0f2233;">Unsubscribe</a>.` : ''}
 </td></tr></table>
 </td></tr></table></body></html>`;
-  const text = [c.heading, '', ...c.paragraphs, ...(c.cta ? ['', `${c.cta.label}: ${c.cta.url}`] : []), '', '— LanceNest · support@lancenest.com'].join('\n');
+  const text = [c.heading, '', ...c.paragraphs, ...(c.cta ? ['', `${c.cta.label}: ${c.cta.url}`] : []), '', '— LanceNest · support@lancenest.com',
+    ...(ADDRESS ? [ADDRESS] : []), ...(c.unsubscribe ? [`${c.unsubscribe.reason} Unsubscribe: ${c.unsubscribe.page}`] : [])].join('\n');
   return { html, text };
 }
 
@@ -51,7 +57,11 @@ export async function sendEmail(to: string, c: EmailContent) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: 'LanceNest <noreply@lancenest.com>', to, reply_to: 'support@lancenest.com', subject: c.subject, html, text }),
+    body: JSON.stringify({
+      from: 'LanceNest <noreply@lancenest.com>', to, reply_to: 'support@lancenest.com', subject: c.subject, html, text,
+      // One-click unsubscribe for mailing-list emails (Gmail/Yahoo sender rules, RFC 8058).
+      ...(c.unsubscribe ? { headers: { 'List-Unsubscribe': `<${c.unsubscribe.oneClick}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } } : {}),
+    }),
   });
   if (!res.ok) console.error('email failed:', res.status, await res.text().catch(() => ''));
 }

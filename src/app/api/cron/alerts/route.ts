@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { SITE, sendEmail } from '@/lib/email';
 import { US_STATES } from '@/lib/states';
+import { unsubscribeLinks } from '@/lib/emailLinks';
 
 type Job = { id: string; slug: string; title: string; description: string | null; location: string | null; work_arrangement: string | null; clearance_required: string | null; posted_at: string; company: { name: string } | null };
 const H = 3600000;
@@ -118,18 +119,35 @@ export async function GET(request: NextRequest) {
   if (new Date().getUTCDay() === 1) {
     const weekAgo = new Date(now - 7 * 24 * H).toISOString();
     const { count: newJobs } = await admin.from('jobs').select('id', { count: 'exact', head: true }).eq('status', 'open').gte('posted_at', weekAgo);
-    const { data: members } = await admin.from('veteran_profiles').select('profile_id').eq('verification_status', 'verified').limit(5000);
-    for (const m of members ?? []) {
+    // Every verified member (the database returns at most 1,000 rows per request, so page through them).
+    const members: { profile_id: string }[] = [];
+    for (let from = 0; ; from += 1000) {
+      const { data: page } = await admin.from('veteran_profiles').select('profile_id').eq('verification_status', 'verified').order('profile_id').range(from, from + 999);
+      members.push(...((page ?? []) as { profile_id: string }[]));
+      if (!page || page.length < 1000) break;
+    }
+    // Members who unsubscribed from the weekly update.
+    const optedOut = new Set<string>();
+    for (let from = 0; ; from += 1000) {
+      const { data: page } = await admin.from('profiles').select('id').eq('email_digest', false).order('id').range(from, from + 999);
+      (page ?? []).forEach((r) => optedOut.add(r.id as string));
+      if (!page || page.length < 1000) break;
+    }
+    const digestFor = async (m: { profile_id: string }) => {
+      if (optedOut.has(m.profile_id)) return;
       const [{ count: views }, { data: u }] = await Promise.all([
         admin.from('profile_views').select('viewer_id', { count: 'exact', head: true }).eq('profile_id', m.profile_id).gte('viewed_at', weekAgo),
-        admin.auth.admin.getUserById(m.profile_id as string),
+        admin.auth.admin.getUserById(m.profile_id),
       ]);
-      if (!u?.user?.email || (!(views ?? 0) && !(newJobs ?? 0))) continue;
+      if (!u?.user?.email || (!(views ?? 0) && !(newJobs ?? 0))) return;
       await sendEmail(u.user.email, { subject: 'Your week on LanceNest', preheader: `${newJobs ?? 0} new jobs · ${views ?? 0} profile views`, tone: 'notice', badge: 'Weekly update',
         heading: 'Your week on LanceNest', paragraphs: [`${newJobs ?? 0} new jobs were posted by verified employers this week.`, `${views ?? 0} people viewed your profile.`, 'Your recommended jobs are matched to your whole background — take a look.'],
-        cta: { label: 'See jobs for you', url: `${SITE}/jobs` } });
+        cta: { label: 'See jobs for you', url: `${SITE}/jobs` },
+        unsubscribe: { ...unsubscribeLinks(SITE, m.profile_id, 'digest'), reason: 'You’re getting this weekly update as a LanceNest member.' } });
       digests++;
-    }
+    };
+    // Ten at a time, so the job finishes well within its time limit as membership grows.
+    for (let i = 0; i < members.length; i += 10) await Promise.all(members.slice(i, i + 10).map((m) => digestFor(m).catch(() => undefined)));
   }
   return NextResponse.json({ memberEmails, employerEmails, digests });
 }
