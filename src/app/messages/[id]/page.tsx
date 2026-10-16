@@ -18,14 +18,18 @@ export default async function ThreadPage({ params, searchParams }: { params: { i
   const { user } = await requireRole(['veteran', 'employer', 'admin'], '/messages');
   const supabase = createClient();
 
-  const { data: conv } = await supabase.from('conversations').select('status, requested_by').eq('id', params.id).maybeSingle();
-  const { count: mySentCount } = await supabase.from('messages').select('id', { count: 'exact', head: true }).eq('conversation_id', params.id).eq('sender_id', user.id);
+  // One round: row-level security returns nothing (and updates nothing) unless you're a participant.
+  const [{ data: conv }, { count: mySentCount }, { data: participants }, { data: messages }] = await Promise.all([
+    supabase.from('conversations').select('status, requested_by').eq('id', params.id).maybeSingle(),
+    supabase.from('messages').select('id', { count: 'exact', head: true }).eq('conversation_id', params.id).eq('sender_id', user.id),
+    supabase
+      .from('conversation_participants')
+      .select('profile_id, profile:profiles!conversation_participants_profile_id_fkey(full_name, username, role, headline)')
+      .eq('conversation_id', params.id),
+    supabase.from('messages').select('id, sender_id, body, created_at').eq('conversation_id', params.id).order('created_at', { ascending: true }).limit(300),
+    supabase.from('conversation_participants').update({ last_read_at: new Date().toISOString() }).eq('conversation_id', params.id).eq('profile_id', user.id),
+  ]);
   const mySent = mySentCount ?? 0;
-  const { data: participants } = await supabase
-    .from('conversation_participants')
-    .select('profile_id, profile:profiles!conversation_participants_profile_id_fkey(full_name, username, role, headline)')
-    .eq('conversation_id', params.id);
-  // Row-level security returns nothing unless you're a participant.
   if (!participants?.some((p) => p.profile_id === user.id)) notFound();
   const other = (participants as unknown as { profile_id: string; profile: { full_name: string; username: string | null; role: string; headline: string | null } | null }[])
     .find((p) => p.profile_id !== user.id);
@@ -33,11 +37,6 @@ export default async function ThreadPage({ params, searchParams }: { params: { i
   const { data: employerCo } = other?.profile?.role === 'employer'
     ? ((await createAdminClient().rpc('company_for_user', { u: other.profile_id }).maybeSingle()) as { data: { name: string; is_verified: boolean } | null })
     : { data: null };
-
-  const [{ data: messages }] = await Promise.all([
-    supabase.from('messages').select('id, sender_id, body, created_at').eq('conversation_id', params.id).order('created_at', { ascending: true }).limit(300),
-    supabase.from('conversation_participants').update({ last_read_at: new Date().toISOString() }).eq('conversation_id', params.id).eq('profile_id', user.id),
-  ]);
 
   return (
     <div className="container-page flex max-w-3xl flex-col py-8">

@@ -1,13 +1,22 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { unstable_cache } from 'next/cache';
 import { BRANCH_SLUGS, publicDb, slugFromBranch } from '@/lib/careers';
 
 export const revalidate = 86400;
+
+// Reference data: each branch's list is cached for a day.
+type OccRow = { code: string; title: string; branch: string };
+const occupationsFor = unstable_cache(async (branch: string): Promise<OccRow[]> => {
+  const res = await publicDb().from('military_occupations').select('code, title, branch').eq('branch', branch).order('code').limit(1000);
+  return (res.data ?? []) as OccRow[];
+}, ['careers-branch-list'], { revalidate: 86400 });
+
 export const metadata: Metadata = { alternates: { canonical: '/careers' }, title: 'Military to civilian careers: every MOS, rating, and AFSC', description: 'Civilian career translations for 1,469 Army, Marine Corps, Navy, Air Force, Space Force, and Coast Guard jobs.' };
 
 export default async function CareersIndex({ searchParams }: { searchParams: { branch?: string } }) {
   const branch = BRANCH_SLUGS.find(([s]) => s === searchParams.branch)?.[1] ?? 'Army';
-  const { data } = await publicDb().from('military_occupations').select('code, title, branch').eq('branch', branch).order('code').limit(1000);
+  const data = await occupationsFor(branch);
   return (
     <>
       <section className="bg-navy-deep text-ivory"><div className="container-page py-14">

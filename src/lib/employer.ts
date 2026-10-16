@@ -1,4 +1,5 @@
 import 'server-only';
+import { cache } from 'react';
 import { createClient } from '@/lib/supabase/server';
 
 export type Plan = 'free' | 'professional' | 'federal' | 'enterprise';
@@ -14,15 +15,20 @@ export function monthStart() {
   return new Date(d.getFullYear(), d.getMonth(), 1).toISOString();
 }
 
-/** The company this employer owns — or recruits for as a team member (isOwner tells which). */
-export async function getMyCompany(userId: string) {
+/**
+ * The company this employer owns — or recruits for as a team member (isOwner tells which).
+ * Both lookups run at once, and the result is shared by everything rendering in one request.
+ */
+export const getMyCompany = cache(async (userId: string) => {
   const supabase = createClient();
-  const { data: own } = await supabase.from('companies').select('*').eq('owner_id', userId).maybeSingle();
+  const [{ data: own }, { data: m }] = await Promise.all([
+    supabase.from('companies').select('*').eq('owner_id', userId).maybeSingle(),
+    supabase.from('company_members').select('company:companies(*)').eq('profile_id', userId).maybeSingle(),
+  ]);
   if (own) return { ...own, isOwner: true } as MyCompany;
-  const { data: m } = await supabase.from('company_members').select('company:companies(*)').eq('profile_id', userId).maybeSingle();
   const company = (m as unknown as { company: Record<string, unknown> | null } | null)?.company;
   return company ? ({ ...company, isOwner: false } as MyCompany) : null;
-}
+});
 
 type MyCompany = { id: string; name: string; slug: string; plan: Plan; is_verified: boolean; verification_status: string; contact_credits: number; extra_job_slots: number; stripe_customer_id: string | null; isOwner: boolean } & Record<string, unknown>;
 export const SEATS: Record<string, number> = { free: 1, professional: 2, federal: 5, enterprise: 20 };

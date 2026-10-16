@@ -2,7 +2,6 @@
 
 import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { createPost } from '@/app/network/actions';
 import Avatar from './Avatar';
 
@@ -39,12 +38,13 @@ export default function Composer({
     start(async () => {
       try {
         // Photos go straight to storage (into the member's own folder), then the post references them.
-        const supabase = createClient();
+        // The upload library loads only when there are photos, keeping the feed's first load light.
         const paths: string[] = [];
+        const supabase = files.length ? (await import('@/lib/supabase/client')).createClient() : null;
         for (const f of files) {
           const ext = f.type.split('/')[1].replace('jpeg', 'jpg');
           const path = `${userId}/${crypto.randomUUID()}.${ext}`;
-          const { error: upErr } = await supabase.storage.from('post-media').upload(path, f, { contentType: f.type });
+          const { error: upErr } = await supabase!.storage.from('post-media').upload(path, f, { contentType: f.type });
           if (upErr) throw new Error('upload');
           paths.push(path);
         }

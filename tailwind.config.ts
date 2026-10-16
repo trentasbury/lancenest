@@ -18,8 +18,8 @@ const config: Config = {
         signal: '#8f2d2d',
       },
       fontFamily: {
-        serif: ['"Cormorant Garamond"', 'Georgia', '"Times New Roman"', 'serif'],
-        sans: ['Inter', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        serif: ['var(--font-cormorant)', '"Cormorant Garamond"', 'Georgia', '"Times New Roman"', 'serif'],
+        sans: ['var(--font-inter)', 'Inter', 'Helvetica Neue', 'Arial', 'sans-serif'],
       },
       letterSpacing: { eyebrow: '0.26em', wordmark: '0.18em' },
       boxShadow: {

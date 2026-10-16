@@ -5,8 +5,8 @@ const isDev = process.env.NODE_ENV === 'development';
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://challenges.cloudflare.com`,
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self'",
   "img-src 'self' data: blob: https://*.supabase.co",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com",
   "frame-src https://challenges.cloudflare.com",

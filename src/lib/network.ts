@@ -104,18 +104,23 @@ export async function getFeed(opts: {
   let q = supabase.from('network_posts').select(POST_SELECT);
   q = opts.groupId ? q.eq('group_id', opts.groupId) : q.is('group_id', null);
 
+  // The viewer's mutes, follows, and saves are independent — fetch them together.
+  const none = Promise.resolve({ data: null });
+  const [{ data: muted }, { data: f }, { data: s }] = await Promise.all([
+    opts.viewerId && !opts.authorId ? supabase.from('user_mutes').select('muted_id').eq('muter_id', opts.viewerId) : none,
+    opts.scope === 'following' && opts.viewerId ? supabase.from('user_follows').select('following_id').eq('follower_id', opts.viewerId) : none,
+    opts.savedOnly && opts.viewerId ? supabase.from('post_saves').select('post_id').eq('profile_id', opts.viewerId) : none,
+  ]);
+
   if (opts.viewerId && !opts.authorId) {
-    const { data: muted } = await supabase.from('user_mutes').select('muted_id').eq('muter_id', opts.viewerId);
-    const mutedIds = (muted ?? []).map((m) => m.muted_id as string);
+    const mutedIds = ((muted ?? []) as { muted_id: string }[]).map((m) => m.muted_id);
     if (mutedIds.length) q = q.not('author_id', 'in', `(${mutedIds.join(',')})`);
   }
   if (opts.scope === 'following' && opts.viewerId) {
-    const { data: f } = await supabase.from('user_follows').select('following_id').eq('follower_id', opts.viewerId);
-    q = q.in('author_id', [opts.viewerId, ...(f ?? []).map((r) => r.following_id as string)]);
+    q = q.in('author_id', [opts.viewerId, ...((f ?? []) as { following_id: string }[]).map((r) => r.following_id)]);
   }
   if (opts.savedOnly && opts.viewerId) {
-    const { data: s } = await supabase.from('post_saves').select('post_id').eq('profile_id', opts.viewerId);
-    const ids = (s ?? []).map((r) => r.post_id as string);
+    const ids = ((s ?? []) as { post_id: string }[]).map((r) => r.post_id);
     if (!ids.length) return { posts: [], nextCursor: null };
     q = q.in('id', ids);
   }
@@ -151,21 +156,20 @@ async function decorate(posts: Post[], viewerId: string | null) {
   posts.forEach((p) => p.media?.sort((a, b) => a.position - b.position));
 
   const sharedIds = Array.from(new Set(posts.map((p) => p.shared_post_id).filter(Boolean))) as string[];
-  if (sharedIds.length) {
-    const { data } = await supabase.from('network_posts').select(POST_SELECT).in('id', sharedIds);
-    const byId = new Map(((data ?? []) as Post[]).map((p) => [p.id, p]));
-    posts.forEach((p) => { if (p.is_share) p.shared = p.shared_post_id ? byId.get(p.shared_post_id) ?? null : null; });
-  }
-
   const ids = posts.map((p) => p.id);
   const authorIds = Array.from(new Set(posts.map((p) => p.author_id)));
-  const [reactions, saves, follows] = viewerId
-    ? await Promise.all([
-        supabase.from('post_reactions').select('post_id, reaction').eq('profile_id', viewerId).in('post_id', ids),
-        supabase.from('post_saves').select('post_id').eq('profile_id', viewerId).in('post_id', ids),
-        supabase.from('user_follows').select('following_id').eq('follower_id', viewerId).in('following_id', authorIds),
-      ])
-    : [{ data: [] }, { data: [] }, { data: [] }];
+  const empty = Promise.resolve({ data: [] as Record<string, unknown>[] });
+  // Shared originals and the viewer's own state are independent — one round of queries, not two.
+  const [shared, reactions, saves, follows] = await Promise.all([
+    sharedIds.length ? supabase.from('network_posts').select(POST_SELECT).in('id', sharedIds) : empty,
+    viewerId ? supabase.from('post_reactions').select('post_id, reaction').eq('profile_id', viewerId).in('post_id', ids) : empty,
+    viewerId ? supabase.from('post_saves').select('post_id').eq('profile_id', viewerId).in('post_id', ids) : empty,
+    viewerId ? supabase.from('user_follows').select('following_id').eq('follower_id', viewerId).in('following_id', authorIds) : empty,
+  ]);
+  if (sharedIds.length) {
+    const byId = new Map(((shared.data ?? []) as unknown as Post[]).map((p) => [p.id, p]));
+    posts.forEach((p) => { if (p.is_share) p.shared = p.shared_post_id ? byId.get(p.shared_post_id) ?? null : null; });
+  }
   const myReaction = new Map((reactions.data ?? []).map((r) => [r.post_id as string, r.reaction as string]));
   const saved = new Set((saves.data ?? []).map((r) => r.post_id as string));
   const following = new Set((follows.data ?? []).map((r) => r.following_id as string));
@@ -184,20 +188,14 @@ export type Suggestion = { id: string; full_name: string; username: string | nul
 /** "Grow Your Network": simple, explainable matching on data members can already see. */
 export async function getSuggestions(viewerId: string, limit = 5): Promise<Suggestion[]> {
   const supabase = createClient();
-  const [{ data: me }, { data: following }, { data: blocks }, { data: mySkills }] = await Promise.all([
+  const [{ data: me }, { data: following }, { data: blocks }, { data: mySkills }, { data: pool }] = await Promise.all([
     supabase.from('profiles').select('service_summary, location').eq('id', viewerId).maybeSingle(),
     supabase.from('user_follows').select('following_id').eq('follower_id', viewerId),
     supabase.from('user_blocks').select('blocked_id').eq('blocker_id', viewerId),
     supabase.from('profile_skills').select('skill_id').eq('profile_id', viewerId),
+    supabase.from('profiles').select('id, full_name, username, headline, service_summary, location, role').neq('role', 'admin').order('created_at', { ascending: false }).limit(80),
   ]);
   const exclude = new Set([viewerId, ...(following ?? []).map((r) => r.following_id as string), ...(blocks ?? []).map((r) => r.blocked_id as string)]);
-
-  const { data: pool } = await supabase
-    .from('profiles')
-    .select('id, full_name, username, headline, service_summary, location, role')
-    .neq('role', 'admin')
-    .order('created_at', { ascending: false })
-    .limit(80);
   const candidates = (pool ?? []).filter((p) => !exclude.has(p.id as string)) as Omit<Suggestion, 'reason'>[];
   if (!candidates.length) return [];
 

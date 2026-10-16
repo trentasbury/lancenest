@@ -1,4 +1,5 @@
 {
+  "regions": ["pdx1"],
   "crons": [
     { "path": "/api/cron/auto-release", "schedule": "0 14 * * *" },
     { "path": "/api/cron/alerts", "schedule": "0 12 * * *" }

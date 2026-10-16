@@ -1,4 +1,5 @@
 import 'server-only';
+import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import type { Profile, Role } from '@/lib/types';
@@ -9,8 +10,12 @@ export function roleHome(role?: Role | null): string {
   return '/dashboard';
 }
 
-/** Validated server-side (getUser checks the token with Supabase, unlike getSession). */
-export async function getSessionProfile() {
+/**
+ * Validated server-side (getUser checks the token with Supabase, unlike getSession).
+ * Wrapped in React cache(): the navbar, layouts, and page of one request share a single
+ * check instead of each repeating it.
+ */
+export const getSessionProfile = cache(async () => {
   const supabase = createClient();
   const {
     data: { user },
@@ -24,7 +29,13 @@ export async function getSessionProfile() {
     .maybeSingle();
 
   return { user, profile: (profile as Profile | null) ?? null };
-}
+});
+
+/** The member's verification status, looked up once per request. */
+const getVerificationStatus = cache(async (profileId: string) => {
+  const { data } = await createClient().from('veteran_profiles').select('verification_status').eq('profile_id', profileId).maybeSingle();
+  return (data?.verification_status as string | undefined) ?? null;
+});
 
 /** Server-side gate for protected pages/layouts. Never rely on client-side role checks. */
 export async function requireRole(roles: Role[], nextPath?: string) {
@@ -68,8 +79,7 @@ export async function requireAdmin(nextPath = '/admin') {
 export async function requireVerifiedMember(nextPath: string) {
   const session = await requireRole(['veteran', 'employer', 'admin'], nextPath);
   if (session.profile.role === 'veteran') {
-    const { data } = await createClient().from('veteran_profiles').select('verification_status').eq('profile_id', session.user.id).maybeSingle();
-    if (data?.verification_status !== 'verified') redirect(`/dashboard/verification?required=1`);
+    if ((await getVerificationStatus(session.user.id)) !== 'verified') redirect(`/dashboard/verification?required=1`);
   }
   return session;
 }

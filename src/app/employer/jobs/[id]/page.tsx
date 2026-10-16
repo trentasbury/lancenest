@@ -13,17 +13,18 @@ import { featureWithPlan, saveJob, setJobStatus } from '../actions';
 export const metadata: Metadata = { title: 'Manage job' };
 
 export default async function ManageJobPage({ params, searchParams }: { params: { id: string }; searchParams: { error?: string; saved?: string } }) {
-  await requireRole(['employer'], '/employer/dashboard');
+  const { user } = await requireRole(['employer'], '/employer/dashboard');
   const supabase = createClient();
   // Row-level security only returns this job to its own company (or if it's open).
-  const { data } = await supabase.from('jobs').select('*, company:companies!inner(owner_id)').eq('id', params.id).maybeSingle();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!data || (data.company as { owner_id: string }).owner_id !== user?.id) notFound();
+  const [{ data }, co, { count: applicants }] = await Promise.all([
+    supabase.from('jobs').select('*, company:companies!inner(owner_id)').eq('id', params.id).maybeSingle(),
+    getMyCompany(user.id),
+    supabase.from('applications').select('id', { count: 'exact', head: true }).eq('job_id', params.id).neq('status', 'withdrawn'),
+  ]);
+  if (!data || (data.company as { owner_id: string }).owner_id !== user.id) notFound();
   const job = data as unknown as Job & { featured_until: string | null };
   const featured = job.featured_until && new Date(job.featured_until) > new Date();
-  const co = await getMyCompany(user!.id);
   const paidPlan = co?.plan && co.plan !== 'free';
-  const { count: applicants } = await supabase.from('applications').select('id', { count: 'exact', head: true }).eq('job_id', job.id).neq('status', 'withdrawn');
 
   const statusButtons: [string, 'open' | 'paused' | 'closed' | 'draft'][] =
     job.status === 'open' ? [['Pause', 'paused'], ['Close', 'closed']]

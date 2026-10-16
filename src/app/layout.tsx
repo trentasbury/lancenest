@@ -1,6 +1,26 @@
 import { CANONICAL_ORIGIN } from '@/lib/seo';
 import type { Metadata, Viewport } from 'next';
+import localFont from 'next/font/local';
 import './globals.css';
+
+// Fonts are served from our own domain and preloaded (no Google Fonts round trip, no layout shift).
+const inter = localFont({
+  src: './fonts/inter-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
+  display: 'swap',
+  variable: '--font-inter',
+});
+const cormorant = localFont({
+  src: [
+    { path: './fonts/cormorant-garamond-latin-500-normal.woff2', weight: '500', style: 'normal' },
+    { path: './fonts/cormorant-garamond-latin-600-normal.woff2', weight: '600', style: 'normal' },
+    { path: './fonts/cormorant-garamond-latin-700-normal.woff2', weight: '700', style: 'normal' },
+    { path: './fonts/cormorant-garamond-latin-500-italic.woff2', weight: '500', style: 'italic' },
+  ],
+  display: 'swap',
+  variable: '--font-cormorant',
+});
 import PageViewBeacon from '@/components/PageViewBeacon';
 import AutoCloseDetails from '@/components/AutoCloseDetails';
 import Navbar from '@/components/Navbar';
@@ -30,16 +50,7 @@ export const viewport: Viewport = { themeColor: '#102431' };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&display=swap"
-        />
-      </head>
+    <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
       <body className="flex min-h-screen flex-col">
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-ivory focus:p-2">
           Skip to content

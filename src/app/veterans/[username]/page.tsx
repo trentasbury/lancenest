@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
+import { cache } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth';
 import VerificationBadge from '@/components/VerificationBadge';
@@ -26,7 +27,8 @@ type Service = {
   occupation: { title: string; civilian_categories: string[]; civilian_skills: string[] } | null;
 };
 
-async function load(username: string) {
+// Shared by the page title and the page itself: one lookup per request.
+const load = cache(async (username: string) => {
   const supabase = createClient();
   // Row-level security decides visibility: the owner, employers, admins, or anyone if the profile is public.
   const { data: profile } = await supabase
@@ -44,7 +46,7 @@ async function load(username: string) {
     .maybeSingle();
 
   return { supabase, profile: profile as Profile, vet: (vet as Vet) ?? null };
-}
+});
 
 export async function generateMetadata({ params }: { params: { username: string } }): Promise<Metadata> {
   const data = await load(params.username);
@@ -60,13 +62,16 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
   if (!data) notFound();
   const { supabase, profile } = data;
   const viewer = await getSessionProfile();
-  if (viewer?.profile?.role === 'employer') {
-    const { data: hiding } = await supabase.rpc('members_hiding_me');
-    if (((hiding ?? []) as string[]).includes(profile.id)) notFound();
-  }
+  // Access checks first (both at once): employers this member hid from, and unverified members.
+  const [{ data: hiding }, { data: me }] = await Promise.all([
+    viewer?.profile?.role === 'employer' ? supabase.rpc('members_hiding_me') : Promise.resolve({ data: [] }),
+    viewer?.profile?.role === 'veteran' && viewer.user.id !== profile.id
+      ? supabase.from('veteran_profiles').select('verification_status').eq('profile_id', viewer.user.id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  if (viewer?.profile?.role === 'employer' && ((hiding ?? []) as string[]).includes(profile.id)) notFound();
   if (viewer?.profile?.role === 'veteran' && viewer.user.id !== profile.id) {
-    const { data: me } = await supabase.from('veteran_profiles').select('verification_status').eq('profile_id', viewer.user.id).maybeSingle();
-    if (me?.verification_status !== 'verified') redirect('/dashboard/verification?required=1');
+    if ((me as { verification_status?: string } | null)?.verification_status !== 'verified') redirect('/dashboard/verification?required=1');
   }
 
   // Hidden by the database: a Free employer who hasn't received an application from this veteran.
@@ -83,40 +88,43 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
     );
   }
   const vet = data.vet;
-  if (viewer && viewer.user.id !== profile.id) {
-    await supabase.from('profile_views').insert({ profile_id: profile.id, viewer_id: viewer.user.id }).then(() => undefined, () => undefined);
-  }
+  const session = viewer;
+  const viewerId = session?.user.id ?? null;
+  const none = Promise.resolve({ data: null });
 
-  const [{ data: service }, { data: skillRows }, { data: experience }, { data: education }, session] = await Promise.all([
+  // Every section of the profile is independent: load them all in one round instead of eight.
+  const [
+    ,
+    { data: service }, { data: skillRows }, { data: experience }, { data: education },
+    { posts }, { count: followers }, { data: iFollow },
+    { data: verifiedWork },
+    { data: recs }, { data: myPendingRecs }, { data: mentorRow }, { data: wroteOne },
+    { data: offered }, { data: reviews },
+    { data: freelance }, { data: portfolio },
+  ] = await Promise.all([
+    viewer && viewer.user.id !== profile.id
+      ? supabase.from('profile_views').insert({ profile_id: profile.id, viewer_id: viewer.user.id }).then(() => undefined, () => undefined)
+      : Promise.resolve(undefined),
     supabase.from('military_service').select('*, occupation:military_occupations(title, civilian_categories, civilian_skills)').eq('profile_id', profile.id).order('start_date', { ascending: false }),
     supabase.from('profile_skills').select('skill:skills(name)').eq('profile_id', profile.id),
     supabase.from('experience').select('*').eq('profile_id', profile.id).order('start_date', { ascending: false }),
     supabase.from('education').select('*').eq('profile_id', profile.id).order('graduation_year', { ascending: false }),
-    getSessionProfile(),
-  ]);
-
-  const viewerId = session?.user.id ?? null;
-  const [{ posts }, { count: followers }, { data: iFollow }] = await Promise.all([
     getFeed({ viewerId, authorId: profile.id, limit: 5 }),
     supabase.from('user_follows').select('*', { count: 'exact', head: true }).eq('following_id', profile.id),
     viewerId ? supabase.from('user_follows').select('following_id').eq('follower_id', viewerId).eq('following_id', profile.id) : Promise.resolve({ data: [] }),
-  ]);
-  const following = (iFollow ?? []).length > 0;
-  const { data: verifiedWork } = viewer ? await supabase.rpc('verified_work', { p: profile.id }) : { data: [] };
-  const [{ data: recs }, { data: myPendingRecs }, { data: mentorRow }, { data: wroteOne }] = await Promise.all([
+    viewer ? supabase.rpc('verified_work', { p: profile.id }) : Promise.resolve({ data: [] }),
     supabase.from('recommendations').select('id, relationship, body, created_at, author:profiles!recommendations_author_id_fkey(full_name, username, headline, verified)').eq('subject_id', profile.id).eq('status', 'accepted').order('created_at', { ascending: false }),
     viewer?.user?.id === profile.id ? supabase.from('recommendations').select('id, relationship, body, author:profiles!recommendations_author_id_fkey(full_name)').eq('subject_id', profile.id).eq('status', 'pending') : Promise.resolve({ data: [] }),
     supabase.from('mentor_profiles').select('available').eq('profile_id', profile.id).maybeSingle(),
-    viewer?.user?.id && viewer.user.id !== profile.id ? supabase.from('recommendations').select('id').eq('author_id', viewer.user.id).eq('subject_id', profile.id).maybeSingle() : Promise.resolve({ data: null }),
-  ]);
-  const { data: offered } = await supabase.from('service_listings').select('id, title, category, price_cents, price_type, delivery, service_area').eq('profile_id', profile.id).eq('status', 'active').order('created_at', { ascending: false });
-  type RecRow = { id: string; relationship: string; body: string; author: { full_name: string; username?: string | null; headline?: string | null; verified?: boolean } | null };
-  const { data: reviews } = await supabase.from('reviews').select('rating, body, created_at').eq('reviewee_id', profile.id).order('created_at', { ascending: false }).limit(5);
-  const avg = (reviews ?? []).length ? (reviews ?? []).reduce((a, r) => a + (r.rating as number), 0) / (reviews ?? []).length : 0;
-  const [{ data: freelance }, { data: portfolio }] = await Promise.all([
+    viewer?.user?.id && viewer.user.id !== profile.id ? supabase.from('recommendations').select('id').eq('author_id', viewer.user.id).eq('subject_id', profile.id).maybeSingle() : none,
+    supabase.from('service_listings').select('id, title, category, price_cents, price_type, delivery, service_area').eq('profile_id', profile.id).eq('status', 'active').order('created_at', { ascending: false }),
+    supabase.from('reviews').select('rating, body, created_at').eq('reviewee_id', profile.id).order('created_at', { ascending: false }).limit(5),
     supabase.from('freelancer_profiles').select('title, bio, hourly_rate, available, clearance_work, vosb, sdvosb').eq('profile_id', profile.id).maybeSingle(),
     supabase.from('portfolio_items').select('id, title, description, url').eq('profile_id', profile.id).order('created_at', { ascending: false }).limit(6),
   ]);
+  const following = (iFollow ?? []).length > 0;
+  type RecRow = { id: string; relationship: string; body: string; author: { full_name: string; username?: string | null; headline?: string | null; verified?: boolean } | null };
+  const avg = (reviews ?? []).length ? (reviews ?? []).reduce((a, r) => a + (r.rating as number), 0) / (reviews ?? []).length : 0;
   const services = (service ?? []) as unknown as Service[];
   const skills = ((skillRows ?? []) as unknown as { skill: { name: string } | null }[]).map((r) => r.skill?.name).filter(Boolean) as string[];
   const isOwner = session?.user.id === profile.id;

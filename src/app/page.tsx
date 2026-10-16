@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { unstable_cache } from 'next/cache';
 import { ensureOccupationsLoaded } from '@/lib/occupations';
 import StarRule from '@/components/StarRule';
 
@@ -13,7 +14,8 @@ const FEATURES = [
 
 const LOOP = ['Service', 'Skills', 'Translation', 'Opportunity', 'Application', 'Career'];
 
-async function getStats() {
+// Public counts change slowly: computed at most every 10 minutes, then served from cache.
+const getStats = unstable_cache(async () => {
   try {
     const { createAdminClient } = await import('@/lib/supabase/admin');
     const admin = createAdminClient();
@@ -24,13 +26,12 @@ async function getStats() {
     ]);
     return { members: m.count ?? 0, jobs: j.count ?? 0, companies: c.count ?? 0 };
   } catch { return null; }
-}
+}, ['home-stats'], { revalidate: 600 });
 
 export const metadata: Metadata = { alternates: { canonical: '/' } };
 
 export default async function HomePage({ searchParams }: { searchParams: { deleted?: string } }) {
-  const stats = await getStats();
-  await ensureOccupationsLoaded();
+  const [stats] = await Promise.all([getStats(), ensureOccupationsLoaded()]);
   return (
     <>
       {searchParams.deleted && (

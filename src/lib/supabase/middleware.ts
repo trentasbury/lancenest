@@ -33,9 +33,17 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Speed: visitors without a Supabase auth cookie are signed out — no auth check needed.
+  // Signed-in visitors: getClaims() verifies the token's signature locally (the project signs
+  // tokens with an asymmetric key) and refreshes it when expired, instead of a round trip to
+  // the auth server on every request. Pages and actions still confirm the user with the auth
+  // server (requireRole → getUser), so this check is for session upkeep and redirects only.
+  const hasAuthCookie = request.cookies.getAll().some((c) => c.name.startsWith('sb-') && c.name.includes('-auth-token'));
+  let user = false;
+  if (hasAuthCookie) {
+    const { data } = await supabase.auth.getClaims();
+    user = Boolean(data?.claims?.sub);
+  }
 
   const path = request.nextUrl.pathname;
   const now = Date.now();

@@ -1,7 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { unstable_cache } from 'next/cache';
 import { getSessionProfile } from '@/lib/auth';
 import { foundingSpotsLeft } from '@/lib/billing';
+
+// Display only: refreshed every 5 minutes. Checkout always re-checks the live count.
+const spotsLeftForDisplay = unstable_cache(() => foundingSpotsLeft().catch(() => 0), ['founding-spots-left'], { revalidate: 300 });
 
 export const metadata: Metadata = { alternates: { canonical: '/employers' },
   title: 'Hire Veterans',
@@ -22,11 +26,9 @@ const PLANS = [
 const CHECKOUT: Record<string, string> = { Professional: 'employer_professional', Federal: 'employer_federal' };
 
 export default async function EmployersPage() {
-  const { foundingSpotsLeft } = await import('@/lib/billing');
-  const spotsLeft = await foundingSpotsLeft().catch(() => 0);
-  const session = await getSessionProfile();
+  const [spotsLeft, session] = await Promise.all([spotsLeftForDisplay(), getSessionProfile()]);
   const isEmployer = session?.profile?.role === 'employer';
-  const founding = await foundingSpotsLeft();
+  const founding = spotsLeft;
   return (
     <>
       <section className="bg-navy-deep text-ivory">

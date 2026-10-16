@@ -12,6 +12,8 @@ export const metadata: Metadata = { title: 'Network' };
 export default async function NetworkPage({ searchParams }: { searchParams: { type?: string; scope?: string; view?: string; cursor?: string } }) {
   const { user, profile } = await requireRole(['veteran', 'employer', 'admin'], '/network');
   const supabase = createClient();
+  // Suggestions don't depend on anything below — start them now so they load alongside the feed.
+  const suggestionsPromise = getSuggestions(user.id);
   const [{ count: followingCount }, { count: followerCount }] = await Promise.all([
     supabase.from('user_follows').select('*', { count: 'exact', head: true }).eq('follower_id', user.id),
     supabase.from('user_follows').select('*', { count: 'exact', head: true }).eq('following_id', user.id),
@@ -23,7 +25,7 @@ export default async function NetworkPage({ searchParams }: { searchParams: { ty
   const type = FEED_FILTERS.some(([v]) => v === searchParams.type) ? searchParams.type : undefined;
   const [{ posts, nextCursor }, suggestions] = await Promise.all([
     getFeed({ viewerId: user.id, scope: saved ? 'everyone' : scope, type, cursor: searchParams.cursor, savedOnly: saved }),
-    getSuggestions(user.id),
+    suggestionsPromise,
   ]);
 
   const qs = (patch: Record<string, string | undefined>) => {

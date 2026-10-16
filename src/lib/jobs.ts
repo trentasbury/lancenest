@@ -1,4 +1,5 @@
 import 'server-only';
+import { cache } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { sanitizeSearch } from '@/lib/format';
 import { US_STATES } from '@/lib/states';
@@ -60,11 +61,12 @@ export async function searchJobs(filters: JobFilters, limit = 50): Promise<JobWi
   return (data ?? []) as JobWithCompany[];
 }
 
-export async function getJobBySlug(slug: string): Promise<JobWithCompany | null> {
+/** One lookup per request: the page title and the page share it. */
+export const getJobBySlug = cache(async (slug: string): Promise<JobWithCompany | null> => {
   const supabase = createClient();
   const { data } = await supabase.from('jobs').select(JOB_SELECT).eq('slug', slug).maybeSingle();
   return (data as JobWithCompany | null) ?? null;
-}
+});
 
 /** Active paid boosts, shown above regular results. */
 export async function getFeaturedJobs(limit = 3): Promise<JobWithCompany[]> {

@@ -48,20 +48,30 @@ type App = { answers?: { q: string; a: string }[]; id: string; status: string; a
 
 export default async function ApplicantsPage({ params }: { params: { id: string } }) {
   const { user } = await requireRole(['employer'], '/employer/dashboard');
-  const company = await getMyCompany(user.id);
   const supabase = createClient();
-  const { data: job } = await supabase.from('jobs').select('id, title, company_id').eq('id', params.id).maybeSingle();
+  const [company, { data: job }] = await Promise.all([
+    getMyCompany(user.id),
+    supabase.from('jobs').select('id, title, company_id').eq('id', params.id).maybeSingle(),
+  ]);
   if (!job || !company || job.company_id !== company.id) notFound();
 
   // Opening the pipeline marks new applications as "Reviewing" (the applicant is told their application was viewed).
-  await supabase.from('applications').update({ status: 'viewed' }).eq('job_id', job.id).eq('status', 'applied').eq('source', 'lancenest');
-  const { data } = await supabase.from('applications')
-    .select('id, status, applied_at, profile_id, resume_id, answers, profile:profiles!applications_profile_id_fkey(full_name, username, headline, service_summary, verified)')
-    .eq('job_id', job.id).eq('source', 'lancenest').neq('status', 'withdrawn').order('applied_at', { ascending: false });
-  const rawApps = (data ?? []) as unknown as App[];
-  const { data: plans } = rawApps.length ? await supabase.from('veteran_profiles').select('profile_id, plan').in('profile_id', rawApps.map((a) => a.profile_id)) : { data: [] };
-  const planOf = new Map((plans ?? []).map((p) => [p.profile_id as string, p.plan as string]));
-  const { data: track } = rawApps.length ? await supabase.rpc('verified_work_summary', { ids: rawApps.map((a) => a.profile_id) }) : { data: [] };
+  // The update and the list load together; anything still "applied" in the list is shown as viewed.
+  const [, { data }] = await Promise.all([
+    supabase.from('applications').update({ status: 'viewed' }).eq('job_id', job.id).eq('status', 'applied').eq('source', 'lancenest'),
+    supabase.from('applications')
+      .select('id, status, applied_at, profile_id, resume_id, answers, profile:profiles!applications_profile_id_fkey(full_name, username, headline, service_summary, verified)')
+      .eq('job_id', job.id).eq('source', 'lancenest').neq('status', 'withdrawn').order('applied_at', { ascending: false }),
+  ]);
+  const rawApps = ((data ?? []) as unknown as App[]).map((a) => (a.status === 'applied' ? { ...a, status: 'viewed' } : a)) as App[];
+  const ids = rawApps.map((a) => a.profile_id);
+  const [{ data: plans }, { data: track }] = rawApps.length
+    ? await Promise.all([
+        supabase.from('veteran_profiles').select('profile_id, plan').in('profile_id', ids),
+        supabase.rpc('verified_work_summary', { ids }),
+      ])
+    : [{ data: [] }, { data: [] }];
+  const planOf = new Map(((plans ?? []) as { profile_id: string; plan: string }[]).map((p) => [p.profile_id, p.plan]));
   const trackOf = new Map(((track ?? []) as { profile_id: string; completed: number; avg_rating: number | null }[]).map((t) => [t.profile_id, t]));
   const featured = (a: App) => ['pro_plus', 'federal_pro'].includes(planOf.get(a.profile_id) ?? '');
   // Career Accelerator / Federal members are featured applicants: listed first, newest first within each group.

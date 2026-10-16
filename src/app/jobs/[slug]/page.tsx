@@ -43,29 +43,26 @@ export default async function JobDetailPage({ params, searchParams }: { params: 
   if (!job) notFound();
 
   const session = await getSessionProfile();
-  const [{ data: earlyRows }, { data: insightRows }] = await Promise.all([
-    createClient().rpc('early_jobs', { ids: [job.id] }),
-    (!!session && ['veteran', 'admin'].includes(session.profile?.role ?? '')) ? createClient().rpc('applicant_insight', { j: job.id }) : Promise.resolve({ data: [] }),
+  const isVeteran = (!!session && ['veteran', 'admin'].includes(session.profile?.role ?? ''));
+  const supabase = createClient();
+  const none = Promise.resolve({ data: null });
+  // Everything below depends only on the job and the viewer: one round of queries.
+  const [{ data: earlyRows }, { data: insightRows }, { data: myResumesRows }, , { data: s }, { data: a }] = await Promise.all([
+    supabase.rpc('early_jobs', { ids: [job.id] }),
+    isVeteran ? supabase.rpc('applicant_insight', { j: job.id }) : Promise.resolve({ data: [] }),
+    isVeteran && session ? supabase.from('resumes').select('id, file_name, is_default').eq('profile_id', session.user.id).order('uploaded_at', { ascending: false }) : Promise.resolve({ data: [] }),
+    // One view per member per job per day; duplicates are ignored.
+    session ? supabase.from('job_views').insert({ job_id: job.id, viewer_id: session.user.id }).then(() => undefined, () => undefined) : Promise.resolve(undefined),
+    isVeteran && session ? supabase.from('saved_jobs').select('job_id').eq('profile_id', session.user.id).eq('job_id', job.id).maybeSingle() : none,
+    isVeteran && session ? supabase.from('applications').select('status').eq('profile_id', session.user.id).eq('job_id', job.id).maybeSingle() : none,
   ]);
   const isEarly = ((earlyRows ?? []) as string[]).length > 0;
   const insight = ((insightRows ?? []) as { stronger_than_pct: number; verified_pct: number; applicants_bucket: string }[])[0] ?? null;
-  const { data: myResumes } = (!!session && ['veteran', 'admin'].includes(session.profile?.role ?? ''))
-    ? await createClient().from('resumes').select('id, file_name, is_default').eq('profile_id', session.user.id).order('uploaded_at', { ascending: false })
-    : { data: [] as { id: string; file_name: string; is_default: boolean }[] };
-  if (session) {
-    // One view per member per job per day; duplicates are ignored.
-    await createClient().from('job_views').insert({ job_id: job.id, viewer_id: session.user.id }).then(() => undefined, () => undefined);
-  }
-  const isVeteran = (!!session && ['veteran', 'admin'].includes(session.profile?.role ?? ''));
+  const myResumes = (myResumesRows ?? []) as { id: string; file_name: string; is_default: boolean }[];
 
   let saved = false;
   let applicationStatus: string | null = null;
   if (isVeteran && session) {
-    const supabase = createClient();
-    const [{ data: s }, { data: a }] = await Promise.all([
-      supabase.from('saved_jobs').select('job_id').eq('profile_id', session.user.id).eq('job_id', job.id).maybeSingle(),
-      supabase.from('applications').select('status').eq('profile_id', session.user.id).eq('job_id', job.id).maybeSingle(),
-    ]);
     saved = !!s;
     applicationStatus = (a?.status as string | undefined) ?? null;
   }

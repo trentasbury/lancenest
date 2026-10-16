@@ -16,23 +16,18 @@ export default async function PeoplePage({ searchParams }: { searchParams: { tab
   const tab = ['followers', 'following', 'muted', 'blocked'].includes(searchParams.tab ?? '') ? searchParams.tab! : 'following';
   const supabase = createClient();
 
-  const { data: myFollows } = await supabase.from('user_follows').select('following_id').eq('follower_id', user.id);
+  // The tab's list and who you follow load together.
+  const list =
+    tab === 'followers' ? supabase.from('user_follows').select(`p:profiles!user_follows_follower_id_fkey(${P})`).eq('following_id', user.id).limit(200)
+    : tab === 'following' ? supabase.from('user_follows').select(`p:profiles!user_follows_following_id_fkey(${P})`).eq('follower_id', user.id).limit(200)
+    : tab === 'muted' ? supabase.from('user_mutes').select(`p:profiles!user_mutes_muted_id_fkey(${P})`).eq('muter_id', user.id)
+    : supabase.from('user_blocks').select(`p:profiles!user_blocks_blocked_id_fkey(${P})`).eq('blocker_id', user.id);
+  const [{ data: myFollows }, { data }] = await Promise.all([
+    supabase.from('user_follows').select('following_id').eq('follower_id', user.id),
+    list,
+  ]);
   const followingSet = new Set((myFollows ?? []).map((r) => r.following_id as string));
-
-  let people: Person[] = [];
-  if (tab === 'followers') {
-    const { data } = await supabase.from('user_follows').select(`p:profiles!user_follows_follower_id_fkey(${P})`).eq('following_id', user.id).limit(200);
-    people = ((data ?? []) as unknown as { p: Person }[]).map((r) => r.p).filter(Boolean);
-  } else if (tab === 'following') {
-    const { data } = await supabase.from('user_follows').select(`p:profiles!user_follows_following_id_fkey(${P})`).eq('follower_id', user.id).limit(200);
-    people = ((data ?? []) as unknown as { p: Person }[]).map((r) => r.p).filter(Boolean);
-  } else if (tab === 'muted') {
-    const { data } = await supabase.from('user_mutes').select(`p:profiles!user_mutes_muted_id_fkey(${P})`).eq('muter_id', user.id);
-    people = ((data ?? []) as unknown as { p: Person }[]).map((r) => r.p).filter(Boolean);
-  } else {
-    const { data } = await supabase.from('user_blocks').select(`p:profiles!user_blocks_blocked_id_fkey(${P})`).eq('blocker_id', user.id);
-    people = ((data ?? []) as unknown as { p: Person }[]).map((r) => r.p).filter(Boolean);
-  }
+  const people: Person[] = ((data ?? []) as unknown as { p: Person }[]).map((r) => r.p).filter(Boolean);
 
   const tabs = [['following', 'Following'], ['followers', 'Followers'], ['muted', 'Muted'], ['blocked', 'Blocked']];
   return (

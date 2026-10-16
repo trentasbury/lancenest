@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { cache } from 'react';
 import CompanyMark from '@/components/CompanyMark';
 import JobCard from '@/components/JobCard';
 import EmptyState from '@/components/EmptyState';
@@ -10,11 +11,12 @@ import { getSessionProfile } from '@/lib/auth';
 import SubmitButton from '@/components/SubmitButton';
 import { startConversation } from '@/app/messages/actions';
 
-async function getCompany(slug: string) {
+// Shared by the page title and the page itself: one lookup per request.
+const getCompany = cache(async (slug: string) => {
   const supabase = createClient();
   const { data } = await supabase.from('companies').select('*').eq('slug', slug).maybeSingle();
   return (data as Company | null) ?? null;
-}
+});
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const company = await getCompany(params.slug);
@@ -27,14 +29,16 @@ export default async function CompanyPage({ params }: { params: { slug: string }
   if (!company) notFound();
 
   const supabase = createClient();
-  const { data } = await supabase
-    .from('jobs')
-    .select('*, company:companies(name, slug, logo_url, is_verified, industry)')
-    .eq('company_id', company.id)
-    .eq('status', 'open')
-    .order('posted_at', { ascending: false });
+  const [{ data }, session] = await Promise.all([
+    supabase
+      .from('jobs')
+      .select('*, company:companies(name, slug, logo_url, is_verified, industry)')
+      .eq('company_id', company.id)
+      .eq('status', 'open')
+      .order('posted_at', { ascending: false }),
+    getSessionProfile(),
+  ]);
   const jobs = (data ?? []) as JobWithCompany[];
-  const session = await getSessionProfile();
 
   return (
     <>

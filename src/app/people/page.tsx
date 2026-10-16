@@ -16,20 +16,22 @@ type Person = { id: string; avatar_url: string | null; full_name: string; userna
 export default async function PeoplePage({ searchParams: f }: { searchParams: { q?: string; branch?: string; location?: string; mos?: string; skill?: string; type?: string } }) {
   const { user, profile } = await requireVerifiedMember('/people');
   const supabase = createClient();
+  // The MOS filter, skill filter, and hidden-from list are independent: look them up together.
+  const none = Promise.resolve({ data: null });
+  const [{ data: mosRows }, { data: skillRows }, { data: hiding }] = await Promise.all([
+    f.mos ? supabase.from('military_service').select('profile_id').ilike('occupation_code', sanitizeSearch(f.mos)).limit(1000) : none,
+    f.skill ? supabase.from('profile_skills').select('profile_id, skills!inner(name)').ilike('skills.name', `%${sanitizeSearch(f.skill)}%`).limit(1000) : none,
+    profile.role === 'employer' ? supabase.rpc('members_hiding_me') : none,
+  ]);
   let ids: string[] | null = null;
-  if (f.mos) {
-    const { data } = await supabase.from('military_service').select('profile_id').ilike('occupation_code', sanitizeSearch(f.mos)).limit(1000);
-    ids = (data ?? []).map((r) => r.profile_id as string);
-  }
+  if (f.mos) ids = ((mosRows ?? []) as { profile_id: string }[]).map((r) => r.profile_id);
   if (f.skill) {
-    const { data } = await supabase.from('profile_skills').select('profile_id, skills!inner(name)').ilike('skills.name', `%${sanitizeSearch(f.skill)}%`).limit(1000);
-    const s = (data ?? []).map((r) => r.profile_id as string);
+    const s = ((skillRows ?? []) as { profile_id: string }[]).map((r) => r.profile_id);
     ids = ids === null ? s : ids.filter((x) => s.includes(x));
   }
   // Row-level security returns only members the viewer may see (verified, not removed).
   let q = supabase.from('profiles').select('id, full_name, username, headline, location, service_summary, verified, role, avatar_url').neq('id', user.id);
   if (profile.role === 'employer') {
-    const { data: hiding } = await supabase.rpc('members_hiding_me');
     const hid = ((hiding ?? []) as string[]);
     if (hid.length) q = q.not('id', 'in', `(${hid.join(',')})`);
   }

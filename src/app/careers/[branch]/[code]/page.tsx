@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { unstable_cache } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { branchFromSlug, publicDb } from '@/lib/careers';
 
@@ -21,12 +22,24 @@ function certsFor(text: string) { const out = new Set<string>(); for (const [re,
 
 type Occ = { id: string; code: string; branch: string; title: string; civilian_categories: string[] | null; civilian_skills: string[] | null };
 
+// Occupation data is static reference data: cached for a day (metadata and page share it).
+const loadOcc = unstable_cache(async (branch: string, code: string) => {
+  const { data } = await publicDb().from('military_occupations').select('id, code, branch, title, civilian_categories, civilian_skills').eq('branch', branch).ilike('code', code).maybeSingle();
+  return data as Occ | null;
+}, ['career-occupation'], { revalidate: 86400 });
+
 async function load(branchSlug: string, code: string) {
   const branch = branchFromSlug(branchSlug);
   if (!branch) return null;
-  const { data } = await publicDb().from('military_occupations').select('id, code, branch, title, civilian_categories, civilian_skills').eq('branch', branch).ilike('code', code).maybeSingle();
-  return data as Occ | null;
+  return loadOcc(branch, code.toLowerCase());
 }
+
+// Open roles matching this occupation: refreshed hourly.
+const openRolesFor = unstable_cache(async (cats: string[]) => {
+  const { count } = await createAdminClient().from('jobs').select('id', { count: 'exact', head: true }).eq('status', 'open')
+    .or(cats.slice(0, 3).map((c) => `title.ilike.%${c.replace(/[,()%]/g, ' ').trim()}%`).join(','));
+  return count ?? 0;
+}, ['career-open-roles'], { revalidate: 3600 });
 
 export async function generateMetadata({ params }: { params: { branch: string; code: string } }): Promise<Metadata> {
   const o = await load(params.branch, params.code);
@@ -44,12 +57,7 @@ export default async function CareerPage({ params }: { params: { branch: string;
   if (!o) notFound();
   const cats = (o.civilian_categories ?? []).slice(0, 6);
   const skills = (o.civilian_skills ?? []).slice(0, 12);
-  let openRoles = 0;
-  if (cats.length) {
-    const { count } = await createAdminClient().from('jobs').select('id', { count: 'exact', head: true }).eq('status', 'open')
-      .or(cats.slice(0, 3).map((c) => `title.ilike.%${c.replace(/[,()%]/g, ' ').trim()}%`).join(','));
-    openRoles = count ?? 0;
-  }
+  const openRoles = cats.length ? await openRolesFor(cats) : 0;
   return (
     <>
       <section className="bg-navy-deep text-ivory"><div className="container-page py-14">
