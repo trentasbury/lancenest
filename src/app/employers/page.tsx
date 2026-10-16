@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { unstable_cache } from 'next/cache';
-import { getSessionProfile } from '@/lib/auth';
 import { foundingSpotsLeft } from '@/lib/billing';
 
 // Display only: refreshed every 5 minutes. Checkout always re-checks the live count.
 const spotsLeftForDisplay = unstable_cache(() => foundingSpotsLeft().catch(() => 0), ['founding-spots-left'], { revalidate: 300 });
+
+// Pre-built and served from the location nearest each visitor; refreshed every 5 minutes.
+export const revalidate = 300;
 
 export const metadata: Metadata = { alternates: { canonical: '/employers' },
   title: 'Hire Veterans',
@@ -26,8 +28,7 @@ const PLANS = [
 const CHECKOUT: Record<string, string> = { Professional: 'employer_professional', Federal: 'employer_federal' };
 
 export default async function EmployersPage() {
-  const [spotsLeft, session] = await Promise.all([spotsLeftForDisplay(), getSessionProfile()]);
-  const isEmployer = session?.profile?.role === 'employer';
+  const spotsLeft = await spotsLeftForDisplay();
   const founding = spotsLeft;
   return (
     <>
@@ -79,18 +80,20 @@ export default async function EmployersPage() {
                   </li>
                 ))}
               </ul>
-              {isEmployer && CHECKOUT[plan.name] ? (
-                <div className="mt-8 space-y-2">
+              {/* Signed-in employers see checkout; everyone else sees sign-up. Both are in the pre-built page and
+                  the menu hint shows the right one before first paint (.nav-employer / .nav-not-employer). */}
+              {CHECKOUT[plan.name] && (
+                <div className="nav-employer mt-8 space-y-2">
                   <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value={`${CHECKOUT[plan.name]}_month`} /><button className={`btn w-full ${plan.featured ? 'btn-primary' : 'btn-outline'}`}>Choose monthly</button></form>
                   <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value={`${CHECKOUT[plan.name]}_year`} /><button className="btn btn-ghost w-full border border-line">Choose annual · 2 months free</button></form>
                 </div>
-              ) : isEmployer && plan.name === 'Free' ? (
-                <Link href="/employer/dashboard" className="btn btn-outline mt-8">Go to dashboard</Link>
-              ) : (
-                <Link href={plan.name === 'Enterprise' ? '/contact-sales?plan=enterprise' : '/signup?role=employer'} className={`btn mt-8 ${plan.featured ? 'btn-primary' : 'btn-outline'}`}>
-                  {plan.name === 'Enterprise' ? 'Book a call' : plan.cta}
-                </Link>
               )}
+              {plan.name === 'Free' && (
+                <Link href="/employer/dashboard" className="nav-employer btn btn-outline mt-8">Go to dashboard</Link>
+              )}
+              <Link href={plan.name === 'Enterprise' ? '/contact-sales?plan=enterprise' : '/signup?role=employer'} className={`${CHECKOUT[plan.name] || plan.name === 'Free' ? 'nav-not-employer ' : ''}btn mt-8 ${plan.featured ? 'btn-primary' : 'btn-outline'}`}>
+                {plan.name === 'Enterprise' ? 'Book a call' : plan.cta}
+              </Link>
               {plan.name === 'Federal' && <Link href="/contact-sales?plan=federal" className="mt-2 block text-center text-sm text-navy underline decoration-brass underline-offset-4">or book a call</Link>}
             </div>
           ))}

@@ -48,9 +48,17 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: '#102431' };
 
+// Runs before the page is drawn: picks the signed-in or signed-out menu from the menu hint cookie,
+// so pre-built pages never flash the wrong menu. (Display only; the server checks the real session.)
+const NAV_HINT_SCRIPT =
+  "try{var m=document.cookie.match(/(?:^|;\\s*)ln_nav=([^;]*)/);document.documentElement.setAttribute('data-nav',m&&m[1]?decodeURIComponent(m[1]):'out')}catch(e){}";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
+    <html lang="en" className={`${inter.variable} ${cormorant.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: NAV_HINT_SCRIPT }} />
+      </head>
       <body className="flex min-h-screen flex-col">
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-ivory focus:p-2">
           Skip to content

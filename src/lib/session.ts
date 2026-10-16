@@ -13,3 +13,24 @@ export const sessionCookieOptions = {
   // Must outlive the limits it enforces: if these cookies expired first, an old session would look brand new.
   maxAge: 30 * 24 * 60 * 60,
 };
+
+/**
+ * Menu hint for pre-built pages: 'veteran' | 'employer' | 'admin' | 'member' while signed in, absent when
+ * signed out. The page's own script reads it so the right menu shows before first paint. It only changes
+ * what the menu looks like; every protected page and action still checks the real session on the server.
+ */
+export const NAV_COOKIE = 'ln_nav';
+export const NAV_ROLES = ['veteran', 'employer', 'admin', 'member'] as const;
+export type NavRole = (typeof NAV_ROLES)[number];
+
+export const navCookieOptions = {
+  httpOnly: false, // read by the page's menu script
+  sameSite: 'lax' as const,
+  secure: process.env.NODE_ENV === 'production',
+  path: '/',
+  maxAge: 30 * 24 * 60 * 60,
+};
+
+export function navRoleFor(role: string | null | undefined): NavRole {
+  return role === 'veteran' || role === 'employer' || role === 'admin' ? role : 'member';
+}

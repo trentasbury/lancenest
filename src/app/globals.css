@@ -31,6 +31,14 @@
   .skeleton { @apply animate-pulse rounded-[3px] bg-line/60; }
 }
 
+/* Menu variants on pre-built pages. <html data-nav> is set before first paint from the menu hint
+   ('out' when signed out, otherwise the member's role). No attribute (no script) = signed out. */
+html:not([data-nav]) .nav-in,
+html[data-nav='out'] .nav-in { display: none !important; }
+html[data-nav]:not([data-nav='out']) .nav-out { display: none !important; }
+html:not([data-nav='employer']) .nav-employer { display: none !important; }
+html[data-nav='employer'] .nav-not-employer { display: none !important; }
+
 @media print {
   header, footer, nav, .print\:hidden { display: none !important; }
   body { background: #fff !important; }

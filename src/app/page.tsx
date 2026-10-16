@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { unstable_cache } from 'next/cache';
-import { ensureOccupationsLoaded } from '@/lib/occupations';
+import QueryNotice from '@/components/QueryNotice';
 import StarRule from '@/components/StarRule';
 
 const FEATURES = [
@@ -30,13 +31,16 @@ const getStats = unstable_cache(async () => {
 
 export const metadata: Metadata = { alternates: { canonical: '/' } };
 
-export default async function HomePage({ searchParams }: { searchParams: { deleted?: string } }) {
-  const [stats] = await Promise.all([getStats(), ensureOccupationsLoaded()]);
+// Pre-built and served from the location nearest each visitor; refreshed every 10 minutes.
+export const revalidate = 600;
+
+export default async function HomePage() {
+  const stats = await getStats();
   return (
     <>
-      {searchParams.deleted && (
-        <div className="bg-olive/10 py-3 text-center text-sm text-olive">Your account and data have been permanently deleted.</div>
-      )}
+      <Suspense fallback={null}>
+        <QueryNotice param="deleted" message="Your account and data have been permanently deleted." className="bg-olive/10 py-3 text-center text-sm text-olive" />
+      </Suspense>
       {/* Hero */}
       <section className="relative overflow-hidden bg-navy-deep text-ivory">
         <div className="container-page grid items-center gap-12 py-16 lg:grid-cols-[1.25fr_1fr] lg:py-24">

@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { IDLE_LIMIT_MS, LAST_SEEN_COOKIE, MAX_SESSION_MS, SESSION_START_COOKIE, sessionCookieOptions } from '@/lib/session';
+import { IDLE_LIMIT_MS, LAST_SEEN_COOKIE, MAX_SESSION_MS, NAV_COOKIE, NAV_ROLES, SESSION_START_COOKIE, navCookieOptions, sessionCookieOptions } from '@/lib/session';
+import { roleHome } from '@/lib/nav';
 
 const PROTECTED_PREFIXES = ['/dashboard', '/employer', '/admin', '/applications', '/saved-jobs', '/messages', '/onboarding', '/settings', '/network', '/notifications', '/security', '/jobs', '/billing', '/freelance', '/transition', '/people', '/training', '/groups', '/mentors', '/fairs'];
 
@@ -71,23 +72,40 @@ export async function updateSession(request: NextRequest) {
       } else {
         out = NextResponse.next({ request });
       }
-      [...authCookies, LAST_SEEN_COOKIE, SESSION_START_COOKIE].forEach((name) =>
+      [...authCookies, LAST_SEEN_COOKIE, SESSION_START_COOKIE, NAV_COOKIE].forEach((name) =>
         out.cookies.set(name, '', { path: '/', maxAge: 0 }),
       );
+      return out;
+    }
+
+    const navHint = request.cookies.get(NAV_COOKIE)?.value;
+    const knownHint = (NAV_ROLES as readonly string[]).includes(navHint ?? '') ? navHint : null;
+
+    // Already signed in: the log-in and sign-up pages send you home instead.
+    if (path === '/login' || path === '/signup') {
+      const url = request.nextUrl.clone();
+      url.pathname = roleHome(knownHint === 'employer' || knownHint === 'admin' ? knownHint : 'veteran');
+      url.search = '';
+      const out = NextResponse.redirect(url);
+      // Keep any session cookies refreshed above (tokens rotate; dropping them would sign the member out).
+      response.cookies.getAll().forEach((c) => out.cookies.set(c));
       return out;
     }
 
     // Any request counts as activity. The session start is stamped once, on the first request.
     response.cookies.set(LAST_SEEN_COOKIE, String(now), sessionCookieOptions);
     if (!startedAt) response.cookies.set(SESSION_START_COOKIE, String(now), sessionCookieOptions);
+    // Menu hint for pre-built pages; the menu replaces 'member' with the exact role once it loads.
+    if (!knownHint) response.cookies.set(NAV_COOKIE, 'member', navCookieOptions);
     return response;
   }
 
-  // Signed out: drop any leftover timing cookies so a future login starts fresh.
+  // Signed out: drop any leftover timing cookies and menu hint so a future login starts fresh.
   if (request.cookies.get(LAST_SEEN_COOKIE) || request.cookies.get(SESSION_START_COOKIE)) {
     response.cookies.set(LAST_SEEN_COOKIE, '', { path: '/', maxAge: 0 });
     response.cookies.set(SESSION_START_COOKIE, '', { path: '/', maxAge: 0 });
   }
+  if (request.cookies.get(NAV_COOKIE)) response.cookies.set(NAV_COOKIE, '', { path: '/', maxAge: 0 });
 
   if (isProtected(path)) {
     const url = request.nextUrl.clone();

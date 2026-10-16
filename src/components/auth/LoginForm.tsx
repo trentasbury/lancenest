@@ -1,14 +1,35 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useFormState } from 'react-dom';
 import { signIn, type FormState } from '@/app/auth/actions';
 import SubmitButton from '../SubmitButton';
 import FormMessage from '../FormMessage';
 import Turnstile from './Turnstile';
+import { safeNextPath } from '@/lib/nav';
 
-export default function LoginForm({ next, notice }: { next?: string; notice?: string }) {
+/** The message shown above the form for ?reason=… or ?error=… links. */
+function noticeFor(p: URLSearchParams): string | undefined {
+  const reason = p.get('reason');
+  if (reason === 'everywhere') return 'You’ve been signed out on every device. Sign in again — and change your password if you didn’t do this yourself.';
+  if (reason === 'idle') return 'For your security, you were signed out after 30 minutes of inactivity.';
+  if (reason === 'expired') return 'For your security, sessions end after 12 hours. Please sign in again.';
+  if (p.get('error') === 'link') return 'That link has expired or was already used. Log in, or request a new one.';
+  if (p.get('next')?.startsWith('/jobs')) return 'Job listings are for LanceNest members. Log in, or create a free account in under a minute.';
+  return undefined;
+}
+
+/** The page is pre-built; where to go after login and any notice come from the address, read here. */
+export default function LoginForm() {
   const [state, action] = useFormState<FormState, FormData>(signIn, {});
+  const [next, setNext] = useState<string | undefined>();
+  const [notice, setNotice] = useState<string | undefined>();
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    setNext(safeNextPath(p.get('next')) ?? undefined);
+    setNotice(noticeFor(p));
+  }, []);
   return (
     <form action={action} className="space-y-5">
       {notice && <FormMessage message={notice} />}

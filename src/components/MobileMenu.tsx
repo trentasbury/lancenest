@@ -3,25 +3,32 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { PUBLIC_LINKS, accountLinks, dashboardLink, memberLinks, type NavLink } from '@/lib/nav';
+import type { Role } from '@/lib/types';
+import { markSignedOut, useMe } from './nav/useMe';
 
-export type NavLink = { href: string; label: string };
+export type { NavLink };
 
-export default function MobileMenu({
-  links,
-  dashboard,
-  signedIn,
-  signOutAction,
-}: {
-  links: NavLink[];
-  dashboard: NavLink | null;
-  signedIn: boolean;
-  signOutAction: () => Promise<void>;
-}) {
+/** Phone and tablet menu. Works out signed-in vs signed-out in the browser (pages are pre-built). */
+export default function MobileMenu({ signOutAction }: { signOutAction: () => Promise<void> }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const me = useMe();
 
   // Close whenever the route changes.
   useEffect(() => setOpen(false), [pathname]);
+
+  // The menu only renders once opened (after the page is interactive), so reading the page's hint is safe here.
+  const hint = open && typeof document !== 'undefined' ? document.documentElement.getAttribute('data-nav') ?? 'out' : 'out';
+  const signedIn = me ? me.signedIn : hint !== 'out';
+  const role: Role | null = me?.signedIn ? me.role : hint === 'veteran' || hint === 'employer' || hint === 'admin' ? hint : null;
+  const unread = me?.signedIn ? me.unread : 0;
+  const username = me?.signedIn ? me.username : null;
+
+  const dashboard = signedIn ? dashboardLink(role) : null;
+  const links: NavLink[] = signedIn
+    ? [...memberLinks(role), { href: '/notifications', label: unread ? `Notifications (${unread})` : 'Notifications' }, ...accountLinks(role, username).slice(1)]
+    : PUBLIC_LINKS;
 
   return (
     <div className="lg:hidden">
@@ -47,13 +54,13 @@ export default function MobileMenu({
               </Link>
             )}
             {links.map((l) => (
-              <Link key={l.href} href={l.href} className="border-b border-line py-3.5 text-ink">
+              <Link key={l.href + l.label} href={l.href} className="border-b border-line py-3.5 text-ink">
                 {l.label}
               </Link>
             ))}
             <div className="flex gap-3 py-4">
               {signedIn ? (
-                <form action={signOutAction} className="w-full">
+                <form action={signOutAction} onSubmit={markSignedOut} className="w-full">
                   <button type="submit" className="btn btn-outline w-full">
                     Log out
                   </button>

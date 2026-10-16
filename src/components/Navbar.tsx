@@ -1,119 +1,47 @@
 import Link from 'next/link';
-import { getSessionProfile, roleHome } from '@/lib/auth';
 import { signOut } from '@/app/auth/actions';
-import { initials } from '@/lib/format';
-import { createClient } from '@/lib/supabase/server';
+import { PUBLIC_LINKS } from '@/lib/nav';
 import Wordmark from './Wordmark';
-import MobileMenu, { type NavLink } from './MobileMenu';
-import IdleTimer from './IdleTimer';
+import MobileMenu from './MobileMenu';
+import NavAccount from './nav/NavAccount';
+import SessionExtras from './nav/SessionExtras';
 
-export default async function Navbar() {
-  const session = await getSessionProfile();
-  const profile = session?.profile ?? null;
-
-  const links: NavLink[] = session
-    ? [
-        { href: '/network', label: 'Network' },
-        { href: '/people', label: 'People' },
-        session.profile?.role === 'employer' ? { href: '/employer/candidates', label: 'Candidates' } : { href: '/jobs', label: 'Find Jobs' },
-        { href: '/freelance', label: 'Freelance' },
-        { href: '/messages', label: 'Messages' },
-      ]
-    : [
-        { href: '/jobs', label: 'Find Jobs' },
-        { href: '/employers', label: 'For Employers' },
-        { href: '/resources', label: 'Resources' },
-        { href: '/about', label: 'About' },
-      ];
-
-  let unread = 0;
-  if (session) {
-    const { count } = await createClient().from('notifications').select('id', { count: 'exact', head: true }).eq('profile_id', session.user.id).is('read_at', null);
-    unread = count ?? 0;
-  }
-
-  const role = profile?.role;
-  const accountLinks: NavLink[] = !session ? [] : [
-    { href: roleHome(role), label: role === 'admin' ? 'Admin' : role === 'employer' ? 'Employer dashboard' : 'Dashboard' },
-    ...((role === 'veteran' || role === 'admin') && profile?.username ? [{ href: `/veterans/${profile.username}`, label: 'My profile' }] : []),
-    ...(role === 'admin' ? [{ href: '/dashboard/profile', label: 'Edit profile' }] : []),
-    ...(role === 'veteran' ? [{ href: '/dashboard/profile', label: 'Edit profile' }, { href: '/dashboard/applications', label: 'My applications' }, { href: '/dashboard/alerts', label: 'Job alerts' }, { href: '/freelance/earnings', label: 'Earnings' }, { href: '/groups', label: 'Groups' }, { href: '/mentors', label: 'Mentors' }, { href: '/fairs', label: 'Career fairs' }, { href: '/dashboard/resume-builder', label: 'Résumé builder' }, { href: '/dashboard/verification', label: 'Verification' }, { href: '/transition', label: 'Transition Hub & SkillBridge' }, { href: '/training', label: 'Training & certifications' }, { href: '/plans', label: 'Plans & upgrades' }] : []),
-    ...(role === 'employer' ? [{ href: '/employer/jobs/new', label: 'Post a job' }, { href: '/employer/analytics', label: 'Hiring analytics' }, { href: '/employer/training', label: 'Training listings' }, { href: '/employer/talent', label: 'Talent pools' }, { href: '/employer/team', label: 'Hiring team' }, { href: '/fairs', label: 'Career fairs' }, { href: '/employer/company', label: 'Company page' }, { href: '/employers', label: 'Plans & billing' }] : []),
-    { href: '/network?view=saved', label: 'Saved posts' },
-    { href: '/settings/account', label: 'Account settings' },
-  ];
-  const dashboard = session
-    ? { href: roleHome(profile?.role), label: profile?.role === 'admin' ? 'Admin' : profile?.role === 'employer' ? 'Employer Dashboard' : 'Dashboard' }
-    : null;
-
+/**
+ * The top menu is the same HTML for every visitor, so every page around it can be pre-built and
+ * served from the location nearest each visitor. Both menus are in the page; a tiny script in
+ * <head> marks the page signed-in or signed-out before it's drawn, and CSS shows the right one
+ * (.nav-in / .nav-out, .nav-employer / .nav-not-employer). Names, photos, and unread counts load
+ * in the browser for signed-in members only (see nav/useMe).
+ */
+export default function Navbar() {
+  const item = 'transition-colors hover:text-brass-dark';
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-cream/95 backdrop-blur">
-      {session && <IdleTimer />}
+      <SessionExtras />
       <div className="container-page flex h-[72px] items-center justify-between gap-6">
         <Wordmark />
 
         <nav className="hidden items-center gap-8 text-[14px] text-ink lg:flex" aria-label="Main">
-          {links.map((l) => (
-            <Link key={l.href} href={l.href} className="transition-colors hover:text-brass-dark">
-              {l.label}
-            </Link>
+          {PUBLIC_LINKS.map((l) => (
+            <Link key={`out-${l.href}`} href={l.href} className={`nav-out ${item}`}>{l.label}</Link>
           ))}
+          <Link href="/network" className={`nav-in ${item}`}>Network</Link>
+          <Link href="/people" className={`nav-in ${item}`}>People</Link>
+          <Link href="/jobs" className={`nav-in nav-not-employer ${item}`}>Find Jobs</Link>
+          <Link href="/employer/candidates" className={`nav-in nav-employer ${item}`}>Candidates</Link>
+          <Link href="/freelance" className={`nav-in ${item}`}>Freelance</Link>
+          <Link href="/messages" className={`nav-in ${item}`}>Messages</Link>
         </nav>
 
         <div className="hidden items-center gap-4 lg:flex">
-          {session ? (
-            <>
-              <Link href="/notifications" className="relative flex h-9 w-9 items-center justify-center rounded-full text-navy hover:bg-cream" aria-label={unread ? `${unread} unread notifications` : 'Notifications'}>
-                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-                  <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" />
-                </svg>
-                {unread > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brass px-1 text-[10px] font-semibold text-navy-deep">{unread > 9 ? '9+' : unread}</span>
-                )}
-              </Link>
-              {dashboard && (
-                <details className="relative" data-autoclose>
-                  <summary className="flex cursor-pointer list-none items-center gap-2 text-sm text-ink hover:text-brass-dark">
-                    {profile?.avatar_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={profile.avatar_url} alt="" className="h-8 w-8 rounded-full border border-brass object-cover" />
-                    ) : (
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full border border-brass bg-navy font-serif text-xs text-brass">
-                        {initials(profile?.full_name)}
-                      </span>
-                    )}
-                    <span className="hidden xl:inline">{profile?.full_name?.split(' ')[0] ?? 'Account'}</span>
-                    <span aria-hidden="true" className="text-xs text-muted">▾</span>
-                  </summary>
-                  <div className="absolute right-0 z-50 mt-2 w-60 rounded-[4px] border border-line bg-ivory p-2 text-sm shadow-card">
-                    {accountLinks.map((l) => (
-                      <Link key={l.href} href={l.href} className="block rounded-[3px] px-3 py-2 hover:bg-cream">{l.label}</Link>
-                    ))}
-                    <form action={signOut} className="mt-1 border-t border-line pt-1">
-                      <button type="submit" className="w-full rounded-[3px] px-3 py-2 text-left text-signal hover:bg-signal/5">Log out</button>
-                    </form>
-                  </div>
-                </details>
-              )}
-            </>
-          ) : (
-            <>
-              <Link href="/login" className="text-sm text-ink hover:text-brass-dark">
-                Log in
-              </Link>
-              <Link href="/signup" className="btn btn-primary">
-                Sign up
-              </Link>
-            </>
-          )}
+          <Link href="/login" className="nav-out text-sm text-ink hover:text-brass-dark">Log in</Link>
+          <Link href="/signup" className="nav-out btn btn-primary">Sign up</Link>
+          <div className="nav-in flex items-center gap-4">
+            <NavAccount signOutAction={signOut} />
+          </div>
         </div>
 
-        <MobileMenu
-          links={session ? [...links, { href: '/notifications', label: unread ? `Notifications (${unread})` : 'Notifications' }, ...accountLinks.slice(1)] : links}
-          dashboard={dashboard}
-          signedIn={!!session}
-          signOutAction={signOut}
-        />
+        <MobileMenu signOutAction={signOut} />
       </div>
     </header>
   );

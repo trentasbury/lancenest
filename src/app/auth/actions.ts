@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { LAST_SEEN_COOKIE, SESSION_START_COOKIE, sessionCookieOptions } from '@/lib/session';
+import { LAST_SEEN_COOKIE, NAV_COOKIE, SESSION_START_COOKIE, navCookieOptions, navRoleFor, sessionCookieOptions } from '@/lib/session';
 import { recordLogin } from '@/lib/devices';
 import { createClient } from '@/lib/supabase/server';
 import { roleHome, safeNextPath } from '@/lib/auth';
@@ -20,9 +20,15 @@ function startSessionClock() {
   cookies().set(SESSION_START_COOKIE, now, sessionCookieOptions);
 }
 
+/** Tells pre-built pages which menu to show before they load anything (a display hint only). */
+function setMenuHint(role: string | null | undefined) {
+  cookies().set(NAV_COOKIE, navRoleFor(role), navCookieOptions);
+}
+
 function clearSessionClock() {
   cookies().delete(LAST_SEEN_COOKIE);
   cookies().delete(SESSION_START_COOKIE);
+  cookies().delete(NAV_COOKIE);
 }
 
 function field(formData: FormData, name: string) {
@@ -59,6 +65,7 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
   startSessionClock();
   await recordLogin(data.user.id, data.user.email);
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).maybeSingle();
+  setMenuHint(profile?.role as string | undefined);
   redirect(safeNextPath(formData.get('next')) ?? roleHome((profile?.role as Role) ?? null));
 }
 
@@ -107,6 +114,7 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   // Email confirmation disabled in Supabase -> a session exists immediately.
   if (data.session) {
     startSessionClock();
+    setMenuHint(role);
     redirect(home);
   }
 
@@ -167,5 +175,6 @@ export async function updatePassword(_prev: FormState, formData: FormData): Prom
   if (error) return { error: 'We couldn’t update your password. Try requesting a new reset link.' };
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
+  setMenuHint(profile?.role as string | undefined);
   redirect(roleHome((profile?.role as Role) ?? null));
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useFormState } from 'react-dom';
 import { signUp, type FormState } from '@/app/auth/actions';
 import SubmitButton from '../SubmitButton';
@@ -13,8 +13,16 @@ const OPTIONS = [
   { value: 'employer', title: 'I’m hiring', body: 'Any company or recruiter — no military background or veteran ownership required. Post roles and search verified military talent.' },
 ] as const;
 
-export default function SignupForm({ defaultRole, referral }: { defaultRole: 'veteran' | 'employer'; referral?: string }) {
-  const [role, setRole] = useState<'veteran' | 'employer'>(defaultRole);
+/** The page is pre-built; ?role=employer and ?ref=… (referral links) are read here, in the browser. */
+export default function SignupForm() {
+  const [role, setRole] = useState<'veteran' | 'employer'>('veteran');
+  const [referral, setReferral] = useState<string | undefined>();
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get('role') === 'employer') setRole('employer');
+    const ref = p.get('ref');
+    if (ref) setReferral(ref.slice(0, 80));
+  }, []);
   const [state, action] = useFormState<FormState, FormData>(signUp, {});
 
   if (state.message) {

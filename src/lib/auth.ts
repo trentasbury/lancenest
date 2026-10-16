@@ -3,12 +3,10 @@ import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import type { Profile, Role } from '@/lib/types';
+import { roleHome, safeNextPath } from '@/lib/nav';
 
-export function roleHome(role?: Role | null): string {
-  if (role === 'admin') return '/admin';
-  if (role === 'employer') return '/employer/dashboard';
-  return '/dashboard';
-}
+// Shared with the browser-side menu; re-exported here so existing imports keep working.
+export { roleHome, safeNextPath };
 
 /**
  * Validated server-side (getUser checks the token with Supabase, unlike getSession).
@@ -56,11 +54,6 @@ export async function requireRole(roles: Role[], nextPath?: string) {
   return { user: session.user, profile: session.profile };
 }
 
-/** Only allow same-site relative redirects (prevents open-redirect abuse). */
-export function safeNextPath(value: FormDataEntryValue | string | null | undefined): string | null {
-  const next = typeof value === 'string' ? value : null;
-  return next && next.startsWith('/') && !next.startsWith('//') ? next : null;
-}
 
 /** Admin pages and actions: requires the admin role AND a session that passed two-step verification. */
 export async function requireAdmin(nextPath = '/admin') {

@@ -37,7 +37,10 @@ const nextConfig = {
   },
   async redirects() {
     // Old site URLs still in search results
-    return [{ source: '/directory', destination: '/careers', permanent: true }, { source: '/freelancers', destination: '/careers', permanent: true }, { source: '/pricing', destination: '/employers', permanent: false }, { source: '/verification', destination: '/trust', permanent: true }, { source: '/employers/pricing', destination: '/employers', permanent: false }];
+    return [{ source: '/directory', destination: '/careers', permanent: true }, { source: '/freelancers', destination: '/careers', permanent: true }, { source: '/pricing', destination: '/employers', permanent: false }, { source: '/verification', destination: '/trust', permanent: true }, { source: '/employers/pricing', destination: '/employers', permanent: false },
+      // Career translator: one pre-built page per branch (was ?branch=).
+      { source: '/careers/army', destination: '/careers', permanent: true },
+      { source: '/careers', has: [{ type: 'query', key: 'branch', value: '(?<branch>marine-corps|navy|air-force|space-force|coast-guard)' }], destination: '/careers/:branch', permanent: true }];
   },
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }];

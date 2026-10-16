@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
-import { ensureOccupationsLoaded } from '@/lib/occupations';
+import { publicDb } from '@/lib/careers';
 import { sanitizeSearch } from '@/lib/format';
 import type { MilitaryOccupation } from '@/lib/types';
 
@@ -13,8 +12,8 @@ export const metadata: Metadata = { alternates: { canonical: '/resources' },
 const BRANCH_LIST = ['Army', 'Marine Corps', 'Navy', 'Air Force', 'Space Force', 'Coast Guard'];
 
 export default async function ResourcesPage({ searchParams }: { searchParams: { code?: string; branch?: string } }) {
-  await ensureOccupationsLoaded();
-  const supabase = createClient();
+  // Public reference data: no sign-in cookies needed.
+  const supabase = publicDb();
   const branch = BRANCH_LIST.includes(searchParams.branch ?? '') ? searchParams.branch! : null;
   const code = sanitizeSearch(searchParams.code ?? '');
 

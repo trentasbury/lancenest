@@ -6,6 +6,12 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { branchFromSlug, publicDb } from '@/lib/careers';
 
 export const revalidate = 86400;
+
+// 1,469 career pages: each one is built the first time someone opens it, then served pre-built
+// from the location nearest each visitor (refreshed daily).
+export function generateStaticParams() {
+  return [];
+}
 const CERT_RULES: [RegExp, string[]][] = [
   [/cyber|security|network|information|it\b|computer|system/i, ['CompTIA Security+', 'CompTIA Network+', 'CompTIA A+']],
   [/logistic|supply|inventory|procure|warehouse/i, ['APICS CPIM or CSCP', 'Certified Professional in Supply Management (CPSM)']],
