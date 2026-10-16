@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { IDLE_LIMIT_MS, LAST_SEEN_COOKIE, MAX_SESSION_MS, NAV_COOKIE, NAV_ROLES, SESSION_START_COOKIE, navCookieOptions, sessionCookieOptions } from '@/lib/session';
 import { roleHome } from '@/lib/nav';
 
-const PROTECTED_PREFIXES = ['/dashboard', '/employer', '/admin', '/applications', '/saved-jobs', '/messages', '/onboarding', '/settings', '/network', '/notifications', '/security', '/jobs', '/billing', '/freelance', '/transition', '/people', '/training', '/groups', '/mentors', '/fairs'];
+const PROTECTED_PREFIXES = ['/dashboard', '/employer', '/admin', '/applications', '/saved-jobs', '/messages', '/onboarding', '/settings', '/network', '/notifications', '/security/mfa', '/jobs', '/billing', '/freelance', '/transition', '/people', '/training', '/groups', '/mentors', '/fairs'];
 
 function isProtected(path: string) {
   return PROTECTED_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
