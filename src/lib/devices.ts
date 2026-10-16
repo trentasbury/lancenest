@@ -2,6 +2,7 @@ import 'server-only';
 import { createHash } from 'crypto';
 import { headers } from 'next/headers';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { isDeliverable } from '@/lib/email';
 
 function describe(ua: string) {
   const browser = /Edg\//.test(ua) ? 'Edge' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'a browser';
@@ -28,7 +29,7 @@ export async function recordLogin(userId: string, email?: string | null) {
       profile_id: userId, type: 'security', link: '/settings/account',
       title: `New sign-in: ${label} · ${when} ET. Not you? Sign out everywhere and change your password.`,
     });
-    if (process.env.RESEND_API_KEY && email) {
+    if (process.env.RESEND_API_KEY && email && isDeliverable(email)) {
       await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },

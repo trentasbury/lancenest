@@ -50,9 +50,17 @@ Independent — not affiliated with the DoD, the VA, or any branch of service.${
   return { html, text };
 }
 
-/** Sends through Resend. Quietly skips (and logs) if RESEND_API_KEY isn't set yet. */
+/** False for reserved domains that can never receive mail (e.g. the demo accounts' demo.lancenest.invalid).
+ *  Sending to them would bounce and hurt lancenest.com's sender reputation. */
+export function isDeliverable(to: string) {
+  const domain = (to.split('@')[1] ?? '').toLowerCase();
+  return !!domain && !/(^|\.)(invalid|test|example|localhost|local)$/.test(domain) && !/^example\.(com|net|org)$/.test(domain);
+}
+
+/** Sends through Resend. Quietly skips (and logs) if RESEND_API_KEY isn't set yet or the address can't receive mail. */
 export async function sendEmail(to: string, c: EmailContent) {
   if (!process.env.RESEND_API_KEY) { console.warn('email skipped (RESEND_API_KEY not set):', c.subject); return; }
+  if (!isDeliverable(to)) { console.warn('email skipped (undeliverable address):', c.subject); return; }
   const { html, text } = renderEmail(c);
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
