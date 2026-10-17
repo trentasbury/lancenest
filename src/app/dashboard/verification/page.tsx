@@ -3,18 +3,20 @@ import Link from 'next/link';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import VerificationBadge from '@/components/VerificationBadge';
-import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
-import { submitVerification } from './actions';
+import VerificationForm from './VerificationForm';
 
 export const metadata: Metadata = { title: 'Verify your service' };
 
 const ERRORS: Record<string, string> = {
-  missing: 'Choose a file to upload.',
-  redact: 'Please confirm you’ve blacked out your Social Security number.',
+  missing: 'Choose your service document to upload.',
+  id_missing: 'Add a photo of your driver’s license, state ID, or passport.',
+  id_type: 'Choose which kind of photo ID you’re uploading.',
+  redact: 'Please confirm you’ve blacked out your Social Security number and covered your ID number.',
+  consent: 'Please agree to the photo ID check so a reviewer can confirm the documents are yours.',
   size: 'That file is over 4 MB. Try a PDF export or a smaller photo.',
   type: 'Upload a PDF, JPG, or PNG.',
-  pending: 'You already have a document under review.',
+  pending: 'You already have documents under review.',
   upload: 'The upload didn’t go through. Please try again.',
 };
 
@@ -22,6 +24,7 @@ const ACCEPTED = [
   ['Veterans', 'DD-214 (Member-4 copy preferred) or a VA benefit summary letter.'],
   ['Active duty & transitioning', 'A recent LES (Leave and Earnings Statement) or your separation / retirement orders.'],
   ['Guard & Reserve', 'NGB-22, a recent LES, or current orders.'],
+  ['Plus a photo ID', 'A driver’s license, state ID card, or U.S. passport (book or card) with the same name.'],
 ];
 
 export default async function VerificationPage({ searchParams }: { searchParams: { error?: string; submitted?: string; required?: string } }) {
@@ -64,41 +67,18 @@ export default async function VerificationPage({ searchParams }: { searchParams:
               <h2 className="font-serif text-2xl font-semibold">Your status</h2>
               <VerificationBadge status={status} />
             </div>
-            {status === 'verified' && <p className="mt-4 text-sm text-muted">You’re verified. Your document was deleted after review — we don’t keep it.</p>}
+            {status === 'verified' && <p className="mt-4 text-sm text-muted">You’re verified. Your documents were deleted after review — we don’t keep them.</p>}
             {status === 'pending' && latest && (
-              <p className="mt-4 text-sm text-muted">Submitted {new Date(latest.created_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}. A reviewer will check it by hand.</p>
+              <p className="mt-4 text-sm text-muted">Submitted {new Date(latest.created_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}. A reviewer will check your documents by hand.</p>
             )}
             {status === 'failed' && (
               <p className="mt-4 text-sm text-signal">
-                We couldn’t verify the last document{latest?.notes ? `: ${latest.notes}` : '.'} You can submit a new one below.
+                We couldn’t verify your last submission{latest?.notes ? `: ${latest.notes}` : '.'} You can submit again below.
               </p>
             )}
           </div>
 
-          {canSubmit && (
-            <form action={submitVerification} className="card space-y-5 p-7">
-              <h2 className="font-serif text-2xl font-semibold">Submit a document</h2>
-              <div>
-                <label htmlFor="doc_type" className="field-label">Document type</label>
-                <select id="doc_type" name="doc_type" className="field" defaultValue="DD-214">
-                  <option>DD-214</option>
-                  <option>VA benefit summary letter</option>
-                  <option>LES</option>
-                  <option>Orders</option>
-                  <option>NGB-22</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="document" className="field-label">File (PDF, JPG, or PNG · up to 4 MB)</label>
-                <input id="document" name="document" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required className="field file:mr-3 file:rounded-[3px] file:border-0 file:bg-navy file:px-3 file:py-1.5 file:text-sm file:text-ivory" />
-              </div>
-              <label className="flex items-start gap-2.5 text-sm">
-                <input type="checkbox" name="redacted" required className="mt-0.5 h-4 w-4 accent-navy" />
-                <span>I’ve blacked out my Social Security number and any other information not needed to confirm my service.</span>
-              </label>
-              <SubmitButton className="btn btn-primary" pendingText="Uploading…">Submit for review</SubmitButton>
-            </form>
-          )}
+          {canSubmit && <VerificationForm userId={user.id} />}
         </div>
 
         <aside className="space-y-5">
@@ -113,17 +93,17 @@ export default async function VerificationPage({ searchParams }: { searchParams:
           <div className="card border-signal/30 p-6">
             <p className="eyebrow text-signal">Never upload</p>
             <p className="mt-3 text-sm leading-relaxed text-ink/85">
-              Your CAC or any military ID card. Photographing or copying a military ID is prohibited by federal law (18 U.S.C. § 701).
+              Your CAC, any military ID card, a VA ID card, or any other federal agency ID card. Photographing or copying them is prohibited by federal law (18 U.S.C. § 701).
               Also never upload security clearance records, DISS printouts, or anything classified or controlled (CUI) — LanceNest verifies service only.
             </p>
-            <p className="mt-3 text-sm leading-relaxed text-ink/85"><strong>Before you upload:</strong> cover your Social Security number, VA file number, and home address. We only need your name, branch, and dates of service.</p>
+            <p className="mt-3 text-sm leading-relaxed text-ink/85"><strong>Before you upload:</strong> cover your Social Security number, VA file number, and home address on the service document, and the ID number on your photo ID. We only need your name, date of birth, photo, branch, and dates of service.</p>
           </div>
           <div className="card p-6">
-            <p className="eyebrow">How your document is handled</p>
+            <p className="eyebrow">How your documents are handled</p>
             <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm text-ink/80">
-              <li>Stored privately — only you and our reviewer can open it.</li>
-              <li>Checked by a person, not an algorithm.</li>
-              <li>Deleted as soon as the review is complete.</li>
+              <li>Stored privately — only you and our reviewer can open them.</li>
+              <li>Compared by a person, by eye. No face-matching software, and no biometric data is ever created or kept.</li>
+              <li>Both deleted as soon as the review is complete, or automatically after 30 days if never reviewed.</li>
             </ul>
           </div>
         </aside>

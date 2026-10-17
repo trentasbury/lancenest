@@ -5,14 +5,14 @@ export const metadata: Metadata = { alternates: { canonical: '/privacy' }, title
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy Policy" updated="September 2026">
+    <LegalPage title="Privacy Policy" updated="October 2026">
       <section>
         <p>LanceNest (“we,” “us”) is a professional network and job platform for active duty, transitioning, and veteran service members and the employers who hire them. This policy explains what we collect, why, and the choices you have.</p>
       </section>
       <section className="rounded-[6px] border border-brass/50 bg-paper p-5">
         <h2>The short version</h2>
         <ul>
-          <li><strong>Service documents</strong> (DD-214, LES, orders, NGB-22, VA letters) are used only to verify service, seen only by an authorized reviewer, and deleted after review — or automatically after 30 days if never reviewed. Never upload military ID cards or clearance records.</li>
+          <li><strong>Service documents</strong> (DD-214, LES, orders, NGB-22, VA letters) and a <strong>photo ID</strong> (driver’s license, state ID, or passport) are used only to verify your service and that the documents are yours. A person compares them by eye — no face-matching software — and both are deleted after review, or automatically after 30 days if never reviewed. Never upload military, VA, or other federal ID cards, or clearance records.</li>
           <li><strong>Your profile</strong> is visible to verified members and verified employers. You can hide it from employers entirely or from specific companies in Account settings.</li>
           <li><strong>Clearances</strong> you list are self-reported and labeled that way.</li>
           <li><strong>Payments</strong> are processed by Stripe; we never store card numbers.</li>
@@ -27,7 +27,7 @@ export default function PrivacyPage() {
         <ul>
           <li><strong>Account information:</strong> your name, email address, password (stored only as a secure hash by our authentication provider), and whether you joined as a service member or an employer.</li>
           <li><strong>Profile information you choose to add:</strong> headline, about, location, military service (branch, rank, occupation code, years, deployments), civilian experience, education, skills, and security clearance level. We never ask for clearance investigation details.</li>
-          <li><strong>Verification documents:</strong> if you request a Verified Veteran badge, the document you upload (for example a DD-214 with your Social Security number blacked out). See “Verification documents” below.</li>
+          <li><strong>Verification documents:</strong> when you verify your service, the two files you upload: a service document (for example a DD-214 with your Social Security number blacked out) and a photo ID (a driver’s license, state ID, or passport with the ID number covered). See “Verification documents” below.</li>
           <li><strong>Activity:</strong> jobs you save or apply to, posts, comments, reactions, follows, messages, and reports you submit.</li>
           <li><strong>Company information</strong> for employer accounts, and job postings they publish.</li>
           <li><strong>Technical data:</strong> security cookies that keep you signed in and sign you out after inactivity, and basic request logs used to operate and secure the service. We count page visits with our own private analytics: no cookies, no cross-site tracking, and visitors are identified only by an anonymous code that changes every day. We do not use advertising or tracking cookies.</li>
@@ -35,7 +35,8 @@ export default function PrivacyPage() {
       </section>
       <section>
         <h2>Verification documents</h2>
-        <p>Documents are stored in private storage that only you and our reviewers can open, reviewed by a person, and <strong>deleted as soon as the review is complete</strong>. We keep only the result (verified or not). Never upload a military ID card — copying one is prohibited by federal law (18 U.S.C. § 701).</p>
+        <p>We ask for a photo ID along with your service document so a reviewer can confirm both belong to you. Both files are stored in private storage that only you and our reviewers can open. A person compares them by eye; we don’t use facial-recognition or face-matching software, and we never create or keep biometric data. Both files are <strong>deleted as soon as the review is complete</strong>, or automatically after 30 days if never reviewed.</p>
+        <p>We keep the result (verified or not) and a one-way code made from the name and date of birth on your documents. It is used only to stop duplicate and banned accounts, and it can’t be turned back into your details. Never upload a military, VA, or other federal ID card — copying one is prohibited by federal law (18 U.S.C. § 701).</p>
       </section>
       <section>
         <h2>How we use your information</h2>

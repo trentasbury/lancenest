@@ -17,7 +17,7 @@ export async function decideVerification(requestId: string, decision: 'verified'
 
   const { data: request } = await admin
     .from('verification_requests')
-    .select('id, profile_id, document_path, status')
+    .select('id, profile_id, document_path, id_document_path, status')
     .eq('id', requestId)
     .maybeSingle();
   if (!request || request.status !== 'pending') return;
@@ -42,13 +42,14 @@ export async function decideVerification(requestId: string, decision: 'verified'
   // Status change syncs to the member's profile via a database trigger.
   await admin
     .from('verification_requests')
-    .update({ status: decision, reviewer_id: user.id, reviewed_at: new Date().toISOString(), notes: note, document_path: null })
+    .update({ status: decision, reviewer_id: user.id, reviewed_at: new Date().toISOString(), notes: note, document_path: null, id_document_path: null })
     .eq('id', requestId);
 
   if (fingerprint) await admin.from('verified_identities').upsert({ profile_id: request.profile_id, identity_hash: fingerprint });
 
-  // Data minimization: the document isn't needed once a decision is made.
-  if (request.document_path) await admin.storage.from('verification-docs').remove([request.document_path]);
+  // Data minimization: neither file is needed once a decision is made.
+  const files = [request.document_path, request.id_document_path].filter((p): p is string => typeof p === 'string' && p.length > 0);
+  if (files.length) await admin.storage.from('verification-docs').remove(files);
 
   await admin.from('admin_actions').insert({
     admin_id: user.id,
@@ -64,15 +65,15 @@ export async function decideVerification(requestId: string, decision: 'verified'
         email: { subject: 'You’re verified on LanceNest', preheader: 'Jobs, the network, messaging, and freelance are now unlocked.', tone: 'success', badge: '✓ Verified service member',
           heading: 'Welcome aboard — your service is verified.',
           paragraphs: ['Thank you for your service. Your Verified badge is now on your profile, and everything on LanceNest is unlocked: jobs, the Network, messaging, and freelance work.',
-            'Your verification document has been permanently deleted, as promised.',
+            'Your service document and photo ID have been permanently deleted, as promised.',
             'Next step: complete your profile — members with a résumé and military career filled in hear from employers far more often.'],
           cta: { label: 'Go to your dashboard', url: `${SITE}/dashboard` } } }
-    : { type: 'verification', link: '/dashboard/verification', title: `We couldn’t verify your document${note ? `: ${note}` : '.'} Please resubmit.`,
-        email: { subject: 'Action needed: your LanceNest verification', preheader: 'We couldn’t verify your document — here’s how to fix it.', tone: 'alert', badge: 'Action needed',
-          heading: 'We couldn’t verify your document yet.',
-          paragraphs: [note ? `Reason: ${note}` : 'The document didn’t meet our requirements.',
-            'For your privacy, the document you sent has already been permanently deleted.',
-            'You can resubmit anytime — it only takes a couple of minutes. Remember to black out your Social Security number first.'],
+    : { type: 'verification', link: '/dashboard/verification', title: `We couldn’t verify your documents${note ? `: ${note}` : '.'} Please resubmit.`,
+        email: { subject: 'Action needed: your LanceNest verification', preheader: 'We couldn’t verify your documents — here’s how to fix it.', tone: 'alert', badge: 'Action needed',
+          heading: 'We couldn’t verify your documents yet.',
+          paragraphs: [note ? `Reason: ${note}` : 'The documents didn’t meet our requirements.',
+            'For your privacy, the files you sent have already been permanently deleted.',
+            'You can resubmit anytime — it only takes a couple of minutes. Remember to black out your Social Security number and cover your ID number first.'],
           cta: { label: 'Resubmit verification', url: `${SITE}/dashboard/verification` } } });
 
   revalidatePath('/admin/verifications');

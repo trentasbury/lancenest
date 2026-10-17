@@ -190,7 +190,7 @@ export default async function HomePage() {
             <Link href="/trust" className="text-sm text-navy underline decoration-brass underline-offset-4">What we verify — and what we don’t →</Link>
           </div>
           <div className="mt-6 grid gap-5 md:grid-cols-3">
-            <div className="card p-5"><p className="font-semibold text-navy">Every member</p><p className="mt-1 text-sm text-muted">A person reviews proof of service — DD-214, LES, orders, NGB-22, or a VA letter. Documents are deleted after review. Military ID cards are never accepted.</p></div>
+            <div className="card p-5"><p className="font-semibold text-navy">Every member</p><p className="mt-1 text-sm text-muted">A person checks proof of service — DD-214, LES, orders, NGB-22, or a VA letter — against a photo ID. Documents are deleted after review. Military ID cards are never accepted.</p></div>
             <div className="card p-5"><p className="font-semibold text-navy">Every employer</p><p className="mt-1 text-sm text-muted">Company domain or business documents are verified before anyone can post a job, search, or message members.</p></div>
             <div className="card p-5"><p className="font-semibold text-navy">What’s self-reported</p><p className="mt-1 text-sm text-muted">Security clearances are self-reported and labeled that way. Employers confirm eligibility through official channels.</p></div>
           </div>
