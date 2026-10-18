@@ -38,15 +38,38 @@ export function dashboardLink(role?: Role | null): NavLink {
   return { href: roleHome(role), label: role === 'admin' ? 'Admin' : role === 'employer' ? 'Employer dashboard' : 'Dashboard' };
 }
 
-/** The account menu under the avatar. */
-export function accountLinks(role: Role | null | undefined, username: string | null | undefined): NavLink[] {
+/**
+ * The button at the top of the account menu: your public profile (members) or company page (employers),
+ * like LinkedIn's "View profile". Editing happens from that page, not from the menu.
+ */
+export function profileLink(role: Role | null | undefined, username: string | null | undefined, companySlug?: string | null): NavLink {
+  if (role === 'employer') return companySlug ? { href: `/companies/${companySlug}`, label: 'View company page' } : { href: '/employer/dashboard', label: 'Set up your company page' };
+  return username ? { href: `/veterans/${username}`, label: 'View profile' } : { href: '/dashboard/profile', label: 'Set up your profile' };
+}
+
+/**
+ * The account menu under the avatar: kept short on purpose. Everything else lives on the
+ * dashboard (members) or employer dashboard, so the menu stays readable.
+ */
+export function accountLinks(role: Role | null | undefined): NavLink[] {
+  if (role === 'employer') {
+    return [
+      dashboardLink(role),
+      { href: '/employer/jobs/new', label: 'Post a job' },
+      { href: '/employer/team', label: 'Hiring team' },
+      { href: '/network?view=saved', label: 'Saved posts' },
+      { href: '/employers', label: 'Plans & billing' },
+      { href: '/settings/account', label: 'Settings & privacy' },
+    ];
+  }
+  if (role === 'admin') {
+    return [dashboardLink(role), { href: '/network?view=saved', label: 'Saved posts' }, { href: '/settings/account', label: 'Settings & privacy' }];
+  }
   return [
     dashboardLink(role),
-    ...((role === 'veteran' || role === 'admin') && username ? [{ href: `/veterans/${username}`, label: 'My profile' }] : []),
-    ...(role === 'admin' ? [{ href: '/dashboard/profile', label: 'Edit profile' }] : []),
-    ...(role === 'veteran' ? [{ href: '/dashboard/profile', label: 'Edit profile' }, { href: '/dashboard/applications', label: 'My applications' }, { href: '/dashboard/alerts', label: 'Job alerts' }, { href: '/freelance/earnings', label: 'Earnings' }, { href: '/groups', label: 'Groups' }, { href: '/mentors', label: 'Mentors' }, { href: '/fairs', label: 'Career fairs' }, { href: '/dashboard/resume-builder', label: 'Résumé builder' }, { href: '/dashboard/verification', label: 'Verification' }, { href: '/transition', label: 'Transition Hub & SkillBridge' }, { href: '/training', label: 'Training & certifications' }, { href: '/plans', label: 'Plans & upgrades' }] : []),
-    ...(role === 'employer' ? [{ href: '/employer/jobs/new', label: 'Post a job' }, { href: '/employer/analytics', label: 'Hiring analytics' }, { href: '/employer/training', label: 'Training listings' }, { href: '/employer/talent', label: 'Talent pools' }, { href: '/employer/team', label: 'Hiring team' }, { href: '/fairs', label: 'Career fairs' }, { href: '/employer/company', label: 'Company page' }, { href: '/employers', label: 'Plans & billing' }] : []),
+    { href: '/dashboard/applications', label: 'My applications' },
     { href: '/network?view=saved', label: 'Saved posts' },
-    { href: '/settings/account', label: 'Account settings' },
+    { href: '/plans', label: 'Plans & upgrades' },
+    { href: '/settings/account', label: 'Settings & privacy' },
   ];
 }

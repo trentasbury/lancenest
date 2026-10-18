@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { PUBLIC_LINKS, accountLinks, dashboardLink, memberLinks, type NavLink } from '@/lib/nav';
+import { PUBLIC_LINKS, accountLinks, dashboardLink, memberLinks, profileLink, type NavLink } from '@/lib/nav';
 import type { Role } from '@/lib/types';
 import { markSignedOut, useMe } from './nav/useMe';
 
@@ -24,10 +24,13 @@ export default function MobileMenu({ signOutAction }: { signOutAction: () => Pro
   const role: Role | null = me?.signedIn ? me.role : hint === 'veteran' || hint === 'employer' || hint === 'admin' ? hint : null;
   const unread = me?.signedIn ? me.unread : 0;
   const username = me?.signedIn ? me.username : null;
+  const companySlug = me?.signedIn ? me.companySlug ?? null : null;
 
   const dashboard = signedIn ? dashboardLink(role) : null;
+  // "View profile" needs the member's details; until they load, the dashboard link covers it.
+  const profile = signedIn && me?.signedIn ? profileLink(role, username, companySlug) : null;
   const links: NavLink[] = signedIn
-    ? [...memberLinks(role), { href: '/notifications', label: unread ? `Notifications (${unread})` : 'Notifications' }, ...accountLinks(role, username).slice(1)]
+    ? [...(profile ? [profile] : []), ...memberLinks(role), { href: '/notifications', label: unread ? `Notifications (${unread})` : 'Notifications' }, ...accountLinks(role).slice(1)]
     : PUBLIC_LINKS;
 
   return (

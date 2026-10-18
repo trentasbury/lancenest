@@ -14,6 +14,17 @@ import { postedAgo } from '@/lib/format';
 
 export const metadata: Metadata = { title: 'Dashboard' };
 
+const TOOLS = [
+  { href: '/dashboard/applications', label: 'My applications', hint: 'Track every job you’ve applied to' },
+  { href: '/dashboard/alerts', label: 'Job alerts', hint: 'New matches sent to your inbox' },
+  { href: '/dashboard/resume-builder', label: 'Résumé builder', hint: 'Turn your service into a civilian résumé' },
+  { href: '/training', label: 'Training & certifications', hint: 'Programs for GI Bill and SkillBridge' },
+  { href: '/groups', label: 'Groups', hint: 'Connect by branch, field, and location' },
+  { href: '/mentors', label: 'Mentors', hint: 'Advice from members who’ve made the move' },
+  { href: '/fairs', label: 'Career fairs', hint: 'Virtual hiring events' },
+  { href: '/freelance/earnings', label: 'Freelance earnings', hint: 'Contracts and payouts' },
+];
+
 type AppRow = { id: string; status: string; applied_at: string; job: { title: string; slug: string } | null };
 
 export default async function VeteranDashboard({ searchParams }: { searchParams: { boost?: string } }) {
@@ -93,6 +104,18 @@ export default async function VeteranDashboard({ searchParams }: { searchParams:
             <p className="mt-2 font-serif text-2xl text-navy">Free · Pro · Federal Pro →</p>
           </Link>
         </div>
+
+        <section aria-labelledby="tools-heading">
+          <h2 id="tools-heading" className="eyebrow">Your tools</h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {TOOLS.map((t) => (
+              <Link key={t.href} href={t.href} className="card p-4 transition-colors hover:border-brass">
+                <p className="font-medium text-navy">{t.label} →</p>
+                <p className="mt-1 text-xs text-muted">{t.hint}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <StatCard label="Applications" value={applications.length} hint="Most recent five shown below" />

@@ -64,6 +64,9 @@ export default async function CompanyPage({ params }: { params: { slug: string }
               )}
             </div>
           </div>
+          {session && company.owner_id === session.user.id && (
+            <Link href="/employer/company" className="btn btn-brass sm:ml-auto">Edit company page</Link>
+          )}
         </div>
       </section>
 

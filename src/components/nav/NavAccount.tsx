@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { accountLinks } from '@/lib/nav';
+import { accountLinks, profileLink } from '@/lib/nav';
 import { initials } from '@/lib/format';
 import { markSignedOut, useMe } from './useMe';
+
+const ROLE_LABEL: Record<string, string> = { veteran: 'Service member', employer: 'Employer', admin: 'Admin' };
 
 /** Desktop: notifications bell and the account menu for signed-in members. */
 export default function NavAccount({ signOutAction }: { signOutAction: () => Promise<void> }) {
@@ -35,10 +37,32 @@ export default function NavAccount({ signOutAction }: { signOutAction: () => Pro
           <span className="hidden xl:inline">{firstName ?? 'Account'}</span>
           <span aria-hidden="true" className="text-xs text-muted">▾</span>
         </summary>
-        <div className="absolute right-0 z-50 mt-2 w-60 rounded-[4px] border border-line bg-ivory p-2 text-sm shadow-card">
-          {accountLinks(signed?.role, signed?.username).map((l) => (
-            <Link key={l.href} href={l.href} className="block rounded-[3px] px-3 py-2 hover:bg-cream">{l.label}</Link>
-          ))}
+        <div className="absolute right-0 z-50 mt-2 w-72 rounded-[4px] border border-line bg-ivory p-2 text-sm shadow-card">
+          {signed && (
+            <div className="border-b border-line px-2 pb-3 pt-1">
+              <div className="flex items-center gap-3">
+                {signed.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={signed.avatarUrl} alt="" className="h-11 w-11 shrink-0 rounded-full border border-brass object-cover" />
+                ) : (
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-brass bg-navy font-serif text-sm text-brass">{initials(signed.fullName)}</span>
+                )}
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-ink">{signed.fullName ?? 'Your account'}</p>
+                  <p className="text-xs text-muted">{ROLE_LABEL[signed.role ?? 'veteran'] ?? 'Member'}</p>
+                </div>
+              </div>
+              {(() => {
+                const p = profileLink(signed.role, signed.username, signed.companySlug);
+                return <Link href={p.href} className="btn btn-outline mt-3 w-full py-1.5 text-sm">{p.label}</Link>;
+              })()}
+            </div>
+          )}
+          <div className="pt-1">
+            {accountLinks(signed?.role).map((l) => (
+              <Link key={l.href} href={l.href} className="block rounded-[3px] px-3 py-2 hover:bg-cream">{l.label}</Link>
+            ))}
+          </div>
           <form action={signOutAction} onSubmit={markSignedOut} className="mt-1 border-t border-line pt-1">
             <button type="submit" className="w-full rounded-[3px] px-3 py-2 text-left text-signal hover:bg-signal/5">Log out</button>
           </form>

@@ -14,7 +14,7 @@ import type { Role } from '@/lib/types';
  */
 export type Me =
   | { signedIn: false }
-  | { signedIn: true; id: string; role: Role | null; fullName: string | null; username: string | null; avatarUrl: string | null; unread: number };
+  | { signedIn: true; id: string; role: Role | null; fullName: string | null; username: string | null; avatarUrl: string | null; companySlug?: string | null; unread: number };
 
 let current: Me | null = null;
 let inflight = false;
