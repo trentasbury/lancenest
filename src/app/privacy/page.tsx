@@ -17,7 +17,7 @@ export default function PrivacyPage() {
           <li><strong>Clearances</strong> you list are self-reported and labeled that way.</li>
           <li><strong>Payments</strong> are processed by Stripe; we never store card numbers.</li>
           <li><strong>Analytics</strong> are first-party and cookie-free; we don’t sell your data or show ads.</li>
-          <li><strong>Service providers:</strong> Vercel (hosting), Supabase (database and storage), Stripe (payments), Resend (email), Cloudflare Turnstile (bot protection).</li>
+          <li><strong>Service providers:</strong> Vercel (hosting), Supabase (database and storage), Stripe (payments), Resend (email), Cloudflare Turnstile (bot protection), and Google (optional sign-in).</li>
           <li><strong>AI:</strong> LanceNest does not send your profile or documents to AI services, and does not use your data to train AI models.</li>
           <li><strong>Your choices:</strong> edit or delete your profile anytime, and delete your account in Account settings. Questions or requests: support@lancenest.com or our Help page (lancenest.com/help).</li>
         </ul>
@@ -25,7 +25,7 @@ export default function PrivacyPage() {
       <section>
         <h2>What we collect</h2>
         <ul>
-          <li><strong>Account information:</strong> your name, email address, password (stored only as a secure hash by our authentication provider), and whether you joined as a service member or an employer.</li>
+          <li><strong>Account information:</strong> your name, email address, password (stored only as a secure hash by our authentication provider), and whether you joined as a service member or an employer. If you choose “Continue with Google,” Google shares your name, email address, and profile picture with us; we never receive your Google password.</li>
           <li><strong>Profile information you choose to add:</strong> headline, about, location, military service (branch, rank, occupation code, years, deployments), civilian experience, education, skills, and security clearance level. We never ask for clearance investigation details.</li>
           <li><strong>Verification documents:</strong> when you verify your service, the two files you upload: a service document (for example a DD-214 with your Social Security number blacked out) and a photo ID (a driver’s license, state ID, or passport with the ID number covered). See “Verification documents” below.</li>
           <li><strong>Activity:</strong> jobs you save or apply to, posts, comments, reactions, follows, messages, and reports you submit.</li>
@@ -60,7 +60,7 @@ export default function PrivacyPage() {
       </section>
       <section>
         <h2>Service providers</h2>
-        <p>We use trusted providers to operate LanceNest: Supabase (database, authentication, file storage), Vercel (hosting), Cloudflare Turnstile (bot protection), and Resend (email delivery). When paid plans launch, payments will be processed by Stripe; we will not store full card numbers. These providers process data only to provide their services to us.</p>
+        <p>We use trusted providers to operate LanceNest: Supabase (database, authentication, file storage), Vercel (hosting), Cloudflare Turnstile (bot protection), Resend (email delivery), and Google (if you choose to sign in with Google). When paid plans launch, payments will be processed by Stripe; we will not store full card numbers. These providers process data only to provide their services to us.</p>
       </section>
       <section>
         <h2>Security</h2>

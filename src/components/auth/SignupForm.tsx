@@ -7,6 +7,7 @@ import { signUp, type FormState } from '@/app/auth/actions';
 import SubmitButton from '../SubmitButton';
 import FormMessage from '../FormMessage';
 import Turnstile from './Turnstile';
+import GoogleButton from './GoogleButton';
 
 const OPTIONS = [
   { value: 'veteran', title: 'I’m a service member or veteran', body: 'Active duty, National Guard, Reserve, transitioning, or veteran — build your profile and find your next role.' },
@@ -63,6 +64,8 @@ export default function SignupForm() {
         </div>
       </fieldset>
 
+      <GoogleButton href={`/auth/google?role=${role}${referral ? `&ref=${encodeURIComponent(referral)}` : ''}`} />
+
       <div>
         <label htmlFor="full_name" className="field-label">{role === 'employer' ? 'Your full name' : 'Full name'}</label>
         <input id="full_name" name="full_name" autoComplete="name" required className="field" />
@@ -81,7 +84,7 @@ export default function SignupForm() {
       <FormMessage error={state.error} />
       <SubmitButton pendingText="Creating your account…">Create account</SubmitButton>
       <p className="text-center text-xs text-muted">
-        Service members verify their service after signup to unlock jobs and the network. By creating an account, you agree to our <Link href="/terms" className="underline">Terms</Link>, <Link href="/conduct" className="underline">Code of Conduct</Link>, and <Link href="/privacy" className="underline">Privacy Policy</Link>.
+        Service members verify their service after signup to unlock jobs and the network. By creating an account, with email or Google, you agree to our <Link href="/terms" className="underline">Terms</Link>, <Link href="/conduct" className="underline">Code of Conduct</Link>, and <Link href="/privacy" className="underline">Privacy Policy</Link>.
       </p>
       <p className="text-center text-sm text-muted">
         Already a member? <Link href="/login" className="text-navy underline decoration-brass underline-offset-4">Log in</Link>

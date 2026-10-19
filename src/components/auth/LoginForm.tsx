@@ -7,6 +7,7 @@ import { signIn, type FormState } from '@/app/auth/actions';
 import SubmitButton from '../SubmitButton';
 import FormMessage from '../FormMessage';
 import Turnstile from './Turnstile';
+import GoogleButton from './GoogleButton';
 import { safeNextPath } from '@/lib/nav';
 
 /** The message shown above the form for ?reason=… or ?error=… links. */
@@ -16,6 +17,7 @@ function noticeFor(p: URLSearchParams): string | undefined {
   if (reason === 'idle') return 'For your security, you were signed out after 30 minutes of inactivity.';
   if (reason === 'expired') return 'For your security, sessions end after 12 hours. Please sign in again.';
   if (p.get('error') === 'link') return 'That link has expired or was already used. Log in, or request a new one.';
+  if (p.get('error') === 'google') return 'Google sign-in didn’t finish. Please try again, or log in with your email and password.';
   if (p.get('next')?.startsWith('/jobs')) return 'Job listings are for LanceNest members. Log in, or create a free account in under a minute.';
   return undefined;
 }
@@ -34,6 +36,8 @@ export default function LoginForm() {
     <form action={action} className="space-y-5">
       {notice && <FormMessage message={notice} />}
       <input type="hidden" name="next" value={next ?? ''} />
+      <GoogleButton href={`/auth/google${next ? `?next=${encodeURIComponent(next)}` : ''}`}
+        note={<>New here? Google creates a free account, and you agree to our <Link href="/terms" className="underline">Terms</Link> and <Link href="/privacy" className="underline">Privacy Policy</Link>.</>} />
       <div>
         <label htmlFor="email" className="field-label">Email</label>
         <input id="email" name="email" type="email" autoComplete="email" required className="field" />

@@ -5,5 +5,8 @@ export const CONVERSION_FEES_ENABLED = false;   // contract-to-hire conversion f
 // Off until payments counsel reviews the fund flow. While off, posting, proposals, contracts and messaging still work,
 // and the Terms, Trust, and Protected Payments pages say payments are arranged directly between the parties.
 export const FREELANCE_PAYMENTS_ENABLED = false;
+// "Continue with Google": shown only after the Google provider is set up in Supabase. Turn on by setting
+// NEXT_PUBLIC_GOOGLE_SIGNIN=1 in Vercel and redeploying (the login and sign-up pages are pre-built).
+export const GOOGLE_SIGNIN = process.env.NEXT_PUBLIC_GOOGLE_SIGNIN === '1';
 // Trades that require a state/local license: hidden until license verification ships.
 export const LICENSED_TRADES = ['HVAC & refrigeration', 'Electrical', 'Plumbing', 'Construction & remodeling', 'Roofing & exteriors'];
