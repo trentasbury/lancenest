@@ -11,7 +11,7 @@ export const metadata: Metadata = { alternates: { canonical: '/plans' },
 const PLANS = [
   { id: null, key: 'free', name: 'Free', price: '$0', note: 'Always, for every verified service member',
     features: ['Verified profile with military & professional career', 'Apply to every job with up to 3 résumés', 'Network, messaging, and People search',
-      'Transition Hub & SkillBridge', 'See how many people viewed your profile', '10 freelance proposals a month', 'Freelance fee: 15%'] },
+      'Transition Hub & SkillBridge', 'See how many people viewed your profile', '5 freelance proposals a month, plus 5 more for $5 anytime', 'Freelance fee: 15%'] },
   { id: 'veteran_pro' as const, key: 'pro', name: 'Pro', price: '$25', note: 'per month · or $229/year paid up front (save 24%)', month: 'veteran_pro_month', year: 'veteran_pro_year',
     features: ['Everything in Free', 'See exactly who viewed your profile', 'Applicant insights: how you compare on every job', 'Daily job alerts by email (3)', 'Unlimited freelance proposals', 'Pro badge on your profile', 'Freelance fee: 10%'] },
   { id: 'veteran_pro_plus' as const, key: 'pro_plus', name: 'Career Accelerator', price: '$45', note: 'per month · or $399/year paid up front (save 26%)', month: 'veteran_pro_plus_month', year: 'veteran_pro_plus_year', featured: true,

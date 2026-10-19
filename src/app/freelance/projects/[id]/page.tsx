@@ -4,7 +4,8 @@ import { notFound } from 'next/navigation';
 import { requireVerifiedMember } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { CLEARANCE_LABEL } from '@/lib/employer';
-import { FREE_PROPOSALS_PER_MONTH, keepPercent, proposalsUsedThisMonth } from '@/lib/freelance';
+import { FREE_PROPOSALS_PER_MONTH, keepPercent, proposalCredits, proposalsUsedThisMonth } from '@/lib/freelance';
+import ProposalPackForm from '@/components/freelance/ProposalPackForm';
 import { timeAgo } from '@/lib/network';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
@@ -15,7 +16,7 @@ import { setProjectStatus, setProposalStatus, submitProposal, withdrawProposal }
 import { hireFreelancer } from '../../contracts/actions';
 
 export const metadata: Metadata = { title: 'Project' };
-const ERR: Record<string, string> = { proposal: 'Add your price and a cover letter of at least 30 characters.', limit: `You’ve used your ${FREE_PROPOSALS_PER_MONTH} free proposals this month. Pro members send unlimited proposals.`, closed: 'This project is no longer accepting proposals.', duplicate: 'You’ve already sent a proposal for this project.', save: 'Your proposal didn’t send — please try again.', pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' };
+const ERR: Record<string, string> = { proposal: 'Add your price and a cover letter of at least 30 characters.', limit: `You’ve used your ${FREE_PROPOSALS_PER_MONTH} free proposals this month. Get 5 more for $5, or go Pro for unlimited proposals.`, closed: 'This project is no longer accepting proposals.', duplicate: 'You’ve already sent a proposal for this project.', save: 'Your proposal didn’t send — please try again.', pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' };
 
 type Proposal = { id: string; freelancer_id: string; cover_letter: string; bid_amount: number; timeline: string | null; status: string; created_at: string;
   freelancer: { full_name: string; username: string | null; headline: string | null; verified: boolean; service_summary: string | null } | null };
@@ -47,7 +48,12 @@ export default async function ProjectPage({ params, searchParams }: { params: { 
     ? await Promise.all([supabase.from('freelancer_profiles').select('title').eq('profile_id', user.id).maybeSingle(), supabase.from('veteran_profiles').select('plan').eq('profile_id', user.id).maybeSingle()])
     : [{ data: null }, { data: null }];
   const plan = (vet?.plan as string) ?? 'free';
-  const used = isVet ? await proposalsUsedThisMonth(user.id) : 0;
+  const [used, credits] = isVet ? await Promise.all([proposalsUsedThisMonth(user.id), plan === 'free' ? proposalCredits(user.id) : 0]) : [0, 0];
+  // Free plan: what's left of this month's free proposals, plus any bought ones (used after the free ones).
+  const freeLeft = Math.max(FREE_PROPOSALS_PER_MONTH - used, 0);
+  const left = freeLeft + credits;
+  const now = new Date();
+  const resets = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' });
 
   return (
     <div className="container-page grid gap-8 py-10 lg:grid-cols-[1fr_360px]">
@@ -121,6 +127,16 @@ export default async function ProjectPage({ params, searchParams }: { params: { 
           <div className="card p-6 text-sm text-muted">This project isn’t accepting proposals.</div>
         ) : !fp ? (
           <div className="card p-6"><p className="font-medium">Create your freelancer profile to send a proposal.</p><Link href="/freelance/profile" className="btn btn-primary mt-3">Set up profile</Link></div>
+        ) : plan === 'free' && left === 0 ? (
+          <div className="card p-6">
+            <p className="eyebrow">Send a proposal</p>
+            <p className="mt-2 font-medium">You’ve used your {FREE_PROPOSALS_PER_MONTH} free proposals this month.</p>
+            <p className="mt-1 text-sm text-muted">Get 5 more for $5 (they never expire), or go Pro for unlimited proposals. Your free proposals reset on {resets}.</p>
+            <div className="mt-4 space-y-2">
+              <ProposalPackForm back={`/freelance/projects/${project.id}`} button />
+              <Link href="/plans" className="btn btn-outline w-full">Go Pro · unlimited proposals</Link>
+            </div>
+          </div>
         ) : (
           <form action={submitProposal.bind(null, project.id)} className="card space-y-3 p-6">
             <p className="eyebrow">Send a proposal</p>
@@ -128,7 +144,9 @@ export default async function ProjectPage({ params, searchParams }: { params: { 
             <div><label className="field-label" htmlFor="bid_amount">Your price ($)</label><input id="bid_amount" name="bid_amount" required inputMode="numeric" className="field" /></div>
             <div><label className="field-label" htmlFor="timeline">Timeline</label><input id="timeline" name="timeline" placeholder="e.g. 3 weeks" className="field" /></div>
             <div><label className="field-label" htmlFor="cover_letter">Why you</label><textarea id="cover_letter" name="cover_letter" required rows={6} minLength={30} className="field" /></div>
-            <p className="text-xs text-muted">You keep {keepPercent(plan)}% of payments on this project. {plan === 'free' ? `${Math.max(FREE_PROPOSALS_PER_MONTH - used, 0)} of ${FREE_PROPOSALS_PER_MONTH} free proposals left this month.` : 'Unlimited proposals.'}</p>
+            <p className="text-xs text-muted">You keep {keepPercent(plan)}% of payments on this project. {plan === 'free'
+              ? `${freeLeft} of ${FREE_PROPOSALS_PER_MONTH} free proposals left this month${credits ? `, plus ${credits} extra` : ''}.`
+              : 'Unlimited proposals.'}</p>
             <SubmitButton className="btn btn-primary w-full" pendingText="Sending…">Send proposal</SubmitButton>
           </form>
         ))}

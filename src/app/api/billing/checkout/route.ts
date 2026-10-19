@@ -18,14 +18,28 @@ export async function POST(request: NextRequest) {
   if (item.audience === 'veteran') {
     // Member plans: verified service members only; one Stripe customer per member (stored server-side only).
     if (session.profile?.role !== 'veteran') return NextResponse.redirect(`${site}/plans`, 303);
-    const { data: vet } = await createClient().from('veteran_profiles').select('verification_status').eq('profile_id', session.user.id).maybeSingle();
+    const { data: vet } = await createClient().from('veteran_profiles').select('verification_status, plan').eq('profile_id', session.user.id).maybeSingle();
     if (vet?.verification_status !== 'verified') return NextResponse.redirect(`${site}/dashboard/verification?required=1`, 303);
+    // Proposal packs are only for the Free plan (paid plans already send unlimited proposals).
+    if (item.kind === 'proposal_pack' && (vet?.plan ?? 'free') !== 'free') return NextResponse.redirect(`${site}/freelance`, 303);
     const admin = createAdminClient();
     const { data: bc } = await admin.from('billing_customers').select('stripe_customer_id').eq('profile_id', session.user.id).maybeSingle();
     let customer = bc?.stripe_customer_id as string | undefined;
     if (!customer) {
       customer = (await stripe().customers.create({ email: session.user.email, name: session.profile?.full_name ?? undefined, metadata: { profile_id: session.user.id } })).id;
       await admin.from('billing_customers').insert({ profile_id: session.user.id, stripe_customer_id: customer });
+    }
+    if (item.kind === 'proposal_pack') {
+      const back = String(form.get('back') ?? '');
+      const cancel = /^\/freelance(\/[\w-]+)*$/.test(back) ? back : '/freelance';
+      const meta = { profile_id: session.user.id, kind: 'proposal_pack', product };
+      const checkout = await stripe().checkout.sessions.create({
+        mode: 'payment', customer, allow_promotion_codes: true,
+        line_items: [{ quantity: 1, price_data: { currency: 'usd', unit_amount: item.amount, product_data: { name: item.name } } }],
+        metadata: meta, payment_intent_data: { metadata: meta },
+        success_url: `${site}/billing/success?session_id={CHECKOUT_SESSION_ID}`, cancel_url: `${site}${cancel}`,
+      });
+      return NextResponse.redirect(checkout.url!, 303);
     }
     const meta = { profile_id: session.user.id, kind: 'plan', plan: item.plan as string, product };
     const checkout = await stripe().checkout.sessions.create({

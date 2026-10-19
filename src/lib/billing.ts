@@ -1,7 +1,7 @@
 import 'server-only';
 import type Stripe from 'stripe';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { BOOST_DAYS, CONTACT_PACK_SIZE, stripe } from '@/lib/stripe';
+import { BOOST_DAYS, CONTACT_PACK_SIZE, PROPOSAL_PACK_SIZE, stripe } from '@/lib/stripe';
 
 const ACTIVE = new Set(['active', 'trialing', 'past_due']);
 
@@ -104,6 +104,12 @@ export async function applyCheckoutSession(sessionId: string) {
         amount_cents: s.amount_total ?? 0, stripe_checkout_session_id: s.id,
       });
     }
+    return { ok: true as const, kind };
+  }
+  if (kind === 'proposal_pack' && s.payment_status === 'paid') {
+    const profileId = s.metadata?.profile_id;
+    // The database records the Stripe session once, so the webhook and the success page can both call this safely.
+    if (profileId) await createAdminClient().rpc('apply_proposal_pack', { p_session: s.id, p_profile: profileId, p_credits: PROPOSAL_PACK_SIZE, p_amount: s.amount_total ?? 0 });
     return { ok: true as const, kind };
   }
   if (kind === 'shortlist' && s.payment_status === 'paid') {

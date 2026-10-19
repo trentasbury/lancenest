@@ -7,8 +7,9 @@ import { getSessionProfile } from '@/lib/auth';
 import VerificationBadge from '@/components/VerificationBadge';
 import { CLEARANCES, COMPONENTS, yearOf } from '@/lib/military';
 import { initials } from '@/lib/format';
-import { getFeed } from '@/lib/network';
+import { FEED_FILTERS, MILESTONES_BY_TYPE, PAGE_SIZE, POST_TYPES, VISIBILITY, getFeed, mediaUrl, type Post } from '@/lib/network';
 import PostCard from '@/components/network/PostCard';
+import Composer from '@/components/network/Composer';
 import SubmitButton from '@/components/SubmitButton';
 import { followUser, reportContent, unfollowUser } from '@/app/network/actions';
 import { startConversation } from '@/app/messages/actions';
@@ -57,7 +58,10 @@ export async function generateMetadata({ params }: { params: { username: string 
   };
 }
 
-export default async function VeteranProfilePage({ params, searchParams }: { params: { username: string }; searchParams: { rec?: string } }) {
+type Tab = 'profile' | 'posts' | 'photos';
+const TABS: [Tab, string][] = [['profile', 'Profile'], ['posts', 'Posts'], ['photos', 'Photos']];
+
+export default async function VeteranProfilePage({ params, searchParams }: { params: { username: string }; searchParams: { rec?: string; tab?: string; type?: string; cursor?: string } }) {
   const data = await load(params.username);
   if (!data) notFound();
   const { supabase, profile } = data;
@@ -91,25 +95,32 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
   const session = viewer;
   const viewerId = session?.user.id ?? null;
   const none = Promise.resolve({ data: null });
+  // Profile (résumé + recent activity), Posts (the full wall), or Photos.
+  const tab: Tab = searchParams.tab === 'posts' || searchParams.tab === 'photos' ? searchParams.tab : 'profile';
+  const wallType = tab === 'posts' && FEED_FILTERS.some(([v]) => v && v === searchParams.type) ? searchParams.type : undefined;
 
   // Every section of the profile is independent: load them all in one round instead of eight.
   const [
     ,
     { data: service }, { data: skillRows }, { data: experience }, { data: education },
-    { posts }, { count: followers }, { data: iFollow },
+    { posts, nextCursor }, { count: followers }, { data: iFollow },
     { data: verifiedWork },
     { data: recs }, { data: myPendingRecs }, { data: mentorRow }, { data: wroteOne },
     { data: offered }, { data: reviews },
     { data: freelance }, { data: portfolio },
+    photoFeed, { count: postCount },
   ] = await Promise.all([
-    viewer && viewer.user.id !== profile.id
+    // Count one profile view per visit, not one per tab clicked.
+    viewer && viewer.user.id !== profile.id && tab === 'profile'
       ? supabase.from('profile_views').insert({ profile_id: profile.id, viewer_id: viewer.user.id }).then(() => undefined, () => undefined)
       : Promise.resolve(undefined),
     supabase.from('military_service').select('*, occupation:military_occupations(title, civilian_categories, civilian_skills)').eq('profile_id', profile.id).order('start_date', { ascending: false }),
     supabase.from('profile_skills').select('skill:skills(name)').eq('profile_id', profile.id),
     supabase.from('experience').select('*').eq('profile_id', profile.id).order('start_date', { ascending: false }),
     supabase.from('education').select('*').eq('profile_id', profile.id).order('graduation_year', { ascending: false }),
-    getFeed({ viewerId, authorId: profile.id, limit: 5 }),
+    tab === 'posts'
+      ? getFeed({ viewerId, authorId: profile.id, limit: PAGE_SIZE, type: wallType, cursor: searchParams.cursor })
+      : tab === 'profile' ? getFeed({ viewerId, authorId: profile.id, limit: 2 }) : Promise.resolve({ posts: [] as Post[], nextCursor: null }),
     supabase.from('user_follows').select('*', { count: 'exact', head: true }).eq('following_id', profile.id),
     viewerId ? supabase.from('user_follows').select('following_id').eq('follower_id', viewerId).eq('following_id', profile.id) : Promise.resolve({ data: [] }),
     viewer ? supabase.rpc('verified_work', { p: profile.id }) : Promise.resolve({ data: [] }),
@@ -121,6 +132,9 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
     supabase.from('reviews').select('rating, body, created_at').eq('reviewee_id', profile.id).order('created_at', { ascending: false }).limit(5),
     supabase.from('freelancer_profiles').select('title, bio, hourly_rate, available, clearance_work, vosb, sdvosb').eq('profile_id', profile.id).maybeSingle(),
     supabase.from('portfolio_items').select('id, title, description, url').eq('profile_id', profile.id).order('created_at', { ascending: false }).limit(6),
+    tab === 'profile' ? Promise.resolve({ posts: [] as Post[], nextCursor: null }) : getFeed({ viewerId, authorId: profile.id, type: 'photos', limit: tab === 'photos' ? 48 : 9 }),
+    // Row-level security counts only the posts this viewer is allowed to see.
+    supabase.from('network_posts').select('id', { count: 'exact', head: true }).eq('author_id', profile.id).is('group_id', null),
   ]);
   const following = (iFollow ?? []).length > 0;
   type RecRow = { id: string; relationship: string; body: string; author: { full_name: string; username?: string | null; headline?: string | null; verified?: boolean } | null };
@@ -131,6 +145,34 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
   const primary = services[0];
   const translated = Array.from(new Set(services.flatMap((s) => s.occupation?.civilian_categories ?? []))).slice(0, 8);
   const clearance = CLEARANCES.find(([v]) => v === vet.clearance_level)?.[1];
+  const first = profile.full_name.split(' ')[0];
+  // Posting needs a verified account (the database enforces this too); admins can always post.
+  const canPost = isOwner && (viewer?.profile?.role === 'admin' || vet.verification_status === 'verified');
+  const tabHref = (t: Tab, extra: Record<string, string | undefined> = {}) => {
+    const p = new URLSearchParams();
+    if (t !== 'profile') p.set('tab', t);
+    Object.entries(extra).forEach(([k, v]) => v && p.set(k, v));
+    const s = p.toString();
+    return `/veterans/${profile.username}${s ? `?${s}` : ''}`;
+  };
+  const photos = photoFeed.posts.flatMap((p) => [...p.media].sort((a, b) => a.position - b.position).map((m) => ({ postId: p.id, src: mediaUrl(m.storage_path) })));
+  const composer = canPost ? (
+    <Composer userId={profile.id} name={profile.full_name} avatarUrl={profile.avatar_url} postTypes={POST_TYPES} milestonesByType={MILESTONES_BY_TYPE} visibility={VISIBILITY}
+      prompt={`What have you been working on, ${first}?`} heading="Post to your profile" />
+  ) : isOwner ? (
+    <div className="card flex flex-col gap-3 p-5 text-sm sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-muted">Once your service is verified, you can post updates, milestones and photos here.</p>
+      <Link href="/dashboard/verification" className="btn btn-outline shrink-0">Get verified</Link>
+    </div>
+  ) : null;
+  const emptyWall = (
+    <div className="card p-8 text-center">
+      <p className="font-sans text-lg font-semibold text-ink">{isOwner ? 'Your wall is empty.' : `${first} hasn’t posted yet.`}</p>
+      <p className="mx-auto mt-1 max-w-md text-sm text-muted">
+        {isOwner ? 'Share what you’re working on: a new certification, a project, a job change, or a move.' : 'Follow them to see their updates in your feed.'}
+      </p>
+    </div>
+  );
 
   return (
     <>
@@ -141,7 +183,8 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
             <div className="absolute inset-0 opacity-[0.07] [background-image:radial-gradient(circle_at_1px_1px,#d9c9a8_1px,transparent_0)] [background-size:18px_18px]" />
           </div>
           <div className="px-5 pb-6 sm:px-8">
-            <div className="-mt-14 flex flex-col gap-4 sm:-mt-16 sm:flex-row sm:items-end sm:justify-between">
+            {/* relative + z-10: the cover is positioned, so without this it paints over the top half of the photo. */}
+            <div className="relative z-10 -mt-14 flex flex-col gap-4 sm:-mt-16 sm:flex-row sm:items-end sm:justify-between">
               {profile.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={profile.avatar_url} alt={profile.full_name} className="h-28 w-28 shrink-0 rounded-full border-4 border-ivory object-cover shadow-md sm:h-36 sm:w-36" />
@@ -217,10 +260,101 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
                 )}
               </div>
             )}
+
+            <nav aria-label="Profile sections" className="-mx-5 -mb-6 mt-5 flex overflow-x-auto border-t border-line/80 px-2 sm:-mx-8 sm:px-5">
+              {TABS.map(([key, label]) => {
+                const on = tab === key;
+                return (
+                  <Link key={key} href={tabHref(key)} scroll={false} aria-current={on ? 'page' : undefined}
+                    className={`relative flex items-center whitespace-nowrap px-4 py-3.5 text-sm font-semibold transition-colors ${on ? 'text-navy' : 'text-muted hover:text-navy'}`}>
+                    {label}
+                    {key === 'posts' && !!postCount && <span className="ml-1.5 rounded-full bg-paper px-2 py-0.5 text-xs font-medium text-muted">{postCount}</span>}
+                    <span aria-hidden="true" className={`absolute inset-x-3 bottom-0 h-[3px] rounded-full bg-navy transition-opacity ${on ? 'opacity-100' : 'opacity-0'}`} />
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
         </section>
       </div>
 
+      {tab === 'posts' && (
+        <div className="container-page grid items-start gap-6 py-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+          <div className="min-w-0 space-y-4 lg:order-2">
+            {!wallType && !searchParams.cursor && composer}
+            <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+              {FEED_FILTERS.map(([v, label]) => (
+                <Link key={label} href={tabHref('posts', { type: v || undefined })} scroll={false}
+                  className={`whitespace-nowrap rounded-full border px-4 py-1.5 text-sm ${(wallType ?? '') === v ? 'border-navy bg-navy text-ivory' : 'border-line bg-ivory text-ink hover:border-brass'}`}>
+                  {label}
+                </Link>
+              ))}
+            </div>
+            {posts.length === 0 && !searchParams.cursor
+              ? (wallType ? <div className="card p-6 text-sm text-muted">Nothing in this category yet.</div> : emptyWall)
+              : posts.map((post) => <PostCard key={post.id} post={post} signedIn={!!session} />)}
+            {nextCursor && (
+              <div className="text-center"><Link href={tabHref('posts', { type: wallType, cursor: nextCursor })} scroll={false} className="btn btn-outline">Load older posts</Link></div>
+            )}
+            {searchParams.cursor && !nextCursor && posts.length > 0 && <p className="text-center text-sm text-muted">That’s everything {isOwner ? 'you’ve' : `${first} has`} posted.</p>}
+          </div>
+
+          <aside className="space-y-4 lg:order-1">
+            <div className="card p-6">
+              <h2 className="font-sans text-lg font-semibold text-ink">Intro</h2>
+              {vet.about && <p className="mt-3 line-clamp-5 whitespace-pre-line text-sm leading-relaxed text-ink/85">{vet.about}</p>}
+              <ul className="mt-4 space-y-3 text-sm text-ink/85">
+                {primary && <IntroRow icon="service">{primary.branch}{primary.rank ? ` · ${primary.rank}` : ''}</IntroRow>}
+                {primary?.occupation?.title && <IntroRow icon="role">{primary.occupation.title}</IntroRow>}
+                {profile.location && <IntroRow icon="place">Lives in {profile.location}</IntroRow>}
+                {vet.willing_to_relocate && <IntroRow icon="move">Open to relocation</IntroRow>}
+                <IntroRow icon="people">{followers ?? 0} follower{followers === 1 ? '' : 's'}</IntroRow>
+              </ul>
+              <Link href={tabHref('profile')} scroll={false} className="btn btn-outline mt-5 w-full">See full profile</Link>
+            </div>
+            <div className="card p-6">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="font-sans text-lg font-semibold text-ink">Photos</h2>
+                {photos.length > 0 && <Link href={tabHref('photos')} scroll={false} className="text-sm font-medium text-navy hover:underline">See all</Link>}
+              </div>
+              {photos.length === 0 ? (
+                <p className="mt-3 text-sm text-muted">{isOwner ? 'Photos you add to posts show up here.' : 'No photos yet.'}</p>
+              ) : (
+                <div className="mt-4 grid grid-cols-3 gap-1.5 overflow-hidden rounded-xl">
+                  {photos.slice(0, 9).map((ph) => (
+                    <Link key={ph.src} href={`/network/${ph.postId}`} className="block aspect-square bg-paper">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={ph.src} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover transition-opacity hover:opacity-90" />
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {tab === 'photos' && (
+        <div className="container-page py-6">
+          <section className="card p-6 sm:p-7">
+            <h2 className="font-sans text-lg font-semibold text-ink">Photos</h2>
+            {photos.length === 0 ? (
+              <p className="mt-3 text-sm text-muted">{isOwner ? 'Add photos to a post and they’ll appear here.' : `${first} hasn’t shared any photos yet.`}</p>
+            ) : (
+              <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                {photos.map((ph) => (
+                  <Link key={ph.src} href={`/network/${ph.postId}`} className="block aspect-square overflow-hidden rounded-xl bg-paper">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={ph.src} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-300 hover:scale-[1.03]" />
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      )}
+
+      {tab === 'profile' && (
       <div className="container-page grid gap-6 py-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-4">
           {vet.about && (
@@ -229,6 +363,18 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
               <p className="mt-3 whitespace-pre-line text-[16px] leading-relaxed text-ink/90">{vet.about}</p>
             </section>
           )}
+
+          <section id="activity" className="scroll-mt-24 space-y-3">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <h2 className="font-sans text-lg font-semibold text-ink">Activity</h2>
+                <p className="text-sm text-muted">{postCount ?? 0} post{postCount === 1 ? '' : 's'}</p>
+              </div>
+              {!!postCount && <Link href={tabHref('posts')} scroll={false} className="text-sm font-semibold text-navy hover:underline">Show all posts →</Link>}
+            </div>
+            {composer}
+            {posts.length === 0 ? emptyWall : posts.map((post) => <PostCard key={post.id} post={post} signedIn={!!session} />)}
+          </section>
 
           <section className="card p-7">
             <h2 className="font-sans text-lg font-semibold text-ink">Military career</h2>
@@ -361,18 +507,6 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
             </section>
           )}
 
-          <section id="posts" className="scroll-mt-24 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-sans text-lg font-semibold text-ink">Posts & milestones</h2>
-              {isOwner && <Link href="/network" className="text-sm text-navy underline decoration-brass underline-offset-4">Share an update →</Link>}
-            </div>
-            {posts.length === 0 ? (
-              <div className="card p-6 text-sm text-muted">{isOwner ? 'You haven’t shared anything yet.' : 'No posts to show yet.'}</div>
-            ) : (
-              posts.map((post) => <PostCard key={post.id} post={post} signedIn={!!session} />)
-            )}
-          </section>
-
           {(experience ?? []).length > 0 && (
             <section className="card p-7">
               <h2 className="font-sans text-lg font-semibold text-ink">Professional career</h2>
@@ -420,6 +554,25 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
           </div>
         </aside>
       </div>
+      )}
     </>
+  );
+}
+
+const ICON: Record<string, React.ReactNode> = {
+  service: <path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6z" />,
+  role: <><rect x="3.5" y="7.5" width="17" height="12" rx="2" /><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5" /></>,
+  place: <><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z" /><circle cx="12" cy="10" r="2.3" /></>,
+  move: <path d="M4 8h13l-3-3M20 16H7l3 3" />,
+  people: <><circle cx="9" cy="8.5" r="3" /><path d="M3.5 19.5c.6-3 2.8-4.7 5.5-4.7s4.9 1.7 5.5 4.7M15.5 5.6a2.8 2.8 0 0 1 0 5.6M17.6 14.9c1.3.7 2.2 2.2 2.4 4.6" /></>,
+};
+
+/** One line of the wall's Intro card: a small icon and its text. */
+function IntroRow({ icon, children }: { icon: string; children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-3">
+      <svg viewBox="0 0 24 24" className="mt-px h-[18px] w-[18px] shrink-0 text-muted" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{ICON[icon]}</svg>
+      <span className="min-w-0">{children}</span>
+    </li>
   );
 }

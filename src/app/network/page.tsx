@@ -50,6 +50,7 @@ export default async function NetworkPage({ searchParams }: { searchParams: { ty
             <Composer
               userId={user.id}
               name={profile.full_name}
+              avatarUrl={profile.avatar_url}
               postTypes={POST_TYPES}
               milestonesByType={MILESTONES_BY_TYPE}
               visibility={VISIBILITY}

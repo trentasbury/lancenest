@@ -8,10 +8,12 @@ import Avatar from './Avatar';
 type Opt = readonly [string, string];
 
 export default function Composer({
-  userId, name, postTypes, milestonesByType, visibility,
+  userId, name, postTypes, milestonesByType, visibility, avatarUrl, prompt = 'Share an accomplishment or update…', heading = 'Share with your network',
 }: {
   userId: string; name: string; postTypes: readonly Opt[]; milestonesByType: Record<string, [string, string][]>;
   visibility: readonly (readonly [string, string, string])[];
+  /** Optional: the member's photo, the collapsed prompt, and the form's title (the profile wall uses its own wording). */
+  avatarUrl?: string | null; prompt?: string; heading?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState('general');
@@ -68,8 +70,8 @@ export default function Composer({
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} className="card flex w-full items-center gap-3 p-4 text-left transition-colors hover:border-brass/60">
-        <Avatar name={name} />
-        <span className="flex-1 rounded-full border border-line bg-paper px-4 py-3 text-sm text-muted">Share an accomplishment or update…</span>
+        <Avatar name={name} src={avatarUrl} />
+        <span className="flex-1 rounded-full border border-line bg-paper px-4 py-3 text-sm text-muted">{prompt}</span>
       </button>
     );
   }
@@ -77,7 +79,7 @@ export default function Composer({
   return (
     <form ref={formRef} action={submit} className="card space-y-4 p-5 sm:p-6">
       <div className="flex items-center justify-between">
-        <p className="font-sans text-lg font-semibold">Share with your network</p>
+        <p className="font-sans text-lg font-semibold">{heading}</p>
         <button type="button" onClick={() => setOpen(false)} className="text-sm text-muted hover:text-ink">Cancel</button>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">

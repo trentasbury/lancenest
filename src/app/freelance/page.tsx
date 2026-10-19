@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireVerifiedMember } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { CATEGORIES, FREE_PROPOSALS_PER_MONTH, keepPercent, proposalsUsedThisMonth } from '@/lib/freelance';
+import { CATEGORIES, FREE_PROPOSALS_PER_MONTH, proposalCredits, proposalsUsedThisMonth } from '@/lib/freelance';
+import ProposalPackForm from '@/components/freelance/ProposalPackForm';
 import { CLEARANCE_LABEL } from '@/lib/employer';
 import { sanitizeSearch } from '@/lib/format';
 import { timeAgo } from '@/lib/network';
@@ -22,8 +23,8 @@ export default async function FreelancePage({ searchParams }: { searchParams: { 
         supabase.from('veteran_profiles').select('plan').eq('profile_id', user.id).maybeSingle(),
       ])
     : [{ data: null }, { data: null }];
-  const used = isVet ? await proposalsUsedThisMonth(user.id) : 0;
   const plan = (vet?.plan as string) ?? 'free';
+  const [used, credits] = isVet ? await Promise.all([proposalsUsedThisMonth(user.id), plan === 'free' ? proposalCredits(user.id) : 0]) : [0, 0];
   const { data: contracts } = await supabase.from('contracts').select('id, title, status').or(`client_id.eq.${user.id},freelancer_id.eq.${user.id}`).order('created_at', { ascending: false }).limit(10);
 
   let q = supabase.from('freelance_projects').select('id, title, description, category, work_location, budget_type, budget_min, budget_max, clearance_required, status, created_at, company:companies(name, is_verified)');
@@ -58,8 +59,20 @@ export default async function FreelancePage({ searchParams }: { searchParams: { 
       <div className="container-page py-8">
         {isVet && (
           <div className="mb-6 grid gap-3 sm:grid-cols-3">
-            <div className="card p-5"><p className="eyebrow">Proposals this month</p><p className="mt-2 font-serif text-2xl text-navy">{plan === 'free' ? `${used} of ${FREE_PROPOSALS_PER_MONTH}` : `${used} · unlimited`}</p>{plan === 'free' && <Link href="/plans" className="text-xs text-navy underline">Unlimited with Pro →</Link>}</div>
-            <div className="card p-5"><p className="eyebrow">You keep</p><p className="mt-2 font-serif text-2xl text-navy">{keepPercent(plan)}% of every payment</p><p className="text-xs text-muted">Pro 90% · Career Accelerator 92% · Federal 94%</p></div>
+            <div className="card p-5">
+              <p className="eyebrow">Proposals this month</p>
+              <p className="mt-2 font-serif text-2xl text-navy">{plan === 'free' ? `${Math.min(used, FREE_PROPOSALS_PER_MONTH)} of ${FREE_PROPOSALS_PER_MONTH} free` : `${used} · unlimited`}</p>
+              {plan === 'free' && (
+                <>
+                  {credits > 0 && <p className="text-xs font-medium text-olive">+ {credits} extra proposal{credits === 1 ? '' : 's'} ready to use</p>}
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                    <ProposalPackForm back="/freelance" />
+                    <Link href="/plans" className="text-navy underline hover:text-brass-dark">Unlimited with Pro →</Link>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="card p-5"><p className="eyebrow">Protected payments</p><p className="mt-2 font-serif text-2xl text-navy">Funded before you start</p><p className="text-xs text-muted">Clients fund each milestone up front. It’s released to you when the work is approved. <Link href="/payments-protection" className="text-navy underline">How it works →</Link></p></div>
             <div className="card p-5"><p className="eyebrow">Payouts</p><p className="mt-2 font-serif text-2xl text-navy">{fp?.payouts_enabled ? 'Ready ✓' : 'Not set up'}</p>{!fp?.payouts_enabled && <Link href="/freelance/profile#payouts" className="text-xs text-navy underline">Set up payouts →</Link>}</div>
           </div>
         )}

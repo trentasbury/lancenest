@@ -25,13 +25,14 @@ export default async function AdminPage({ searchParams }: { searchParams: { dele
     return count ?? 0;
   };
 
-  const [veterans, employers, openJobs, companies, pendingVerifications, openReports, recentRes] = await Promise.all([
+  const [veterans, employers, openJobs, companies, pendingVerifications, openReports, newFeedback, recentRes] = await Promise.all([
     countOf('profiles', { column: 'role', value: 'veteran' }),
     countOf('profiles', { column: 'role', value: 'employer' }),
     countOf('jobs', { column: 'status', value: 'open' }),
     countOf('companies'),
     countOf('verification_requests', { column: 'status', value: 'pending' }),
     countOf('reports', { column: 'status', value: 'open' }),
+    countOf('support_requests', { column: 'status', value: 'new' }),
     admin.from('profiles').select('id, full_name, role, created_at').order('created_at', { ascending: false }).limit(10),
   ]);
 
@@ -77,6 +78,9 @@ export default async function AdminPage({ searchParams }: { searchParams: { dele
           </Link>
           <Link href="/admin/reports" className="transition-opacity hover:opacity-80">
             <StatCard label="Open reports →" value={openReports} hint="Open the moderation queue" />
+          </Link>
+          <Link href="/admin/feedback" className="transition-opacity hover:opacity-80">
+            <StatCard label="Help & feedback →" value={newFeedback} hint="New help requests, bug reports, and ideas" />
           </Link>
         </div>
         <section className="card p-6">

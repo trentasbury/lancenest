@@ -2,7 +2,7 @@ import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 import { FREELANCE_FEES } from '@/lib/fees';
 
-export const FREE_PROPOSALS_PER_MONTH = 10;
+export const FREE_PROPOSALS_PER_MONTH = 5;   // enforced by the database (0060); extra proposals come from bought packs
 export const CATEGORIES = [
   // Federal-ready work leads the brand
   'Cybersecurity', 'IT support & networking', 'Enterprise software (ITSM, ERP, CRM)', 'Software development', 'Data & analytics', 'Intelligence & analysis',
@@ -23,6 +23,12 @@ export async function proposalsUsedThisMonth(profileId: string) {
   const start = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
   const { count } = await createClient().from('proposals').select('id', { count: 'exact', head: true }).eq('freelancer_id', profileId).gte('created_at', start);
   return count ?? 0;
+}
+
+/** Extra proposals a Free member bought (used after the monthly free ones run out). */
+export async function proposalCredits(profileId: string) {
+  const { data } = await createClient().from('proposal_credits').select('credits').eq('profile_id', profileId).maybeSingle();
+  return (data?.credits as number | undefined) ?? 0;
 }
 
 export const PRICE_LABEL: Record<string, string> = { fixed: '', hourly: '/hr', starting_at: '+' };

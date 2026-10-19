@@ -51,6 +51,8 @@ export function profileLink(role: Role | null | undefined, username: string | nu
  * The account menu under the avatar: kept short on purpose. Everything else lives on the
  * dashboard (members) or employer dashboard, so the menu stays readable.
  */
+const HELP: NavLink = { href: '/help', label: 'Help & feedback' };
+
 export function accountLinks(role: Role | null | undefined): NavLink[] {
   if (role === 'employer') {
     return [
@@ -60,10 +62,11 @@ export function accountLinks(role: Role | null | undefined): NavLink[] {
       { href: '/network?view=saved', label: 'Saved posts' },
       { href: '/employers', label: 'Plans & billing' },
       { href: '/settings/account', label: 'Settings & privacy' },
+      HELP,
     ];
   }
   if (role === 'admin') {
-    return [dashboardLink(role), { href: '/network?view=saved', label: 'Saved posts' }, { href: '/settings/account', label: 'Settings & privacy' }];
+    return [dashboardLink(role), { href: '/admin/feedback', label: 'Help & feedback queue' }, { href: '/network?view=saved', label: 'Saved posts' }, { href: '/settings/account', label: 'Settings & privacy' }];
   }
   return [
     dashboardLink(role),
@@ -71,5 +74,6 @@ export function accountLinks(role: Role | null | undefined): NavLink[] {
     { href: '/network?view=saved', label: 'Saved posts' },
     { href: '/plans', label: 'Plans & upgrades' },
     { href: '/settings/account', label: 'Settings & privacy' },
+    HELP,
   ];
 }
