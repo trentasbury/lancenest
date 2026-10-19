@@ -106,7 +106,7 @@ export default async function ApplicantsPage({ params }: { params: { id: string 
                 <p className="text-xs text-muted">Applied {new Date(a.applied_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}
                   {a.resume_id && <> · <a href={`/api/resume-files/${a.resume_id}`} className="text-navy underline">Résumé sent with this application</a></>}</p>
                 {(a.answers ?? []).length > 0 && (
-                  <dl className="mt-2 space-y-1 rounded-[3px] bg-paper p-3 text-xs">{(a.answers ?? []).map((x, i) => <div key={i}><dt className="font-semibold text-ink">{x.q}</dt><dd className="text-ink/80">{x.a}</dd></div>)}</dl>
+                  <dl className="mt-2 space-y-1 rounded-lg bg-paper p-3 text-xs">{(a.answers ?? []).map((x, i) => <div key={i}><dt className="font-semibold text-ink">{x.q}</dt><dd className="text-ink/80">{x.a}</dd></div>)}</dl>
                 )}
                 {trackOf.get(a.profile_id) && <p className="text-xs text-olive">✓ {trackOf.get(a.profile_id)!.completed} verified freelance job{trackOf.get(a.profile_id)!.completed === 1 ? '' : 's'}{trackOf.get(a.profile_id)!.avg_rating ? ` · ${trackOf.get(a.profile_id)!.avg_rating}★` : ''}</p>}
               </div>

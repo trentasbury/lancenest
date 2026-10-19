@@ -75,31 +75,31 @@ export default async function VeteranDashboard({ searchParams }: { searchParams:
         )}
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Link href="/dashboard/profile" className="card group p-5 transition-colors hover:border-brass">
+          <Link href="/dashboard/profile" className="card card-hover group p-5">
             <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Your profile</p>
             <p className="mt-2 font-serif text-2xl text-navy">{profile.onboarding_completed ? 'Edit profile' : 'Build your profile'} →</p>
             <p className="mt-1 text-xs text-muted">Name, about, skills, service, experience</p>
           </Link>
-          <Link href="/dashboard/verification" className="card group p-5 transition-colors hover:border-brass">
+          <Link href="/dashboard/verification" className="card card-hover group p-5">
             <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Verification</p>
             <p className="mt-2 font-serif text-2xl text-navy">{vet?.verification_status === 'verified' ? 'Verified ✦' : 'Get verified'} →</p>
             <p className="mt-1 text-xs text-muted">Earn the Verified Veteran badge</p>
           </Link>
           {profile.username && (
-            <Link href={`/veterans/${profile.username}`} className="card group p-5 transition-colors hover:border-brass">
+            <Link href={`/veterans/${profile.username}`} className="card card-hover group p-5">
               <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Public profile</p>
               <p className="mt-2 font-serif text-2xl text-navy">See what employers see →</p>
             </Link>
           )}
-          <Link href="/transition" className="card group p-5 transition-colors hover:border-brass">
+          <Link href="/transition" className="card card-hover group p-5">
             <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Transitioning?</p>
             <p className="mt-2 font-serif text-2xl text-navy">Transition Hub & SkillBridge →</p>
           </Link>
-          <Link href="/settings/account" className="card group p-5 transition-colors hover:border-brass">
+          <Link href="/settings/account" className="card card-hover group p-5">
             <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Account</p>
             <p className="mt-2 font-serif text-2xl text-navy">Settings & privacy →</p>
           </Link>
-          <Link href="/plans" className="card group p-5 transition-colors hover:border-brass">
+          <Link href="/plans" className="card card-hover group p-5">
             <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Plans</p>
             <p className="mt-2 font-serif text-2xl text-navy">Free · Pro · Federal Pro →</p>
           </Link>
@@ -109,7 +109,7 @@ export default async function VeteranDashboard({ searchParams }: { searchParams:
           <h2 id="tools-heading" className="eyebrow">Your tools</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {TOOLS.map((t) => (
-              <Link key={t.href} href={t.href} className="card p-4 transition-colors hover:border-brass">
+              <Link key={t.href} href={t.href} className="card card-hover p-4">
                 <p className="font-medium text-navy">{t.label} →</p>
                 <p className="mt-1 text-xs text-muted">{t.hint}</p>
               </Link>

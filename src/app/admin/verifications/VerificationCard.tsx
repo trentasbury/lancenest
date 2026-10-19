@@ -25,7 +25,7 @@ const isImage = (p: string | null) => !!p && /\.(jpg|png)$/i.test(p);
 
 function DocPanel({ title, subtitle, path, url }: { title: string; subtitle: string; path: string | null; url: string | null }) {
   return (
-    <div className="flex min-w-0 flex-col rounded-[4px] border border-line bg-paper">
+    <div className="flex min-w-0 flex-col rounded-xl border border-line bg-paper">
       <div className="flex items-baseline justify-between gap-3 border-b border-line px-4 py-2.5">
         <p className="text-sm font-semibold text-ink">{title}</p>
         <p className="truncate text-xs text-muted">{subtitle}</p>
@@ -38,7 +38,7 @@ function DocPanel({ title, subtitle, path, url }: { title: string; subtitle: str
         ) : isImage(path) ? (
           <a href={url} target="_blank" rel="noopener noreferrer" title="Open full size">
             {/* eslint-disable-next-line @next/next/no-img-element -- short-lived private link, never cached or optimized */}
-            <img src={url} alt={`${title} uploaded by the member`} className="max-h-[420px] w-auto max-w-full rounded-[3px] object-contain" referrerPolicy="no-referrer" />
+            <img src={url} alt={`${title} uploaded by the member`} className="max-h-[420px] w-auto max-w-full rounded-lg object-contain" referrerPolicy="no-referrer" />
           </a>
         ) : (
           <a href={url} target="_blank" rel="noopener noreferrer" className="btn btn-outline">Open PDF</a>
@@ -83,10 +83,10 @@ export default function VerificationCard({ r, docUrl, idUrl, flag, reject, appro
       </div>
 
       {r.member_note && (
-        <p className="mt-4 rounded-[4px] border border-brass/40 bg-paper px-4 py-2.5 text-sm"><span className="font-semibold">Member’s note:</span> {r.member_note}</p>
+        <p className="mt-4 rounded-xl border border-brass/40 bg-paper px-4 py-2.5 text-sm"><span className="font-semibold">Member’s note:</span> {r.member_note}</p>
       )}
       {!r.id_document_path && (
-        <p className="mt-4 rounded-[4px] border border-signal/30 bg-signal/5 px-4 py-2.5 text-sm text-signal">
+        <p className="mt-4 rounded-xl border border-signal/30 bg-signal/5 px-4 py-2.5 text-sm text-signal">
           Submitted before photo IDs were required. Reject with “Photo ID missing” to ask for one, or approve on the service document alone.
         </p>
       )}
@@ -94,7 +94,7 @@ export default function VerificationCard({ r, docUrl, idUrl, flag, reject, appro
       <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_1fr_280px]">
         <DocPanel title="Service document" subtitle={r.notes ?? 'Document'} path={r.document_path} url={docUrl} />
         <DocPanel title="Photo ID" subtitle={idTypeLabel(r.id_type)} path={r.id_document_path} url={idUrl} />
-        <div className="rounded-[4px] border border-line p-4">
+        <div className="rounded-xl border border-line p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Before you approve</p>
           <ol className="mt-3 list-decimal space-y-2 pl-4 text-sm text-ink/85">
             {CHECKS.map((c) => <li key={c}>{c}</li>)}
@@ -111,7 +111,7 @@ export default function VerificationCard({ r, docUrl, idUrl, flag, reject, appro
           </div>
           <SubmitButton className="btn btn-outline border-signal text-signal hover:bg-signal hover:text-ivory" pendingText="Saving…">Reject</SubmitButton>
         </form>
-        <form action={approve} className="w-full space-y-2 rounded-[4px] border border-line bg-paper p-3">
+        <form action={approve} className="w-full space-y-2 rounded-xl border border-line bg-paper p-3">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Identity check (from the documents)</p>
           {flagText && <p className="text-xs font-semibold text-signal">{flagText}</p>}
           <div className="grid gap-2 sm:grid-cols-3">

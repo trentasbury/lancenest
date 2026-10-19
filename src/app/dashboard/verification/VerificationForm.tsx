@@ -7,7 +7,7 @@ import { ID_TYPES } from './idTypes';
 const MAX_BYTES = 4 * 1024 * 1024;
 const EXT: Record<string, string> = { 'application/pdf': 'pdf', 'image/jpeg': 'jpg', 'image/png': 'png' };
 const ACCEPT = '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png';
-const FILE_INPUT = 'field file:mr-3 file:rounded-[3px] file:border-0 file:bg-navy file:px-3 file:py-1.5 file:text-sm file:text-ivory';
+const FILE_INPUT = 'field file:mr-3 file:rounded-lg file:border-0 file:bg-navy file:px-3 file:py-1.5 file:text-sm file:text-ivory';
 
 /** Uploads both files straight to private storage (no 4 MB request limit), then opens the review request. */
 export default function VerificationForm({ userId }: { userId: string }) {
@@ -71,9 +71,9 @@ export default function VerificationForm({ userId }: { userId: string }) {
         <p className="mt-1 text-sm text-muted">Two files: proof of service and a photo ID. A reviewer checks that they match, then deletes both.</p>
       </div>
 
-      {error && <p role="alert" className="rounded-[3px] border border-signal/30 bg-signal/5 px-3.5 py-2.5 text-sm text-signal">{error}</p>}
+      {error && <p role="alert" className="rounded-lg border border-signal/30 bg-signal/5 px-3.5 py-2.5 text-sm text-signal">{error}</p>}
 
-      <fieldset className="space-y-4 rounded-[4px] border border-line p-4">
+      <fieldset className="space-y-4 rounded-xl border border-line p-4">
         <legend className="px-1 text-sm font-semibold text-ink">1. Proof of service</legend>
         <div>
           <label htmlFor="doc_type" className="field-label">Document type</label>
@@ -92,7 +92,7 @@ export default function VerificationForm({ userId }: { userId: string }) {
         </div>
       </fieldset>
 
-      <fieldset className="space-y-4 rounded-[4px] border border-line p-4">
+      <fieldset className="space-y-4 rounded-xl border border-line p-4">
         <legend className="px-1 text-sm font-semibold text-ink">2. Photo ID</legend>
         <div>
           <label htmlFor="id_type" className="field-label">ID type</label>

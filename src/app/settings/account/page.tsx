@@ -71,7 +71,7 @@ export default async function AccountPage({ searchParams }: { searchParams: { er
             )}
             <form method="get" className="mt-3 flex gap-2"><input name="hq" defaultValue={searchParams.hq} placeholder="Search for a company (e.g. your current employer)" className="field" /><button className="btn btn-outline shrink-0">Search</button></form>
             {hq && <ul className="mt-2 space-y-1 text-sm">{(found ?? []).length === 0 ? <li className="text-muted">No companies on LanceNest match. If they join later, you can hide them then.</li> : (found ?? []).map((c) => (
-              <li key={c.id as string} className="flex items-center justify-between rounded-[3px] border border-line px-3 py-2"><span>{c.name as string}</span>{hiddenIds.has(c.id as string) ? <span className="text-xs text-olive">Hidden</span> : <form action={hideCompany.bind(null, c.id as string)}><button className="text-xs text-navy underline">Hide from this company</button></form>}</li>
+              <li key={c.id as string} className="flex items-center justify-between rounded-lg border border-line px-3 py-2"><span>{c.name as string}</span>{hiddenIds.has(c.id as string) ? <span className="text-xs text-olive">Hidden</span> : <form action={hideCompany.bind(null, c.id as string)}><button className="text-xs text-navy underline">Hide from this company</button></form>}</li>
             ))}</ul>}
           </section>
         );
@@ -92,7 +92,7 @@ export default async function AccountPage({ searchParams }: { searchParams: { er
         <h2 className="font-serif text-2xl font-semibold">Security</h2>
         <p className="mt-2 text-sm text-muted">We alert you when your account signs in from a new device. Sessions end after 30 minutes of inactivity.</p>
         {(devices ?? []).length > 0 && (
-          <ul className="mt-4 divide-y divide-line rounded-[4px] border border-line text-sm">
+          <ul className="mt-4 divide-y divide-line rounded-xl border border-line text-sm">
             {(devices ?? []).map((d, i) => (
               <li key={i} className="flex justify-between gap-3 px-4 py-2.5">
                 <span>{d.label as string}</span>
@@ -111,7 +111,7 @@ export default async function AccountPage({ searchParams }: { searchParams: { er
         {(strikes ?? []).length === 0 ? (
           <p className="mt-2 text-sm text-olive">✓ In good standing — no warnings or actions on your account.</p>
         ) : (
-          <ul className="mt-3 divide-y divide-line rounded-[4px] border border-line text-sm">
+          <ul className="mt-3 divide-y divide-line rounded-xl border border-line text-sm">
             {(strikes ?? []).map((st, i) => (
               <li key={i} className="px-4 py-3"><span className="font-semibold capitalize">{st.level as string}</span> · {new Date(st.created_at as string).toLocaleDateString('en-US', { dateStyle: 'medium' })}<p className="text-muted">{st.reason as string}</p></li>
             ))}

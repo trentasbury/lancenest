@@ -54,8 +54,8 @@ export function EnrollForm() {
         <li>Enter the 6-digit code the app shows.</li>
       </ol>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={setup.qr} alt="QR code for your authenticator app" className="mx-auto h-48 w-48 rounded-[4px] border border-line bg-white p-2" />
-      <p className="break-all rounded-[3px] bg-paper px-3 py-2 text-center font-mono text-xs text-muted">Setup key: {setup.secret}</p>
+      <img src={setup.qr} alt="QR code for your authenticator app" className="mx-auto h-48 w-48 rounded-xl border border-line bg-white p-2" />
+      <p className="break-all rounded-lg bg-paper px-3 py-2 text-center font-mono text-xs text-muted">Setup key: {setup.secret}</p>
       <CodeForm factorId={setup.factorId} label="6-digit code" />
     </div>
   );

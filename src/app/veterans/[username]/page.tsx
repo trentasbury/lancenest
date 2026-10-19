@@ -134,88 +134,104 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
 
   return (
     <>
-      <section className="bg-navy-deep text-ivory">
-        <div className="container-page flex flex-col gap-6 py-12 sm:flex-row sm:items-center">
-          {profile.avatar_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={profile.avatar_url} alt={profile.full_name} className="h-24 w-24 shrink-0 rounded-full border-2 border-brass object-cover" />
-          ) : (
-            <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full border-2 border-brass bg-navy font-serif text-3xl text-brass">
-              {initials(profile.full_name)}
-            </div>
-          )}
-          <div className="flex-1">
-            <h1 className="font-serif text-4xl font-medium text-ivory sm:text-5xl">{profile.full_name}<PlanBadge plan={vet.plan} />{mentorRow?.available && <span className="ml-1.5 inline-block rounded-full border border-olive bg-olive/20 px-2 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-[0.1em] text-ivory">Mentor</span>}</h1>
-            {profile.headline && <p className="mt-1 text-lg text-cream/85">{profile.headline}</p>}
-            <p className="mt-2 text-sm text-cream/70">
-              {[primary ? `${primary.branch}${primary.rank ? ` · ${primary.rank}` : ''}` : null, profile.location, vet.willing_to_relocate ? 'Open to relocation' : null]
-                .filter(Boolean)
-                .join(' · ')}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <VerificationBadge status={vet.verification_status} />
-              {clearance && vet.clearance_level !== 'none' && (isOwner || viewer?.profile?.role === 'employer' || viewer?.profile?.role === 'admin') && (
-                <span className="inline-flex items-center rounded-full border border-brass/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-brass">
-                  {clearance} clearance
-                </span>
+      <div className="container-page pt-6">
+        <section className="card overflow-hidden">
+          {/* LinkedIn-style header: cover band, overlapping photo, then name, headline and actions. */}
+          <div className="relative h-28 bg-gradient-to-r from-navy-deep via-navy to-navy-soft sm:h-40" aria-hidden="true">
+            <div className="absolute inset-0 opacity-[0.07] [background-image:radial-gradient(circle_at_1px_1px,#d9c9a8_1px,transparent_0)] [background-size:18px_18px]" />
+          </div>
+          <div className="px-5 pb-6 sm:px-8">
+            <div className="-mt-14 flex flex-col gap-4 sm:-mt-16 sm:flex-row sm:items-end sm:justify-between">
+              {profile.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={profile.avatar_url} alt={profile.full_name} className="h-28 w-28 shrink-0 rounded-full border-4 border-ivory object-cover shadow-md sm:h-36 sm:w-36" />
+              ) : (
+                <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full border-4 border-ivory bg-navy font-serif text-4xl text-brass shadow-md sm:h-36 sm:w-36">
+                  {initials(profile.full_name)}
+                </div>
               )}
-            </div>
-          </div>
-          <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
-            {isOwner ? (
-              <Link href="/dashboard/profile" className="btn btn-brass">Edit profile</Link>
-            ) : session ? (
-              <div className="flex gap-2">
-                <form action={(following ? unfollowUser : followUser).bind(null, profile.id)}>
-                  <SubmitButton className={following ? 'btn border border-brass text-brass hover:bg-brass/10' : 'btn btn-brass'} pendingText="…">{following ? 'Following ✓' : 'Follow'}</SubmitButton>
-                </form>
-                <form action={startConversation.bind(null, profile.id)}>
-                  <SubmitButton className="btn border border-cream/40 text-ivory hover:bg-white/10" pendingText="…">Message</SubmitButton>
-                </form>
+              <div className="flex flex-wrap items-center gap-2 sm:pb-1">
+                {isOwner ? (
+                  <Link href="/dashboard/profile" className="btn btn-primary">Edit profile</Link>
+                ) : session ? (
+                  <>
+                    <form action={(following ? unfollowUser : followUser).bind(null, profile.id)}>
+                      <SubmitButton className={following ? 'btn btn-outline' : 'btn btn-primary'} pendingText="…">{following ? 'Following ✓' : '+ Follow'}</SubmitButton>
+                    </form>
+                    <form action={startConversation.bind(null, profile.id)}>
+                      <SubmitButton className="btn btn-outline" pendingText="…">Message</SubmitButton>
+                    </form>
+                  </>
+                ) : (
+                  <Link href={`/login?next=/veterans/${profile.username}`} className="btn btn-primary">Log in to connect</Link>
+                )}
               </div>
-            ) : (
-              <Link href={`/login?next=/veterans/${profile.username}`} className="btn btn-brass">Log in to connect</Link>
-            )}
-            <p className="text-xs text-cream/70">{followers ?? 0} follower{followers === 1 ? '' : 's'}</p>
-            {viewer?.profile?.role === 'employer' && (
-              <details className="text-xs text-cream/70">
-                <summary className="cursor-pointer hover:text-ivory">Save to talent pool</summary>
-                <form action={saveToPool.bind(null, profile.id, `/veterans/${params.username}`)} className="mt-2 flex flex-col gap-2 text-ink">
-                  <input name="list" placeholder="List name (e.g. Q1 cyber hires)" className="field py-2 text-sm" />
-                  <textarea name="note" rows={2} maxLength={1000} placeholder="Private note (optional)" className="field py-2 text-sm" />
-                  <SubmitButton className="btn border border-brass py-1.5 text-xs text-brass" pendingText="Saving…">Save</SubmitButton>
-                </form>
-              </details>
-            )}
-            {session && !isOwner && (
-              <details className="text-xs text-cream/60">
-                <summary className="cursor-pointer hover:text-ivory">Report this member</summary>
-                <form action={reportContent.bind(null, 'profile', profile.id)} className="mt-2 flex flex-col gap-2 text-ink">
-                  <select name="reason" required defaultValue="" className="field py-2 text-sm">
-                    <option value="" disabled>Reason…</option>
-                    <option value="harassment">Harassment or unprofessional conduct</option><option value="impersonation">Impersonation or false service claims</option>
-                    <option value="fraud">Scam or fraud</option><option value="spam">Spam</option><option value="inappropriate">Inappropriate content</option><option value="sensitive_info">Shares SSN, personal info, or OPSEC-sensitive details</option><option value="other">Other</option>
-                  </select>
-                  <textarea name="details" rows={2} maxLength={1000} placeholder="What happened? (optional)" className="field py-2 text-sm" />
-                  <SubmitButton className="btn btn-outline border-cream/40 py-1.5 text-xs text-ivory" pendingText="Sending…">Send report</SubmitButton>
-                </form>
-              </details>
+            </div>
+
+            <div className="mt-4">
+              <h1 className="font-sans text-2xl font-bold tracking-tight text-ink sm:text-3xl">{profile.full_name}<PlanBadge plan={vet.plan} />{mentorRow?.available && <span className="ml-1.5 inline-block rounded-full border border-olive bg-olive/10 px-2 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-[0.1em] text-olive">Mentor</span>}</h1>
+              {profile.headline && <p className="mt-1 text-base text-ink/85 sm:text-lg">{profile.headline}</p>}
+              <p className="mt-1.5 text-sm text-muted">
+                {[primary ? `${primary.branch}${primary.rank ? ` · ${primary.rank}` : ''}` : null, profile.location, vet.willing_to_relocate ? 'Open to relocation' : null]
+                  .filter(Boolean)
+                  .join(' · ')}
+                <span className="mx-1.5">·</span>
+                <span className="font-medium text-navy">{followers ?? 0} follower{followers === 1 ? '' : 's'}</span>
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <VerificationBadge status={vet.verification_status} />
+                {clearance && vet.clearance_level !== 'none' && (isOwner || viewer?.profile?.role === 'employer' || viewer?.profile?.role === 'admin') && (
+                  <span className="inline-flex items-center rounded-full border border-brass/60 bg-brass/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-brass-dark">
+                    {clearance} clearance
+                  </span>
+                )}
+              </div>
+              {isOwner && <p className="mt-3 text-xs text-muted">This is how employers and members see your profile.</p>}
+            </div>
+
+            {(viewer?.profile?.role === 'employer' || (session && !isOwner)) && (
+              <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-line/80 pt-3">
+                {viewer?.profile?.role === 'employer' && (
+                  <details className="text-sm text-muted">
+                    <summary className="cursor-pointer font-medium text-navy hover:underline">Save to talent pool</summary>
+                    <form action={saveToPool.bind(null, profile.id, `/veterans/${params.username}`)} className="mt-2 flex w-72 max-w-full flex-col gap-2 text-ink">
+                      <input name="list" placeholder="List name (e.g. Q1 cyber hires)" className="field py-2 text-sm" />
+                      <textarea name="note" rows={2} maxLength={1000} placeholder="Private note (optional)" className="field py-2 text-sm" />
+                      <SubmitButton className="btn btn-outline py-1.5 text-xs" pendingText="Saving…">Save</SubmitButton>
+                    </form>
+                  </details>
+                )}
+                {session && !isOwner && (
+                  <details className="text-sm text-muted">
+                    <summary className="cursor-pointer hover:text-ink">Report this member</summary>
+                    <form action={reportContent.bind(null, 'profile', profile.id)} className="mt-2 flex w-72 max-w-full flex-col gap-2 text-ink">
+                      <select name="reason" required defaultValue="" className="field py-2 text-sm">
+                        <option value="" disabled>Reason…</option>
+                        <option value="harassment">Harassment or unprofessional conduct</option><option value="impersonation">Impersonation or false service claims</option>
+                        <option value="fraud">Scam or fraud</option><option value="spam">Spam</option><option value="inappropriate">Inappropriate content</option><option value="sensitive_info">Shares SSN, personal info, or OPSEC-sensitive details</option><option value="other">Other</option>
+                      </select>
+                      <textarea name="details" rows={2} maxLength={1000} placeholder="What happened? (optional)" className="field py-2 text-sm" />
+                      <SubmitButton className="btn btn-outline py-1.5 text-xs" pendingText="Sending…">Send report</SubmitButton>
+                    </form>
+                  </details>
+                )}
+              </div>
             )}
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
-      <div className="container-page grid gap-8 py-10 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-8">
+      <div className="container-page grid gap-6 py-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0 space-y-4">
           {vet.about && (
             <section className="card p-7">
-              <h2 className="eyebrow">About</h2>
+              <h2 className="font-sans text-lg font-semibold text-ink">About</h2>
               <p className="mt-3 whitespace-pre-line text-[16px] leading-relaxed text-ink/90">{vet.about}</p>
             </section>
           )}
 
           <section className="card p-7">
-            <h2 className="eyebrow">Military career</h2>
+            <h2 className="font-sans text-lg font-semibold text-ink">Military career</h2>
             {services.length === 0 ? (
               <p className="mt-3 text-sm text-muted">No service history added yet.</p>
             ) : (
@@ -246,7 +262,7 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
             <section className="card border-brass/40 p-7">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h2 className="eyebrow">Available for freelance</h2>
+                  <h2 className="font-sans text-lg font-semibold text-ink">Available for freelance</h2>
                   <p className="mt-2 font-serif text-2xl text-navy">{freelance.title as string}</p>
                 </div>
                 {freelance.hourly_rate && <p className="font-serif text-2xl">${freelance.hourly_rate as number}/hr</p>}
@@ -265,7 +281,7 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
               {(portfolio ?? []).length > 0 && (
                 <ul className="mt-5 grid gap-3 sm:grid-cols-2">
                   {(portfolio ?? []).map((it) => (
-                    <li key={it.id as string} className="rounded-[4px] border border-line p-4">
+                    <li key={it.id as string} className="rounded-xl border border-line p-4">
                       <p className="font-medium">{it.title as string}</p>
                       {it.description && <p className="mt-1 text-sm text-muted">{it.description as string}</p>}
                       {it.url && <a href={it.url as string} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-xs text-navy underline">View work ↗</a>}
@@ -279,7 +295,7 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
           {((verifiedWork ?? []) as unknown[]).length > 0 && (
             <section className="card p-7">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="eyebrow">Verified work</h2>
+                <h2 className="font-sans text-lg font-semibold text-ink">Verified work</h2>
                 <span className="rounded-full border border-olive/40 bg-olive/10 px-3 py-1 text-[11px] font-semibold text-olive">✓ Completed and paid through LanceNest</span>
               </div>
               <ul className="mt-4 divide-y divide-line">
@@ -299,10 +315,10 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
 
           {(offered ?? []).length > 0 && (
             <section className="card p-7">
-              <h2 className="eyebrow">Services</h2>
+              <h2 className="font-sans text-lg font-semibold text-ink">Services</h2>
               <ul className="mt-4 grid gap-3 sm:grid-cols-2">
                 {(offered ?? []).map((sv) => (
-                  <li key={sv.id as string}><Link href={`/freelance/services/${sv.id}`} className="block rounded-[4px] border border-line p-4 hover:border-brass">
+                  <li key={sv.id as string}><Link href={`/freelance/services/${sv.id}`} className="block rounded-xl border border-line p-4 hover:border-brass">
                     <p className="font-medium text-navy">{sv.title as string}</p>
                     <p className="text-xs text-muted">{sv.category as string} · {DELIVERY_LABEL[sv.delivery as string]}{sv.service_area ? ` · ${sv.service_area}` : ''}</p>
                     <p className="mt-1 text-sm font-semibold">${((sv.price_cents as number) / 100).toLocaleString()}{PRICE_LABEL[sv.price_type as string]} <span className="font-normal text-olive">· Hire →</span></p>
@@ -314,10 +330,10 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
 
           {(((recs ?? []) as unknown as RecRow[]).length > 0 || ((myPendingRecs ?? []) as unknown[]).length > 0 || (viewer?.profile && ['veteran', 'admin'].includes(viewer.profile.role) && viewer.user.id !== profile.id && !wroteOne)) && (
             <section id="recommendations" className="card scroll-mt-24 p-7">
-              <h2 className="eyebrow">Recommendations from fellow service members</h2>
+              <h2 className="font-sans text-lg font-semibold text-ink">Recommendations from fellow service members</h2>
               {searchParams.rec && <p className={`mt-2 text-sm ${searchParams.rec === 'sent' ? 'text-olive' : 'text-signal'}`}>{({ sent: 'Sent — it appears once they accept it.', short: 'Add how you know them and at least a couple of sentences.', exists: 'You’ve already recommended this member.', error: 'That didn’t send — please try again.' } as Record<string, string>)[searchParams.rec] ?? ''}</p>}
               {((myPendingRecs ?? []) as unknown as RecRow[]).map((r) => (
-                <div key={r.id} className="mt-4 rounded-[4px] border border-brass bg-brass/10 p-4 text-sm">
+                <div key={r.id} className="mt-4 rounded-xl border border-brass bg-brass/10 p-4 text-sm">
                   <p><strong>{r.author?.full_name}</strong> · {r.relationship}</p><p className="mt-1 italic">“{r.body}”</p>
                   <div className="mt-3 flex gap-2">
                     <form action={decideRecommendation.bind(null, r.id, 'accepted', params.username)}><SubmitButton className="btn btn-primary py-1.5 text-xs" pendingText="…">Show on my profile</SubmitButton></form>
@@ -347,7 +363,7 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
 
           <section id="posts" className="scroll-mt-24 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="eyebrow">Posts & milestones</h2>
+              <h2 className="font-sans text-lg font-semibold text-ink">Posts & milestones</h2>
               {isOwner && <Link href="/network" className="text-sm text-navy underline decoration-brass underline-offset-4">Share an update →</Link>}
             </div>
             {posts.length === 0 ? (
@@ -359,7 +375,7 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
 
           {(experience ?? []).length > 0 && (
             <section className="card p-7">
-              <h2 className="eyebrow">Professional career</h2>
+              <h2 className="font-sans text-lg font-semibold text-ink">Professional career</h2>
               <ul className="mt-4 space-y-5">
                 {(experience ?? []).map((e: { id: string; company: string; position: string; start_date: string | null; end_date: string | null; description: string | null }) => (
                   <li key={e.id}>
@@ -374,7 +390,7 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
 
           {(education ?? []).length > 0 && (
             <section className="card p-7">
-              <h2 className="eyebrow">Education</h2>
+              <h2 className="font-sans text-lg font-semibold text-ink">Education</h2>
               <ul className="mt-4 space-y-3">
                 {(education ?? []).map((e: { id: string; school: string; degree: string | null; field: string | null; graduation_year: number | null }) => (
                   <li key={e.id}>
@@ -387,17 +403,17 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
           )}
         </div>
 
-        <aside className="space-y-6">
+        <aside className="space-y-4">
           {translated.length > 0 && (
             <div className="card border-brass/40 p-6">
-              <p className="eyebrow">Civilian roles this service translates to</p>
+              <h2 className="font-sans text-base font-semibold text-ink">Civilian roles this service translates to</h2>
               <div className="mt-4 flex flex-wrap gap-2">
                 {translated.map((c) => <span key={c} className="pill border-brass/40 bg-brass/10">{c}</span>)}
               </div>
             </div>
           )}
           <div className="card p-6">
-            <p className="eyebrow">Skills</p>
+            <h2 className="font-sans text-base font-semibold text-ink">Skills</h2>
             <div className="mt-4 flex flex-wrap gap-2">
               {skills.length === 0 ? <p className="text-sm text-muted">No skills listed yet.</p> : skills.map((s) => <span key={s} className="pill">{s}</span>)}
             </div>

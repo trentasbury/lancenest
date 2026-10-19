@@ -51,13 +51,13 @@ export default async function ContractPage({ params, searchParams }: { params: {
       {searchParams.error && <FormMessage error={ERR[searchParams.error] ?? 'Something went wrong — please try again.'} />}
       {searchParams.hired && <FormMessage message="Contract created. Fund the first milestone so work can begin — the payment is held until you approve." />}
       {searchParams.released && <FormMessage message="Payment released to the freelancer. Thank you!" />}
-      <div className="rounded-[4px] border border-olive/30 bg-olive/5 p-4 text-sm text-ink/85">
+      <div className="rounded-xl border border-olive/30 bg-olive/5 p-4 text-sm text-ink/85">
         <strong className="text-olive">Protected Payments.</strong> <a href="/payments-protection" className="text-navy underline">How it works</a> · The client funds each milestone before work starts. LanceNest holds the money and releases it when the client approves — or automatically 14 days after the work is submitted. Either side can open a dispute and LanceNest will decide.
       </div>
 
       {contract.request_note && <div className="card p-5 text-sm"><p className="eyebrow">Request details</p><p className="mt-2 whitespace-pre-line">{contract.request_note}</p></div>}
       {isFreelancer && contract.status === 'active' && ms.every((m) => ['pending', 'cancelled'].includes(m.status)) && (
-        <form action={declineContract.bind(null, contract.id)} className="flex items-center justify-between gap-3 rounded-[4px] border border-line bg-paper p-4 text-sm">
+        <form action={declineContract.bind(null, contract.id)} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper p-4 text-sm">
           <span>Not a fit? You can decline before the client funds it — nothing is charged.</span>
           <SubmitButton className="btn btn-ghost border border-line py-1.5 text-xs" pendingText="…">Decline request</SubmitButton>
         </form>
@@ -73,8 +73,8 @@ export default async function ContractPage({ params, searchParams }: { params: {
                 <div className="text-right"><p className="font-serif text-2xl text-navy">{usd(m.amount_cents)}</p>
                   {isFreelancer && <p className="text-xs text-muted">You receive {usd(Math.round(m.amount_cents * keep))}</p>}</div>
               </div>
-              {m.change_request && m.status === 'funded' && <p className="rounded-[3px] bg-brass/10 p-3 text-sm"><strong>Changes requested:</strong> {m.change_request}</p>}
-              {m.submission_note && ['submitted', 'released', 'disputed'].includes(m.status) && <p className="rounded-[3px] bg-paper p-3 text-sm"><strong>Delivery note:</strong> {m.submission_note}</p>}
+              {m.change_request && m.status === 'funded' && <p className="rounded-lg bg-brass/10 p-3 text-sm"><strong>Changes requested:</strong> {m.change_request}</p>}
+              {m.submission_note && ['submitted', 'released', 'disputed'].includes(m.status) && <p className="rounded-lg bg-paper p-3 text-sm"><strong>Delivery note:</strong> {m.submission_note}</p>}
               {m.status === 'submitted' && m.auto_release_at && <p className="text-xs text-muted">Releases automatically on {new Date(m.auto_release_at).toLocaleDateString('en-US', { dateStyle: 'medium' })} unless the client acts.</p>}
               {m.status === 'disputed' && <p className="text-sm text-signal">Dispute: {m.dispute_reason}</p>}
 

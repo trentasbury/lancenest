@@ -3,8 +3,9 @@
 @tailwind utilities;
 
 @layer base {
-  html { scroll-behavior: smooth; }
-  body { @apply bg-paper text-ink font-sans antialiased; }
+  html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body { @apply bg-paper text-ink font-sans antialiased; text-rendering: optimizeLegibility; }
   h1, h2, h3, h4 { @apply font-serif text-ink; }
   ::selection { background: #d9c9a8; color: #071821; }
 }
@@ -12,23 +13,30 @@
 @layer components {
   .container-page { @apply mx-auto w-full max-w-7xl px-5 sm:px-8 xl:px-10 2xl:max-w-[1440px]; }
   .eyebrow { @apply font-sans text-[11px] font-semibold uppercase tracking-eyebrow text-brass-dark; }
+  /* Pill buttons with a soft press, like LinkedIn and Contra. */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-[3px] px-5 py-3 font-sans text-sm font-medium
-      transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-brass
-      focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex select-none items-center justify-center gap-2 rounded-full px-5 py-2.5 font-sans text-sm font-semibold
+      transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-out
+      focus:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2
+      active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100;
   }
-  .btn-primary { @apply bg-navy text-ivory hover:bg-navy-deep; }
-  .btn-brass { @apply bg-brass text-navy-deep hover:bg-brass-light; }
-  .btn-outline { @apply border border-navy text-navy hover:bg-navy hover:text-ivory; }
-  .btn-ghost { @apply text-navy hover:text-brass-dark; }
-  .card { @apply rounded-[4px] border border-line bg-ivory shadow-card; }
+  .btn-primary { @apply bg-navy text-ivory shadow-sm hover:bg-navy-deep hover:shadow-md; }
+  .btn-brass { @apply bg-brass text-navy-deep shadow-sm hover:bg-brass-light hover:shadow-md; }
+  .btn-outline { @apply border border-navy/70 bg-transparent text-navy hover:border-navy hover:bg-navy/[0.06]; }
+  .btn-ghost { @apply text-navy hover:bg-navy/[0.06] hover:text-navy; }
+  .card { @apply rounded-2xl border border-line/80 bg-ivory shadow-card; }
+  /* Cards that are links: a gentle lift on hover. */
+  .card-hover { @apply transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-brass/50 hover:shadow-lift-soft; }
   .field-label { @apply mb-1.5 block font-sans text-xs font-semibold uppercase tracking-[0.12em] text-muted; }
   .field {
-    @apply w-full rounded-[3px] border border-line bg-white px-3.5 py-2.5 font-sans text-[15px] text-ink
-      placeholder:text-muted/70 focus:border-brass focus:outline-none focus:ring-2 focus:ring-brass/25;
+    @apply w-full rounded-xl border border-line bg-white px-3.5 py-2.5 font-sans text-[15px] text-ink transition-[border-color,box-shadow]
+      duration-150 placeholder:text-muted/70 hover:border-muted/40 focus:border-brass focus:outline-none focus:ring-4 focus:ring-brass/15;
   }
   .pill { @apply inline-flex items-center rounded-full border border-line bg-paper px-3 py-1 font-sans text-xs text-ink; }
-  .skeleton { @apply animate-pulse rounded-[3px] bg-line/60; }
+  .skeleton { @apply animate-pulse rounded-lg bg-line/60; }
+  /* Page content eases in on every navigation (see app/template.tsx); off for reduced motion. */
+  .page-enter { animation: page-enter 220ms ease-out both; }
+  @media (prefers-reduced-motion: reduce) { .page-enter { animation: none; } }
 }
 
 /* Menu variants on pre-built pages. <html data-nav> is set before first paint from the menu hint
@@ -38,6 +46,8 @@ html[data-nav='out'] .nav-in { display: none !important; }
 html[data-nav]:not([data-nav='out']) .nav-out { display: none !important; }
 html:not([data-nav='employer']) .nav-employer { display: none !important; }
 html[data-nav='employer'] .nav-not-employer { display: none !important; }
+
+@keyframes page-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 @media print {
   header, footer, nav, .print\:hidden { display: none !important; }

@@ -60,13 +60,13 @@ export default async function ThreadPage({ params, searchParams }: { params: { i
         </div>
         {other && (
           <details className="relative">
-            <summary className="cursor-pointer list-none rounded-[3px] px-2 py-1 text-lg text-muted hover:bg-cream" aria-label="Conversation options">⋯</summary>
-            <div className="absolute right-0 z-20 mt-1 w-64 space-y-1 rounded-[4px] border border-line bg-ivory p-2 text-sm shadow-card">
+            <summary className="cursor-pointer list-none rounded-lg px-2 py-1 text-lg text-muted hover:bg-cream" aria-label="Conversation options">⋯</summary>
+            <div className="absolute right-0 z-20 mt-1 w-64 space-y-1 rounded-xl border border-line bg-ivory p-2 text-sm shadow-card">
               <form action={blockUser.bind(null, other.profile_id)}>
-                <button type="submit" className="w-full rounded-[3px] px-3 py-2 text-left hover:bg-cream">Block {other.profile?.full_name?.split(' ')[0]}</button>
+                <button type="submit" className="w-full rounded-lg px-3 py-2 text-left hover:bg-cream">Block {other.profile?.full_name?.split(' ')[0]}</button>
               </form>
               <details>
-                <summary className="cursor-pointer rounded-[3px] px-3 py-2 text-signal hover:bg-signal/5">Report this member</summary>
+                <summary className="cursor-pointer rounded-lg px-3 py-2 text-signal hover:bg-signal/5">Report this member</summary>
                 <form action={reportContent.bind(null, 'profile', other.profile_id)} className="space-y-2 p-2">
                   <select name="reason" required defaultValue="" className="field text-sm">
                     <option value="" disabled>Reason…</option>
@@ -87,11 +87,11 @@ export default async function ThreadPage({ params, searchParams }: { params: { i
           const mine = m.sender_id === user.id;
           return (
             <li key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] rounded-[6px] px-4 py-2.5 ${mine ? 'bg-navy text-ivory' : 'border border-line bg-ivory text-ink'}`}>
+              <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${mine ? 'bg-navy text-ivory' : 'border border-line bg-ivory text-ink'}`}>
                 <p className="whitespace-pre-line text-[15px] leading-relaxed">{m.body}</p>
                 <p className={`mt-1 text-[11px] ${mine ? 'text-cream/60' : 'text-muted'}`}>{timeAgo(m.created_at)}</p>
                 {!mine && scamSignals(m.body).length > 0 && (
-                  <p className="mt-2 rounded-[3px] border border-signal/30 bg-signal/5 px-2.5 py-1.5 text-xs text-signal">
+                  <p className="mt-2 rounded-lg border border-signal/30 bg-signal/5 px-2.5 py-1.5 text-xs text-signal">
                     ⚠ Be careful — this message {scamSignals(m.body).join(', ')}. Real LanceNest employers never ask for fees, gift cards, bank details, or your SSN in chat. Use ⋯ to report.
                   </p>
                 )}
@@ -102,7 +102,7 @@ export default async function ThreadPage({ params, searchParams }: { params: { i
       </ul>
 
       {conv?.status === 'request' && conv.requested_by !== user.id && (
-        <div className="mb-3 rounded-[4px] border border-brass bg-brass/10 p-4 text-sm">
+        <div className="mb-3 rounded-xl border border-brass bg-brass/10 p-4 text-sm">
           <p className="font-medium">{other?.profile?.full_name ?? 'This member'} sent you a message request.</p>
           <p className="mt-1 text-muted">Accept to keep talking, or decline — they won’t be able to send more. You can also block or report them from the menu.</p>
           <div className="mt-3 flex gap-2">
@@ -112,11 +112,11 @@ export default async function ThreadPage({ params, searchParams }: { params: { i
         </div>
       )}
       {conv?.status === 'request' && conv.requested_by === user.id && (
-        <p className="mb-3 rounded-[4px] border border-line bg-paper p-3 text-sm text-muted">Message request sent. You can send more once {other?.profile?.full_name ?? 'they'} accepts or replies — or once you follow each other.</p>
+        <p className="mb-3 rounded-xl border border-line bg-paper p-3 text-sm text-muted">Message request sent. You can send more once {other?.profile?.full_name ?? 'they'} accepts or replies — or once you follow each other.</p>
       )}
-      {conv?.status === 'declined' && conv.requested_by === user.id && <p className="mb-3 rounded-[4px] border border-line bg-paper p-3 text-sm text-muted">This message request wasn’t accepted.</p>}
+      {conv?.status === 'declined' && conv.requested_by === user.id && <p className="mb-3 rounded-xl border border-line bg-paper p-3 text-sm text-muted">This message request wasn’t accepted.</p>}
       {searchParams.error && <div className="mb-3"><FormMessage error={searchParams.error === 'pending' ? 'Your message request is waiting for a reply — you can send more once they accept.' : searchParams.error === 'declined' ? 'This message request wasn’t accepted.' : searchParams.error === 'blocked' ? 'This conversation is closed because one of you has blocked the other.' : searchParams.error === 'rate' ? 'You’re sending messages very quickly. Please wait a few minutes.' : searchParams.error === 'pii' ? 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' : 'Your message didn’t send. Please try again.'} /></div>}
-      {!(conv?.requested_by === user.id && ((conv?.status === 'request' && mySent > 0) || conv?.status === 'declined')) && <form action={sendMessage.bind(null, params.id)} className="sticky bottom-4 flex gap-2 rounded-[6px] border border-line bg-ivory p-2 shadow-card">
+      {!(conv?.requested_by === user.id && ((conv?.status === 'request' && mySent > 0) || conv?.status === 'declined')) && <form action={sendMessage.bind(null, params.id)} className="sticky bottom-4 flex gap-2 rounded-2xl border border-line bg-ivory p-2 shadow-card">
         <label htmlFor="msg" className="sr-only">Message</label>
         <textarea id="msg" name="body" required rows={2} maxLength={4000} defaultValue={searchParams.draft} placeholder="Write a message…" className="field resize-none border-0 focus:ring-0" />
         <SubmitButton className="btn btn-primary shrink-0 self-end" pendingText="Sending…">Send</SubmitButton>

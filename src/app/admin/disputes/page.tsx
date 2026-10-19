@@ -30,8 +30,8 @@ export default async function DisputesPage({ searchParams }: { searchParams: { d
               <div><p className="font-serif text-2xl">{m.contract.title} — {m.title}</p><p className="text-sm text-muted">Client: {m.contract.client?.full_name} · Freelancer: {m.contract.freelancer?.full_name}</p></div>
               <p className="font-serif text-2xl text-navy">${(m.amount_cents / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
             </div>
-            <p className="rounded-[3px] bg-signal/5 p-3 text-sm"><strong>Dispute:</strong> {m.dispute_reason}</p>
-            {m.submission_note && <p className="rounded-[3px] bg-paper p-3 text-sm"><strong>Freelancer’s delivery note:</strong> {m.submission_note}</p>}
+            <p className="rounded-lg bg-signal/5 p-3 text-sm"><strong>Dispute:</strong> {m.dispute_reason}</p>
+            {m.submission_note && <p className="rounded-lg bg-paper p-3 text-sm"><strong>Freelancer’s delivery note:</strong> {m.submission_note}</p>}
             <Link href={`/freelance/contracts/${m.contract.id}`} className="text-sm text-navy underline">Open the contract</Link>
             <div className="flex flex-col gap-2 border-t border-line pt-4 sm:flex-row">
               <form action={resolveDispute.bind(null, m.id, 'release')} className="flex flex-1 gap-2"><input name="note" placeholder="Decision note (logged)" className="field py-2 text-sm" /><SubmitButton className="btn btn-primary shrink-0" pendingText="…">Pay freelancer</SubmitButton></form>

@@ -46,7 +46,7 @@ function Body({ post }: { post: Post }) {
     <>
       {isMilestone && (
         <div className="mt-4 border-l-2 border-brass pl-4">
-          <p className="font-serif text-2xl leading-snug text-navy">{post.headline}</p>
+          <p className="font-sans text-lg font-semibold leading-snug text-navy">{post.headline}</p>
           {post.event_date && (
             <p className="mt-1 text-xs text-muted">{new Date(`${post.event_date}T12:00:00`).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
           )}
@@ -54,7 +54,7 @@ function Body({ post }: { post: Post }) {
       )}
       {post.body && <p className="mt-4 whitespace-pre-line text-[15px] leading-relaxed text-ink/90">{post.body}</p>}
       {post.media.length > 0 && (
-        <div className={`mt-4 grid gap-1.5 overflow-hidden rounded-[4px] ${post.media.length > 1 ? 'grid-cols-2' : ''}`}>
+        <div className={`mt-4 grid gap-1.5 overflow-hidden rounded-xl ${post.media.length > 1 ? 'grid-cols-2' : ''}`}>
           {post.media.map((m) => (
             // eslint-disable-next-line @next/next/no-img-element
             <img key={m.storage_path} src={mediaUrl(m.storage_path)} alt="" loading="lazy" className="max-h-[520px] w-full bg-cream object-cover" />
@@ -84,12 +84,12 @@ export default function PostCard({ post, signedIn, detail = false }: { post: Pos
           <AuthorLine post={post} />
           {signedIn && v && (
             <details className="relative" data-autoclose>
-              <summary className="cursor-pointer list-none rounded-[3px] px-2 py-1 text-lg leading-none text-muted hover:bg-cream" aria-label="More options">⋯</summary>
-              <div className="absolute right-0 z-20 mt-1 w-72 space-y-1 rounded-[4px] border border-line bg-ivory p-2 text-sm shadow-card">
+              <summary className="cursor-pointer list-none rounded-lg px-2 py-1 text-lg leading-none text-muted hover:bg-cream" aria-label="More options">⋯</summary>
+              <div className="absolute right-0 z-20 mt-1 w-72 space-y-1 rounded-xl border border-line bg-ivory p-2 text-sm shadow-card">
                 {v.isAuthor ? (
                   <>
                     <details>
-                      <summary className="cursor-pointer rounded-[3px] px-3 py-2 hover:bg-cream">Edit post</summary>
+                      <summary className="cursor-pointer rounded-lg px-3 py-2 hover:bg-cream">Edit post</summary>
                       <form action={updatePost.bind(null, post.id)} className="space-y-2 p-2">
                         <textarea name="body" defaultValue={post.body} rows={4} maxLength={3000} className="field text-sm" />
                         <select name="visibility" defaultValue={post.visibility} className="field text-sm">
@@ -100,24 +100,24 @@ export default function PostCard({ post, signedIn, detail = false }: { post: Pos
                     </details>
                     <form action={deletePost.bind(null, post.id)}>
                       <input type="hidden" name="redirect" value={detail ? 'feed' : ''} />
-                      <button type="submit" className="w-full rounded-[3px] px-3 py-2 text-left text-signal hover:bg-signal/5">Delete post</button>
+                      <button type="submit" className="w-full rounded-lg px-3 py-2 text-left text-signal hover:bg-signal/5">Delete post</button>
                     </form>
                   </>
                 ) : (
                   <>
                     <form action={(v.followsAuthor ? unfollowUser : followUser).bind(null, post.author_id)}>
-                      <button type="submit" className="w-full rounded-[3px] px-3 py-2 text-left hover:bg-cream">
+                      <button type="submit" className="w-full rounded-lg px-3 py-2 text-left hover:bg-cream">
                         {v.followsAuthor ? 'Unfollow' : 'Follow'} {post.author?.full_name?.split(' ')[0] ?? 'member'}
                       </button>
                     </form>
                     <form action={muteUser.bind(null, post.author_id)}>
-                      <button type="submit" className="w-full rounded-[3px] px-3 py-2 text-left hover:bg-cream">Mute (hide their posts)</button>
+                      <button type="submit" className="w-full rounded-lg px-3 py-2 text-left hover:bg-cream">Mute (hide their posts)</button>
                     </form>
                     <form action={blockUser.bind(null, post.author_id)}>
-                      <button type="submit" className="w-full rounded-[3px] px-3 py-2 text-left hover:bg-cream">Block</button>
+                      <button type="submit" className="w-full rounded-lg px-3 py-2 text-left hover:bg-cream">Block</button>
                     </form>
                     <details>
-                      <summary className="cursor-pointer rounded-[3px] px-3 py-2 text-signal hover:bg-signal/5">Report post</summary>
+                      <summary className="cursor-pointer rounded-lg px-3 py-2 text-signal hover:bg-signal/5">Report post</summary>
                       <form action={reportContent.bind(null, 'post', post.id)} className="space-y-2 p-2">
                         <select name="reason" required defaultValue="" className="field text-sm">
                           <option value="" disabled>Choose a reason…</option>
@@ -137,7 +137,7 @@ export default function PostCard({ post, signedIn, detail = false }: { post: Pos
         <Body post={post} />
 
         {post.is_share && (
-          <div className="mt-4 rounded-[4px] border border-line bg-paper p-4">
+          <div className="mt-4 rounded-xl border border-line bg-paper p-4">
             {post.shared ? (
               <>
                 <AuthorLine post={post.shared} compact />
@@ -159,11 +159,11 @@ export default function PostCard({ post, signedIn, detail = false }: { post: Pos
         {signedIn && (
           <div className="mt-3 flex flex-wrap items-center gap-1 border-t border-line pt-3 text-sm">
             <ReactionPicker postId={post.id} initial={v?.reaction ?? null} reactions={REACTIONS.map(([k, l, g]) => [k, l, g] as [string, string, string])} />
-            <Link href={`/network/${post.id}#comments`} className="rounded-[3px] px-3 py-2 text-ink hover:bg-cream">Comment</Link>
+            <Link href={`/network/${post.id}#comments`} className="rounded-lg px-3 py-2 text-ink hover:bg-cream">Comment</Link>
             {canShare && (
               <details className="relative" data-autoclose>
-                <summary className="cursor-pointer list-none rounded-[3px] px-3 py-2 text-ink hover:bg-cream">Share</summary>
-                <form action={sharePost.bind(null, post.id)} className="absolute bottom-full left-0 z-20 mb-1 w-72 space-y-2 rounded-[4px] border border-line bg-ivory p-3 shadow-card">
+                <summary className="cursor-pointer list-none rounded-lg px-3 py-2 text-ink hover:bg-cream">Share</summary>
+                <form action={sharePost.bind(null, post.id)} className="absolute bottom-full left-0 z-20 mb-1 w-72 space-y-2 rounded-xl border border-line bg-ivory p-3 shadow-card">
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Share to your network</p>
                   <textarea name="body" rows={2} maxLength={3000} placeholder="Add a note (optional)" className="field text-sm" />
                   <select name="visibility" defaultValue="network" className="field text-sm">
@@ -174,7 +174,7 @@ export default function PostCard({ post, signedIn, detail = false }: { post: Pos
               </details>
             )}
             <form action={toggleSavePost.bind(null, post.id)} className="ml-auto">
-              <button type="submit" className={`rounded-[3px] px-3 py-2 hover:bg-cream ${v?.saved ? 'font-semibold text-brass-dark' : 'text-ink'}`}>
+              <button type="submit" className={`rounded-lg px-3 py-2 hover:bg-cream ${v?.saved ? 'font-semibold text-brass-dark' : 'text-ink'}`}>
                 {v?.saved ? '★ Saved' : '☆ Save'}
               </button>
             </form>

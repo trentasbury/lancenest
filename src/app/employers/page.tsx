@@ -44,7 +44,7 @@ export default async function EmployersPage() {
           </p>
           <p className="mx-auto mt-6 inline-block rounded-full border border-brass bg-brass/15 px-5 py-2 text-sm font-semibold text-brass">No placement fees on hires you make yourself — ever.</p>
           {spotsLeft > 0 && (
-            <div className="mx-auto mt-5 max-w-2xl rounded-[6px] border border-brass/60 bg-navy/60 p-4 text-sm text-cream">
+            <div className="mx-auto mt-5 max-w-2xl rounded-2xl border border-brass/60 bg-navy/60 p-4 text-sm text-cream">
               <strong className="text-brass">Founding Employer offer · {spotsLeft} of 50 spots left.</strong> Professional for <strong>$1,490 your first year</strong> (save $1,000), or Federal for <strong>$7,500 your first year</strong> (regularly $11,988). Paid up front, launch pricing locked in.
             </div>
           )}
@@ -52,7 +52,7 @@ export default async function EmployersPage() {
             <Link href="/signup?role=employer" className="btn btn-brass" data-track="cta_employer_post_free">Post a job free</Link>
             <Link href="/contact-sales?plan=federal" className="btn border border-cream/40 text-cream hover:border-brass" data-track="cta_employer_book_call">Book a call</Link>
           </div>
-          <p className="mx-auto mt-4 max-w-2xl rounded-[4px] border border-brass/40 bg-white/5 px-4 py-3 text-sm text-cream/90">
+          <p className="mx-auto mt-4 max-w-2xl rounded-xl border border-brass/40 bg-white/5 px-4 py-3 text-sm text-cream/90">
             <strong className="text-brass">Any company can hire here.</strong> You don’t need to be veteran-owned or have served — if you want to hire
             service members, you belong on LanceNest. We simply verify that your company is real to keep veterans safe.
           </p>
@@ -68,7 +68,7 @@ export default async function EmployersPage() {
               <p className="mt-4 font-serif text-5xl font-medium text-navy">{plan.price}</p>
               <p className="text-sm text-muted">{plan.note}</p>
               {plan.name === 'Professional' && founding > 0 && (
-                <p className="mt-3 rounded-[3px] border border-brass bg-brass/10 px-3 py-2 text-xs font-semibold text-brass-dark">
+                <p className="mt-3 rounded-lg border border-brass bg-brass/10 px-3 py-2 text-xs font-semibold text-brass-dark">
                   Founding Employer: $149/mo for your first 12 months ($1,490 first year on annual) · {founding} of 50 spots left
                 </p>
               )}
@@ -99,7 +99,7 @@ export default async function EmployersPage() {
           ))}
         </div>
 
-          <div className="mt-12 overflow-x-auto rounded-[6px] border border-line bg-ivory" tabIndex={0} role="region" aria-label="Plan comparison">
+          <div className="mt-12 overflow-x-auto rounded-2xl border border-line bg-ivory" tabIndex={0} role="region" aria-label="Plan comparison">
             <table className="w-full min-w-[640px] text-left text-sm">
               <thead className="border-b border-line bg-paper text-xs uppercase tracking-[0.12em] text-muted"><tr><th className="p-3">Compare plans</th><th className="p-3">Free</th><th className="p-3">Professional</th><th className="p-3">Federal</th><th className="p-3">Enterprise</th></tr></thead>
               <tbody className="divide-y divide-line">

@@ -30,7 +30,7 @@ export default async function AdminShortlistsPage({ searchParams }: { searchPara
             </div>
             <p className="text-muted">{[(r.engagement as string).replace(/_/g, ' '), r.clearance_required !== 'none' && `${r.clearance_required} (self-reported OK)`, r.location, r.pay].filter(Boolean).join(' · ')}</p>
             {r.details && <p>{r.details as string}</p>}
-            {r.status === 'hired' && <p className="rounded-[3px] bg-olive/10 p-3 text-olive">Hired · salary ${((r.placement_salary_cents as number) / 100).toLocaleString()} · <strong>invoice ${((r.placement_fee_cents as number) / 100).toLocaleString()}</strong> in Stripe → Invoices</p>}
+            {r.status === 'hired' && <p className="rounded-lg bg-olive/10 p-3 text-olive">Hired · salary ${((r.placement_salary_cents as number) / 100).toLocaleString()} · <strong>invoice ${((r.placement_fee_cents as number) / 100).toLocaleString()}</strong> in Stripe → Invoices</p>}
             <ul className="space-y-1">{list.map((c) => <li key={c.profile_id} className="flex justify-between gap-2"><span>{c.profile?.full_name} — {c.profile?.headline}{c.note ? ` · ${c.note}` : ''}</span><form action={removeCandidate.bind(null, r.id as string, c.profile_id)}><button className="text-xs text-muted hover:text-signal">Remove</button></form></li>)}</ul>
             {r.status === 'sourcing' && (
               <div className="flex flex-col gap-2 border-t border-line pt-3">

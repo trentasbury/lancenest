@@ -200,7 +200,7 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
           <SubmitButton className="btn btn-outline py-2 text-sm" pendingText="Saving…">Save search & email me new matches</SubmitButton>
         </form>
       )}
-      {cleared && <p className="mt-4 rounded-[4px] border border-line bg-paper p-3 text-xs text-muted"><strong className="text-ink">Clearances on LanceNest are self-reported.</strong> LanceNest verifies military service, not security clearance eligibility. Confirm eligibility through the official government system your facility security officer uses before relying on it for a hiring decision.</p>}
+      {cleared && <p className="mt-4 rounded-xl border border-line bg-paper p-3 text-xs text-muted"><strong className="text-ink">Clearances on LanceNest are self-reported.</strong> LanceNest verifies military service, not security clearance eligibility. Confirm eligibility through the official government system your facility security officer uses before relying on it for a hiring decision.</p>}
       {spot.length > 0 && (
         <section className="mt-8">
           <p className="eyebrow">Cleared talent spotlight · self-reported clearances</p>
@@ -212,7 +212,7 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
         <p className="eyebrow">{rows.length === 60 ? 'Top 60 matches' : `${rows.length} candidate${rows.length === 1 ? '' : 's'}`}</p>
         {rows.length === 0 ? <p className="mt-4 text-sm text-muted">No veterans match those filters yet. Try widening your search.</p> : <>
           {featured.length > 0 && (
-            <div className="mt-3 rounded-[6px] border border-brass/50 bg-paper p-3">
+            <div className="mt-3 rounded-2xl border border-brass/50 bg-paper p-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brass-dark">Featured · members with a paid profile boost or Career Accelerator</p>
               <ul className="mt-2 space-y-3">{featured.map((r) => <Card key={`f-${r.profile_id}`} r={r} />)}</ul>
             </div>

@@ -44,7 +44,7 @@ export default function SignupForm() {
           {OPTIONS.map((o) => (
             <label
               key={o.value}
-              className={`cursor-pointer rounded-[4px] border p-4 transition-colors ${
+              className={`cursor-pointer rounded-xl border p-4 transition-colors ${
                 role === o.value ? 'border-brass bg-brass/10' : 'border-line bg-white hover:border-brass/50'
               }`}
             >

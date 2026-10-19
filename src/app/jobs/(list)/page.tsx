@@ -46,11 +46,11 @@ export default async function JobsPage({ searchParams }: { searchParams: JobFilt
         <div className="container-page py-12">
           <p className="eyebrow text-brass">Find Jobs</p>
           <h1 className="mt-3 font-serif text-5xl font-medium text-ivory">Your next mission.</h1>
-          <form action="/jobs" method="get" className="mt-8 grid gap-2 rounded-[6px] bg-ivory p-2 shadow-lift md:grid-cols-[1fr_240px_auto]">
+          <form action="/jobs" method="get" className="mt-8 grid gap-2 rounded-2xl bg-ivory p-2 shadow-lift md:grid-cols-[1fr_240px_auto]">
             <label htmlFor="q" className="sr-only">Job title, keyword, or company</label>
-            <input id="q" name="q" defaultValue={searchParams.q} placeholder="Job title, keyword, or company" className="rounded-[3px] px-4 py-3 text-ink outline-none" />
+            <input id="q" name="q" defaultValue={searchParams.q} placeholder="Job title, keyword, or company" className="rounded-lg px-4 py-3 text-ink outline-none" />
             <label htmlFor="state" className="sr-only">Location</label>
-            <select id="state" name="state" defaultValue={searchParams.state ?? ''} className="rounded-[3px] bg-ivory px-4 py-3 text-ink outline-none md:border-l md:border-line">
+            <select id="state" name="state" defaultValue={searchParams.state ?? ''} className="rounded-lg bg-ivory px-4 py-3 text-ink outline-none md:border-l md:border-line">
               <option value="">Any location</option>
               <option value="multi">Multiple locations</option>
               {US_STATES.map(([code, name]) => <option key={code} value={code}>{name}</option>)}

@@ -24,7 +24,7 @@ export default async function CareersBrowser({ branch }: { branch: string }) {
       <div className="container-page py-10">
         <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {data.map((o) => (
-            <li key={o.code}><Link href={`/careers/${slugFromBranch(o.branch)}/${o.code.toLowerCase()}`} className="block rounded-[4px] border border-line bg-ivory px-4 py-3 hover:border-brass">
+            <li key={o.code}><Link href={`/careers/${slugFromBranch(o.branch)}/${o.code.toLowerCase()}`} className="block rounded-xl border border-line bg-ivory px-4 py-3 hover:border-brass">
               <span className="font-mono text-xs text-brass-dark">{o.code}</span> <span className="text-navy">{o.title}</span></Link></li>
           ))}
         </ul>

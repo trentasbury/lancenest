@@ -54,7 +54,7 @@ export default async function JobDetailPage({ params, searchParams }: { params: 
     // One view per member per job per day; duplicates are ignored.
     session ? supabase.from('job_views').insert({ job_id: job.id, viewer_id: session.user.id }).then(() => undefined, () => undefined) : Promise.resolve(undefined),
     isVeteran && session ? supabase.from('saved_jobs').select('job_id').eq('profile_id', session.user.id).eq('job_id', job.id).maybeSingle() : none,
-    isVeteran && session ? supabase.from('applications').select('status').eq('profile_id', session.user.id).eq('job_id', job.id).maybeSingle() : none,
+    isVeteran && session ? supabase.from('applications').select('status, source').eq('profile_id', session.user.id).eq('job_id', job.id).maybeSingle() : none,
   ]);
   const isEarly = ((earlyRows ?? []) as string[]).length > 0;
   const insight = ((insightRows ?? []) as { stronger_than_pct: number; verified_pct: number; applicants_bucket: string }[])[0] ?? null;
@@ -62,13 +62,20 @@ export default async function JobDetailPage({ params, searchParams }: { params: 
 
   let saved = false;
   let applicationStatus: string | null = null;
+  let appliedOnSite = false;
   if (isVeteran && session) {
     saved = !!s;
     applicationStatus = (a?.status as string | undefined) ?? null;
+    appliedOnSite = (a as { source?: string } | null)?.source === 'external';
   }
 
   const salary = formatSalary(job.salary_min, job.salary_max, job.salary_period);
   const applied = applicationStatus && applicationStatus !== 'withdrawn';
+  // How this employer takes applications (set on the job post), like LinkedIn's Easy Apply vs. company website.
+  const mode = job.apply_mode ?? (job.apply_url ? 'both' : 'easy');
+  const easyApply = mode !== 'external';
+  const siteApply = mode !== 'easy' && !!job.apply_url;
+  const companyName = job.company?.name ?? 'the company';
   const next = encodeURIComponent(`/jobs/${job.slug}`);
 
   return (
@@ -94,7 +101,7 @@ export default async function JobDetailPage({ params, searchParams }: { params: 
             )}
             {isEarly && <p className="mt-2 inline-block rounded-full border border-brass/60 bg-brass/10 px-3 py-1 text-xs font-semibold text-brass-dark">Be an early applicant</p>}
             {(!!session && ['veteran', 'admin'].includes(session.profile?.role ?? '')) && (insight ? (
-              <div className="mt-4 rounded-[4px] border border-navy/20 bg-paper p-4 text-sm">
+              <div className="mt-4 rounded-xl border border-navy/20 bg-paper p-4 text-sm">
                 <p className="font-semibold text-navy">Your applicant insights</p>
                 <p className="mt-1">Your skills match is stronger than or equal to <strong>{insight.stronger_than_pct}%</strong> of applicants · {insight.verified_pct}% of applicants are verified · {insight.applicants_bucket} applicants so far</p>
               </div>
@@ -102,7 +109,7 @@ export default async function JobDetailPage({ params, searchParams }: { params: 
               <p className="mt-3 text-xs text-muted">See how your skills compare with other applicants — <Link href="/plans" className="text-navy underline">applicant insights with Pro</Link>.</p>
             ))}
             {job.employment_type === 'skillbridge' && (
-              <div className="mt-4 rounded-[4px] border border-olive/40 bg-olive/5 p-4 text-sm">
+              <div className="mt-4 rounded-xl border border-olive/40 bg-olive/5 p-4 text-sm">
                 <p className="font-semibold text-olive">DoD SkillBridge program{(job as unknown as { skillbridge_weeks?: number }).skillbridge_weeks ? ` · ${(job as unknown as { skillbridge_weeks: number }).skillbridge_weeks} weeks` : ''}</p>
                 <p className="mt-1 text-ink/80">You keep your full military pay and benefits; the company doesn’t pay you. You’ll need an approved separation date, completed TAP, and written approval from your first O-4 commander, and you can start up to 180 days before separation.</p>
                 <Link href="/transition" className="mt-2 inline-block text-navy underline">Plan it in your Transition Hub →</Link>
@@ -146,7 +153,7 @@ export default async function JobDetailPage({ params, searchParams }: { params: 
           <Section title="Preferred qualifications" text={job.preferred_qualifications} />
           <Section title="Benefits" text={job.benefits} />
           {job.military_transferable && (
-            <section className="rounded-[4px] border border-brass/40 bg-brass/5 p-5">
+            <section className="rounded-xl border border-brass/40 bg-brass/5 p-5">
               <h2 className="eyebrow">Why this role may fit your experience</h2>
               <p className="mt-3 text-[15px] leading-relaxed text-ink/85">
                 This employer counts military experience toward this role’s requirements. Leading people, executing under
@@ -167,40 +174,56 @@ export default async function JobDetailPage({ params, searchParams }: { params: 
             </>
           )}
 
-          {searchParams?.apply === 'done' && <p className="rounded-[3px] bg-olive/10 px-4 py-3 text-sm text-olive">✓ Application sent. Track it under My applications.</p>}
-          {searchParams?.apply === 'answers' && <p className="rounded-[3px] bg-signal/10 px-4 py-3 text-sm text-signal">Please answer every question to apply.</p>}
-          {searchParams?.apply === 'error' && <p className="rounded-[3px] bg-signal/10 px-4 py-3 text-sm text-signal">Your application didn’t go through. Make sure your profile is verified, then try again.</p>}
+          {searchParams?.apply === 'done' && <p className="rounded-lg bg-olive/10 px-4 py-3 text-sm text-olive">✓ Application sent. Track it under My applications.</p>}
+          {searchParams?.apply === 'answers' && <p className="rounded-lg bg-signal/10 px-4 py-3 text-sm text-signal">Please answer every question to apply.</p>}
+          {searchParams?.apply === 'error' && <p className="rounded-lg bg-signal/10 px-4 py-3 text-sm text-signal">Your application didn’t go through. Make sure your profile is verified, then try again.</p>}
           {isVeteran && (
             <>
               {applied ? (
-                <p className="rounded-[3px] border border-olive/30 bg-olive/10 px-4 py-3 text-center text-sm font-medium text-olive">
-                  ✓ Applied — status: {applicationStatus}
-                </p>
+                appliedOnSite ? (
+                  <p className="rounded-xl border border-navy/20 bg-navy/[0.04] px-4 py-3 text-center text-sm text-navy">
+                    You opened {companyName}’s application. <Link href="/dashboard/applications" className="font-medium underline underline-offset-2">Track it in My applications</Link>
+                  </p>
+                ) : (
+                  <p className="rounded-xl border border-olive/30 bg-olive/10 px-4 py-3 text-center text-sm font-medium text-olive">
+                    ✓ Applied — status: {applicationStatus}
+                  </p>
+                )
               ) : (
-                <form action={applyToJob.bind(null, job.id, job.slug)} className="space-y-2">
-                  {(myResumes ?? []).length > 0 ? (
-                    <div>
-                      <label htmlFor="resume_id" className="field-label">Résumé to send</label>
-                      <select id="resume_id" name="resume_id" defaultValue={((myResumes ?? []).find((r) => r.is_default)?.id as string) ?? ''} className="field text-sm">
-                        {(myResumes ?? []).map((r) => <option key={r.id as string} value={r.id as string}>{r.file_name as string}</option>)}
-                        <option value="">Apply without a résumé</option>
-                      </select>
-                      <p className="mt-1 text-[11px] text-muted">Only {job.company?.name ?? 'this company'} will see it.</p>
-                    </div>
-                  ) : <p className="text-xs text-muted"><Link href="/dashboard/profile#resume" className="underline">Add a résumé</Link> to stand out.</p>}
-                  {((job as unknown as { screening_questions?: { q: string; type: string }[] }).screening_questions ?? []).map((q, i) => (
-                    <div key={i}>
-                      <label className="field-label" htmlFor={`answer_${i}`}>{q.q}</label>
-                      {q.type === 'yesno'
-                        ? <select id={`answer_${i}`} name={`answer_${i}`} required defaultValue="" className="field text-sm"><option value="" disabled>Choose…</option><option>Yes</option><option>No</option></select>
-                        : <textarea id={`answer_${i}`} name={`answer_${i}`} required rows={2} maxLength={1000} className="field text-sm" />}
-                    </div>
-                  ))}
-                  <SubmitButton pendingText="Submitting…">{(job as unknown as { apply_url?: string }).apply_url ? 'Easy Apply on LanceNest' : 'Easy Apply'}</SubmitButton>
-                </form>
-              )}
-              {!applied && (job as unknown as { apply_url?: string }).apply_url && (
-                <a href={`/api/jobs/${job.id}/external`} className="btn btn-outline w-full">Apply on company site ↗</a>
+                <>
+                  {siteApply && !easyApply && (
+                    <>
+                      <a href={`/api/jobs/${job.id}/external`} className="btn btn-primary w-full" data-track="job_apply_company_site">Apply on company site ↗</a>
+                      <p className="text-center text-xs text-muted">You’ll finish on {companyName}’s website. We’ll add it to My applications so you can track it.</p>
+                    </>
+                  )}
+                  {easyApply && (
+                    <form action={applyToJob.bind(null, job.id, job.slug)} className="space-y-2">
+                      {(myResumes ?? []).length > 0 ? (
+                        <div>
+                          <label htmlFor="resume_id" className="field-label">Résumé to send</label>
+                          <select id="resume_id" name="resume_id" defaultValue={((myResumes ?? []).find((r) => r.is_default)?.id as string) ?? ''} className="field text-sm">
+                            {(myResumes ?? []).map((r) => <option key={r.id as string} value={r.id as string}>{r.file_name as string}</option>)}
+                            <option value="">Apply without a résumé</option>
+                          </select>
+                          <p className="mt-1 text-[11px] text-muted">Only {job.company?.name ?? 'this company'} will see it.</p>
+                        </div>
+                      ) : <p className="text-xs text-muted"><Link href="/dashboard/profile#resume" className="underline">Add a résumé</Link> to stand out.</p>}
+                      {((job as unknown as { screening_questions?: { q: string; type: string }[] }).screening_questions ?? []).map((q, i) => (
+                        <div key={i}>
+                          <label className="field-label" htmlFor={`answer_${i}`}>{q.q}</label>
+                          {q.type === 'yesno'
+                            ? <select id={`answer_${i}`} name={`answer_${i}`} required defaultValue="" className="field text-sm"><option value="" disabled>Choose…</option><option>Yes</option><option>No</option></select>
+                            : <textarea id={`answer_${i}`} name={`answer_${i}`} required rows={2} maxLength={1000} className="field text-sm" />}
+                        </div>
+                      ))}
+                      <SubmitButton pendingText="Submitting…">{siteApply ? 'Easy Apply on LanceNest' : 'Easy Apply'}</SubmitButton>
+                    </form>
+                  )}
+                  {siteApply && easyApply && (
+                    <a href={`/api/jobs/${job.id}/external`} className="btn btn-outline w-full" data-track="job_apply_company_site">Apply on company site ↗</a>
+                  )}
+                </>
               )}
               <form action={toggleSaveJob.bind(null, job.id, job.slug)}>
                 <SubmitButton className="btn btn-outline w-full" pendingText="Saving…">

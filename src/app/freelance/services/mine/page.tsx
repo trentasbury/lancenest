@@ -22,7 +22,7 @@ export default async function MyServicesPage({ searchParams }: { searchParams: {
       <Link href="/freelance/services" className="text-sm text-muted hover:text-navy">← Services</Link>
       <h1 className="font-serif text-4xl font-medium">My services</h1>
       <p className="text-muted">List what you can do — anyone on LanceNest can hire you and pay through the site. Services also appear on your profile.</p>
-      {!fp?.payouts_enabled && <p className="rounded-[4px] border border-brass bg-brass/10 p-4 text-sm">Before anyone can hire you, <Link href="/freelance/profile" className="font-medium text-navy underline">set up payouts</Link> (about 5 minutes with Stripe).</p>}
+      {!fp?.payouts_enabled && <p className="rounded-xl border border-brass bg-brass/10 p-4 text-sm">Before anyone can hire you, <Link href="/freelance/profile" className="font-medium text-navy underline">set up payouts</Link> (about 5 minutes with Stripe).</p>}
       {searchParams.error && <FormMessage error={ERR[searchParams.error] ?? ERR.save} />}
       {searchParams.saved && <FormMessage message="Service listed." />}
       <ul className="card divide-y divide-line">

@@ -61,7 +61,7 @@ export default function ProfileEditor({ initial }: { initial: ProfilePayload }) 
         <h2 className="eyebrow">Military career</h2>
         <p className="text-xs text-muted">Add each assignment — every duty station, branch, or component (Active, Guard, Reserve). OPSEC: no classified details, locations of deployments, or unit movements.</p>
         {p.service.map((x, i) => (
-          <div key={i} className="space-y-3 rounded-[4px] border border-line p-4">
+          <div key={i} className="space-y-3 rounded-xl border border-line p-4">
             <div className="grid gap-3 sm:grid-cols-3">
               <div><label className={L}>Branch</label><select value={x.branch} onChange={(e) => setRow('service', i, 'branch', e.target.value)} className={F}>{BRANCHES.map((b) => <option key={b}>{b}</option>)}</select></div>
               <div><label className={L}>Component</label><select value={x.component} onChange={(e) => setRow('service', i, 'component', e.target.value)} className={F}>{COMPONENTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
@@ -82,7 +82,7 @@ export default function ProfileEditor({ initial }: { initial: ProfilePayload }) 
       <section className="card space-y-4 p-6">
         <h2 className="eyebrow">Professional career</h2>
         {p.experience.map((x, i) => (
-          <div key={i} className="space-y-3 rounded-[4px] border border-line p-4">
+          <div key={i} className="space-y-3 rounded-xl border border-line p-4">
             <div className="grid gap-3 sm:grid-cols-2">
               <div><label className={L}>Title</label><input value={x.position} onChange={(e) => setRow('experience', i, 'position', e.target.value)} className={F} /></div>
               <div><label className={L}>Company</label><input value={x.company} onChange={(e) => setRow('experience', i, 'company', e.target.value)} className={F} /></div>
@@ -98,7 +98,7 @@ export default function ProfileEditor({ initial }: { initial: ProfilePayload }) 
       <section className="card space-y-4 p-6">
         <h2 className="eyebrow">Education</h2>
         {p.education.map((x, i) => (
-          <div key={i} className="grid gap-3 rounded-[4px] border border-line p-4 sm:grid-cols-2">
+          <div key={i} className="grid gap-3 rounded-xl border border-line p-4 sm:grid-cols-2">
             <div className="sm:col-span-2"><label className={L}>School</label><input value={x.school} onChange={(e) => setRow('education', i, 'school', e.target.value)} className={F} /></div>
             <div><label className={L}>Degree or certificate</label><input value={x.degree} onChange={(e) => setRow('education', i, 'degree', e.target.value)} className={F} /></div>
             <div><label className={L}>Field</label><input value={x.field} onChange={(e) => setRow('education', i, 'field', e.target.value)} className={F} /></div>

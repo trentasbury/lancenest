@@ -6,6 +6,7 @@ import { FEED_FILTERS, MILESTONES_BY_TYPE, POST_TYPES, VISIBILITY, getFeed, getS
 import Composer from '@/components/network/Composer';
 import PostCard from '@/components/network/PostCard';
 import SuggestionList from '@/components/network/SuggestionList';
+import ProfileMini from '@/components/network/ProfileMini';
 
 export const metadata: Metadata = { title: 'Network' };
 
@@ -38,16 +39,13 @@ export default async function NetworkPage({ searchParams }: { searchParams: { ty
 
   return (
     <>
-      <section className="bg-navy-deep text-ivory">
-        <div className="container-page py-10">
-          <p className="eyebrow text-brass">LanceNest Network</p>
-          <h1 className="mt-2 font-serif text-4xl font-medium text-ivory sm:text-5xl">{saved ? 'Saved posts' : 'LanceNest Network'}</h1>
-          <p className="mt-2 text-cream/80">{saved ? 'Posts you’ve kept close.' : 'See what your network is accomplishing.'}</p>
-        </div>
-      </section>
-
-      <div className="container-page grid gap-8 py-8 lg:grid-cols-[1fr_320px]">
-        <div className="min-w-0 space-y-5">
+      <h1 className="sr-only">{saved ? 'Saved posts' : 'LanceNest Network'}</h1>
+      <div className="container-page grid items-start gap-6 py-6 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[230px_minmax(0,1fr)_300px]">
+        <aside className="hidden xl:sticky xl:top-[92px] xl:block">
+          <ProfileMini profile={profile} followers={followerCount ?? 0} following={followingCount ?? 0} saved={saved} />
+        </aside>
+        <div className="min-w-0 space-y-4">
+          {saved && <h2 className="font-sans text-xl font-semibold text-ink">Saved posts</h2>}
           {!saved && (
             <Composer
               userId={user.id}
@@ -80,7 +78,7 @@ export default async function NetworkPage({ searchParams }: { searchParams: { ty
 
           {posts.length === 0 && !searchParams.cursor ? (
             <div className="card p-8 text-center">
-              <p className="font-serif text-3xl">{saved ? 'No saved posts yet.' : 'Your network starts here.'}</p>
+              <p className="font-sans text-2xl font-semibold">{saved ? 'No saved posts yet.' : 'Your network starts here.'}</p>
               <p className="mx-auto mt-2 max-w-md text-sm text-muted">
                 {saved ? 'Tap ☆ Save on any post to keep it here.' : 'Share your first milestone, or follow people who served where you did.'}
               </p>
@@ -107,24 +105,12 @@ export default async function NetworkPage({ searchParams }: { searchParams: { ty
           {searchParams.cursor && !nextCursor && posts.length > 0 && <p className="text-center text-sm text-muted">You’re all caught up.</p>}
         </div>
 
-        <aside className="space-y-5">
-          <div className="card p-6">
-            <p className="font-serif text-xl font-semibold">{profile.full_name}</p>
-            <div className="mt-4 grid grid-cols-2 gap-3 text-center">
-              <Link href="/network/people?tab=followers" className="rounded-[4px] border border-line p-3 hover:border-brass">
-                <p className="font-serif text-2xl text-navy">{followerCount ?? 0}</p><p className="text-xs text-muted">Followers</p>
-              </Link>
-              <Link href="/network/people?tab=following" className="rounded-[4px] border border-line p-3 hover:border-brass">
-                <p className="font-serif text-2xl text-navy">{followingCount ?? 0}</p><p className="text-xs text-muted">Following</p>
-              </Link>
-            </div>
-            <div className="mt-4 flex flex-col gap-2 text-sm">
-              <Link href={saved ? '/network' : '/network?view=saved'} className="text-navy underline decoration-brass underline-offset-4">{saved ? '← Back to feed' : '★ Saved posts'}</Link>
-              <Link href="/messages" className="text-navy underline decoration-brass underline-offset-4">Messages</Link>
-            </div>
+        <aside className="space-y-4 lg:sticky lg:top-[92px]">
+          <div className="xl:hidden">
+            <ProfileMini profile={profile} followers={followerCount ?? 0} following={followingCount ?? 0} saved={saved} />
           </div>
           <div id="grow" className="card scroll-mt-24 p-6">
-            <p className="eyebrow">Grow Your Network</p>
+            <h2 className="font-sans text-base font-semibold text-ink">Grow your network</h2>
             <div className="mt-4"><SuggestionList people={suggestions} /></div>
           </div>
         </aside>

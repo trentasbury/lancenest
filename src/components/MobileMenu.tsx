@@ -41,7 +41,7 @@ export default function MobileMenu({ signOutAction }: { signOutAction: () => Pro
         aria-expanded={open}
         aria-controls="mobile-menu"
         aria-label={open ? 'Close menu' : 'Open menu'}
-        className="flex h-10 w-10 items-center justify-center rounded-[3px] border border-line text-navy"
+        className="flex h-10 w-10 items-center justify-center rounded-lg border border-line text-navy"
       >
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
           {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}

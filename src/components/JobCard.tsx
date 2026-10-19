@@ -10,12 +10,12 @@ export default function JobCard({ job, early }: { job: JobWithCompany; early?: b
   return (
     <Link
       href={`/jobs/${job.slug}`}
-      className="card group flex gap-4 p-5 transition-all hover:-translate-y-0.5 hover:border-brass/60 sm:p-6"
+      className="card card-hover group flex gap-4 p-5 sm:p-6"
     >
       <CompanyMark name={companyName} logoUrl={job.company?.logo_url} />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
-          <h3 className="font-serif text-xl font-semibold leading-tight text-ink group-hover:text-navy">{job.title}</h3>
+          <h3 className="font-sans text-[17px] font-semibold leading-snug text-navy group-hover:underline group-hover:decoration-brass/60 group-hover:underline-offset-4">{job.title}</h3>
           {salary && <span className="whitespace-nowrap text-sm font-semibold text-navy">{salary}</span>}
         </div>
         <p className="mt-1 text-sm text-muted">
@@ -38,7 +38,12 @@ export default function JobCard({ job, early }: { job: JobWithCompany; early?: b
             <span className="pill border-olive/40 bg-olive/10 text-olive">For service members</span>
           )}
         </div>
-        <p className="mt-3 text-xs text-muted">{postedAgo(job.posted_at)}</p>
+        <p className="mt-3 flex flex-wrap items-center gap-x-2 text-xs text-muted">
+          <span>{postedAgo(job.posted_at)}</span>
+          {(job.apply_mode ?? (job.apply_url ? 'both' : 'easy')) === 'external'
+            ? <span>· Apply on company site ↗</span>
+            : <span className="font-semibold text-olive">· Easy Apply</span>}
+        </p>
       </div>
     </Link>
   );

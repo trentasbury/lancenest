@@ -7,6 +7,7 @@ const MESSAGES: Record<string, string> = {
   question: 'A screening question touches a protected or high-risk topic (for example disability, medical, VA rating, age, religion, family, discharge status, criminal history, or citizenship). Ask about skills, availability, certifications, or work authorization instead.',
   salary: 'The maximum salary can’t be lower than the minimum.',
   save: 'That didn’t save. Please try again.',
+  apply_url_missing: 'Saved as a draft. Add your company application link (or choose Easy Apply on LanceNest), then publish again.',
   apply_url: 'That application link isn’t allowed. Use a link on your verified company website or a standard applicant-tracking system (Workday, Greenhouse, Lever, iCIMS…). This protects veterans from phishing.',
   skillbridge: 'Only DoD-authorized SkillBridge organizations can publish SkillBridge programs. Request SkillBridge listing access from your dashboard — or choose another employment type.',
   salary_required: 'Saved as a draft. Add a salary range to publish — every LanceNest job shows pay, and several states require it.',

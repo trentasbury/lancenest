@@ -77,7 +77,7 @@ export default function Composer({
   return (
     <form ref={formRef} action={submit} className="card space-y-4 p-5 sm:p-6">
       <div className="flex items-center justify-between">
-        <p className="font-serif text-xl font-semibold">Share with your network</p>
+        <p className="font-sans text-lg font-semibold">Share with your network</p>
         <button type="button" onClick={() => setOpen(false)} className="text-sm text-muted hover:text-ink">Cancel</button>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -112,7 +112,7 @@ export default function Composer({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="flex-1">
           <label htmlFor="photos" className="field-label">Photos (optional, up to 4)</label>
-          <input id="photos" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple onChange={(e) => pickFiles(e.target.files)} className="field text-sm file:mr-3 file:rounded-[3px] file:border-0 file:bg-navy file:px-3 file:py-1.5 file:text-ivory" />
+          <input id="photos" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple onChange={(e) => pickFiles(e.target.files)} className="field text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-navy file:px-3 file:py-1.5 file:text-ivory" />
           {files.length > 0 && <p className="mt-1 text-xs text-muted">{files.length} photo{files.length > 1 ? 's' : ''} selected</p>}
         </div>
         <div className="sm:w-56">
@@ -122,7 +122,7 @@ export default function Composer({
           </select>
         </div>
       </div>
-      {error && <p role="alert" className="rounded-[3px] border border-signal/30 bg-signal/5 px-3 py-2 text-sm text-signal">{error}</p>}
+      {error && <p role="alert" className="rounded-lg border border-signal/30 bg-signal/5 px-3 py-2 text-sm text-signal">{error}</p>}
       <button type="submit" disabled={pending} className="btn btn-primary w-full sm:w-auto">{pending ? 'Publishing…' : 'Publish'}</button>
     </form>
   );

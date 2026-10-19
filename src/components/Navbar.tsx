@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { signOut } from '@/app/auth/actions';
-import { PUBLIC_LINKS } from '@/lib/nav';
 import Wordmark from './Wordmark';
 import MobileMenu from './MobileMenu';
 import NavAccount from './nav/NavAccount';
+import NavLinks from './nav/NavLinks';
 import SessionExtras from './nav/SessionExtras';
 
 /**
@@ -14,24 +14,13 @@ import SessionExtras from './nav/SessionExtras';
  * in the browser for signed-in members only (see nav/useMe).
  */
 export default function Navbar() {
-  const item = 'transition-colors hover:text-brass-dark';
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-cream/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-line/80 bg-ivory/90 backdrop-blur-md supports-[backdrop-filter]:bg-ivory/75">
       <SessionExtras />
       <div className="container-page flex h-[72px] items-center justify-between gap-6">
         <Wordmark />
 
-        <nav className="hidden items-center gap-8 text-[14px] text-ink lg:flex" aria-label="Main">
-          {PUBLIC_LINKS.map((l) => (
-            <Link key={`out-${l.href}`} href={l.href} className={`nav-out ${item}`}>{l.label}</Link>
-          ))}
-          <Link href="/network" className={`nav-in ${item}`}>Network</Link>
-          <Link href="/people" className={`nav-in ${item}`}>People</Link>
-          <Link href="/jobs" className={`nav-in nav-not-employer ${item}`}>Find Jobs</Link>
-          <Link href="/employer/candidates" className={`nav-in nav-employer ${item}`}>Candidates</Link>
-          <Link href="/freelance" className={`nav-in ${item}`}>Freelance</Link>
-          <Link href="/messages" className={`nav-in ${item}`}>Messages</Link>
-        </nav>
+        <NavLinks />
 
         <div className="hidden items-center gap-4 lg:flex">
           <Link href="/login" className="nav-out text-sm text-ink hover:text-brass-dark">Log in</Link>

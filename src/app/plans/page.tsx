@@ -55,7 +55,7 @@ export default async function PlansPage() {
                 </ul>
                 <div className="mt-8">
                   {!plan.id ? (
-                    session ? <p className="rounded-[3px] border border-line px-4 py-3 text-center text-sm text-muted">{currentPlan === 'free' ? 'Your current plan' : 'Included'}</p>
+                    session ? <p className="rounded-lg border border-line px-4 py-3 text-center text-sm text-muted">{currentPlan === 'free' ? 'Your current plan' : 'Included'}</p>
                       : <Link href="/signup?role=veteran" className="btn btn-outline w-full">Create a free profile</Link>
                   ) : !session ? (
                     <Link href="/login?next=/plans" className="btn btn-primary w-full">Log in to upgrade</Link>

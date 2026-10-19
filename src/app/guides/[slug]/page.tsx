@@ -32,7 +32,7 @@ export default function GuidePage({ params }: { params: { slug: string } }) {
           <ul className="mt-3 space-y-2">{g.links.map(([label, href]) => <li key={href}>{href.startsWith('http') ? <a href={href} target="_blank" rel="noopener noreferrer" className="text-navy underline">{label} ↗</a> : <Link href={href} className="text-navy underline">{label}</Link>}</li>)}</ul>
         </section>
         <p className="text-xs text-muted">General information, not legal, financial, or official military guidance. Rules change — always confirm with the official source or your transition office. LanceNest is not affiliated with the Department of Defense, the VA, or any military branch.</p>
-        <div className="rounded-[6px] bg-navy p-6 text-ivory"><p className="font-serif text-2xl">Join the verified network for service members.</p><Link href="/signup?role=veteran" className="btn btn-brass mt-4">Create your free profile</Link></div>
+        <div className="rounded-2xl bg-navy p-6 text-ivory"><p className="font-serif text-2xl">Join the verified network for service members.</p><Link href="/signup?role=veteran" className="btn btn-brass mt-4">Create your free profile</Link></div>
       </article>
     </>
   );

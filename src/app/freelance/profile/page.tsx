@@ -73,7 +73,7 @@ export default async function FreelancerProfilePage({ searchParams }: { searchPa
         <h2 className="font-serif text-2xl font-semibold">Portfolio</h2>
         <p className="mt-1 text-sm text-muted">Show real work — projects, results, and links. Clients hire from portfolios.</p>
         {(items ?? []).length > 0 && (
-          <ul className="mt-5 divide-y divide-line rounded-[4px] border border-line">
+          <ul className="mt-5 divide-y divide-line rounded-xl border border-line">
             {(items ?? []).map((it) => (
               <li key={it.id as string} className="flex items-start justify-between gap-4 p-4">
                 <div><p className="font-medium">{it.title as string}</p>{it.description && <p className="text-sm text-muted">{it.description as string}</p>}{it.url && <a href={it.url as string} target="_blank" rel="noopener noreferrer" className="text-xs text-navy underline">{it.url as string}</a>}</div>

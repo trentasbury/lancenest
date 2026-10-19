@@ -1,6 +1,12 @@
 import type { Job } from '@/lib/types';
 import SubmitButton from '../SubmitButton';
 
+const APPLY_MODES = [
+  ['easy', 'Easy Apply on LanceNest', 'Résumé and screening answers land in your applicant list.'],
+  ['external', 'Your website', 'Veterans finish on your careers site or applicant-tracking system.'],
+  ['both', 'Both', 'Veterans choose Easy Apply or your site.'],
+] as const;
+
 const CLEARANCES = [['none', 'None required'], ['public_trust', 'Public Trust'], ['confidential', 'Confidential'], ['secret', 'Secret'], ['top_secret', 'Top Secret'], ['ts_sci', 'TS/SCI']];
 
 function Field({ label, children, wide = false }: { label: string; children: React.ReactNode; wide?: boolean }) {
@@ -38,13 +44,28 @@ export default function JobForm({ job, action }: { job?: Job | null; action: (fd
           </select>
         </Field>
         <Field label="Industry"><input name="industry" defaultValue={job?.industry ?? ''} className="field" /></Field>
-        <Field label="Apply on company site — optional link" wide>
-          <input name="apply_url" type="url" defaultValue={(job as unknown as { apply_url?: string | null })?.apply_url ?? ''} placeholder="https://careers.yourcompany.com/job/123" className="field" />
-          <p className="mt-1 text-xs text-muted">Must be on your verified company domain or a standard applicant-tracking system (Workday, Greenhouse, Lever, iCIMS, and similar). Veterans can still apply on LanceNest.</p>
-        </Field>
+        <fieldset className="space-y-3 sm:col-span-2">
+          <legend className="field-label">How veterans apply</legend>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {APPLY_MODES.map(([value, title, hint]) => (
+              <label key={value} className="flex cursor-pointer gap-3 rounded-xl border border-line bg-white/60 p-4 transition-colors hover:border-brass has-[:checked]:border-navy has-[:checked]:bg-navy/[0.03] has-[:checked]:ring-1 has-[:checked]:ring-navy">
+                <input type="radio" name="apply_mode" value={value} defaultChecked={(job?.apply_mode ?? (job?.apply_url ? 'both' : 'easy')) === value} className="mt-1 accent-navy" />
+                <span>
+                  <span className="block text-sm font-semibold text-ink">{title}</span>
+                  <span className="mt-0.5 block text-xs text-muted">{hint}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+          <div>
+            <label htmlFor="apply_url" className="field-label">Company application link <span className="font-normal normal-case tracking-normal text-muted">(needed for “Your website” or “Both”)</span></label>
+            <input id="apply_url" name="apply_url" type="url" defaultValue={job?.apply_url ?? ''} placeholder="https://careers.yourcompany.com/job/123" className="field" />
+            <p className="mt-1 text-xs text-muted">Must be on your verified company domain or a standard applicant-tracking system (Workday, Greenhouse, Lever, iCIMS, and similar). This protects veterans from look-alike phishing pages.</p>
+          </div>
+        </fieldset>
         <div className="sm:col-span-2">
           <p className="field-label">Screening questions (optional, up to 5)</p>
-          <p className="mb-2 text-xs text-muted">Applicants answer these when they Easy Apply. Don’t ask about age, religion, disability, or other protected traits.</p>
+          <p className="mb-2 text-xs text-muted">Applicants answer these when they Easy Apply (not shown for website-only jobs). Don’t ask about age, religion, disability, or other protected traits.</p>
           {[0, 1, 2, 3, 4].map((n) => {
             const q = ((job as unknown as { screening_questions?: { q: string; type: string }[] })?.screening_questions ?? [])[n];
             return (
@@ -91,7 +112,7 @@ export default function JobForm({ job, action }: { job?: Job | null; action: (fd
         <label className="flex items-center gap-2.5 text-sm sm:pt-6"><input type="checkbox" name="clearance_eligible" defaultChecked={job?.clearance_eligible ?? false} className="h-4 w-4 accent-navy" />Will sponsor a clearance</label>
       </section>
 
-      <label className="flex items-start gap-2 rounded-[4px] border border-line bg-paper p-3 text-xs text-ink/85">
+      <label className="flex items-start gap-2 rounded-xl border border-line bg-paper p-3 text-xs text-ink/85">
         <input type="checkbox" name="attest" required className="mt-0.5 accent-navy" />
         I confirm this posting, its pay information, its screening questions, and how we classify the role (employee or contractor) comply with applicable law, and that the work won’t require sharing classified information or CUI on LanceNest.
       </label>

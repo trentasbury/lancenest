@@ -129,7 +129,7 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
 
         <Section id="resume" title="Résumés" hint="Keep up to 3 (for example, one per career path). You choose which to send each time you apply, and only that company sees it — never other members.">
           {(resumes ?? []).length > 0 ? (
-            <ul className="mb-5 divide-y divide-line rounded-[4px] border border-line bg-paper">
+            <ul className="mb-5 divide-y divide-line rounded-xl border border-line bg-paper">
               {(resumes ?? []).map((r) => (
                 <li key={r.id as string} className="flex flex-wrap items-center justify-between gap-3 p-4">
                   <div>
@@ -149,7 +149,7 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
             <form action={uploadResume} className="space-y-3">
               <div>
                 <label htmlFor="resume-file" className="field-label">Add a résumé (PDF or Word, up to 4 MB)</label>
-                <input id="resume-file" name="resume" type="file" required accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="field text-sm file:mr-3 file:rounded-[3px] file:border-0 file:bg-navy file:px-3 file:py-1.5 file:text-ivory" />
+                <input id="resume-file" name="resume" type="file" required accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="field text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-navy file:px-3 file:py-1.5 file:text-ivory" />
               </div>
               {(resumes ?? []).length > 0 && <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="make_default" className="accent-navy" />Make this my default</label>}
               <p className="text-xs text-signal">Before uploading: remove your Social Security number, DoD ID number, date of birth, home address, and any clearance investigation details. A phone number and email are enough.</p>

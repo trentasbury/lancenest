@@ -12,9 +12,9 @@ export function HeroSkeleton({ wide = false }: { wide?: boolean }) {
   return (
     <section className="bg-navy-deep">
       <div className="container-page py-10">
-        <div className="h-3 w-32 animate-pulse rounded-[3px] bg-cream/15" />
-        <div className={`mt-4 h-10 animate-pulse rounded-[3px] bg-cream/15 ${wide ? 'w-full max-w-xl' : 'w-72 max-w-full'}`} />
-        <div className="mt-4 h-4 w-96 max-w-full animate-pulse rounded-[3px] bg-cream/10" />
+        <div className="h-3 w-32 animate-pulse rounded-lg bg-cream/15" />
+        <div className={`mt-4 h-10 animate-pulse rounded-lg bg-cream/15 ${wide ? 'w-full max-w-xl' : 'w-72 max-w-full'}`} />
+        <div className="mt-4 h-4 w-96 max-w-full animate-pulse rounded-lg bg-cream/10" />
       </div>
     </section>
   );
@@ -180,9 +180,9 @@ export function ProfileSkeleton() {
         <div className="container-page flex flex-col gap-6 py-12 sm:flex-row sm:items-center">
           <div className="h-24 w-24 shrink-0 animate-pulse rounded-full bg-cream/15" />
           <div className="flex-1 space-y-3">
-            <div className="h-9 w-64 max-w-full animate-pulse rounded-[3px] bg-cream/15" />
-            <div className="h-4 w-80 max-w-full animate-pulse rounded-[3px] bg-cream/10" />
-            <div className="h-4 w-48 animate-pulse rounded-[3px] bg-cream/10" />
+            <div className="h-9 w-64 max-w-full animate-pulse rounded-lg bg-cream/15" />
+            <div className="h-4 w-80 max-w-full animate-pulse rounded-lg bg-cream/10" />
+            <div className="h-4 w-48 animate-pulse rounded-lg bg-cream/10" />
           </div>
         </div>
       </section>

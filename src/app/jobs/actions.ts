@@ -36,7 +36,8 @@ export async function applyToJob(jobId: string, slug: string, formData: FormData
   const supabase = createClient();
   const resumeId = String(formData.get('resume_id') ?? '') || null;
   // Easy Apply: every screening question the employer added must be answered.
-  const { data: job } = await supabase.from('jobs').select('screening_questions').eq('id', jobId).maybeSingle();
+  const { data: job } = await supabase.from('jobs').select('screening_questions, apply_mode').eq('id', jobId).maybeSingle();
+  if (job?.apply_mode === 'external') redirect(`/jobs/${slug}`); // this employer takes applications on its own site only
   const questions = ((job?.screening_questions as { q: string; type: string }[] | null) ?? []).slice(0, 5);
   const answers = questions.map((q, i) => ({ q: q.q, a: String(formData.get(`answer_${i}`) ?? '').trim().slice(0, 1000) }));
   if (answers.some((x) => !x.a)) redirect(`/jobs/${slug}?apply=answers`);

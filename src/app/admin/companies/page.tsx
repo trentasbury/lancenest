@@ -42,7 +42,7 @@ export default async function CompanyQueue() {
               {(psPending ?? []).map((c) => {
                 const d = (c.public_safety_details ?? {}) as { agency_type?: string; official_site?: string };
                 return (
-                  <li key={c.id as string} className="flex flex-wrap items-center justify-between gap-3 rounded-[4px] border border-line p-4">
+                  <li key={c.id as string} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line p-4">
                     <div><p className="font-medium">{c.name as string}</p><p className="text-sm text-muted">{d.agency_type} · <a href={d.official_site} target="_blank" rel="noopener noreferrer" className="text-navy underline">{d.official_site}</a>{/^https?:\/\/[^/]+\.gov(\/|$)/i.test(d.official_site ?? '') ? ' ✓ .gov' : ''}</p></div>
                     <div className="flex gap-2">
                       <form action={decidePublicSafety.bind(null, c.id as string, 'rejected')}><SubmitButton className="btn btn-outline border-signal px-3 py-1.5 text-xs text-signal" pendingText="…">Decline</SubmitButton></form>
@@ -60,7 +60,7 @@ export default async function CompanyQueue() {
             <p className="mt-1 text-sm text-muted">Search each name on the official DoD directory before approving.</p>
             <ul className="mt-4 space-y-3">
               {(sbPending ?? []).map((c) => (
-                <li key={c.id as string} className="flex flex-wrap items-center justify-between gap-3 rounded-[4px] border border-line p-4">
+                <li key={c.id as string} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line p-4">
                   <div><p className="font-medium">{c.name as string}</p><p className="text-sm text-muted">Listed as: {c.skillbridge_org_name as string}</p></div>
                   <div className="flex flex-wrap gap-2">
                     <a href="https://skillbridge.osd.mil/locations.htm" target="_blank" rel="noopener noreferrer" className="btn btn-ghost border border-line px-3 py-1.5 text-xs">DoD directory ↗</a>

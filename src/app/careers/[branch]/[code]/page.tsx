@@ -74,7 +74,7 @@ export default async function CareerPage({ params }: { params: { branch: string;
       </div></section>
       <div className="container-page grid gap-8 py-12 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
-          {cats.length > 0 && <section className="card p-7"><h2 className="eyebrow">Civilian career paths</h2><ul className="mt-4 grid gap-2 sm:grid-cols-2">{cats.map((c) => <li key={c} className="rounded-[4px] border border-line bg-paper px-4 py-3 font-medium text-navy">{c}</li>)}</ul></section>}
+          {cats.length > 0 && <section className="card p-7"><h2 className="eyebrow">Civilian career paths</h2><ul className="mt-4 grid gap-2 sm:grid-cols-2">{cats.map((c) => <li key={c} className="rounded-xl border border-line bg-paper px-4 py-3 font-medium text-navy">{c}</li>)}</ul></section>}
           {skills.length > 0 && <section className="card p-7"><h2 className="eyebrow">Skills employers recognize</h2><div className="mt-4 flex flex-wrap gap-2">{skills.map((s) => <span key={s} className="pill">{s}</span>)}</div></section>}
           {(() => {
             const certs = certsFor(`${o.title} ${cats.join(' ')} ${skills.join(' ')}`);

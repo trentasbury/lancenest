@@ -23,12 +23,12 @@ export default async function CompanyBrandingPage({ searchParams }: { searchPara
       {searchParams.saved && <FormMessage message="Saved." />}
       <section className="card p-6">
         <p className="eyebrow">Logo</p>
-        {c.logo_url && <img src={c.logo_url as string} alt="" className="mt-3 h-16 w-16 rounded-[4px] border border-line object-contain" />}
+        {c.logo_url && <img src={c.logo_url as string} alt="" className="mt-3 h-16 w-16 rounded-xl border border-line object-contain" />}
         <form action={uploadCompanyImage.bind(null, 'logo')} className="mt-3 flex flex-col gap-2 sm:flex-row"><input type="file" name="file" accept="image/jpeg,image/png,image/webp" required className="field text-sm" /><SubmitButton className="btn btn-outline shrink-0" pendingText="Uploading…">Upload logo</SubmitButton></form>
       </section>
       <section className="card p-6">
         <p className="eyebrow">Cover photo {paid ? '' : '· Professional'}</p>
-        {c.cover_url && <img src={c.cover_url as string} alt="" className="mt-3 h-32 w-full rounded-[4px] object-cover" />}
+        {c.cover_url && <img src={c.cover_url as string} alt="" className="mt-3 h-32 w-full rounded-xl object-cover" />}
         {paid ? (
           <form action={uploadCompanyImage.bind(null, 'cover')} className="mt-3 flex flex-col gap-2 sm:flex-row"><input type="file" name="file" accept="image/jpeg,image/png,image/webp" required className="field text-sm" /><SubmitButton className="btn btn-outline shrink-0" pendingText="Uploading…">Upload cover</SubmitButton></form>
         ) : <p className="mt-2 text-sm text-muted">Add a wide cover photo of your team or workplace with <Link href="/employers" className="text-navy underline">Professional</Link>.</p>}

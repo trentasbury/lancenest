@@ -7,8 +7,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   const session = await getSessionProfile();
   if (!session) return NextResponse.redirect(new URL(`/login`, request.url));
   const supabase = createClient();
-  const { data: job } = await supabase.from('jobs').select('id, apply_url, slug').eq('id', params.id).maybeSingle();
-  if (!job?.apply_url) return NextResponse.redirect(new URL('/jobs', request.url));
+  const { data: job } = await supabase.from('jobs').select('id, apply_url, apply_mode, slug').eq('id', params.id).maybeSingle();
+  if (!job?.apply_url || job.apply_mode === 'easy') return NextResponse.redirect(new URL(job ? `/jobs/${job.slug}` : '/jobs', request.url));
   if (session.profile?.role === 'veteran') {
     await supabase.from('applications').insert({ profile_id: session.user.id, job_id: job.id, source: 'external' }).then(() => undefined, () => undefined);
   }

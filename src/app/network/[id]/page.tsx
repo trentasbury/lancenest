@@ -29,7 +29,7 @@ function CommentItem({ c, me, postAuthorId, postId, replies }: { c: Comment; me:
     <li className="flex gap-3">
       <Avatar name={c.author?.full_name} size="sm" />
       <div className="min-w-0 flex-1">
-        <div className="rounded-[4px] bg-paper px-4 py-3">
+        <div className="rounded-xl bg-paper px-4 py-3">
           <p className="text-sm font-medium">
             {c.author?.role === 'veteran' && c.author.username ? <Link href={`/veterans/${c.author.username}`} className="hover:underline">{c.author.full_name}</Link> : c.author?.full_name ?? 'Member'}
             {c.author?.verified && <VerifiedMark />}

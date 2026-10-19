@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { unstable_cache } from 'next/cache';
 import QueryNotice from '@/components/QueryNotice';
-import StarRule from '@/components/StarRule';
 
 const FEATURES = [
   { icon: '☆', title: 'Veteran Focused', body: 'Built by veterans, for veterans. Your record is read as an asset, never a gap.' },
@@ -41,55 +40,77 @@ export default async function HomePage() {
       <Suspense fallback={null}>
         <QueryNotice param="deleted" message="Your account and data have been permanently deleted." className="bg-olive/10 py-3 text-center text-sm text-olive" />
       </Suspense>
-      {/* Hero */}
+      {/* Hero: what LanceNest is, a job search, and a glimpse of the product (like Contra and LinkedIn). */}
       <section className="relative overflow-hidden bg-navy-deep text-ivory">
-        <div className="container-page grid items-center gap-12 py-16 lg:grid-cols-[1.25fr_1fr] lg:py-24">
+        <div className="pointer-events-none absolute -right-40 -top-40 h-[520px] w-[520px] rounded-full bg-brass/10 blur-3xl" aria-hidden="true" />
+        <div className="container-page relative grid items-center gap-14 py-16 lg:grid-cols-[1.15fr_1fr] lg:py-24">
           <div className="min-w-0">
-            <p className="eyebrow text-brass">Veteran Jobs · Built for What’s Next</p>
-            <h1 className="mt-5 font-serif text-[clamp(2.6rem,13vw,6rem)] font-medium leading-none tracking-[0.04em] text-ivory sm:tracking-[0.06em]">LANCENEST</h1>
-            <StarRule className="mt-6" />
-            <p className="mt-6 max-w-xl font-serif text-2xl italic leading-snug text-cream">
-              Same mission. New battlefield.
-              <br />
-              Your next chapter starts here.
+            <p className="inline-flex items-center gap-2 rounded-full border border-brass/40 bg-white/5 px-3.5 py-1.5 text-xs font-medium text-brass-light">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-olive text-[10px] text-ivory" aria-hidden="true">✓</span>
+              Every member verified by a person
+            </p>
+            <h1 className="mt-6 font-serif text-[clamp(2.4rem,7vw,4.6rem)] font-medium leading-[1.02] text-ivory">
+              The professional network for people who served.
+            </h1>
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-cream/80">
+              Jobs, freelance work, mentors, and a network of verified service members and veterans, plus the employers who want to hire them.
             </p>
 
-            <form action="/jobs" method="get" className="mt-10 flex w-full max-w-2xl flex-col gap-2 rounded-[6px] bg-ivory p-2 shadow-lift sm:flex-row">
+            <form action="/jobs" method="get" className="mt-9 flex w-full max-w-2xl flex-col gap-2 rounded-2xl bg-ivory p-2 shadow-lift sm:flex-row sm:rounded-full">
               <label htmlFor="hero-q" className="sr-only">Job title, keyword, or company</label>
-              <input id="hero-q" name="q" placeholder="Job title, keyword, or company" className="flex-1 rounded-[3px] px-4 py-3 text-[15px] text-ink outline-none placeholder:text-muted" />
+              <input id="hero-q" name="q" placeholder="Job title, keyword, or company" className="flex-1 rounded-full px-5 py-3 text-[15px] text-ink outline-none placeholder:text-muted" />
               <label htmlFor="hero-location" className="sr-only">Location</label>
-              <input id="hero-location" name="location" placeholder="Location" className="rounded-[3px] px-4 py-3 text-[15px] text-ink outline-none placeholder:text-muted sm:w-44 sm:border-l sm:border-line" />
+              <input id="hero-location" name="location" placeholder="Location" className="rounded-full px-5 py-3 text-[15px] text-ink outline-none placeholder:text-muted sm:w-44 sm:border-l sm:border-line sm:rounded-none" />
               <button type="submit" className="btn btn-primary sm:px-7">Find Jobs →</button>
             </form>
 
-            <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-cream/80">
-              <Link href="/signup?role=veteran" className="underline decoration-brass/60 underline-offset-4 hover:text-brass" data-track="cta_home_member_signup">I served — build my profile</Link>
-              <Link href="/signup?role=employer" className="underline decoration-brass/60 underline-offset-4 hover:text-brass" data-track="cta_home_employer_signup">I’m hiring veterans</Link>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/signup?role=veteran" className="btn btn-brass" data-track="cta_home_member_signup">I served — join free</Link>
+              <Link href="/signup?role=employer" className="btn border border-cream/30 text-ivory hover:bg-white/10" data-track="cta_home_employer_signup">I’m hiring veterans</Link>
             </div>
+            <p className="mt-6 text-sm text-cream/60">Free for service members · 1,469 military jobs translated · Built by a Marine veteran</p>
           </div>
 
-          <div className="relative hidden aspect-[4/5] w-full max-w-[432px] justify-self-end lg:block">
-            <div className="absolute -inset-3 border border-brass/40" aria-hidden="true" />
-            <Image
-              src="/assets/hero-service.webp"
-              alt="A U.S. Marine in desert camouflage kneeling to help a person on the ground"
-              fill
-              priority
-              quality={90}
-              sizes="(min-width: 1024px) 432px, 0px"
-              className="object-cover"
-            />
+          {/* Product glimpse: the photo with two illustrative cards floating over it. Decorative. */}
+          <div className="relative mx-auto hidden w-full max-w-[460px] lg:block" aria-hidden="true">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-[28px] shadow-lift ring-1 ring-white/10">
+              <Image src="/assets/hero-service.webp" alt="" fill priority quality={90} sizes="(min-width: 1024px) 460px, 0px" className="object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-navy-deep/70 via-transparent to-transparent" />
+              <p className="absolute bottom-4 left-5 text-xs text-cream/80">Our founder, U.S. Marine Corps veteran</p>
+            </div>
+            <div className="absolute -left-14 top-10 w-72 rounded-2xl border border-line/70 bg-ivory p-4 text-ink shadow-lift">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-navy font-serif text-sm text-brass">JD</span>
+                <div className="min-w-0">
+                  <p className="flex items-center gap-1 text-sm font-semibold">Verified member <span className="flex h-4 w-4 items-center justify-center rounded-full bg-olive text-[9px] text-ivory">✓</span></p>
+                  <p className="truncate text-xs text-muted">USMC 0311 → Operations Coordinator</p>
+                </div>
+              </div>
+            </div>
+            <div className="absolute -right-8 bottom-16 w-72 rounded-2xl border border-line/70 bg-ivory p-4 text-ink shadow-lift">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold">Logistics Program Manager</p>
+                  <p className="mt-0.5 text-xs text-muted">Defense contractor · Hybrid</p>
+                </div>
+                <span className="shrink-0 whitespace-nowrap rounded-full bg-olive/10 px-2 py-0.5 text-[10px] font-semibold text-olive">Easy Apply</span>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                <span className="pill">Secret clearance</span>
+                <span className="pill">Veteran preferred</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Feature bar */}
       <section className="bg-navy text-ivory">
-        <div className="container-page grid sm:grid-cols-2 lg:grid-cols-4">
+        <div className="container-page grid grid-cols-2 lg:grid-cols-4">
           {FEATURES.map((f, i) => (
             <div
               key={f.title}
-              className={`px-6 py-10 text-center ${i < FEATURES.length - 1 ? 'border-b border-white/10 lg:border-b-0 lg:border-r' : ''}`}
+              className={`px-3 py-8 text-center sm:px-6 sm:py-10 ${i < FEATURES.length - 1 ? 'lg:border-r lg:border-white/10' : ''}`}
             >
               <div className="text-2xl text-brass" aria-hidden="true">{f.icon}</div>
               <h2 className="mt-3 font-sans text-[13px] font-semibold uppercase tracking-[0.18em] text-ivory">{f.title}</h2>
@@ -155,7 +176,7 @@ export default async function HomePage() {
           <div className="min-w-0">
             <p className="eyebrow">See it before you sign up</p>
             <h2 className="mt-2 font-serif text-3xl font-medium text-navy">Your military job, in civilian terms.</h2>
-            <div className="mt-5 overflow-x-auto rounded-[6px] border border-line bg-ivory">
+            <div className="mt-5 overflow-x-auto rounded-2xl border border-line bg-ivory">
               <table className="w-full min-w-[420px] text-left text-sm">
                 <thead className="border-b border-line text-xs uppercase tracking-[0.12em] text-muted"><tr><th className="p-3">Military job</th><th className="p-3">Civilian roles</th></tr></thead>
                 <tbody className="divide-y divide-line">
@@ -175,7 +196,7 @@ export default async function HomePage() {
             <h2 className="mt-2 font-serif text-3xl font-medium text-navy">Verified military talent for federal-ready professional work.</h2>
             <p className="mt-3 text-muted"><strong className="text-ink">Search verified talent. Post jobs. Message candidates. Manage applicants.</strong> Built for government contractors, defense subcontractors, and veteran-owned firms hiring for:</p>
             <ul className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
-              {['Program & project management', 'Proposal & capture support', 'Logistics & supply chain', 'IT support & cyber operations', 'Operations & analysis', 'Training & instructional design', 'Business development', 'Executive & administrative operations'].map((r) => <li key={r} className="rounded-[4px] border border-line bg-ivory px-3 py-2">{r}</li>)}
+              {['Program & project management', 'Proposal & capture support', 'Logistics & supply chain', 'IT support & cyber operations', 'Operations & analysis', 'Training & instructional design', 'Business development', 'Executive & administrative operations'].map((r) => <li key={r} className="rounded-xl border border-line bg-ivory px-3 py-2">{r}</li>)}
             </ul>
             <div className="mt-5 flex flex-wrap gap-3"><Link href="/signup?role=employer" className="btn btn-primary" data-track="cta_home_hire">Start free</Link><Link href="/employers" className="btn btn-ghost border border-line" data-track="cta_home_plans">See employer plans</Link><Link href="/contact-sales" className="btn btn-outline" data-track="cta_home_book_call">Book a call</Link></div>
             <p className="mt-3 text-xs text-muted">No placement fees on hires you make yourself. Clearances shown on profiles are self-reported.</p>
@@ -200,20 +221,14 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="bg-navy-deep py-20 text-center text-ivory">
-        <h2 className="font-serif text-3xl font-medium tracking-[0.12em] text-ivory sm:text-4xl">VETERANS TODAY. LEADERS TOMORROW.</h2>
-        <p className="mt-4 text-xs tracking-[0.3em] text-brass-light">SERVICE · LEADERSHIP · OPPORTUNITY</p>
-      </section>
-      <section className="border-t border-line bg-paper">
-        <div className="container-page flex flex-col items-start justify-between gap-6 py-12 md:flex-row md:items-center">
-          <div>
-            <p className="eyebrow">Support</p>
-            <h2 className="mt-2 font-serif text-3xl font-medium text-navy">Trouble signing in?</h2>
-            <p className="mt-2 max-w-xl text-muted">Reset your password in a minute, or email our team — a real person answers, usually within one business day.</p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Link href="/forgot-password" className="btn btn-primary">Reset my password</Link>
-            <a href="mailto:support@lancenest.com?subject=LanceNest%20sign-in%20help" className="btn btn-outline">Email support@lancenest.com</a>
+      {/* Closing call to action */}
+      <section className="bg-navy-deep py-20 text-ivory">
+        <div className="container-page flex flex-col items-center text-center">
+          <p className="text-xs tracking-[0.3em] text-brass-light">VETERANS TODAY · LEADERS TOMORROW</p>
+          <h2 className="mt-4 max-w-2xl font-serif text-4xl font-medium text-ivory sm:text-5xl">Your service is the résumé. Let’s put it to work.</h2>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link href="/signup?role=veteran" className="btn btn-brass px-7" data-track="cta_home_footer_member">Create your free profile</Link>
+            <Link href="/employers" className="btn border border-cream/30 px-7 text-ivory hover:bg-white/10" data-track="cta_home_footer_employer">Hire verified veterans</Link>
           </div>
         </div>
       </section>

@@ -60,6 +60,9 @@ export type Job = {
   clearance_eligible: boolean;
   status: 'draft' | 'open' | 'paused' | 'closed';
   featured_until?: string | null;
+  apply_url?: string | null;
+  /** How veterans apply: Easy Apply on LanceNest, the company's own site, or either. */
+  apply_mode?: 'easy' | 'external' | 'both';
   posted_at: string;
 };
 

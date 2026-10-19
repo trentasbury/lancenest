@@ -40,7 +40,7 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
     if (jobs.length) {
       const ids = jobs.map((j) => j.id);
       const [{ count: appCount }, { count: interviewCount }] = await Promise.all([
-        supabase.from('applications').select('id', { count: 'exact', head: true }).in('job_id', ids).neq('status', 'withdrawn'),
+        supabase.from('applications').select('id', { count: 'exact', head: true }).in('job_id', ids).eq('source', 'lancenest').neq('status', 'withdrawn'),
         supabase.from('applications').select('id', { count: 'exact', head: true }).in('job_id', ids).eq('status', 'interview'),
       ]);
       applicants = appCount ?? 0;
@@ -83,7 +83,7 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
 
             {searchParams.verify === 'submitted' && <p className="text-sm text-olive">Thanks — your company is in review.</p>}
             {searchParams.verify === 'auto' && <p className="text-sm font-medium text-olive">✓ Your company is verified — your work email matches your website. You can publish jobs now.</p>}
-            {!(company as unknown as { isOwner: boolean }).isOwner && <p className="rounded-[4px] border border-line bg-paper p-4 text-sm">You’re on <strong>{company.name}</strong>’s hiring team. Billing, verification, and the company page are managed by the account owner.</p>}
+            {!(company as unknown as { isOwner: boolean }).isOwner && <p className="rounded-xl border border-line bg-paper p-4 text-sm">You’re on <strong>{company.name}</strong>’s hiring team. Billing, verification, and the company page are managed by the account owner.</p>}
             {(company as unknown as { isOwner: boolean }).isOwner && <CompanyVerification status={(company as unknown as { verification_status: string }).verification_status} note={(company as unknown as { verification_note: string | null }).verification_note} flash={searchParams.verify} />}
             {searchParams.error === 'verify' && <p role="alert" className="text-sm text-signal">Your company needs to be verified before you can purchase a plan or add-on.</p>}
 
@@ -110,7 +110,7 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
 
             {(company as unknown as { is_verified: boolean; isOwner: boolean }).is_verified && (company as unknown as { isOwner: boolean }).isOwner && (() => {
               const ps = (company as unknown as { public_safety_status: string }).public_safety_status;
-              if (ps === 'approved') return <p className="rounded-[4px] border border-olive/40 bg-olive/5 p-4 text-sm text-olive">✓ Public Safety rate active — 30% off Professional and Federal, applied automatically at checkout.</p>;
+              if (ps === 'approved') return <p className="rounded-xl border border-olive/40 bg-olive/5 p-4 text-sm text-olive">✓ Public Safety rate active — 30% off Professional and Federal, applied automatically at checkout.</p>;
               if (ps === 'pending' || searchParams.ps === 'requested') return <p className="text-sm text-muted">Public Safety rate requested — we’ll confirm within one business day.</p>;
               return (
                 <details className="card p-5">

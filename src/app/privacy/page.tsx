@@ -9,7 +9,7 @@ export default function PrivacyPage() {
       <section>
         <p>LanceNest (“we,” “us”) is a professional network and job platform for active duty, transitioning, and veteran service members and the employers who hire them. This policy explains what we collect, why, and the choices you have.</p>
       </section>
-      <section className="rounded-[6px] border border-brass/50 bg-paper p-5">
+      <section className="rounded-2xl border border-brass/50 bg-paper p-5">
         <h2>The short version</h2>
         <ul>
           <li><strong>Service documents</strong> (DD-214, LES, orders, NGB-22, VA letters) and a <strong>photo ID</strong> (driver’s license, state ID, or passport) are used only to verify your service and that the documents are yours. A person compares them by eye — no face-matching software — and both are deleted after review, or automatically after 30 days if never reviewed. Never upload military, VA, or other federal ID cards, or clearance records.</li>

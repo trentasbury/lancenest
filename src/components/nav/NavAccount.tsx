@@ -37,7 +37,7 @@ export default function NavAccount({ signOutAction }: { signOutAction: () => Pro
           <span className="hidden xl:inline">{firstName ?? 'Account'}</span>
           <span aria-hidden="true" className="text-xs text-muted">▾</span>
         </summary>
-        <div className="absolute right-0 z-50 mt-2 w-72 rounded-[4px] border border-line bg-ivory p-2 text-sm shadow-card">
+        <div className="absolute right-0 z-50 mt-2 w-72 rounded-xl border border-line bg-ivory p-2 text-sm shadow-card">
           {signed && (
             <div className="border-b border-line px-2 pb-3 pt-1">
               <div className="flex items-center gap-3">
@@ -60,11 +60,11 @@ export default function NavAccount({ signOutAction }: { signOutAction: () => Pro
           )}
           <div className="pt-1">
             {accountLinks(signed?.role).map((l) => (
-              <Link key={l.href} href={l.href} className="block rounded-[3px] px-3 py-2 hover:bg-cream">{l.label}</Link>
+              <Link key={l.href} href={l.href} className="block rounded-lg px-3 py-2 hover:bg-cream">{l.label}</Link>
             ))}
           </div>
           <form action={signOutAction} onSubmit={markSignedOut} className="mt-1 border-t border-line pt-1">
-            <button type="submit" className="w-full rounded-[3px] px-3 py-2 text-left text-signal hover:bg-signal/5">Log out</button>
+            <button type="submit" className="w-full rounded-lg px-3 py-2 text-left text-signal hover:bg-signal/5">Log out</button>
           </form>
         </div>
       </details>

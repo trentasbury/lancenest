@@ -40,9 +40,9 @@ export default async function ResourcesPage({ searchParams }: { searchParams: { 
             Enter your MOS, rating, or AFSC. We’ll show the civilian roles it prepares you for — your military background
             stays front and center, framed as the advantage it is.
           </p>
-          <form action="/resources" method="get" className="mt-8 flex max-w-xl gap-2 rounded-[6px] bg-ivory p-2 shadow-lift">
+          <form action="/resources" method="get" className="mt-8 flex max-w-xl gap-2 rounded-2xl bg-ivory p-2 shadow-lift">
             <label htmlFor="code" className="sr-only">Military occupation code or title</label>
-            <input id="code" name="code" defaultValue={searchParams.code} placeholder="e.g. 11B, 0311, LS, 3P0X1, Infantryman" className="min-w-0 flex-1 rounded-[3px] px-4 py-3 text-ink outline-none" />
+            <input id="code" name="code" defaultValue={searchParams.code} placeholder="e.g. 11B, 0311, LS, 3P0X1, Infantryman" className="min-w-0 flex-1 rounded-lg px-4 py-3 text-ink outline-none" />
             <button type="submit" className="btn btn-primary shrink-0">Translate</button>
           </form>
         </div>
@@ -50,7 +50,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams: { 
 
       <div className="container-page py-12">
         {code && results.length === 0 && (
-          <div className="rounded-[4px] border border-dashed border-brass/50 p-8 text-center">
+          <div className="rounded-xl border border-dashed border-brass/50 p-8 text-center">
             <p className="font-serif text-xl">We don’t have “{searchParams.code}” on file yet.</p>
             <p className="mt-2 text-sm text-muted">Our translation library is growing. Try your job title, or browse the codes below.</p>
           </div>
@@ -66,7 +66,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams: { 
                 <ul className="mt-3 space-y-2">
                   {occ.civilian_categories.map((c) => (
                     <li key={c}>
-                      <Link href={`/jobs?q=${encodeURIComponent(c)}`} className="group flex items-center justify-between rounded-[3px] border border-line bg-paper px-4 py-2.5 text-ink hover:border-brass">
+                      <Link href={`/jobs?q=${encodeURIComponent(c)}`} className="group flex items-center justify-between rounded-lg border border-line bg-paper px-4 py-2.5 text-ink hover:border-brass">
                         {c}
                         <span className="text-xs text-brass-dark opacity-0 transition-opacity group-hover:opacity-100">Search jobs →</span>
                       </Link>
@@ -104,7 +104,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams: { 
                     <summary className="cursor-pointer font-serif text-xl">{field} <span className="font-sans text-sm text-muted">({items.length})</span></summary>
                     <div className="mt-4 grid gap-2 sm:grid-cols-2">
                       {items.map((o) => (
-                        <Link key={o.code} href={`/resources?code=${encodeURIComponent(o.code)}`} className="rounded-[3px] border border-line bg-paper px-3 py-2 text-sm hover:border-brass">
+                        <Link key={o.code} href={`/resources?code=${encodeURIComponent(o.code)}`} className="rounded-lg border border-line bg-paper px-3 py-2 text-sm hover:border-brass">
                           <span className="font-semibold text-navy">{o.code}</span><span className="text-muted"> · {o.title}</span>
                         </Link>
                       ))}

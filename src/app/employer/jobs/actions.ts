@@ -60,6 +60,7 @@ export async function saveJob(jobId: string | null, formData: FormData) {
     clearance_required: oneOf(t(formData, 'clearance_required', 14), ['none', 'public_trust', 'confidential', 'secret', 'top_secret', 'ts_sci'], 'none'),
     clearance_eligible: formData.get('clearance_eligible') === 'on',
     status: oneOf(t(formData, 'status', 8), ['draft', 'open'], 'open'),
+    apply_mode: oneOf(t(formData, 'apply_mode', 8), ['easy', 'external', 'both'], 'easy') as 'easy' | 'external' | 'both',
     apply_url: t(formData, 'apply_url', 500) || null,
     screening_questions: [0, 1, 2, 3, 4].map((n) => ({ q: t(formData, `question_${n}`, 200), type: formData.get(`question_type_${n}`) === 'yesno' ? 'yesno' : 'text' })).filter((x) => x.q.length >= 3),
     multi_location: formData.get('multi_location') === 'on',
@@ -75,6 +76,9 @@ export async function saveJob(jobId: string | null, formData: FormData) {
   if (fields.status === 'open' && !isSkillBridge && (!salaryMin || !salaryMax)) publishError = 'salary_required';
   const text = [title, description, fields.responsibilities, fields.qualifications, fields.preferred_qualifications, fields.benefits].filter(Boolean).join('\n');
   if (fields.status === 'open' && scamSignals(text, 'block').length) publishError = 'scam';
+  // "Your website" and "Both" need a company link: keep the post as a draft (nothing typed is lost) until it's added.
+  if (fields.apply_mode !== 'easy' && !fields.apply_url) { fields.apply_mode = 'easy'; publishError = 'apply_url_missing'; }
+  if (fields.apply_mode === 'easy') fields.apply_url = null;
   if (publishError) fields.status = 'draft';
 
   let id = jobId;

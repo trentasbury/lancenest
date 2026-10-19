@@ -19,7 +19,7 @@ export default async function ManageJobPage({ params, searchParams }: { params: 
   const [{ data }, co, { count: applicants }] = await Promise.all([
     supabase.from('jobs').select('*, company:companies!inner(owner_id)').eq('id', params.id).maybeSingle(),
     getMyCompany(user.id),
-    supabase.from('applications').select('id', { count: 'exact', head: true }).eq('job_id', params.id).neq('status', 'withdrawn'),
+    supabase.from('applications').select('id', { count: 'exact', head: true }).eq('job_id', params.id).eq('source', 'lancenest').neq('status', 'withdrawn'),
   ]);
   if (!data || (data.company as { owner_id: string }).owner_id !== user.id) notFound();
   const job = data as unknown as Job & { featured_until: string | null };
