@@ -27,6 +27,7 @@ export default function JobErrors({ error, saved }: { error?: string; saved?: st
           <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="job_slot" /><button className="btn btn-outline">Add a slot · $39/mo</button></form>
           <Link href="/employers" className="btn btn-primary">See plans</Link>
         </div>
+        <p className="mt-2 text-[11px] text-muted">Extra slots renew monthly until you cancel them in Billing.</p>
       </div>
     );
   }

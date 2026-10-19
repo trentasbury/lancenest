@@ -100,14 +100,15 @@ export async function GET(request: NextRequest) {
     await admin.from('admin_actions').insert({ admin_id: null, action: 'document_auto_deleted', target_type: 'verification_request', target_id: v.id, details: { reason: '30-day retention limit' } });
   }
 
-  // ---------- Uploads that never became a request (browser closed mid-submit): delete after 2 days ----------
+  // ---------- Uploads that never became a request (browser closed mid-submit): older than 1 day are deleted ----------
+  // This job runs once a day, so the published promise is "within 48 hours". A real submission turns into a request within seconds.
   const { data: openReqs } = await admin.from('verification_requests').select('document_path, id_document_path').eq('status', 'pending');
   const keep = new Set((openReqs ?? []).flatMap((r) => [r.document_path, r.id_document_path]).filter(Boolean) as string[]);
   const { data: folders } = await admin.storage.from('verification-docs').list('', { limit: 1000 });
   for (const folder of (folders ?? []).filter((f) => !f.id)) {
     const { data: files } = await admin.storage.from('verification-docs').list(folder.name, { limit: 100 });
     const orphans = (files ?? []).map((f) => ({ path: `${folder.name}/${f.name}`, at: Date.parse(f.created_at ?? '') }))
-      .filter((f) => !keep.has(f.path) && Number.isFinite(f.at) && now - f.at > 48 * H).map((f) => f.path);
+      .filter((f) => !keep.has(f.path) && Number.isFinite(f.at) && now - f.at > 24 * H).map((f) => f.path);
     if (orphans.length) await admin.storage.from('verification-docs').remove(orphans);
   }
 

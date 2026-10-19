@@ -30,7 +30,7 @@ const QUICK: [string, string][] = [
 
 type Req = { id: string; kind: string; subject: string; status: string; admin_reply: string | null; created_at: string };
 
-export default async function HelpPage({ searchParams }: { searchParams: { kind?: string; sent?: string; error?: string; from?: string } }) {
+export default async function HelpPage({ searchParams }: { searchParams: { kind?: string; sent?: string; error?: string; from?: string; subject?: string } }) {
   const session = await getSessionProfile();
   const kind = KINDS.some(([v]) => v === searchParams.kind) ? searchParams.kind : 'support';
   // Pre-fill "which page" from the link that brought them here (same-site paths only).
@@ -88,7 +88,7 @@ export default async function HelpPage({ searchParams }: { searchParams: { kind?
               )}
               <div>
                 <label htmlFor="subject" className="field-label">Subject</label>
-                <input id="subject" name="subject" required minLength={3} maxLength={140} placeholder="e.g. My verification is stuck, or: Let employers filter by certification" className="field" />
+                <input id="subject" name="subject" required minLength={3} maxLength={140} defaultValue={searchParams.subject?.slice(0, 140)} placeholder="e.g. My verification is stuck, or: Let employers filter by certification" className="field" />
               </div>
               <div>
                 <label htmlFor="details" className="field-label">Details</label>

@@ -4,6 +4,7 @@ import { requireVerifiedMember } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { CATEGORIES, FREE_PROPOSALS_PER_MONTH, proposalCredits, proposalsUsedThisMonth } from '@/lib/freelance';
 import ProposalPackForm from '@/components/freelance/ProposalPackForm';
+import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
 import { CLEARANCE_LABEL } from '@/lib/employer';
 import { sanitizeSearch } from '@/lib/format';
 import { timeAgo } from '@/lib/network';
@@ -44,7 +45,7 @@ export default async function FreelancePage({ searchParams }: { searchParams: { 
           <div>
             <p className="eyebrow text-brass">LanceNest Freelance</p>
             <h1 className="mt-2 font-serif text-4xl font-medium text-ivory sm:text-5xl">{isVet ? 'Contract work for verified service members' : 'Hire verified service members'}</h1>
-            <p className="mt-2 max-w-2xl text-cream/80">Every freelancer here is a verified service member. Cleared work, federal projects, and real skills — with payments protected until work is approved.</p>
+            <p className="mt-2 max-w-2xl text-cream/80">Every freelancer here is a verified service member. Cleared work, federal projects, and real skills{FREELANCE_PAYMENTS_ENABLED ? ' — with payments protected until work is approved.' : '. Protected milestone payments are coming soon.'}</p>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
             {!isVet && <Link href="/freelance/services" className="btn btn-brass">Browse services</Link>}
@@ -72,7 +73,11 @@ export default async function FreelancePage({ searchParams }: { searchParams: { 
                 </>
               )}
             </div>
-            <div className="card p-5"><p className="eyebrow">Protected payments</p><p className="mt-2 font-serif text-2xl text-navy">Funded before you start</p><p className="text-xs text-muted">Clients fund each milestone up front. It’s released to you when the work is approved. <Link href="/payments-protection" className="text-navy underline">How it works →</Link></p></div>
+            {FREELANCE_PAYMENTS_ENABLED ? (
+              <div className="card p-5"><p className="eyebrow">Protected payments</p><p className="mt-2 font-serif text-2xl text-navy">Funded before you start</p><p className="text-xs text-muted">Clients fund each milestone up front. It’s released to you when the work is approved. <Link href="/payments-protection" className="text-navy underline">How it works →</Link></p></div>
+            ) : (
+              <div className="card p-5"><p className="eyebrow">Protected payments</p><p className="mt-2 font-serif text-2xl text-navy">Coming soon</p><p className="text-xs text-muted">Milestone payments on LanceNest open soon. For now, agree on payment terms directly with your client. <Link href="/payments-protection" className="text-navy underline">How it will work →</Link></p></div>
+            )}
             <div className="card p-5"><p className="eyebrow">Payouts</p><p className="mt-2 font-serif text-2xl text-navy">{fp?.payouts_enabled ? 'Ready ✓' : 'Not set up'}</p>{!fp?.payouts_enabled && <Link href="/freelance/profile#payouts" className="text-xs text-navy underline">Set up payouts →</Link>}</div>
           </div>
         )}

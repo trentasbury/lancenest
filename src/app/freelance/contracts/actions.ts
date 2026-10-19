@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { AUTO_RELEASE_DAYS, releaseMilestone, vetRateFor } from '@/lib/payments';
 import { SITE, notifyMember } from '@/lib/email';
+import { FREELANCE_FEES } from '@/lib/fees';
 
 const t = (fd: FormData, k: string, max: number) => String(fd.get(k) ?? '').trim().slice(0, max);
 const back = (id: string, q = '') => redirect(`/freelance/contracts/${id}${q}`);
@@ -140,7 +141,7 @@ export async function declineContract(contractId: string) {
   redirect(`/freelance/contracts/${contractId}`);
 }
 
-/** Client converts a LanceNest contractor to a full-time hire: 10% of first-year salary within 12 months of their first contract; free after that. */
+/** Client converts a LanceNest contractor to a full-time hire: the conversion fee in lib/fees.ts (rate of first-year salary, with a minimum) within 12 months of their first contract; free after that. */
 export async function requestConversion(contractId: string, formData: FormData) {
   const { user } = await requireRole(['employer'], '/freelance');
   const admin = createAdminClient();
@@ -150,7 +151,8 @@ export async function requestConversion(contractId: string, formData: FormData) 
   if (!Number.isFinite(salary) || salary < 1000000) redirect(`/freelance/contracts/${contractId}?error=salary`);
   const { data: first } = await admin.from('contracts').select('created_at').eq('client_id', c.client_id).eq('freelancer_id', c.freelancer_id).order('created_at').limit(1).maybeSingle();
   const withinYear = first && Date.now() - Date.parse(first.created_at as string) < 365 * 86400000;
-  const fee = withinYear ? Math.round(salary * 0.10) : 0;
+  const { firstYearPayRate, minimumCents } = FREELANCE_FEES.conversionFee;
+  const fee = withinYear ? Math.max(Math.round(salary * firstYearPayRate), minimumCents) : 0;
   await admin.from('conversion_requests').insert({ contract_id: c.id, client_id: c.client_id, freelancer_id: c.freelancer_id, salary_cents: salary, fee_cents: fee });
   const { data: admins } = await admin.from('profiles').select('id').eq('role', 'admin');
   if (admins?.length) await admin.from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'conversion', title: `Contract-to-hire on “${c.title}” — ${fee ? `invoice $${(fee / 100).toLocaleString()}` : 'no fee (12+ months on LanceNest)'}.`, link: '/admin/leads' })));

@@ -1,6 +1,7 @@
 import { CLEARANCE_STATUS, POLY_SHORT } from '@/lib/military';
 import PlanBadge from '@/components/PlanBadge';
 import VerifiedMark from '@/components/VerifiedMark';
+import VerifiedNote from '@/components/VerifiedNote';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -149,8 +150,9 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
           <Link href="/employer/dashboard" className="text-sm text-muted hover:text-navy">← Employer dashboard</Link>
           <h1 className="mt-2 font-serif text-4xl font-medium">Candidate search</h1>
         </div>
-        <p className="text-sm text-muted">Messaging is free and unlimited.</p>
+        <p className="text-sm text-muted">Message your applicants anytime · {({ professional: '100', federal: '500', enterprise: '2,000' } as Record<string, string>)[company.plan] ?? '100'} new conversations a month with other members</p>
       </div>
+      <p className="mt-3 text-xs text-muted"><VerifiedNote /> Clearances are self-reported; confirm eligibility in official systems.</p>
 
       {(savedSearches ?? []).length > 0 && (
         <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">

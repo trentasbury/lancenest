@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { CLEARANCE_LABEL } from '@/lib/employer';
 import { FREE_PROPOSALS_PER_MONTH, keepPercent, proposalCredits, proposalsUsedThisMonth } from '@/lib/freelance';
 import ProposalPackForm from '@/components/freelance/ProposalPackForm';
+import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
 import { timeAgo } from '@/lib/network';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
@@ -41,7 +42,7 @@ export default async function ProjectPage({ params, searchParams }: { params: { 
   const planOf = new Map((fPlans ?? []).map((r) => [r.profile_id as string, r.plan as string]));
   const trackOf = new Map(((track ?? []) as { profile_id: string; completed: number; avg_rating: number | null }[]).map((t) => [t.profile_id, t]));
   const topProposal = (p: Proposal) => ['pro_plus', 'federal_pro'].includes(planOf.get(p.freelancer_id) ?? '');
-  // Career Accelerator and Federal members are top applicants: their proposals are listed first.
+  // Career Accelerator and Federal members are priority applicants (a paid perk, labeled for the client): their proposals are listed first.
   const proposals = [...rawProposals.filter(topProposal), ...rawProposals.filter((p) => !topProposal(p))];
   const mine = proposals.find((p) => p.freelancer_id === user.id);
   const [{ data: fp }, { data: vet }] = isVet
@@ -74,6 +75,7 @@ export default async function ProjectPage({ params, searchParams }: { params: { 
             <div className="flex items-center justify-between"><h2 className="eyebrow">Proposals ({proposals.filter((p) => p.status !== 'withdrawn').length})</h2>
               <form action={setProjectStatus.bind(null, project.id, project.status === 'open' ? 'closed' : 'open')}><SubmitButton className="btn btn-ghost border border-line py-1.5 text-xs" pendingText="…">{project.status === 'open' ? 'Close to new proposals' : 'Reopen'}</SubmitButton></form>
             </div>
+            {proposals.some(topProposal) && <p className="text-xs text-muted">Priority applicants are Career Accelerator or Federal members. Their proposals are listed first as a paid member perk; LanceNest doesn’t rank proposals by quality.</p>}
             {proposals.length === 0 && <p className="card p-6 text-sm text-muted">No proposals yet. Verified service members are notified as they browse — most projects get proposals within a few days.</p>}
             {proposals.filter((p) => p.status !== 'withdrawn').map((p) => (
               <div key={p.id} className={`card p-5 ${p.status === 'shortlisted' ? 'border-brass' : ''}`}>
@@ -84,7 +86,7 @@ export default async function ProjectPage({ params, searchParams }: { params: { 
                       <p className="font-medium">{p.freelancer?.username ? <Link href={`/veterans/${p.freelancer.username}`} className="hover:underline">{p.freelancer.full_name}</Link> : p.freelancer?.full_name}{p.freelancer?.verified && <VerifiedMark />}</p>
                       <p className="text-xs text-muted">{[p.freelancer?.headline, p.freelancer?.service_summary].filter(Boolean).join(' · ')}</p>
                       <p className="mt-0.5 text-xs">
-                        {topProposal(p) && <span className="mr-2 rounded-full bg-brass px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-navy">Top applicant</span>}
+                        {topProposal(p) && <span title="Career Accelerator or Federal member perk" className="mr-2 rounded-full bg-brass px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-navy">Priority applicant</span>}
                         {trackOf.get(p.freelancer_id) ? <span className="text-olive">✓ {trackOf.get(p.freelancer_id)!.completed} verified job{trackOf.get(p.freelancer_id)!.completed === 1 ? '' : 's'}{trackOf.get(p.freelancer_id)!.avg_rating ? ` · ${trackOf.get(p.freelancer_id)!.avg_rating}★` : ''}</span> : <span className="text-muted">New to LanceNest freelance</span>}
                         {p.freelancer?.username && <> · <Link href={`/veterans/${p.freelancer.username}`} className="text-navy underline">View work & portfolio</Link></>}
                       </p>
@@ -112,7 +114,7 @@ export default async function ProjectPage({ params, searchParams }: { params: { 
         <div className="card p-6">
           <p className="eyebrow">Budget</p>
           <p className="mt-2 font-serif text-3xl text-navy">{project.budget_min || project.budget_max ? `$${(project.budget_min ?? project.budget_max).toLocaleString()}${project.budget_max && project.budget_min && project.budget_max !== project.budget_min ? `–$${project.budget_max.toLocaleString()}` : ''}` : 'Open'}{project.budget_type === 'hourly' ? '/hr' : ''}</p>
-          <p className="text-xs text-muted">{project.budget_type === 'hourly' ? 'Hourly' : 'Fixed price'} · payments protected until you approve the work</p>
+          <p className="text-xs text-muted">{project.budget_type === 'hourly' ? 'Hourly' : 'Fixed price'} · {FREELANCE_PAYMENTS_ENABLED ? 'payments protected until you approve the work' : 'payment arranged directly with the client'}</p>
         </div>
 
         {isVet && (mine ? (

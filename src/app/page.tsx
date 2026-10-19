@@ -6,7 +6,7 @@ import { unstable_cache } from 'next/cache';
 import QueryNotice from '@/components/QueryNotice';
 
 const FEATURES = [
-  { icon: '☆', title: 'Veteran Focused', body: 'Built by veterans, for veterans. Your record is read as an asset, never a gap.' },
+  { icon: '☆', title: 'Veteran Focused', body: 'Built by a Marine veteran, for everyone who served. Your record is read as an asset, never a gap.' },
   { icon: '◇', title: 'Top Opportunities', body: 'Employers here are looking for military talent on purpose — not by accident.' },
   { icon: '✧', title: 'Career Resources', body: 'Translate your MOS, rating, or AFSC into the civilian roles it prepares you for.' },
   { icon: '❖', title: 'A Stronger Community', body: 'Active duty, National Guard, Reserve, transitioning, and veteran members in one professional network.' },
@@ -199,7 +199,7 @@ export default async function HomePage() {
               {['Program & project management', 'Proposal & capture support', 'Logistics & supply chain', 'IT support & cyber operations', 'Operations & analysis', 'Training & instructional design', 'Business development', 'Executive & administrative operations'].map((r) => <li key={r} className="rounded-xl border border-line bg-ivory px-3 py-2">{r}</li>)}
             </ul>
             <div className="mt-5 flex flex-wrap gap-3"><Link href="/signup?role=employer" className="btn btn-primary" data-track="cta_home_hire">Start free</Link><Link href="/employers" className="btn btn-ghost border border-line" data-track="cta_home_plans">See employer plans</Link><Link href="/contact-sales" className="btn btn-outline" data-track="cta_home_book_call">Book a call</Link></div>
-            <p className="mt-3 text-xs text-muted">No placement fees on hires you make yourself. Clearances shown on profiles are self-reported.</p>
+            <p className="mt-3 text-xs text-muted">No placement fees on hires you make through job posts. Clearances shown on profiles are self-reported.</p>
           </div>
         </div>
       </section>
@@ -211,7 +211,7 @@ export default async function HomePage() {
             <Link href="/trust" className="text-sm text-navy underline decoration-brass underline-offset-4">What we verify — and what we don’t →</Link>
           </div>
           <div className="mt-6 grid gap-5 md:grid-cols-3">
-            <div className="card p-5"><p className="font-semibold text-navy">Every member</p><p className="mt-1 text-sm text-muted">A person checks proof of service — DD-214, LES, orders, NGB-22, or a VA letter — against a photo ID. Documents are deleted after review. Military ID cards are never accepted.</p></div>
+            <div className="card p-5"><p className="font-semibold text-navy">Every member</p><p className="mt-1 text-sm text-muted">A person checks proof of service — DD-214, LES, orders, NGB-22, or a VA letter — against a photo ID. Both files are deleted as soon as the reviewer approves or rejects them. Military ID cards are never accepted.</p></div>
             <div className="card p-5"><p className="font-semibold text-navy">Every employer</p><p className="mt-1 text-sm text-muted">Company domain or business documents are verified before anyone can post a job, search, or message members.</p></div>
             <div className="card p-5"><p className="font-semibold text-navy">What’s self-reported</p><p className="mt-1 text-sm text-muted">Security clearances are self-reported and labeled that way. Employers confirm eligibility through official channels.</p></div>
           </div>

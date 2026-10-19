@@ -9,7 +9,7 @@ import { decideVerification } from '../actions';
 export const metadata: Metadata = { title: 'Verification queue', robots: { index: false } };
 
 export default async function VerificationQueue({ searchParams }: { searchParams: { req?: string; flag?: string; on?: string; why?: string } }) {
-  await requireAdmin('/admin/verifications');
+  const { user } = await requireAdmin('/admin/verifications');
   const admin = createAdminClient();
   const { data } = await admin
     .from('verification_requests')
@@ -21,6 +21,14 @@ export default async function VerificationQueue({ searchParams }: { searchParams
   // Short-lived links so documents are never publicly reachable.
   const sign = async (p: string | null) => (p ? (await admin.storage.from('verification-docs').createSignedUrl(p, 600)).data?.signedUrl ?? null : null);
   const links = await Promise.all(requests.map(async (r) => Promise.all([sign(r.document_path), sign(r.id_document_path)])));
+  // Access log: every time an admin opens the queue, record whose documents were made viewable, by whom, and when.
+  const opened = requests.filter((_, i) => links[i]?.some(Boolean));
+  if (opened.length) {
+    await admin.from('admin_actions').insert(opened.map((r) => ({
+      admin_id: user.id, action: 'verification_docs_viewed', target_type: 'profile', target_id: r.profile_id,
+      details: { request_id: r.id, files: [r.document_path ? 'service' : null, r.id_document_path ? 'photo_id' : null].filter(Boolean), link_minutes: 10 },
+    })));
+  }
 
   return (
     <>

@@ -1,4 +1,5 @@
-import { CONVERSION_FEES_ENABLED } from '@/lib/flags';
+import { CONVERSION_FEES_ENABLED, FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
+import { FREELANCE_FEES } from '@/lib/fees';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -49,11 +50,17 @@ export default async function ContractPage({ params, searchParams }: { params: {
         <form action={startConversation.bind(null, other)}><SubmitButton className="btn btn-outline" pendingText="…">Message</SubmitButton></form>
       </div>
       {searchParams.error && <FormMessage error={ERR[searchParams.error] ?? 'Something went wrong — please try again.'} />}
-      {searchParams.hired && <FormMessage message="Contract created. Fund the first milestone so work can begin — the payment is held until you approve." />}
+      {searchParams.hired && <FormMessage message={FREELANCE_PAYMENTS_ENABLED ? 'Contract created. Fund the first milestone so work can begin — the payment is held until you approve.' : 'Contract created. Agree on scope and payment with the freelancer in messages; milestone payments on LanceNest open soon.'} />}
       {searchParams.released && <FormMessage message="Payment released to the freelancer. Thank you!" />}
-      <div className="rounded-xl border border-olive/30 bg-olive/5 p-4 text-sm text-ink/85">
-        <strong className="text-olive">Protected Payments.</strong> <a href="/payments-protection" className="text-navy underline">How it works</a> · The client funds each milestone before work starts. LanceNest holds the money and releases it when the client approves — or automatically 14 days after the work is submitted. Either side can open a dispute and LanceNest will decide.
-      </div>
+      {FREELANCE_PAYMENTS_ENABLED ? (
+        <div className="rounded-xl border border-olive/30 bg-olive/5 p-4 text-sm text-ink/85">
+          <strong className="text-olive">Protected Payments.</strong> <a href="/payments-protection" className="text-navy underline">How it works</a> · The client funds each milestone before work starts. LanceNest holds the money and releases it when the client approves — or automatically 14 days after the work is submitted. Either side can open a dispute and LanceNest will decide.
+        </div>
+      ) : (
+        <div className="rounded-xl border border-brass/50 bg-brass/10 p-4 text-sm text-ink/85">
+          <strong>Milestone payments on LanceNest are coming soon.</strong> Until then, use milestones to agree on scope and amounts, and arrange payment directly with each other. LanceNest isn’t a party to those payments and doesn’t hold or guarantee them.
+        </div>
+      )}
 
       {contract.request_note && <div className="card p-5 text-sm"><p className="eyebrow">Request details</p><p className="mt-2 whitespace-pre-line">{contract.request_note}</p></div>}
       {isFreelancer && contract.status === 'active' && ms.every((m) => ['pending', 'cancelled'].includes(m.status)) && (
@@ -80,8 +87,12 @@ export default async function ContractPage({ params, searchParams }: { params: {
 
               {isClient && m.status === 'pending' && contract.status === 'active' && (
                 <div className="flex flex-wrap items-center gap-2">
-                  <form action="/api/freelance/fund" method="post"><input type="hidden" name="milestone_id" value={m.id} /><input type="hidden" name="method" value="card" /><button className="btn btn-primary">Fund by card (5% fee)</button></form>
-                  <form action="/api/freelance/fund" method="post"><input type="hidden" name="milestone_id" value={m.id} /><input type="hidden" name="method" value="bank" /><button className="btn btn-outline">Fund by bank transfer (3% fee)</button></form>
+                  {FREELANCE_PAYMENTS_ENABLED ? (
+                    <>
+                      <form action="/api/freelance/fund" method="post"><input type="hidden" name="milestone_id" value={m.id} /><input type="hidden" name="method" value="card" /><button className="btn btn-primary">Fund by card (5% fee)</button></form>
+                      <form action="/api/freelance/fund" method="post"><input type="hidden" name="milestone_id" value={m.id} /><input type="hidden" name="method" value="bank" /><button className="btn btn-outline">Fund by bank transfer (3% fee)</button></form>
+                    </>
+                  ) : <span className="text-xs text-muted">Funding through LanceNest opens soon.</span>}
                   <form action={cancelMilestone.bind(null, m.id)}><button className="btn btn-ghost text-xs">Remove</button></form>
                 </div>
               )}
@@ -119,7 +130,7 @@ export default async function ContractPage({ params, searchParams }: { params: {
       {searchParams.converted && <FormMessage message="Thanks — we’ll confirm the conversion and send any invoice by email." />}
       {CONVERSION_FEES_ENABLED && isClient && ['active', 'completed'].includes(contract.status) && (
         <details className="card p-5 text-sm"><summary className="cursor-pointer font-medium text-navy">Hire this freelancer full-time</summary>
-          <p className="mt-2 text-muted">Converting a LanceNest contractor to a full-time employee within 12 months of your first contract carries a one-time fee of 10% of first-year base salary. After 12 months, it’s free.</p>
+          <p className="mt-2 text-muted">Converting a LanceNest contractor to a full-time employee within 12 months of your first contract carries a one-time fee of {Math.round(FREELANCE_FEES.conversionFee.firstYearPayRate * 100)}% of first-year base salary (minimum ${(FREELANCE_FEES.conversionFee.minimumCents / 100).toLocaleString()}). After 12 months, it’s free.</p>
           <form action={requestConversion.bind(null, contract.id)} className="mt-3 flex flex-col gap-2 sm:flex-row"><input name="salary" required inputMode="decimal" placeholder="First-year base salary ($)" className="field" /><SubmitButton className="btn btn-primary shrink-0" pendingText="…">Request conversion</SubmitButton></form>
         </details>
       )}

@@ -1,5 +1,6 @@
 import PlanBadge from '@/components/PlanBadge';
 import VerifiedMark from '@/components/VerifiedMark';
+import VerifiedNote from '@/components/VerifiedNote';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -74,7 +75,7 @@ export default async function ApplicantsPage({ params }: { params: { id: string 
   const planOf = new Map(((plans ?? []) as { profile_id: string; plan: string }[]).map((p) => [p.profile_id, p.plan]));
   const trackOf = new Map(((track ?? []) as { profile_id: string; completed: number; avg_rating: number | null }[]).map((t) => [t.profile_id, t]));
   const featured = (a: App) => ['pro_plus', 'federal_pro'].includes(planOf.get(a.profile_id) ?? '');
-  // Career Accelerator / Federal members are featured applicants: listed first, newest first within each group.
+  // Career Accelerator / Federal members are priority applicants (a paid perk, labeled on screen): listed first, newest first within each group.
   const apps = [...rawApps.filter(featured), ...rawApps.filter((a) => !featured(a))];
 
 
@@ -89,6 +90,10 @@ export default async function ApplicantsPage({ params }: { params: { id: string 
           <Link href="/employers" className="text-sm text-muted underline">CSV export · Professional</Link>
         )}
       </div>
+      <p className="mt-3 text-xs text-muted">
+        <VerifiedNote />
+        {apps.some(featured) && <> Priority applicants are Career Accelerator or Federal members, listed first as a paid member perk — not a ranking of their fit for this job.</>}
+      </p>
       {apps.length === 0 ? (
         <p className="card mt-6 p-8 text-center text-muted">No applicants yet. Boosting the job puts it at the top of search.</p>
       ) : (
@@ -100,7 +105,7 @@ export default async function ApplicantsPage({ params }: { params: { id: string 
                 <p className="font-medium">
                   {a.profile?.username ? <Link href={`/veterans/${a.profile.username}`} className="hover:underline">{a.profile.full_name}</Link> : a.profile?.full_name ?? 'Applicant'}
                   {a.profile?.verified && <VerifiedMark />}<PlanBadge plan={planOf.get(a.profile_id)} />
-                  {featured(a) && <span className="ml-1.5 rounded-full bg-brass px-2 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-[0.1em] text-navy">Featured applicant</span>}
+                  {featured(a) && <span title="Career Accelerator or Federal member perk" className="ml-1.5 rounded-full bg-brass px-2 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-[0.1em] text-navy">Priority applicant</span>}
                 </p>
                 <p className="truncate text-sm text-muted">{[a.profile?.headline, a.profile?.service_summary].filter(Boolean).join(' · ')}</p>
                 <p className="text-xs text-muted">Applied {new Date(a.applied_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}

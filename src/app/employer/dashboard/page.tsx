@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/server';
 import StatCard from '@/components/StatCard';
 import EmptyState from '@/components/EmptyState';
 import CreateCompanyForm from '@/components/employer/CreateCompanyForm';
+import RenewalNote from '@/components/RenewalNote';
 import type { Company } from '@/lib/types';
 
 export const metadata: Metadata = { title: 'Employer Dashboard' };
@@ -169,6 +170,7 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
                 )}
               </div>
             </section>
+            {(company.plan === 'free' || company.plan === 'professional') && <RenewalNote className="-mt-6" />}
 
             <section>
               <div className="flex flex-wrap items-center justify-between gap-3">

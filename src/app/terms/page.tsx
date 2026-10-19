@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import LegalPage from '@/components/LegalPage';
+import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
 
 export const metadata: Metadata = { alternates: { canonical: '/terms' }, title: 'Terms of Service' };
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms of Service" updated="September 2026">
+    <LegalPage title="Terms of Service" updated="October 2026">
       <section>
         <p>These Terms govern your use of LanceNest. By creating an account or using the site, you agree to them and to our <Link href="/privacy" className="text-navy underline">Privacy Policy</Link>.</p>
       </section>
@@ -21,10 +22,13 @@ export default function TermsPage() {
       </section>
       <section>
         <h2>Freelance work and Protected Payments</h2>
+        {!FREELANCE_PAYMENTS_ENABLED && (
+          <p><strong>Milestone payments through LanceNest are not available yet.</strong> Until they are, clients and freelancers agree on and make payments directly with each other. LanceNest is not a party to those payments and does not hold, process, or guarantee them. The payment terms below apply once milestone payments are available on LanceNest.</p>
+        )}
         <p>Freelancers are independent contractors, not employees of LanceNest or of their clients through LanceNest. Clients fund each milestone before work begins. LanceNest holds the funds through its payment processor (Stripe) and releases them to the freelancer when the client approves the work, or automatically 14 days after the work is submitted if the client doesn’t approve, request changes, or open a dispute. LanceNest is not an escrow agent or a party to the work agreement.</p>
         <p>Either party may open a dispute on a funded milestone; LanceNest reviews the contract, messages, and delivered work and decides whether to release the funds to the freelancer or refund the client, and that decision is final on LanceNest. Refunds return the milestone amount; the client service fee (the percentage fee and the contract-start fee) covers payment processing and is non-refundable. Milestones are at least $25. Fees are shown before every payment. Stripe verifies freelancers’ identity and may issue tax forms (such as Form 1099-K) as required by law.</p>
         <p>Members who list services are responsible for holding any license, certification, permit, or insurance the work legally requires where it is performed, and for doing the work safely. Members currently serving are responsible for obtaining any required approval for off-duty employment and may not use government time, property, rank, or uniform to promote or perform their services. LanceNest does not supervise or guarantee services, and clients should confirm licensing for regulated trades.</p>
-        <p>Keep work and payments on LanceNest. Taking a client relationship you met here off the platform to avoid fees (circumvention) is prohibited and may result in removal; hiring a freelancer full-time is permitted with the conversion fee shown in your account.</p>
+        <p>{FREELANCE_PAYMENTS_ENABLED ? 'Keep work and payments on LanceNest. ' : 'Once milestone payments are available, keep work and payments on LanceNest. '}Taking a client relationship you met here off the platform to avoid fees (circumvention) is prohibited and may result in removal. Hiring a freelancer you met here as a full-time employee is permitted.</p>
       </section>
       <section>
         <h2>Independence</h2>
@@ -60,11 +64,12 @@ export default function TermsPage() {
       <section>
         <h2>Your content</h2>
         <p>You own what you post. You give LanceNest a non-exclusive, worldwide, royalty-free license to host, display, and distribute it as needed to operate the service, according to the audience you choose. You can delete your content at any time. We may remove content or suspend accounts that violate these Terms.</p>
+        <p><strong>Copyright.</strong> Post only content you own or have permission to use. We respond to copyright notices as described in our <Link href="/copyright" className="text-navy underline">Copyright policy</Link>, and we end the accounts of repeat infringers.</p>
       </section>
       <section>
         <h2>Plans and payments</h2>
-        <p>Core features are free for service members. Paid plans, when offered, will show their price and terms before you buy, renew automatically until canceled, and can be canceled at any time for the end of the current billing period. Fees for any freelance marketplace will be shown before you accept work.</p>
-        <p><strong>Refunds.</strong> Subscription payments are non-refundable; canceling stops future charges and your plan stays active until the end of the period you paid for. Featured-job boosts are non-refundable once the job is featured. If you believe you were charged in error, contact us within 30 days and we will make it right.</p>
+        <p>Core features are free for service members. Paid plans show their price, billing period, and terms before you buy. <strong>Subscriptions renew automatically</strong> at the then-current price for the same period (monthly or yearly) until you cancel. You can cancel at any time in Billing (from your dashboard), without contacting us; canceling stops future charges, and your plan stays active until the end of the period you paid for. Founding and other introductory prices apply only for the period stated at checkout; after that, the plan renews at its regular price. Fees for any freelance marketplace will be shown before you accept work.</p>
+        <p><strong>Refunds.</strong> Except where the law requires a refund, subscription payments are non-refundable, featured-job boosts are non-refundable once the job is featured, and proposal packs are non-refundable once added to your account. If you believe you were charged in error, twice, or without your permission, contact us within 30 days and we will make it right.</p>
       </section>
       <section>
         <h2>No guarantees</h2>

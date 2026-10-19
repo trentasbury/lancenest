@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { TRAINING_CATEGORIES } from '@/lib/training';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
+import RenewalNote from '@/components/RenewalNote';
 import { deleteProgram, saveProgram, setProgramStatus } from './actions';
 
 export const metadata: Metadata = { title: 'Training & certification listings' };
@@ -46,6 +47,7 @@ export default async function TrainingPartnerPage({ searchParams }: { searchPara
                 <div className="mt-2 space-y-2">
                   <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="training_listing_month" /><button className="btn btn-primary w-full">$149/month</button></form>
                   <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="training_listing_year" /><button className="w-full text-xs text-navy underline">or $1,490/year (2 months free)</button></form>
+                  <RenewalNote />
                 </div>
               )}
             </div>

@@ -5,6 +5,7 @@ import { cache } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth';
 import VerificationBadge from '@/components/VerificationBadge';
+import VerifiedNote from '@/components/VerifiedNote';
 import { CLEARANCES, COMPONENTS, yearOf } from '@/lib/military';
 import { initials } from '@/lib/format';
 import { FEED_FILTERS, MILESTONES_BY_TYPE, PAGE_SIZE, POST_TYPES, VISIBILITY, getFeed, mediaUrl, type Post } from '@/lib/network';
@@ -229,6 +230,9 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
                   </span>
                 )}
               </div>
+              {vet.verification_status === 'verified' && (viewer?.profile?.role === 'employer' || viewer?.profile?.role === 'admin') && (
+                <p className="mt-2 max-w-2xl text-xs text-muted"><VerifiedNote /></p>
+              )}
               {isOwner && <p className="mt-3 text-xs text-muted">This is how employers and members see your profile.</p>}
             </div>
 

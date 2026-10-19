@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { stripe } from '@/lib/stripe';
 import { feeBreakdown } from '@/lib/payments';
 import { FREELANCE_FEES } from '@/lib/fees';
+import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
 
 /** Client funds a milestone. LanceNest holds the payment until the client approves (or auto-release). */
 export async function POST(request: NextRequest) {
@@ -14,6 +15,8 @@ export async function POST(request: NextRequest) {
   if (!session || session.profile?.role !== 'employer') return NextResponse.redirect(`${site}/login?next=/freelance`, 303);
   const form = await request.formData();
   const milestoneId = String(form.get('milestone_id') ?? '');
+  // Switched off until payments counsel clears the fund flow (see lib/flags.ts).
+  if (!FREELANCE_PAYMENTS_ENABLED) return NextResponse.redirect(`${site}/freelance`, 303);
   const method = form.get('method') === 'bank' ? 'bank' : 'card';
   const supabase = createClient();
   const { data: m } = await supabase.from('milestones').select('id, title, amount_cents, status, contract_id, contract:contracts(id, title, client_id, status)').eq('id', milestoneId).maybeSingle();

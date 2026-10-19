@@ -118,7 +118,7 @@ export default function VerificationForm({ userId }: { userId: string }) {
         </label>
         <label className="flex items-start gap-2.5 text-sm">
           <input type="checkbox" name="id_consent" required className="mt-0.5 h-4 w-4 accent-navy" />
-          <span>I agree that a LanceNest reviewer may compare my photo ID with my service document to confirm they’re both mine. Both files are deleted when the review is done.</span>
+          <span>I agree that a LanceNest reviewer may compare my photo ID with my service document to confirm they’re both mine. Both files are deleted as soon as the reviewer approves or rejects them.</span>
         </label>
       </div>
 

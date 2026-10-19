@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { CATALOG, foundingCoupon, foundingFederalCoupon, publicSafetyCoupon, stripe, type ProductKey } from '@/lib/stripe';
 import { foundingSpotsLeft } from '@/lib/billing';
+import { RENEWAL_CHECKOUT_MESSAGE } from '@/components/RenewalNote';
 
 /** Starts a Stripe Checkout for an employer plan, an extra job slot, or a job boost. */
 export async function POST(request: NextRequest) {
@@ -46,6 +47,7 @@ export async function POST(request: NextRequest) {
       mode: 'subscription', customer, allow_promotion_codes: true,
       line_items: [{ quantity: 1, price_data: { currency: 'usd', unit_amount: item.amount, recurring: { interval: item.interval! }, product_data: { name: item.name } } }],
       subscription_data: { metadata: meta }, metadata: meta,
+      custom_text: { submit: { message: RENEWAL_CHECKOUT_MESSAGE } },
       success_url: `${site}/billing/success?session_id={CHECKOUT_SESSION_ID}`, cancel_url: `${site}/plans`,
     });
     return NextResponse.redirect(checkout.url!, 303);
@@ -154,7 +156,7 @@ export async function POST(request: NextRequest) {
       },
     }],
     metadata,
-    ...(item.interval ? { subscription_data: { metadata } } : {}),
+    ...(item.interval ? { subscription_data: { metadata }, custom_text: { submit: { message: RENEWAL_CHECKOUT_MESSAGE } } } : {}),
     // Stripe allows either a pre-applied discount or customer-entered promo codes, not both.
     ...(coupon ? { discounts: [{ coupon }] } : { allow_promotion_codes: true }),
     success_url: `${site}/billing/success?session_id={CHECKOUT_SESSION_ID}`,

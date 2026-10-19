@@ -41,6 +41,8 @@ export default function Footer() {
             <Link href="/accessibility" className="hover:text-brass">ACCESSIBILITY</Link>
             <Link href="/terms" className="hover:text-brass">TERMS</Link>
             <Link href="/conduct" className="hover:text-brass">CODE OF CONDUCT</Link>
+            <Link href="/copyright" className="hover:text-brass">COPYRIGHT</Link>
+            <Link href="/licenses" className="hover:text-brass">LICENSES</Link>
           </span>
         </div>
       </div>

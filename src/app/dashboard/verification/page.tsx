@@ -67,7 +67,7 @@ export default async function VerificationPage({ searchParams }: { searchParams:
               <h2 className="font-serif text-2xl font-semibold">Your status</h2>
               <VerificationBadge status={status} />
             </div>
-            {status === 'verified' && <p className="mt-4 text-sm text-muted">You’re verified. Your documents were deleted after review — we don’t keep them.</p>}
+            {status === 'verified' && <p className="mt-4 text-sm text-muted">You’re verified. Both of your files were deleted as soon as the reviewer approved them — we don’t keep them.</p>}
             {status === 'pending' && latest && (
               <p className="mt-4 text-sm text-muted">Submitted {new Date(latest.created_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}. A reviewer will check your documents by hand.</p>
             )}
@@ -103,7 +103,8 @@ export default async function VerificationPage({ searchParams }: { searchParams:
             <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm text-ink/80">
               <li>Stored privately — only you and our reviewer can open them.</li>
               <li>Compared by a person, by eye. No face-matching software, and no biometric data is ever created or kept.</li>
-              <li>Both deleted as soon as the review is complete, or automatically after 30 days if never reviewed.</li>
+              <li>Opened only through 10-minute links, and every opening is logged.</li>
+              <li>Both deleted as soon as the reviewer approves or rejects them, or automatically after 30 days if never reviewed.</li>
             </ul>
           </div>
         </aside>

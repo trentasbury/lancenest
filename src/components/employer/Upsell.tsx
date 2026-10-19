@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import RenewalNote from '@/components/RenewalNote';
 
 export default function Upsell({ title, body, plan = 'Professional' }: { title: string; body: string; plan?: 'Professional' | 'Federal' }) {
   const product = plan === 'Federal' ? 'employer_federal_month' : 'employer_professional_month';
@@ -11,6 +12,7 @@ export default function Upsell({ title, body, plan = 'Professional' }: { title: 
         <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value={product} /><button className="btn btn-primary">Upgrade to {plan} · {plan === 'Federal' ? '$999/mo' : '$249/mo · Founding: $149/mo for 12 months'}</button></form>
         <Link href="/employers" className="btn btn-outline">Compare plans</Link>
       </div>
+      <RenewalNote className="mx-auto mt-3 max-w-md" />
     </div>
   );
 }

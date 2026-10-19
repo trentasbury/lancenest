@@ -12,14 +12,14 @@ export default function PrivacyPage() {
       <section className="rounded-2xl border border-brass/50 bg-paper p-5">
         <h2>The short version</h2>
         <ul>
-          <li><strong>Service documents</strong> (DD-214, LES, orders, NGB-22, VA letters) and a <strong>photo ID</strong> (driver’s license, state ID, or passport) are used only to verify your service and that the documents are yours. A person compares them by eye — no face-matching software — and both are deleted after review, or automatically after 30 days if never reviewed. Never upload military, VA, or other federal ID cards, or clearance records.</li>
+          <li><strong>Service documents</strong> (DD-214, LES, orders, NGB-22, VA letters) and a <strong>photo ID</strong> (driver’s license, state ID, or passport) are used only to verify your service and that the documents are yours. A person compares them by eye — no face-matching software — and both are deleted as soon as the reviewer approves or rejects them, or automatically after 30 days if never reviewed. Never upload military, VA, or other federal ID cards, or clearance records.</li>
           <li><strong>Your profile</strong> is visible to verified members and verified employers. You can hide it from employers entirely or from specific companies in Account settings.</li>
           <li><strong>Clearances</strong> you list are self-reported and labeled that way.</li>
           <li><strong>Payments</strong> are processed by Stripe; we never store card numbers.</li>
           <li><strong>Analytics</strong> are first-party and cookie-free; we don’t sell your data or show ads.</li>
           <li><strong>Service providers:</strong> Vercel (hosting), Supabase (database and storage), Stripe (payments), Resend (email), Cloudflare Turnstile (bot protection).</li>
           <li><strong>AI:</strong> LanceNest does not send your profile or documents to AI services, and does not use your data to train AI models.</li>
-          <li><strong>Your choices:</strong> edit or delete your profile anytime, and delete your account in Account settings. Questions or requests: support@lancenest.com.</li>
+          <li><strong>Your choices:</strong> edit or delete your profile anytime, and delete your account in Account settings. Questions or requests: support@lancenest.com or our Help page (lancenest.com/help).</li>
         </ul>
       </section>
       <section>
@@ -35,7 +35,7 @@ export default function PrivacyPage() {
       </section>
       <section>
         <h2>Verification documents</h2>
-        <p>We ask for a photo ID along with your service document so a reviewer can confirm both belong to you. Both files are stored in private storage that only you and our reviewers can open. A person compares them by eye; we don’t use facial-recognition or face-matching software, and we never create or keep biometric data. Both files are <strong>deleted as soon as the review is complete</strong>, or automatically after 30 days if never reviewed.</p>
+        <p>We ask for a photo ID along with your service document so a reviewer can confirm both belong to you. Both files are stored in private storage that only you and our reviewers can open. Reviewers open them through links that expire after 10 minutes, and every time they do is recorded in an access log. A person compares them by eye; we don’t use facial-recognition or face-matching software, and we never create or keep biometric data. Both files are <strong>deleted as soon as the reviewer approves or rejects them</strong>, or automatically after 30 days if never reviewed. Files uploaded but never submitted for review are deleted within 48 hours. The files are never attached to emails.</p>
         <p>We keep the result (verified or not) and a one-way code made from the name and date of birth on your documents. It is used only to stop duplicate and banned accounts, and it can’t be turned back into your details. Never upload a military, VA, or other federal ID card — copying one is prohibited by federal law (18 U.S.C. § 701).</p>
       </section>
       <section>
@@ -71,7 +71,7 @@ export default function PrivacyPage() {
         <ul>
           <li>Edit or remove profile information at any time from your dashboard.</li>
           <li>Delete your posts, comments, and saved items; block or mute other members.</li>
-          <li>Request a copy of your data or deletion of your account by emailing <a className="text-navy underline" href="mailto:support@lancenest.com">support@lancenest.com</a>. Deleting your account removes your profile, posts, messages you sent, and related records.</li>
+          <li>Delete your account yourself in Account settings, or request a copy of your data or deletion of your account by emailing <a className="text-navy underline" href="mailto:support@lancenest.com">support@lancenest.com</a> or through our <a className="text-navy underline" href="/help">Help page</a>. Deleting your account removes your profile, posts, messages you sent, and related records.</li>
           <li>Depending on where you live, you may have additional rights under state privacy laws; contact us and we will honor them.</li>
         </ul>
       </section>

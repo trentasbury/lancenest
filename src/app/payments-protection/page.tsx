@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
 
 export const metadata: Metadata = { alternates: { canonical: '/payments-protection' }, title: 'Protected Payments & disputes', description: 'How LanceNest holds, releases, and resolves freelance milestone payments.' };
 
@@ -15,6 +16,9 @@ export default function PaymentsProtectionPage() {
   return (
     <article className="container-page max-w-3xl space-y-8 py-14 text-[16px] leading-relaxed text-ink/90">
       <h1 className="font-serif text-4xl font-medium">Protected Payments & disputes</h1>
+      {!FREELANCE_PAYMENTS_ENABLED && (
+        <p className="rounded-xl border border-brass/50 bg-brass/10 p-4 text-sm"><strong>Coming soon.</strong> Milestone payments through LanceNest aren’t available yet. For now, clients and freelancers agree on payment directly, and LanceNest isn’t a party to those payments. This page describes how Protected Payments will work once they open.</p>
+      )}
       <ol className="space-y-4">{steps.map(([h, b], i) => <li key={h} className="card p-5"><p className="font-semibold text-navy">{i + 1}. {h}</p><p className="mt-1 text-sm">{b}</p></li>)}</ol>
       <section><h2 className="font-serif text-2xl text-navy">How disputes are decided</h2>
         <ul className="mt-2 list-disc space-y-2 pl-6">
