@@ -11,7 +11,7 @@ export default function AboutPage() {
       <section className="grid bg-navy-deep text-ivory lg:grid-cols-2">
         <div className="flex flex-col justify-center px-6 py-16 sm:px-12 lg:px-16">
           <p className="eyebrow text-brass">About LanceNest</p>
-          <h1 className="mt-4 font-serif text-5xl font-medium leading-tight text-ivory">Built by a Marine veteran, for the ones who come next.</h1>
+          <h1 className="mt-4 font-serif text-5xl font-medium leading-tight text-ivory">Built by veterans, for the ones who come next.</h1>
           <StarRule className="mt-6" />
           <p className="mt-6 max-w-lg text-cream/80">
             Leaving the service shouldn’t mean starting over. LanceNest exists to make military experience legible to the
