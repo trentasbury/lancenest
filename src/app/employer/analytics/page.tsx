@@ -17,7 +17,6 @@ export default async function AnalyticsPage() {
     return (
       <div className="container-page max-w-3xl py-12">
         <h1 className="mb-6 font-serif text-4xl font-medium">Hiring analytics</h1>
-        {company && ['federal', 'enterprise'].includes(company.plan) && <a href="/api/employer/compliance-export" className="btn btn-outline mb-6" data-track="employer_compliance_export">Download hiring records (CSV)</a>}
         <Upsell title="See what’s working." body="Views, applicants, and conversion for every job over the last 30 days — so you know which roles to boost and which to rewrite." />
       </div>
     );
@@ -50,8 +49,15 @@ export default async function AnalyticsPage() {
   return (
     <div className="container-page py-10">
       <Link href="/employer/dashboard" className="text-sm text-muted hover:text-navy">← Employer dashboard</Link>
-      <h1 className="mt-2 font-serif text-4xl font-medium">Hiring analytics</h1>
-      <p className="mt-1 text-sm text-muted">Last 30 days · each member counts once per job per day</p>
+      <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-serif text-4xl font-medium">Hiring analytics</h1>
+          <p className="mt-1 text-sm text-muted">Last 30 days · each member counts once per job per day</p>
+        </div>
+        {['federal', 'enterprise'].includes(company.plan) && (
+          <a href="/api/employer/compliance-export" className="btn btn-outline" data-track="employer_compliance_export">Download hiring records (CSV)</a>
+        )}
+      </div>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Job views" value={totalViews} />
         <StatCard label="Easy Apply applications" value={totalApps30} />

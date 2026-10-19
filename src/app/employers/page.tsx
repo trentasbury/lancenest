@@ -108,7 +108,7 @@ export default async function EmployersPage() {
                 <tr><td className="p-3 font-medium">Open jobs</td><td className="p-3">2</td><td className="p-3">10</td><td className="p-3">Unlimited</td><td className="p-3">Unlimited</td></tr>
                 <tr><td className="p-3 font-medium">Screening questions and applicant pipeline</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
                 <tr><td className="p-3 font-medium">Message applicants</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
-                <tr><td className="p-3 font-medium">Search all verified members</td><td className="p-3">Preview</td><td className="p-3">✓</td><td className="p-3">✓ + clearance filters</td><td className="p-3">✓</td></tr>
+                <tr><td className="p-3 font-medium">Search all verified members</td><td className="p-3">—</td><td className="p-3">✓</td><td className="p-3">✓ + clearance filters</td><td className="p-3">✓</td></tr>
                 <tr><td className="p-3 font-medium">New conversations with any member</td><td className="p-3">—</td><td className="p-3">100/month</td><td className="p-3">500/month</td><td className="p-3">2,000/month</td></tr>
                 <tr><td className="p-3 font-medium">Saved searches, talent pools, notes</td><td className="p-3">—</td><td className="p-3">✓</td><td className="p-3">✓ (team-shared)</td><td className="p-3">✓</td></tr>
                 <tr><td className="p-3 font-medium">Featured jobs</td><td className="p-3">Add-on</td><td className="p-3">5/month</td><td className="p-3">Unlimited</td><td className="p-3">Unlimited</td></tr>

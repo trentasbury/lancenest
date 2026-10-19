@@ -76,7 +76,7 @@ export default async function EmployerDashboard({ searchParams }: { searchParams
               <StatCard label="Active jobs" value={activeJobs} hint={`${totalJobs} total`} />
               <StatCard label="Applicants" value={applicants} />
               <StatCard label="Interviews" value={interviews} />
-              <StatCard label="Plan" value={PLAN_LABEL[company.plan] ?? company.plan} hint={company.plan === 'free' ? `${activeJobs} of ${2 + (company.extra_job_slots ?? 0)} open posts used` : 'Unlimited job posts'} />
+              <StatCard label="Plan" value={PLAN_LABEL[company.plan] ?? company.plan} hint={company.plan === 'free' || company.plan === 'professional' ? `${activeJobs} of ${(company.plan === 'free' ? 2 : 10) + (company.extra_job_slots ?? 0)} open posts used` : 'Unlimited job posts'} />
             </div>
 
             {searchParams.error && <p role="alert" className="text-sm text-signal">That purchase couldn’t start. Please try again.</p>}
