@@ -93,7 +93,7 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
       </section>
 
       <div className="container-page max-w-3xl space-y-6 py-10">
-        <section className="card flex flex-wrap items-center gap-5 p-6">
+        <section id="photo" className="card flex scroll-mt-24 flex-wrap items-center gap-5 p-6">
           {profile.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={profile.avatar_url} alt="" className="h-20 w-20 rounded-full border-2 border-brass object-cover" />
@@ -165,7 +165,7 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
           experience: exps.map((x) => ({ id: x.id, company: x.company ?? '', position: x.position ?? '', start_year: x.start_date ? String(new Date(`${x.start_date}T12:00:00`).getFullYear()) : '', end_year: x.end_date ? String(new Date(`${x.end_date}T12:00:00`).getFullYear()) : '', description: x.description ?? '' })),
           education: edus.map((x) => ({ id: x.id, school: x.school ?? '', degree: x.degree ?? '', field: x.field ?? '', graduation_year: x.graduation_year ? String(x.graduation_year) : '' })),
           skills: skills.map((k) => k.name),
-        }} />
+        }} profileHref={profile.username ? `/veterans/${profile.username}` : undefined} />
 
       </div>
     </>

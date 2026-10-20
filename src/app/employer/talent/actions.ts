@@ -3,7 +3,7 @@
 import { getMyCompany } from '@/lib/employer';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { requireRole } from '@/lib/auth';
+import { requireRole, safeNextPath } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 
 async function companyId(userId: string) {
@@ -19,7 +19,8 @@ export async function saveToPool(profileId: string, back: string, formData: Form
   const note = String(formData.get('note') ?? '').trim().slice(0, 1000) || null;
   const { error } = await createClient().from('talent_pool_items').upsert({ company_id: await companyId(user.id), profile_id: profileId, list_name: list, note }, { onConflict: 'company_id,profile_id,list_name' });
   revalidatePath('/employer/talent');
-  redirect(`${back}${back.includes('?') ? '&' : '?'}${error ? 'pool=upgrade' : 'pool=saved'}`);
+  const dest = safeNextPath(back) ?? '/employer/talent'; // same-site paths only
+  redirect(`${dest}${dest.includes('?') ? '&' : '?'}${error ? 'pool=upgrade' : 'pool=saved'}#notice`);
 }
 
 export async function removeFromPool(id: string) {

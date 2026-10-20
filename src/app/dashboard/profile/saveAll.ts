@@ -96,7 +96,7 @@ export async function saveFullProfile(p: ProfilePayload): Promise<{ ok: boolean;
   if (drop.length) await supabase.from('profile_skills').delete().eq('profile_id', user.id).in('skill_id', drop);
   if (skillIds.length) await supabase.from('profile_skills').upsert(skillIds.map((id) => ({ profile_id: user.id, skill_id: id })), { ignoreDuplicates: true });
 
-  revalidatePath('/dashboard/profile'); revalidatePath('/dashboard');
+  revalidatePath('/dashboard/profile'); revalidatePath('/dashboard'); revalidatePath('/veterans/[username]', 'page');
   return { ok: true };
 }
 

@@ -149,6 +149,17 @@ export async function reportContent(targetType: 'post' | 'comment' | 'profile' |
   refresh();
 }
 
+/** Report a member from their profile, then confirm it there. */
+export async function reportMember(targetId: string, username: string, formData: FormData) {
+  const back = `/veterans/${encodeURIComponent(username)}`;
+  const uid = await me(back);
+  const reason = t(formData, 'reason', 30);
+  if (!REPORT_REASONS.includes(reason)) redirect(back);
+  const { error } = await createClient().from('reports').insert({ reporter_id: uid, target_type: 'profile', target_id: targetId, reason, details: t(formData, 'details', 1000) || null });
+  if (error) console.error('reportMember failed:', error.message);
+  redirect(`${back}?reported=${error ? 'error' : '1'}#notice`);
+}
+
 export async function followUser(targetId: string) {
   const uid = await me();
   if (uid !== targetId) await createClient().from('user_follows').upsert({ follower_id: uid, following_id: targetId }, { ignoreDuplicates: true });

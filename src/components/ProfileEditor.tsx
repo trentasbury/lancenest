@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { BRANCHES, CLEARANCE_STATUS, CLEARANCES, COMPONENTS, POLYGRAPH } from '@/lib/military';
 import { saveFullProfile, type ProfilePayload } from '@/app/dashboard/profile/saveAll';
 
@@ -8,8 +9,9 @@ const blankSvc = { branch: 'Army', component: 'active', rank: '', duty_title: ''
 const blankExp = { company: '', position: '', start_year: '', end_year: '', description: '' };
 const blankEdu = { school: '', degree: '', field: '', graduation_year: '' };
 
-/** The whole profile in one place: everything pre-filled, edit anything, one Save. */
-export default function ProfileEditor({ initial }: { initial: ProfilePayload }) {
+/** The whole profile in one place: everything pre-filled, edit anything, one Save (which then opens the profile). */
+export default function ProfileEditor({ initial, profileHref }: { initial: ProfilePayload; profileHref?: string }) {
+  const router = useRouter();
   const [p, setP] = useState<ProfilePayload>(initial);
   const [skill, setSkill] = useState('');
   const [status, setStatus] = useState<{ ok?: boolean; msg?: string }>({});
@@ -22,7 +24,13 @@ export default function ProfileEditor({ initial }: { initial: ProfilePayload }) 
   const addRow = (list: 'service' | 'experience' | 'education', row: object) => { dirty(); setP((x) => ({ ...x, [list]: [...(x[list] as object[]), { ...row }] })); };
   const removeRow = (list: 'service' | 'experience' | 'education', i: number) => { dirty(); setP((x) => ({ ...x, [list]: (x[list] as object[]).filter((_, j) => j !== i) })); };
   const addSkill = () => { const n = skill.trim(); if (n && !p.skills.some((x) => x.toLowerCase() === n.toLowerCase())) { dirty(); setP((x) => ({ ...x, skills: [...x.skills, n] })); } setSkill(''); };
-  const save = () => startTransition(async () => { const r = await saveFullProfile(p); setStatus(r.ok ? { ok: true, msg: 'Profile saved.' } : { ok: false, msg: r.error }); });
+  // After a successful save, show the member their updated profile; on an error, stay here and say what to fix.
+  const save = () => startTransition(async () => {
+    const r = await saveFullProfile(p);
+    if (!r.ok) { setStatus({ ok: false, msg: r.error }); return; }
+    setStatus({ ok: true, msg: profileHref ? 'Profile saved. Opening your profile…' : 'Profile saved.' });
+    if (profileHref) router.push(`${profileHref}?saved=1`);
+  });
   const F = 'field text-sm', L = 'field-label';
   const years = (row: { start_year: string; end_year: string }, list: 'service' | 'experience', i: number, endLabel = 'End year (blank = current)') => (
     <>
@@ -117,7 +125,7 @@ export default function ProfileEditor({ initial }: { initial: ProfilePayload }) 
 
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-ivory/95 py-3 backdrop-blur" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
         <div className="container-page flex max-w-3xl items-center justify-between gap-3">
-          <p className={`text-sm ${status.ok ? 'text-olive' : status.msg ? 'text-signal' : 'text-muted'}`}>{status.msg ?? 'Changes are saved when you press Save.'}</p>
+          <p className={`text-sm ${status.ok ? 'text-olive' : status.msg ? 'text-signal' : 'text-muted'}`}>{status.msg ?? (profileHref ? 'Press Save to update your profile and see how it looks.' : 'Changes are saved when you press Save.')}</p>
           <button type="button" onClick={save} disabled={saving} className="btn btn-primary shrink-0">{saving ? 'Saving…' : 'Save profile'}</button>
         </div>
       </div>

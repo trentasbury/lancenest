@@ -14,12 +14,13 @@ import { searchJobs } from '@/lib/jobs';
 import PostCard from '@/components/network/PostCard';
 import Composer from '@/components/network/Composer';
 import SubmitButton from '@/components/SubmitButton';
-import { followUser, reportContent, unfollowUser } from '@/app/network/actions';
+import { followUser, reportMember, unfollowUser } from '@/app/network/actions';
 import { startConversation } from '@/app/messages/actions';
 import Upsell from '@/components/employer/Upsell';
 import PlanBadge from '@/components/PlanBadge';
 import VerifiedMark from '@/components/VerifiedMark';
 import { Bullets, Icon, SectionHead, StrengthRing } from '@/components/profile/ProfileParts';
+import FlashNotice from '@/components/profile/FlashNotice';
 import { DELIVERY_LABEL, PRICE_LABEL } from '@/lib/freelance';
 import { saveToPool } from '@/app/employer/talent/actions';
 import { decideRecommendation, writeRecommendation } from '@/app/network/recommendActions';
@@ -67,7 +68,7 @@ export async function generateMetadata({ params }: { params: { username: string 
 
 type Tab = 'profile' | 'posts' | 'photos';
 
-export default async function VeteranProfilePage({ params, searchParams }: { params: { username: string }; searchParams: { rec?: string; tab?: string; type?: string; cursor?: string } }) {
+export default async function VeteranProfilePage({ params, searchParams }: { params: { username: string }; searchParams: { rec?: string; tab?: string; type?: string; cursor?: string; pool?: string; reported?: string; saved?: string } }) {
   const data = await load(params.username);
   if (!data) notFound();
   const { supabase, profile } = data;
@@ -209,7 +210,8 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
     if (t !== 'profile') p.set('tab', t);
     Object.entries(extra).forEach(([k, v]) => v && p.set(k, v));
     const s = p.toString();
-    return `${base}${s ? `?${s}` : ''}`;
+    // Land at the top of the profile content, not wherever the page happened to be scrolled.
+    return `${base}${s ? `?${s}` : ''}#profile-content`;
   };
   const photos = photoFeed.posts.flatMap((p) => [...p.media].sort((a, b) => a.position - b.position).map((m) => ({ postId: p.id, src: mediaUrl(m.storage_path) })));
   const composer = canPost ? (
@@ -241,6 +243,19 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
   ];
   const activeNav = tab === 'profile' ? 'overview' : tab;
 
+  // One-line confirmation after an action on this page (report, talent pool, recommendation).
+  const flash: { text: string; ok: boolean; link?: [string, string] } | null =
+    isOwner && searchParams.saved === '1' ? { text: 'Your profile was saved.', ok: true, link: ['Keep editing', '/dashboard/profile'] }
+    : searchParams.reported === '1' ? { text: 'Thanks. Your report was received, and our team will review it.', ok: true }
+    : searchParams.reported === 'error' ? { text: 'Your report didn’t send. Please try again.', ok: false }
+    : searchParams.pool === 'saved' ? { text: `${first} was saved to your talent pool.`, ok: true, link: ['Open talent pool', '/employer/talent'] }
+    : searchParams.pool === 'upgrade' ? { text: 'Talent pools are included with the Professional, Federal and Enterprise plans.', ok: false, link: ['Compare plans', '/employers'] }
+    : searchParams.rec === 'sent' ? { text: `Recommendation sent. It appears on ${first}’s profile once they accept it.`, ok: true }
+    : searchParams.rec === 'exists' ? { text: `You’ve already recommended ${first}.`, ok: false }
+    : searchParams.rec === 'short' ? { text: 'Your recommendation wasn’t sent. Add how you know them and at least a couple of sentences.', ok: false, link: ['Try again', `${base}#recommendations`] }
+    : searchParams.rec === 'error' ? { text: 'Your recommendation didn’t send. Please try again.', ok: false, link: ['Try again', `${base}#recommendations`] }
+    : null;
+
   return (
     <>
       {/* Banner: the harbor photo with the member's name (and a welcome on your own profile). */}
@@ -255,6 +270,12 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
           {isOwner && <p className="mt-4 max-w-md font-serif text-lg italic leading-snug text-cream/90 sm:text-xl">Same mission. New battlefield.<br />Your next chapter starts here.</p>}
         </div>
       </section>
+
+      {flash && (
+        <div id="notice" className="container-page scroll-mt-24 pt-6">
+          <FlashNotice text={flash.text} ok={flash.ok} link={flash.link} />
+        </div>
+      )}
 
       <div className="container-page grid grid-cols-[minmax(0,1fr)] items-start gap-6 py-8 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_300px]">
         {/* ---------- Left: identity card and section menu ---------- */}
@@ -321,7 +342,7 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
                 {session && !isOwner && (
                   <details className="text-sm text-muted">
                     <summary className="cursor-pointer hover:text-ink">Report this member</summary>
-                    <form action={reportContent.bind(null, 'profile', profile.id)} className="mt-2 flex flex-col gap-2 text-ink">
+                    <form action={reportMember.bind(null, profile.id, profile.username)} className="mt-2 flex flex-col gap-2 text-ink">
                       <select name="reason" required defaultValue="" className="field py-2 text-sm">
                         <option value="" disabled>Reason…</option>
                         <option value="harassment">Harassment or unprofessional conduct</option><option value="impersonation">Impersonation or false service claims</option>
@@ -340,7 +361,7 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
             {nav.map(([key, label, icon, href]) => {
               const on = activeNav === key;
               return (
-                <Link key={key} href={href} scroll={key === 'overview' || key === 'posts' || key === 'photos' ? false : undefined} aria-current={on ? 'page' : undefined}
+                <Link key={key} href={href} aria-current={on ? 'page' : undefined}
                   className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2 text-sm transition-colors lg:gap-3 lg:border-l-[3px] lg:py-2.5 ${on ? 'bg-paper font-semibold text-ink lg:border-navy' : 'text-ink/80 hover:bg-paper/70 hover:text-ink lg:border-transparent'}`}>
                   <Icon name={icon} className="h-[18px] w-[18px] text-ink/70" />{label}
                 </Link>
@@ -351,7 +372,7 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
         </aside>
 
         {/* ---------- Center ---------- */}
-        <div className="min-w-0 space-y-6">
+        <div id="profile-content" className="min-w-0 scroll-mt-24 space-y-6">
           {tab === 'profile' && (
             <>
               {/* Service banner */}
@@ -504,7 +525,6 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
               {(((recs ?? []) as unknown as RecRow[]).length > 0 || ((myPendingRecs ?? []) as unknown[]).length > 0 || (viewer?.profile && ['veteran', 'admin'].includes(viewer.profile.role) && !isOwner && !wroteOne)) && (
                 <section id="recommendations" className="card scroll-mt-24 p-6 sm:p-8">
                   <SectionHead title="Recommendations" />
-                  {searchParams.rec && <p className={`mt-3 text-sm ${searchParams.rec === 'sent' ? 'text-olive' : 'text-signal'}`}>{({ sent: 'Sent — it appears once they accept it.', short: 'Add how you know them and at least a couple of sentences.', exists: 'You’ve already recommended this member.', error: 'That didn’t send — please try again.' } as Record<string, string>)[searchParams.rec] ?? ''}</p>}
                   {((myPendingRecs ?? []) as unknown as RecRow[]).map((r) => (
                     <div key={r.id} className="mt-4 rounded-xl border border-brass bg-brass/10 p-4 text-sm">
                       <p><strong>{r.author?.full_name}</strong> · {r.relationship}</p><p className="mt-1 italic">“{r.body}”</p>
@@ -540,7 +560,7 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
                     <h2 className="font-serif text-[15px] font-semibold uppercase tracking-[0.22em] text-ink">Activity</h2>
                     <p className="text-sm text-muted">{postCount ?? 0} post{postCount === 1 ? '' : 's'}</p>
                   </div>
-                  {!!postCount && <Link href={tabHref('posts')} scroll={false} className="text-sm font-semibold text-navy hover:underline">Show all posts →</Link>}
+                  {!!postCount && <Link href={tabHref('posts')} className="text-sm font-semibold text-navy hover:underline">Show all posts →</Link>}
                 </div>
                 {composer}
                 {posts.length === 0 ? emptyWall : posts.map((post) => <PostCard key={post.id} post={post} signedIn={!!session} />)}
@@ -553,7 +573,7 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
               {!wallType && !searchParams.cursor && composer}
               <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
                 {FEED_FILTERS.map(([v, label]) => (
-                  <Link key={label} href={tabHref('posts', { type: v || undefined })} scroll={false}
+                  <Link key={label} href={tabHref('posts', { type: v || undefined })}
                     className={`whitespace-nowrap rounded-full border px-4 py-1.5 text-sm ${(wallType ?? '') === v ? 'border-navy bg-navy text-ivory' : 'border-line bg-ivory text-ink hover:border-brass'}`}>
                     {label}
                   </Link>
@@ -563,7 +583,7 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
                 ? (wallType ? <div className="card p-6 text-sm text-muted">Nothing in this category yet.</div> : emptyWall)
                 : posts.map((post) => <PostCard key={post.id} post={post} signedIn={!!session} />)}
               {nextCursor && (
-                <div className="text-center"><Link href={tabHref('posts', { type: wallType, cursor: nextCursor })} scroll={false} className="btn btn-outline">Load older posts</Link></div>
+                <div className="text-center"><Link href={tabHref('posts', { type: wallType, cursor: nextCursor })} className="btn btn-outline">Load older posts</Link></div>
               )}
               {searchParams.cursor && !nextCursor && posts.length > 0 && <p className="text-center text-sm text-muted">That’s everything {isOwner ? 'you’ve' : `${first} has`} posted.</p>}
             </>
@@ -605,7 +625,7 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
                   ))}
                 </ul>
                 {strength < 100
-                  ? <Link href={`/dashboard/profile${nextFix && nextFix !== 'photo' ? `#${nextFix}` : ''}`} className="btn btn-primary mt-5 w-full">Improve profile</Link>
+                  ? <Link href={`/dashboard/profile${nextFix ? `#${nextFix}` : ''}`} className="btn btn-primary mt-5 w-full">Improve profile</Link>
                   : <p className="mt-5 text-center text-sm font-medium text-olive">Your profile is complete.</p>}
               </div>
 
@@ -673,7 +693,7 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
             <div className="card p-6">
               <div className="flex items-baseline justify-between gap-3">
                 <h2 className="font-serif text-lg font-semibold text-ink">Photos</h2>
-                <Link href={tabHref('photos')} scroll={false} className="text-xs font-semibold text-navy hover:underline">See all</Link>
+                <Link href={tabHref('photos')} className="text-xs font-semibold text-navy hover:underline">See all</Link>
               </div>
               <div className="mt-4 grid grid-cols-3 gap-1.5 overflow-hidden rounded-xl">
                 {photos.slice(0, 6).map((ph) => (
