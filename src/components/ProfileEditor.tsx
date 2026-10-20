@@ -32,7 +32,7 @@ export default function ProfileEditor({ initial }: { initial: ProfilePayload }) 
   );
   return (
     <div className="space-y-6 pb-24">
-      <section className="card space-y-3 p-6">
+      <section id="about" className="card scroll-mt-24 space-y-3 p-6">
         <h2 className="eyebrow">About you</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="sm:col-span-2"><label className={L}>Full name</label><input value={p.basics.full_name} onChange={(e) => setBasics('full_name', e.target.value)} className={F} /></div>
@@ -57,7 +57,7 @@ export default function ProfileEditor({ initial }: { initial: ProfilePayload }) 
         </div>
       </section>
 
-      <section className="card space-y-4 p-6">
+      <section id="service" className="card scroll-mt-24 space-y-4 p-6">
         <h2 className="eyebrow">Military career</h2>
         <p className="text-xs text-muted">Add each assignment — every duty station, branch, or component (Active, Guard, Reserve). OPSEC: no classified details, locations of deployments, or unit movements.</p>
         {p.service.map((x, i) => (
@@ -79,7 +79,7 @@ export default function ProfileEditor({ initial }: { initial: ProfilePayload }) 
         <button type="button" onClick={() => addRow('service', blankSvc)} className="btn btn-outline text-sm">+ Add another assignment</button>
       </section>
 
-      <section className="card space-y-4 p-6">
+      <section id="experience" className="card scroll-mt-24 space-y-4 p-6">
         <h2 className="eyebrow">Professional career</h2>
         {p.experience.map((x, i) => (
           <div key={i} className="space-y-3 rounded-xl border border-line p-4">
@@ -95,7 +95,7 @@ export default function ProfileEditor({ initial }: { initial: ProfilePayload }) 
         <button type="button" onClick={() => addRow('experience', blankExp)} className="btn btn-outline text-sm">+ Add a job</button>
       </section>
 
-      <section className="card space-y-4 p-6">
+      <section id="education" className="card scroll-mt-24 space-y-4 p-6">
         <h2 className="eyebrow">Education</h2>
         {p.education.map((x, i) => (
           <div key={i} className="grid gap-3 rounded-xl border border-line p-4 sm:grid-cols-2">
@@ -109,7 +109,7 @@ export default function ProfileEditor({ initial }: { initial: ProfilePayload }) 
         <button type="button" onClick={() => addRow('education', blankEdu)} className="btn btn-outline text-sm">+ Add education</button>
       </section>
 
-      <section className="card space-y-3 p-6">
+      <section id="skills" className="card scroll-mt-24 space-y-3 p-6">
         <h2 className="eyebrow">Skills</h2>
         <div className="flex flex-wrap gap-2">{p.skills.map((n) => <span key={n} className="pill">{n}<button type="button" aria-label={`Remove ${n}`} onClick={() => { dirty(); setP((x) => ({ ...x, skills: x.skills.filter((y) => y !== n) })); }} className="ml-1.5 text-muted hover:text-signal">×</button></span>)}</div>
         <div className="flex gap-2"><input value={skill} onChange={(e) => setSkill(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSkill(); } }} placeholder="e.g. Logistics, Team leadership, Enterprise software" className={F} /><button type="button" onClick={addSkill} className="btn btn-outline shrink-0 text-sm">Add</button></div>
