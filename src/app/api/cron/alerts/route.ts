@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { SITE, sendEmail } from '@/lib/email';
 import { US_STATES } from '@/lib/states';
 import { unsubscribeLinks } from '@/lib/emailLinks';
+import { sendFounderWelcomes } from '@/lib/founderWelcome';
 
 type Job = { id: string; slug: string; title: string; description: string | null; location: string | null; work_arrangement: string | null; clearance_required: string | null; posted_at: string; company: { name: string } | null };
 const H = 3600000;
@@ -163,5 +164,9 @@ export async function GET(request: NextRequest) {
     // Ten at a time, so the job finishes well within its time limit as membership grows.
     for (let i = 0; i < members.length; i += 10) await Promise.all(members.slice(i, i + 10).map((m) => digestFor(m).catch(() => undefined)));
   }
-  return NextResponse.json({ memberEmails, employerEmails, digests });
+
+  // ---------- The founder's personal welcome, the morning after verification ----------
+  const founderWelcomes = await sendFounderWelcomes(now).catch((err) => { console.error('founder welcomes failed:', err); return 0; });
+
+  return NextResponse.json({ memberEmails, employerEmails, digests, founderWelcomes });
 }
