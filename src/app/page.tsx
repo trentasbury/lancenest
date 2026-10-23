@@ -75,6 +75,8 @@ function HeroPanel({ stats, attached = false }: { stats: Awaited<ReturnType<type
   );
 }
 
+const TRUST = ['Every member verified by a person', 'Free for service members', '1,469 military jobs translated', 'Built by a Marine veteran'];
+
 export const metadata: Metadata = { alternates: { canonical: '/' } };
 
 // Pre-built and served from the location nearest each visitor; refreshed every 10 minutes.
@@ -92,11 +94,7 @@ export default async function HomePage() {
         <div className="pointer-events-none absolute -right-40 -top-40 h-[520px] w-[520px] rounded-full bg-brass/10 blur-3xl" aria-hidden="true" />
         <div className="container-page relative grid items-center gap-14 py-16 lg:grid-cols-[1.15fr_1fr] lg:py-20">
           <div className="min-w-0">
-            <p className="inline-flex items-center gap-2 rounded-full border border-brass/40 bg-white/5 px-3.5 py-1.5 text-xs font-medium text-brass-light">
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-olive text-[10px] text-ivory" aria-hidden="true">✓</span>
-              Every member verified by a person
-            </p>
-            <h1 className="mt-6 font-serif text-[clamp(2.4rem,7vw,4.6rem)] font-medium leading-[1.02] text-ivory">
+            <h1 className="font-serif text-[clamp(2.4rem,7vw,4.6rem)] font-medium leading-[1.02] text-ivory">
               The professional network for people who served.
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-cream/80">
@@ -115,7 +113,15 @@ export default async function HomePage() {
               <Link href="/signup?role=veteran" className="btn btn-brass" data-track="cta_home_member_signup">I served — join free</Link>
               <Link href="/signup?role=employer" className="btn border border-cream/30 text-ivory hover:bg-white/10" data-track="cta_home_employer_signup">I’m hiring veterans</Link>
             </div>
-            <p className="mt-6 text-sm text-cream/60">Free for service members · 1,469 military jobs translated · Built by a Marine veteran</p>
+            {/* What makes LanceNest different, right under the sign-up buttons. */}
+            <ul className="mt-7 flex flex-wrap gap-x-5 gap-y-2.5 text-sm text-cream/75">
+              {TRUST.map((t, i) => (
+                <li key={t} className={`flex items-center gap-2 ${i === 0 ? 'font-medium text-ivory' : ''}`}>
+                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-olive text-[10px] text-ivory" aria-hidden="true">✓</span>
+                  {t}
+                </li>
+              ))}
+            </ul>
             <div className="mt-8 max-w-md lg:hidden"><HeroPanel stats={stats} /></div>
           </div>
 
