@@ -8,15 +8,16 @@ import { createClient } from '@/lib/supabase/server';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import { startConversation } from '@/app/messages/actions';
-import { addMilestone, approveMilestone, cancelMilestone, declineContract, requestConversion, leaveReview, openDispute, requestChanges, submitMilestone } from '../actions';
+import { CONTACT_BLOCKED } from '@/lib/contact';
+import { addMilestone, approveMilestone, cancelBooking, cancelMilestone, declineContract, payBooking, requestConversion, leaveReview, openDispute, requestChanges, submitMilestone } from '../actions';
 
 export const metadata: Metadata = { title: 'Contract' };
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 const LABEL: Record<string, [string, string]> = {
-  pending: ['Awaiting funding', 'text-muted'], funded: ['Funded — protected', 'text-olive'], submitted: ['Submitted for review', 'text-navy'],
+  pending: [FREELANCE_PAYMENTS_ENABLED ? 'Awaiting funding' : 'Agreed amount', 'text-muted'], funded: ['Funded — protected', 'text-olive'], submitted: ['Submitted for review', 'text-navy'],
   released: ['Paid', 'text-olive'], refunded: ['Refunded', 'text-muted'], disputed: ['In dispute — under review', 'text-signal'], cancelled: ['Cancelled', 'text-muted'],
 };
-const ERR: Record<string, string> = { delivery: 'Describe what you delivered and where to find it (a link or file name).', changes: 'Say what doesn’t match the agreed scope, so the freelancer knows exactly what to fix.', salary: 'Enter the first-year base salary.', payouts: 'The freelancer’s payout account isn’t ready yet — we’ve let them know.', transfer: 'Payment couldn’t be released just now. Please try again in a few minutes.',
+const ERR: Record<string, string> = { booking: 'We couldn’t open checkout for the booking fee. Please try again in a minute, or reach us through the Help page.', contact: CONTACT_BLOCKED, delivery: 'Describe what you delivered and where to find it (a link or file name).', changes: 'Say what doesn’t match the agreed scope, so the freelancer knows exactly what to fix.', salary: 'Enter the first-year base salary.', payouts: 'The freelancer’s payout account isn’t ready yet — we’ve let them know.', transfer: 'Payment couldn’t be released just now. Please try again in a few minutes.',
   state: 'That milestone has already changed — refresh to see the latest.', milestone: 'Milestones need a title and at least $25.', dispute: 'Please describe the problem (at least 10 characters).', review: 'Choose a rating from 1 to 5.' };
 
 type M = { id: string; title: string; amount_cents: number; status: string; client_fee_cents: number; submission_note: string | null; change_request: string | null; dispute_reason: string | null; auto_release_at: string | null; released_at: string | null };
@@ -25,10 +26,10 @@ export default async function ContractPage({ params, searchParams }: { params: {
   const { user } = await requireVerifiedMember(`/freelance/contracts/${params.id}`);
   const supabase = createClient();
   const { data: c } = await supabase.from('contracts')
-    .select('id, title, status, veteran_fee_rate, client_id, freelancer_id, project_id, request_note, client:profiles!contracts_client_id_fkey(full_name), freelancer:profiles!contracts_freelancer_id_fkey(full_name, username)')
+    .select('id, title, status, veteran_fee_rate, client_id, freelancer_id, project_id, request_note, booking_status, booking_fee_cents, booking_paid_at, on_site, client:profiles!contracts_client_id_fkey(full_name), freelancer:profiles!contracts_freelancer_id_fkey(full_name, username)')
     .eq('id', params.id).maybeSingle();
   if (!c) notFound();
-  const contract = c as unknown as { request_note?: string | null; id: string; title: string; status: string; veteran_fee_rate: number; client_id: string; freelancer_id: string; project_id: string | null; client: { full_name: string } | null; freelancer: { full_name: string; username: string | null } | null };
+  const contract = c as unknown as { booking_status: string; booking_fee_cents: number | null; booking_paid_at: string | null; on_site: boolean; request_note?: string | null; id: string; title: string; status: string; veteran_fee_rate: number; client_id: string; freelancer_id: string; project_id: string | null; client: { full_name: string } | null; freelancer: { full_name: string; username: string | null } | null };
   const isClient = user.id === contract.client_id;
   const isFreelancer = user.id === contract.freelancer_id;
   const [{ data: mRows }, { data: myReview }] = await Promise.all([
@@ -38,6 +39,9 @@ export default async function ContractPage({ params, searchParams }: { params: {
   const ms = (mRows ?? []) as M[];
   const keep = 1 - Number(contract.veteran_fee_rate);
   const other = isClient ? contract.freelancer_id : contract.client_id;
+  // Not booked until the client pays the booking fee (lib/booking.ts). Milestones and contact details wait until then.
+  const awaitingBooking = contract.booking_status === 'awaiting_payment' && contract.status === 'active';
+  const live = contract.status === 'active' && !awaitingBooking;
 
   return (
     <div className="container-page max-w-4xl space-y-6 py-10">
@@ -50,7 +54,21 @@ export default async function ContractPage({ params, searchParams }: { params: {
         <form action={startConversation.bind(null, other)}><SubmitButton className="btn btn-outline" pendingText="…">Message</SubmitButton></form>
       </div>
       {searchParams.error && <FormMessage error={ERR[searchParams.error] ?? 'Something went wrong — please try again.'} />}
-      {searchParams.hired && <FormMessage message={FREELANCE_PAYMENTS_ENABLED ? 'Contract created. Fund the first milestone so work can begin — the payment is held until you approve.' : 'Contract created. Agree on scope and payment with the freelancer in messages; milestone payments on LanceNest open soon.'} />}
+      {searchParams.hired && <FormMessage message={FREELANCE_PAYMENTS_ENABLED ? 'Contract created. Fund the first milestone so work can begin — the payment is held until you approve.' : 'Booked. You can now share contact details in messages and arrange the work and payment directly with each other.'} />}
+      {contract.status === 'cancelled' && <p className="rounded-xl border border-line bg-paper p-4 text-sm text-muted">This request was cancelled.</p>}
+      {awaitingBooking && isClient && (
+        <div className="card space-y-3 border-brass p-6">
+          <p className="eyebrow">Confirm your booking</p>
+          <p className="font-serif text-2xl text-navy">{contract.booking_fee_cents ? usd(contract.booking_fee_cents) : ''} booking fee</p>
+          <p className="text-sm text-ink/85">Pay the booking fee to book {contract.freelancer?.full_name ?? 'this freelancer'}. They’re notified as soon as it’s paid, and you can then share contact details and set the schedule in messages. Refunded if they decline within 48 hours.</p>
+          <div className="flex flex-wrap gap-2">
+            <form action={payBooking.bind(null, contract.id)}><SubmitButton className="btn btn-primary" pendingText="Opening checkout…">Pay booking fee</SubmitButton></form>
+            <form action={cancelBooking.bind(null, contract.id)}><SubmitButton className="btn btn-ghost border border-line" pendingText="…">Cancel request</SubmitButton></form>
+          </div>
+        </div>
+      )}
+      {awaitingBooking && isFreelancer && <p className="rounded-xl border border-line bg-paper p-4 text-sm">This request isn’t booked yet. You’ll be notified as soon as the client confirms it.</p>}
+      {contract.booking_status === 'paid' && isClient && contract.booking_paid_at && <p className="text-xs text-muted">Booked {new Date(contract.booking_paid_at).toLocaleDateString('en-US', { dateStyle: 'medium' })} · booking fee {contract.booking_fee_cents ? usd(contract.booking_fee_cents) : ''} paid</p>}
       {searchParams.released && <FormMessage message="Payment released to the freelancer. Thank you!" />}
       {FREELANCE_PAYMENTS_ENABLED ? (
         <div className="rounded-xl border border-olive/30 bg-olive/5 p-4 text-sm text-ink/85">
@@ -63,9 +81,9 @@ export default async function ContractPage({ params, searchParams }: { params: {
       )}
 
       {contract.request_note && <div className="card p-5 text-sm"><p className="eyebrow">Request details</p><p className="mt-2 whitespace-pre-line">{contract.request_note}</p></div>}
-      {isFreelancer && contract.status === 'active' && ms.every((m) => ['pending', 'cancelled'].includes(m.status)) && (
+      {isFreelancer && live && ms.every((m) => ['pending', 'cancelled'].includes(m.status)) && (
         <form action={declineContract.bind(null, contract.id)} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper p-4 text-sm">
-          <span>Not a fit? You can decline before the client funds it — nothing is charged.</span>
+          <span>{contract.booking_status === 'paid' ? 'Not a fit? Decline within 48 hours, before you start talking details, and the client’s booking fee is refunded.' : 'Not a fit? You can decline before the client funds it — nothing is charged.'}</span>
           <SubmitButton className="btn btn-ghost border border-line py-1.5 text-xs" pendingText="…">Decline request</SubmitButton>
         </form>
       )}
@@ -85,7 +103,7 @@ export default async function ContractPage({ params, searchParams }: { params: {
               {m.status === 'submitted' && m.auto_release_at && <p className="text-xs text-muted">Releases automatically on {new Date(m.auto_release_at).toLocaleDateString('en-US', { dateStyle: 'medium' })} unless the client acts.</p>}
               {m.status === 'disputed' && <p className="text-sm text-signal">Dispute: {m.dispute_reason}</p>}
 
-              {isClient && m.status === 'pending' && contract.status === 'active' && (
+              {isClient && m.status === 'pending' && live && (
                 <div className="flex flex-wrap items-center gap-2">
                   {FREELANCE_PAYMENTS_ENABLED ? (
                     <>
@@ -118,7 +136,7 @@ export default async function ContractPage({ params, searchParams }: { params: {
             </div>
           );
         })}
-        {isClient && contract.status === 'active' && (
+        {isClient && live && (
           <form action={addMilestone.bind(null, contract.id)} className="card flex flex-col gap-2 p-5 sm:flex-row sm:items-end">
             <div className="flex-1"><label className="field-label" htmlFor="ms-title">Add a milestone</label><input id="ms-title" name="title" required placeholder="e.g. Phase 2 — reporting" className="field" /></div>
             <div className="sm:w-40"><label className="field-label" htmlFor="ms-amt">Amount ($)</label><input id="ms-amt" name="amount" required inputMode="decimal" className="field" /></div>

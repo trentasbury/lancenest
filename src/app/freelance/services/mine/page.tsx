@@ -6,9 +6,11 @@ import { OPEN_CATEGORIES } from '@/lib/freelance';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import { deleteService, saveService, setServiceStatus } from '../actions';
+import { CONTACT_BLOCKED } from '@/lib/contact';
+import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
 
 export const metadata: Metadata = { title: 'My services' };
-const ERR: Record<string, string> = { ack: 'Please confirm both acknowledgments.', required: 'Add a title, a description of at least 20 characters, and a price of at least $25.', scam: 'That listing contains wording we don’t allow.', save: 'That didn’t save — please try again.' };
+const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, licensed: 'Licensed trades open on LanceNest once license verification launches.', ack: 'Please confirm both acknowledgments.', required: 'Add a title, a description of at least 20 characters, and a price of at least $25.', scam: 'That listing contains wording we don’t allow.', save: 'That didn’t save — please try again.' };
 
 export default async function MyServicesPage({ searchParams }: { searchParams: { error?: string; saved?: string } }) {
   const { user } = await requireVerifiedMember('/freelance/services/mine');
@@ -21,8 +23,8 @@ export default async function MyServicesPage({ searchParams }: { searchParams: {
     <div className="container-page max-w-3xl space-y-6 py-10">
       <Link href="/freelance/services" className="text-sm text-muted hover:text-navy">← Services</Link>
       <h1 className="font-serif text-4xl font-medium">My services</h1>
-      <p className="text-muted">List what you can do — anyone on LanceNest can hire you and pay through the site. Services also appear on your profile.</p>
-      {!fp?.payouts_enabled && <p className="rounded-xl border border-brass bg-brass/10 p-4 text-sm">Before anyone can hire you, <Link href="/freelance/profile" className="font-medium text-navy underline">set up payouts</Link> (about 5 minutes with Stripe).</p>}
+      <p className="text-muted">List what you can do. Verified employers can book you on LanceNest{FREELANCE_PAYMENTS_ENABLED ? ' and pay through the site' : '; they pay LanceNest a small booking fee, and you keep 100% of what they pay you'}. Services also appear on your profile. Keep contact details out of listings; you can share them once you’re booked.</p>
+      {FREELANCE_PAYMENTS_ENABLED && !fp?.payouts_enabled && <p className="rounded-xl border border-brass bg-brass/10 p-4 text-sm">Before anyone can hire you, <Link href="/freelance/profile" className="font-medium text-navy underline">set up payouts</Link> (about 5 minutes with Stripe).</p>}
       {searchParams.error && <FormMessage error={ERR[searchParams.error] ?? ERR.save} />}
       {searchParams.saved && <FormMessage message="Service listed." />}
       <ul className="card divide-y divide-line">

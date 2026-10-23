@@ -15,9 +15,11 @@ import Avatar from '@/components/network/Avatar';
 import { startConversation } from '@/app/messages/actions';
 import { setProjectStatus, setProposalStatus, submitProposal, withdrawProposal } from '../../actions';
 import { hireFreelancer } from '../../contracts/actions';
+import { CONTACT_BLOCKED } from '@/lib/contact';
+import { bookingFeeCents, bookingRequired, isOnSite, usd } from '@/lib/booking';
 
 export const metadata: Metadata = { title: 'Project' };
-const ERR: Record<string, string> = { proposal: 'Add your price and a cover letter of at least 30 characters.', limit: `You’ve used your ${FREE_PROPOSALS_PER_MONTH} free proposals this month. Get 5 more for $5, or go Pro for unlimited proposals.`, closed: 'This project is no longer accepting proposals.', duplicate: 'You’ve already sent a proposal for this project.', save: 'Your proposal didn’t send — please try again.', pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' };
+const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, minimum: 'Jobs on LanceNest start at $25.', proposal: 'Add your price (at least $25) and a cover letter of at least 30 characters.', limit: `You’ve used your ${FREE_PROPOSALS_PER_MONTH} free proposals this month. Get 5 more for $5, or go Pro for unlimited proposals.`, closed: 'This project is no longer accepting proposals.', duplicate: 'You’ve already sent a proposal for this project.', save: 'Your proposal didn’t send — please try again.', pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' };
 
 type Proposal = { id: string; freelancer_id: string; cover_letter: string; bid_amount: number; timeline: string | null; status: string; created_at: string;
   freelancer: { full_name: string; username: string | null; headline: string | null; verified: boolean; service_summary: string | null } | null };
@@ -28,6 +30,7 @@ export default async function ProjectPage({ params, searchParams }: { params: { 
   const { data: project } = await supabase.from('freelance_projects').select('*, company:companies(name, slug, is_verified)').eq('id', params.id).maybeSingle();
   if (!project) notFound();
   const isOwner = project.client_id === user.id;
+  const needsBooking = bookingRequired(isOnSite((project as unknown as { work_location?: string }).work_location));
   const isVet = profile.role === 'veteran';
   const company = project.company as { name: string; slug: string; is_verified: boolean } | null;
 
@@ -97,11 +100,12 @@ export default async function ProjectPage({ params, searchParams }: { params: { 
                 <p className="mt-3 whitespace-pre-line text-sm text-ink/90">{p.cover_letter}</p>
                 <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-4">
                   <span className="text-xs capitalize text-muted">{p.status}</span>
+                  {needsBooking && ['submitted', 'shortlisted'].includes(p.status) && project.status === 'open' && <span className="text-xs text-muted">· {usd(bookingFeeCents(p.bid_amount * 100))} booking fee when you hire</span>}
                   {p.status !== 'shortlisted' && p.status !== 'declined' && <form action={setProposalStatus.bind(null, p.id, project.id, 'shortlisted')}><SubmitButton className="btn btn-outline py-1.5 text-xs" pendingText="…">Shortlist</SubmitButton></form>}
                   {p.status !== 'declined' && <form action={setProposalStatus.bind(null, p.id, project.id, 'declined')}><SubmitButton className="btn btn-ghost py-1.5 text-xs" pendingText="…">Decline</SubmitButton></form>}
                   <form action={startConversation.bind(null, p.freelancer_id)}><SubmitButton className="btn btn-outline py-1.5 text-xs" pendingText="…">Message</SubmitButton></form>
                   {['submitted', 'shortlisted'].includes(p.status) && project.status === 'open' && (
-                    <form action={hireFreelancer.bind(null, p.id)}><SubmitButton className="btn btn-primary py-1.5 text-xs" pendingText="Hiring…">Hire for ${p.bid_amount.toLocaleString()}</SubmitButton></form>
+                    <form action={hireFreelancer.bind(null, p.id)}><SubmitButton className="btn btn-primary py-1.5 text-xs" pendingText="Opening checkout…">Hire for ${p.bid_amount.toLocaleString()}</SubmitButton></form>
                   )}
                 </div>
               </div>
@@ -146,7 +150,7 @@ export default async function ProjectPage({ params, searchParams }: { params: { 
             <div><label className="field-label" htmlFor="bid_amount">Your price ($)</label><input id="bid_amount" name="bid_amount" required inputMode="numeric" className="field" /></div>
             <div><label className="field-label" htmlFor="timeline">Timeline</label><input id="timeline" name="timeline" placeholder="e.g. 3 weeks" className="field" /></div>
             <div><label className="field-label" htmlFor="cover_letter">Why you</label><textarea id="cover_letter" name="cover_letter" required rows={6} minLength={30} className="field" /></div>
-            <p className="text-xs text-muted">You keep {keepPercent(plan)}% of payments on this project. {plan === 'free'
+            <p className="text-xs text-muted">{FREELANCE_PAYMENTS_ENABLED ? `You keep ${keepPercent(plan)}% of payments on this project.` : 'You keep 100% of what the client pays you. Clients pay LanceNest a small booking fee when they hire.'} Share contact details after you’re booked. {plan === 'free'
               ? `${freeLeft} of ${FREE_PROPOSALS_PER_MONTH} free proposals left this month${credits ? `, plus ${credits} extra` : ''}.`
               : 'Unlimited proposals.'}</p>
             <SubmitButton className="btn btn-primary w-full" pendingText="Sending…">Send proposal</SubmitButton>

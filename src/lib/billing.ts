@@ -83,6 +83,11 @@ export async function applyCheckoutSession(sessionId: string) {
     const { fundMilestoneFromSession } = await import('@/lib/payments');
     return fundMilestoneFromSession(sessionId);
   }
+  if (kind === 'booking') {
+    if (s.payment_status !== 'paid' || !s.metadata?.contract_id) return { ok: false as const };
+    const { confirmBookingFromSession } = await import('@/lib/booking');
+    return confirmBookingFromSession(s.id, s.metadata.contract_id, s.amount_total ?? 0);
+  }
 
   if (s.mode === 'subscription' && s.subscription && typeof s.subscription !== 'string') {
     await syncSubscription(s.subscription);
@@ -92,17 +97,17 @@ export async function applyCheckoutSession(sessionId: string) {
   if (kind === 'job_boost' && s.payment_status === 'paid') {
     const admin = createAdminClient();
     const jobId = s.metadata?.job_id;
-    const { data: already } = await admin.from('purchases').select('id').eq('stripe_checkout_session_id', s.id).maybeSingle();
-    if (!already && jobId) {
+    // Record the purchase first: the unique session id means only one caller (webhook or success page) extends the boost.
+    const { error: dup } = jobId ? await admin.from('purchases').insert({
+      company_id: s.metadata?.company_id ?? null, kind: 'job_boost', job_id: jobId,
+      amount_cents: s.amount_total ?? 0, stripe_checkout_session_id: s.id,
+    }) : { error: true };
+    if (!dup && jobId) {
       const { data: job } = await admin.from('jobs').select('featured_until').eq('id', jobId).maybeSingle();
       // Boosts stack: a second boost extends from the current end date.
       const base = job?.featured_until && new Date(job.featured_until) > new Date() ? new Date(job.featured_until) : new Date();
       base.setDate(base.getDate() + BOOST_DAYS);
       await admin.from('jobs').update({ featured_until: base.toISOString() }).eq('id', jobId);
-      await admin.from('purchases').insert({
-        company_id: s.metadata?.company_id ?? null, kind: 'job_boost', job_id: jobId,
-        amount_cents: s.amount_total ?? 0, stripe_checkout_session_id: s.id,
-      });
     }
     return { ok: true as const, kind };
   }

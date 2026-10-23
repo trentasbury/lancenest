@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getSessionProfile } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { stripe } from '@/lib/stripe';
 
@@ -9,7 +8,7 @@ export async function POST(request: NextRequest) {
   const site = (process.env.NEXT_PUBLIC_SITE_URL ?? request.nextUrl.origin).replace(/\/$/, '');
   const session = await getSessionProfile();
   if (!session || session.profile?.role !== 'veteran') return NextResponse.redirect(`${site}/login?next=/freelance/profile`, 303);
-  const { data: fp } = await createClient().from('freelancer_profiles').select('stripe_account_id').eq('profile_id', session.user.id).maybeSingle();
+  const { data: fp } = await createAdminClient().from('freelancer_profiles').select('stripe_account_id').eq('profile_id', session.user.id).maybeSingle(); // payout IDs are server-only
   if (!fp) return NextResponse.redirect(`${site}/freelance/profile?error=profile_first`, 303);
 
   let accountId = fp.stripe_account_id as string | null;

@@ -19,14 +19,16 @@ export async function POST(request: NextRequest) {
   if (!FREELANCE_PAYMENTS_ENABLED) return NextResponse.redirect(`${site}/freelance`, 303);
   const method = form.get('method') === 'bank' ? 'bank' : 'card';
   const supabase = createClient();
-  const { data: m } = await supabase.from('milestones').select('id, title, amount_cents, status, contract_id, contract:contracts(id, title, client_id, status)').eq('id', milestoneId).maybeSingle();
-  const ms = m as unknown as { id: string; title: string; amount_cents: number; status: string; contract_id: string; contract: { id: string; title: string; client_id: string; status: string } } | null;
+  const { data: m } = await supabase.from('milestones').select('id, title, amount_cents, status, contract_id, contract:contracts(id, title, client_id, status, booking_status)').eq('id', milestoneId).maybeSingle();
+  const ms = m as unknown as { id: string; title: string; amount_cents: number; status: string; contract_id: string; contract: { id: string; title: string; client_id: string; status: string; booking_status: string } } | null;
   if (!ms || ms.contract.client_id !== session.user.id || ms.status !== 'pending' || ms.contract.status !== 'active') return NextResponse.redirect(`${site}/freelance`, 303);
+  // An on-site booking is paid before any milestone can be funded.
+  if (ms.contract.booking_status === 'awaiting_payment') return NextResponse.redirect(`${site}/freelance/contracts/${ms.contract_id}`, 303);
 
   const { data: all } = await supabase.from('milestones').select('amount_cents, status, funded_at').eq('contract_id', ms.contract_id);
   const firstPayment = !(all ?? []).some((x) => x.funded_at);
   const contractTotal = (all ?? []).filter((x) => x.status !== 'cancelled').reduce((a, x) => a + (x.amount_cents as number), 0);
-  const fees = feeBreakdown(ms.amount_cents, method, firstPayment, contractTotal);
+  const fees = feeBreakdown(ms.amount_cents, method, firstPayment, contractTotal, ms.contract.booking_status === 'paid');
 
   const company = await getMyCompany(session.user.id);
   const lines = [

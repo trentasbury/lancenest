@@ -8,6 +8,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { AUTO_RELEASE_DAYS, releaseMilestone, vetRateFor } from '@/lib/payments';
 import { SITE, notifyMember } from '@/lib/email';
 import { FREELANCE_FEES } from '@/lib/fees';
+import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
+import { bookingCheckoutUrl, bookingFeeCents, bookingRequired, isOnSite, markHired, refundBooking } from '@/lib/booking';
 
 const t = (fd: FormData, k: string, max: number) => String(fd.get(k) ?? '').trim().slice(0, max);
 const back = (id: string, q = '') => redirect(`/freelance/contracts/${id}${q}`);
@@ -18,37 +20,73 @@ async function loadMilestone(milestoneId: string) {
   return data as unknown as { id: string; contract_id: string; title: string; status: string; amount_cents: number; contract: { id: string; title: string; client_id: string; freelancer_id: string; status: string } } | null;
 }
 
-/** Client hires a freelancer from a proposal. The veteran's fee rate is locked in at this moment. */
+/** Send the client to pay the booking fee (or back to the contract with an error if checkout can't open). */
+async function goPayBooking(contractId: string, clientId: string, email: string | undefined) {
+  let url: string | null = null;
+  try { url = await bookingCheckoutUrl(contractId, clientId, email); } catch (err) { console.error('booking checkout failed:', err); }
+  redirect(url ?? `/freelance/contracts/${contractId}?error=booking`);
+}
+
+/**
+ * Client hires a freelancer from a proposal. The veteran's fee rate is locked in at this moment. When a booking fee
+ * applies (see lib/booking.ts), the job is booked, and the freelancer told, only once the client pays it.
+ */
 export async function hireFreelancer(proposalId: string) {
   const { user } = await requireRole(['employer'], '/freelance');
-  const { data: p } = await createClient().from('proposals').select('id, bid_amount, status, freelancer_id, project:freelance_projects(id, title, client_id, status)').eq('id', proposalId).maybeSingle();
-  const proposal = p as unknown as { id: string; bid_amount: number; status: string; freelancer_id: string; project: { id: string; title: string; client_id: string; status: string } } | null;
-  if (!proposal || proposal.project.client_id !== user.id || !['submitted', 'shortlisted'].includes(proposal.status)) redirect('/freelance');
+  const { data: p } = await createClient().from('proposals').select('id, bid_amount, status, freelancer_id, project:freelance_projects(id, title, client_id, status, work_location)').eq('id', proposalId).maybeSingle();
+  const proposal = p as unknown as { id: string; bid_amount: number; status: string; freelancer_id: string; project: { id: string; title: string; client_id: string; status: string; work_location: string | null } } | null;
+  if (!proposal || proposal.project.client_id !== user.id) redirect('/freelance');
   const admin = createAdminClient();
+  // A booking already started for this proposal: finish paying for it instead of starting another.
+  const { data: existing } = await admin.from('contracts').select('id, status, booking_status').eq('proposal_id', proposal.id).maybeSingle();
+  if (existing) {
+    if (existing.status === 'active' && existing.booking_status === 'awaiting_payment') await goPayBooking(existing.id as string, user.id, user.email);
+    redirect(`/freelance/contracts/${existing.id}`);
+  }
+  if (!['submitted', 'shortlisted'].includes(proposal.status) || proposal.project.status !== 'open') redirect(`/freelance/projects/${proposal.project.id}`);
+  const price = proposal.bid_amount * 100;
+  if (price < 2500) redirect(`/freelance/projects/${proposal.project.id}?error=minimum`);
   const [{ data: fp }, { data: vet }] = await Promise.all([
     admin.from('freelancer_profiles').select('payouts_enabled').eq('profile_id', proposal.freelancer_id).maybeSingle(),
     admin.from('veteran_profiles').select('plan').eq('profile_id', proposal.freelancer_id).maybeSingle(),
   ]);
-  if (!fp?.payouts_enabled) redirect(`/freelance/projects/${proposal.project.id}?error=payouts`);
+  // Payout setup only matters once LanceNest handles milestone payments.
+  if (FREELANCE_PAYMENTS_ENABLED && !fp?.payouts_enabled) redirect(`/freelance/projects/${proposal.project.id}?error=payouts`);
+  const onSite = isOnSite(proposal.project.work_location);
+  const fee = bookingRequired(onSite) ? bookingFeeCents(price) : 0;
   const { data: contract, error } = await admin.from('contracts').insert({
     project_id: proposal.project.id, proposal_id: proposal.id, client_id: user.id, freelancer_id: proposal.freelancer_id,
     title: proposal.project.title, veteran_fee_rate: vetRateFor((vet?.plan as string) ?? 'free'),
-  }).select('id').single();
+    on_site: onSite, booking_status: fee ? 'awaiting_payment' : 'not_required', booking_fee_cents: fee || null,
+  }).select('id, title, client_id, freelancer_id, project_id, proposal_id, service_id').single();
   if (error || !contract) redirect(`/freelance/projects/${proposal.project.id}?error=save`);
-  await admin.from('milestones').insert({ contract_id: contract.id, title: 'Full project', amount_cents: proposal.bid_amount * 100 });
-  await admin.from('proposals').update({ status: 'accepted' }).eq('id', proposal.id);
-  await admin.from('freelance_projects').update({ status: 'in_progress' }).eq('id', proposal.project.id);
-  await notifyMember(proposal.freelancer_id, { type: 'contract', link: `/freelance/contracts/${contract.id}`, title: `You’re hired for “${proposal.project.title}”. Work starts once the client funds the first milestone.`,
-    email: { subject: `You’re hired: ${proposal.project.title}`, preheader: 'Congratulations — here’s what happens next.', tone: 'success', badge: 'Hired',
-      heading: 'Congratulations — you’re hired.', paragraphs: [`The client accepted your proposal for “${proposal.project.title}”.`, 'Wait for the milestone to show “Funded” before starting work — that means the payment is protected and held for you.'],
-      cta: { label: 'Open the contract', url: `${SITE}/freelance/contracts/${contract.id}` } } });
+  await admin.from('milestones').insert({ contract_id: contract.id, title: 'Full project', amount_cents: price });
+  if (fee) await goPayBooking(contract.id as string, user.id, user.email);
+  await markHired(contract as Parameters<typeof markHired>[0]);
   redirect(`/freelance/contracts/${contract.id}?hired=1`);
+}
+
+/** Client pays the booking fee for a request they already started. */
+export async function payBooking(contractId: string) {
+  const { user } = await requireRole(['employer'], `/freelance/contracts/${contractId}`);
+  await goPayBooking(contractId, user.id, user.email);
+}
+
+/** Client withdraws a request they haven't paid the booking fee for. Nothing was charged. */
+export async function cancelBooking(contractId: string) {
+  const { user } = await requireRole(['employer'], `/freelance/contracts/${contractId}`);
+  const admin = createAdminClient();
+  const { data: k } = await admin.from('contracts').update({ status: 'cancelled' })
+    .eq('id', contractId).eq('client_id', user.id).eq('status', 'active').eq('booking_status', 'awaiting_payment').select('id').maybeSingle();
+  if (k) await admin.from('milestones').update({ status: 'cancelled' }).eq('contract_id', contractId).eq('status', 'pending');
+  revalidatePath(`/freelance/contracts/${contractId}`);
+  redirect(`/freelance/contracts/${contractId}`);
 }
 
 export async function addMilestone(contractId: string, formData: FormData) {
   const { user } = await requireRole(['employer'], '/freelance');
-  const { data: c } = await createClient().from('contracts').select('id, client_id, status').eq('id', contractId).maybeSingle();
-  if (!c || c.client_id !== user.id || c.status !== 'active') back(contractId);
+  const { data: c } = await createClient().from('contracts').select('id, client_id, status, booking_status').eq('id', contractId).maybeSingle();
+  if (!c || c.client_id !== user.id || c.status !== 'active' || c.booking_status === 'awaiting_payment') back(contractId);
   const amount = Math.round(Number(t(formData, 'amount', 9).replace(/[$,\s]/g, '')) * 100);
   const title = t(formData, 'title', 140);
   if (!Number.isFinite(amount) || amount < 2500 || title.length < 2) back(contractId, '?error=milestone');
@@ -135,9 +173,15 @@ export async function declineContract(contractId: string) {
   if (!c || c.freelancer_id !== user.id || c.status !== 'active') redirect('/freelance');
   const { data: ms } = await admin.from('milestones').select('status').eq('contract_id', contractId);
   if ((ms ?? []).some((m) => m.status !== 'pending' && m.status !== 'cancelled')) redirect(`/freelance/contracts/${contractId}?error=state`);
+  let refund: Awaited<ReturnType<typeof refundBooking>> = 'none';
+  try { refund = await refundBooking(contractId); } catch (err) { console.error('booking refund failed:', err); refund = 'review'; }
   await admin.from('milestones').update({ status: 'cancelled' }).eq('contract_id', contractId).eq('status', 'pending');
   await admin.from('contracts').update({ status: 'cancelled' }).eq('id', contractId);
-  await notifyMember(c.client_id as string, { type: 'contract', link: `/freelance/contracts/${contractId}`, title: `Your request for “${c.title}” was declined. Nothing was charged.` });
+  // Let them hire someone else from the same project.
+  const { data: k } = await admin.from('contracts').select('proposal_id, project_id').eq('id', contractId).maybeSingle();
+  if (k?.proposal_id) await admin.from('proposals').update({ status: 'declined' }).eq('id', k.proposal_id);
+  if (k?.project_id) await admin.from('freelance_projects').update({ status: 'open' }).eq('id', k.project_id).eq('status', 'in_progress');
+  await notifyMember(c.client_id as string, { type: 'contract', link: `/freelance/contracts/${contractId}`, title: `Your request for “${c.title}” was declined. ${refund === 'refunded' ? 'Your booking fee is being refunded.' : refund === 'review' ? 'LanceNest will review a refund of your booking fee and email you.' : 'Nothing was charged.'}` });
   redirect(`/freelance/contracts/${contractId}`);
 }
 

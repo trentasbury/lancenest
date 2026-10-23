@@ -8,16 +8,18 @@ import { stripe } from '@/lib/stripe';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import { addPortfolioItem, removePortfolioItem, saveFreelancerProfile } from '../actions';
+import { CONTACT_BLOCKED } from '@/lib/contact';
+import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
 
 export const metadata: Metadata = { title: 'Freelancer profile' };
-const ERR: Record<string, string> = { title: 'Add a professional title.', save: 'That didn’t save — please try again.', portfolio: 'Portfolio items need a title (and a valid link if you add one).', profile_first: 'Save your freelancer profile first, then set up payouts.' };
+const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, title: 'Add a professional title.', save: 'That didn’t save — please try again.', portfolio: 'Portfolio items need a title (and a valid link if you add one).', profile_first: 'Save your freelancer profile first, then set up payouts.' };
 
 export default async function FreelancerProfilePage({ searchParams }: { searchParams: { saved?: string; error?: string; payouts?: string } }) {
   const { user, profile } = await requireVerifiedMember('/freelance/profile');
   if (profile.role !== 'veteran') redirect('/freelance');
   const supabase = createClient();
   const [{ data: fp }, { data: items }] = await Promise.all([
-    supabase.from('freelancer_profiles').select('*').eq('profile_id', user.id).maybeSingle(),
+    createAdminClient().from('freelancer_profiles').select('profile_id, title, bio, hourly_rate, available, clearance_work, vosb, sdvosb, sam_uei, payouts_enabled, stripe_account_id').eq('profile_id', user.id).maybeSingle(),
     supabase.from('portfolio_items').select('*').eq('profile_id', user.id).order('created_at', { ascending: false }),
   ]);
 
@@ -53,6 +55,7 @@ export default async function FreelancerProfilePage({ searchParams }: { searchPa
         <div className="sm:col-span-2"><SubmitButton className="btn btn-primary" pendingText="Saving…">{fp ? 'Save changes' : 'Create freelancer profile'}</SubmitButton></div>
       </form>
 
+      {FREELANCE_PAYMENTS_ENABLED && (
       <section id="payouts" className="card scroll-mt-24 p-7">
         <h2 className="font-serif text-2xl font-semibold">Payouts</h2>
         {payoutsReady ? (
@@ -68,6 +71,7 @@ export default async function FreelancerProfilePage({ searchParams }: { searchPa
           </>
         )}
       </section>
+      )}
 
       <section id="portfolio" className="card scroll-mt-24 p-7">
         <h2 className="font-serif text-2xl font-semibold">Portfolio</h2>

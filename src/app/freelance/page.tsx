@@ -78,7 +78,11 @@ export default async function FreelancePage({ searchParams }: { searchParams: { 
             ) : (
               <div className="card p-5"><p className="eyebrow">Protected payments</p><p className="mt-2 font-serif text-2xl text-navy">Coming soon</p><p className="text-xs text-muted">Milestone payments on LanceNest open soon. For now, agree on payment terms directly with your client. <Link href="/payments-protection" className="text-navy underline">How it will work →</Link></p></div>
             )}
-            <div className="card p-5"><p className="eyebrow">Payouts</p><p className="mt-2 font-serif text-2xl text-navy">{fp?.payouts_enabled ? 'Ready ✓' : 'Not set up'}</p>{!fp?.payouts_enabled && <Link href="/freelance/profile#payouts" className="text-xs text-navy underline">Set up payouts →</Link>}</div>
+            {FREELANCE_PAYMENTS_ENABLED ? (
+              <div className="card p-5"><p className="eyebrow">Payouts</p><p className="mt-2 font-serif text-2xl text-navy">{fp?.payouts_enabled ? 'Ready ✓' : 'Not set up'}</p>{!fp?.payouts_enabled && <Link href="/freelance/profile#payouts" className="text-xs text-navy underline">Set up payouts →</Link>}</div>
+            ) : (
+              <div className="card p-5"><p className="eyebrow">When you’re hired</p><p className="mt-2 font-serif text-2xl text-navy">You keep 100%</p><p className="text-xs text-muted">Clients pay LanceNest a small booking fee when they hire you. Share contact details once you’re booked.</p></div>
+            )}
           </div>
         )}
 

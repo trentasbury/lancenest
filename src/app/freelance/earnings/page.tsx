@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { stripe } from '@/lib/stripe';
 
 export const metadata: Metadata = { title: 'Earnings' };
@@ -12,7 +13,7 @@ export default async function EarningsPage({ searchParams }: { searchParams: { e
   const supabase = createClient();
   const [{ data: contracts }, { data: fp }] = await Promise.all([
     supabase.from('contracts').select('id, title, veteran_fee_rate, milestones(amount_cents, status, released_at)').eq('freelancer_id', user.id),
-    supabase.from('freelancer_profiles').select('stripe_account_id, payouts_enabled').eq('profile_id', user.id).maybeSingle(),
+    createAdminClient().from('freelancer_profiles').select('stripe_account_id, payouts_enabled').eq('profile_id', user.id).maybeSingle(), // payout IDs are server-only
   ]);
   let held = 0, released = 0, thisYear = 0;
   const yearStart = new Date(new Date().getFullYear(), 0, 1).getTime();

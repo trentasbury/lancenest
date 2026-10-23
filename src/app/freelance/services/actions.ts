@@ -7,8 +7,10 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { OPEN_CATEGORIES } from '@/lib/freelance';
 import { vetRateFor } from '@/lib/payments';
-import { SITE, notifyMember } from '@/lib/email';
 import { scamSignals } from '@/lib/scam';
+import { getMyCompany } from '@/lib/employer';
+import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
+import { bookingCheckoutUrl, bookingFeeCents, bookingRequired, markHired } from '@/lib/booking';
 
 const t = (fd: FormData, k: string, max: number) => String(fd.get(k) ?? '').trim().slice(0, max);
 const dollars = (v: string) => Math.round(Number(v.replace(/[$,\s]/g, '')) * 100);
@@ -28,7 +30,7 @@ export async function saveService(formData: FormData) {
     service_area: t(formData, 'service_area', 120) || null,
   });
   revalidatePath('/freelance/services/mine');
-  redirect(`/freelance/services/mine?${error ? 'error=save' : 'saved=1'}`);
+  redirect(`/freelance/services/mine?${error ? `error=${error.code === 'P0017' ? 'contact' : error.code === 'P0018' ? 'licensed' : 'save'}` : 'saved=1'}`);
 }
 
 export async function setServiceStatus(id: string, status: 'active' | 'paused') {
@@ -43,11 +45,16 @@ export async function deleteService(id: string) {
   revalidatePath('/freelance/services/mine');
 }
 
-/** A verified member or employer hires a service: creates a contract with Protected Payments (fund → work → approve → paid). */
+/**
+ * A verified employer hires a service. When a booking fee applies (see lib/booking.ts) the request is booked, and the
+ * member told, once the employer pays it; the fee can't be skipped by paying in cash.
+ */
 export async function requestService(serviceId: string, formData: FormData) {
   const { user, profile } = await requireVerifiedMember(`/freelance/services/${serviceId}`);
   if (profile.role !== 'employer') redirect(`/freelance/services/${serviceId}`);
-  const { data: s } = await createClient().from('service_listings').select('id, profile_id, title, price_cents, status').eq('id', serviceId).eq('status', 'active').maybeSingle();
+  const company = await getMyCompany(user.id);
+  if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
+  const { data: s } = await createClient().from('service_listings').select('id, profile_id, title, price_cents, status, delivery').eq('id', serviceId).eq('status', 'active').maybeSingle();
   if (!s || s.profile_id === user.id) redirect('/freelance/services');
   const amount = dollars(t(formData, 'amount', 12));
   const note = t(formData, 'note', 2000);
@@ -58,16 +65,22 @@ export async function requestService(serviceId: string, formData: FormData) {
     admin.from('freelancer_profiles').select('payouts_enabled').eq('profile_id', s.profile_id).maybeSingle(),
     admin.from('veteran_profiles').select('plan').eq('profile_id', s.profile_id).maybeSingle(),
   ]);
-  if (!fp?.payouts_enabled) redirect(`/freelance/services/${serviceId}?error=payouts`);
+  // Payout setup only matters once LanceNest handles milestone payments.
+  if (FREELANCE_PAYMENTS_ENABLED && !fp?.payouts_enabled) redirect(`/freelance/services/${serviceId}?error=payouts`);
+  const onSite = s.delivery !== 'remote';
+  const fee = bookingRequired(onSite) ? bookingFeeCents(amount) : 0;
   const { data: contract, error } = await admin.from('contracts').insert({
     client_id: user.id, freelancer_id: s.profile_id, service_id: s.id, title: s.title as string, request_note: note,
     veteran_fee_rate: vetRateFor((vet?.plan as string) ?? 'free'),
-  }).select('id').single();
-  if (error || !contract) redirect(`/freelance/services/${serviceId}?error=save`);
+    on_site: onSite, booking_status: fee ? 'awaiting_payment' : 'not_required', booking_fee_cents: fee || null,
+  }).select('id, title, client_id, freelancer_id, project_id, proposal_id, service_id').single();
+  if (error || !contract) redirect(`/freelance/services/${serviceId}?error=${error?.code === 'P0017' ? 'contact' : 'save'}`);
   await admin.from('milestones').insert({ contract_id: contract.id, title: s.title as string, amount_cents: amount });
-  await notifyMember(s.profile_id as string, { type: 'contract', link: `/freelance/contracts/${contract.id}`, title: `New request for “${s.title}”. Review the details — work starts once the client funds it.`,
-    email: { subject: `New service request: ${s.title}`, preheader: 'A verified member wants to hire you.', tone: 'success', badge: 'Hired',
-      heading: 'Someone wants to hire you.', paragraphs: [`A verified LanceNest member requested “${s.title}”.`, `Their note: ${note}`, 'Wait for “Funded” before starting — that means the payment is protected. You can decline if it isn’t a fit.'],
-      cta: { label: 'Review the request', url: `${SITE}/freelance/contracts/${contract.id}` } } });
+  if (fee) {
+    let url: string | null = null;
+    try { url = await bookingCheckoutUrl(contract.id as string, user.id, user.email); } catch (err) { console.error('booking checkout failed:', err); }
+    redirect(url ?? `/freelance/contracts/${contract.id}?error=booking`);
+  }
+  await markHired(contract as Parameters<typeof markHired>[0]);
   redirect(`/freelance/contracts/${contract.id}?hired=1`);
 }

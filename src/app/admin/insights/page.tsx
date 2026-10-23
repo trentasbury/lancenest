@@ -59,6 +59,9 @@ export default async function InsightsPage() {
     admin.from('subscriptions').select('plan, kind, status').in('status', ['active', 'trialing', 'past_due']),
     admin.from('purchases').select('kind, amount_cents').gte('created_at', monthStart),
   ]);
+  // Freelance booking fees are recorded on the contract (lib/booking.ts).
+  const { data: bookings } = await admin.from('contracts').select('booking_fee_cents').eq('booking_status', 'paid').gte('booking_paid_at', monthStart);
+  const bookingTotal = (bookings ?? []).reduce((a, b) => a + ((b.booking_fee_cents as number) ?? 0), 0);
   const t = (traffic ?? {}) as Traffic;
   const planCount = (plan: string) => (subsRows ?? []).filter((r) => r.plan === plan).length;
   const boostsPaid = (purchases ?? []).filter((p) => p.kind === 'job_boost' && (p.amount_cents as number) > 0);
@@ -101,6 +104,7 @@ export default async function InsightsPage() {
             <StatCard label="Federal" value={planCount('federal')} hint="active subscribers" />
             <StatCard label="Extra job slots" value={planCount('job_slot')} hint="active add-ons" />
             <StatCard label="This month’s add-ons" value={usd([...boostsPaid, ...packs].reduce((a, p) => a + (p.amount_cents as number), 0))} hint={`${boostsPaid.length} boosts · ${packs.length} contact packs · ${boostsIncluded} included boosts used`} />
+            <StatCard label="This month’s booking fees" value={usd(bookingTotal)} hint={`${(bookings ?? []).length} freelance job${(bookings ?? []).length === 1 ? '' : 's'} booked`} />
           </div>
         </section>
 

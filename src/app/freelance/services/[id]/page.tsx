@@ -9,9 +9,11 @@ import VerifiedMark from '@/components/VerifiedMark';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import { requestService } from '../actions';
+import { CONTACT_BLOCKED } from '@/lib/contact';
+import { bookingFeeCents, bookingRequired, usd } from '@/lib/booking';
 
 export const metadata: Metadata = { title: 'Service' };
-const ERR: Record<string, string> = { amount: 'Enter an amount of at least $25.', note: 'Describe what you need (at least a sentence).', payouts: 'This member hasn’t finished payout setup yet, so they can’t be hired through LanceNest yet. Message them to let them know.', save: 'That didn’t go through — please try again.' };
+const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, booking: 'We couldn’t open checkout. Please try again in a minute.', amount: 'Enter an amount of at least $25.', note: 'Describe what you need (at least a sentence).', payouts: 'This member hasn’t finished payout setup yet, so they can’t be hired through LanceNest yet. Message them to let them know.', save: 'That didn’t go through — please try again.' };
 
 export default async function ServicePage({ params, searchParams }: { params: { id: string }; searchParams: { error?: string } }) {
   const { user, profile } = await requireVerifiedMember(`/freelance/services/${params.id}`);
@@ -47,7 +49,9 @@ export default async function ServicePage({ params, searchParams }: { params: { 
               <div><label className="field-label" htmlFor="amount">Agreed amount ($)</label><input id="amount" name="amount" required inputMode="decimal" defaultValue={(s.price_cents / 100).toString()} className="field" /></div>
               <div><label className="field-label" htmlFor="note">What you need</label><textarea id="note" name="note" required rows={4} maxLength={2000} placeholder={s.delivery === 'remote' ? 'Describe the work and your timeline' : 'Describe the work, the location, and when works for you'} className="field" /></div>
               <SubmitButton className="btn btn-primary w-full" pendingText="Sending…">Hire through LanceNest</SubmitButton>
-              <p className="text-xs text-muted">You’ll fund the payment next. LanceNest holds it until you approve the work — or it releases 14 days after the work is submitted. Client fee: 5% card or 3% bank, plus $9.99.</p>
+              <p className="text-xs text-muted">{bookingRequired(s.delivery !== 'remote')
+                ? `You’ll pay LanceNest a booking fee next, based on the amount (${usd(bookingFeeCents(s.price_cents))} at this price; from $4.99, never more than $99.99). It’s refunded if the member declines within 48 hours. Contact details can be shared once you’re booked.`
+                : 'You’ll fund the payment next. LanceNest holds it until you approve the work — or it releases 14 days after the work is submitted. Client fee: 5% card or 3% bank, plus $9.99.'}</p>
             </form>
           )}
           <p className="text-xs text-muted">Providers confirm they hold any license the work requires and, if serving, have approval for off-duty employment. Check licensing for regulated trades.</p>

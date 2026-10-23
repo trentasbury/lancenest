@@ -7,4 +7,14 @@ export const FREELANCE_FEES = {
   smallProjectCents: 0, // on projects under $200 (Fiverr charges $3.50)
   smallProjectUnderCents: 20000,
   conversionFee: { minimumCents: 500000, firstYearPayRate: 0.15 }, // hiring a freelancer full-time
+  // Booking fee: paid by the client to LanceNest when they hire (veterans pay nothing). Collected before the job is
+  // booked, so it can't be skipped by paying the freelancer in cash. Roughly 1–5% of the job, capped at $99.99.
+  bookingTiers: [
+    { underCents: 20000, feeCents: 499 },   // under $200
+    { underCents: 50000, feeCents: 999 },   // $200–499
+    { underCents: 100000, feeCents: 1999 }, // $500–999
+    { underCents: 250000, feeCents: 3999 }, // $1,000–2,499
+    { underCents: 500000, feeCents: 6999 }, // $2,500–4,999
+    { underCents: Infinity, feeCents: 9999 }, // $5,000 and up (cap)
+  ],
 };

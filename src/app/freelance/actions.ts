@@ -28,7 +28,10 @@ export async function saveFreelancerProfile(formData: FormData) {
   const { error } = existing
     ? await supabase.from('freelancer_profiles').update(fields).eq('profile_id', user.id)
     : await supabase.from('freelancer_profiles').insert({ profile_id: user.id, ...fields });
-  if (error) { console.error('saveFreelancerProfile:', error.message); redirect('/freelance/profile?error=save'); }
+  if (error) {
+    if (error.code === 'P0017') redirect('/freelance/profile?error=contact');
+    console.error('saveFreelancerProfile:', error.message); redirect('/freelance/profile?error=save');
+  }
   revalidatePath('/freelance', 'layout');
   redirect('/freelance/profile?saved=1');
 }
@@ -40,7 +43,7 @@ export async function addPortfolioItem(formData: FormData) {
     profile_id: user.id, title: t(formData, 'title', 120), description: t(formData, 'description', 1500) || null,
     url: url ? (/^https?:\/\//i.test(url) ? url : `https://${url}`) : null,
   });
-  if (error) redirect('/freelance/profile?error=portfolio');
+  if (error) redirect(`/freelance/profile?error=${error.code === 'P0017' ? 'contact' : 'portfolio'}`);
   revalidatePath('/freelance/profile');
   redirect('/freelance/profile?saved=1#portfolio');
 }
@@ -74,7 +77,7 @@ export async function createProject(formData: FormData) {
     budget_type: t(formData, 'budget_type', 6) === 'hourly' ? 'hourly' : 'fixed', budget_min: min, budget_max: max,
     clearance_required: CLEARANCES.includes(clearance) ? clearance : 'none',
   }).select('id').single();
-  if (error || !data) { console.error('createProject:', error?.message); redirect(`/freelance/projects/new?error=${error?.code === 'P0009' ? 'pii' : 'save'}`); }
+  if (error || !data) { console.error('createProject:', error?.message); redirect(`/freelance/projects/new?error=${error?.code === 'P0009' ? 'pii' : error?.code === 'P0017' ? 'contact' : 'save'}`); }
   revalidatePath('/freelance');
   redirect(`/freelance/projects/${data.id}`);
 }
@@ -89,12 +92,12 @@ export async function submitProposal(projectId: string, formData: FormData) {
   const { user } = await requireRole(['veteran'], `/freelance/projects/${projectId}`);
   const bid = money(t(formData, 'bid_amount', 9));
   const cover = t(formData, 'cover_letter', 5000);
-  if (!bid || cover.length < 30) redirect(`/freelance/projects/${projectId}?error=proposal`);
+  if (!bid || bid < 25 || cover.length < 30) redirect(`/freelance/projects/${projectId}?error=proposal`);
   const { error } = await createClient().from('proposals').insert({
     project_id: projectId, freelancer_id: user.id, cover_letter: cover, bid_amount: bid, timeline: t(formData, 'timeline', 120) || null,
   });
   if (error) {
-    const code = error.code === 'P0009' ? 'pii' : error.code === 'P0006' ? 'limit' : error.code === 'P0005' ? 'closed' : error.code === '23505' ? 'duplicate' : 'save';
+    const code = error.code === 'P0009' ? 'pii' : error.code === 'P0017' ? 'contact' : error.code === 'P0006' ? 'limit' : error.code === 'P0005' ? 'closed' : error.code === '23505' ? 'duplicate' : 'save';
     redirect(`/freelance/projects/${projectId}?error=${code}`);
   }
   revalidatePath(`/freelance/projects/${projectId}`);

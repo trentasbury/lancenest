@@ -7,9 +7,11 @@ import { OPEN_CATEGORIES } from '@/lib/freelance';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import { createProject } from '../../actions';
+import { CONTACT_BLOCKED } from '@/lib/contact';
+import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
 
 export const metadata: Metadata = { title: 'Post a project' };
-const ERR: Record<string, string> = { classification: 'You checked a box that suggests employee-style control. Confirm the acknowledgment, or consider posting this as a job instead.', required: 'Add a title and a description of at least 20 characters.', budget: 'The maximum budget can’t be lower than the minimum.', scam: 'This description contains wording often used in scams (fees, gift cards, off-platform chat apps). Please revise it.', save: 'That didn’t post — please try again.', pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' };
+const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, classification: 'You checked a box that suggests employee-style control. Confirm the acknowledgment, or consider posting this as a job instead.', required: 'Add a title and a description of at least 20 characters.', budget: 'The maximum budget can’t be lower than the minimum.', scam: 'This description contains wording often used in scams (fees, gift cards, off-platform chat apps). Please revise it.', save: 'That didn’t post — please try again.', pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' };
 
 export default async function NewProjectPage({ searchParams }: { searchParams: { error?: string } }) {
   const { user, profile } = await requireVerifiedMember('/freelance/projects/new');
@@ -26,13 +28,15 @@ export default async function NewProjectPage({ searchParams }: { searchParams: {
         <div className="sm:col-span-2"><label className="field-label" htmlFor="title">Project title</label><input id="title" name="title" required maxLength={140} placeholder="e.g. enterprise software ITSM configuration for a federal program" className="field" /></div>
         <div className="sm:col-span-2"><label className="field-label" htmlFor="description">Scope of work</label><textarea id="description" name="description" required rows={7} maxLength={8000} placeholder="Deliverables, timeline, tools, and anything a freelancer needs to know." className="field" /></div>
         <div><label className="field-label" htmlFor="work_location">Where</label><input id="work_location" name="work_location" maxLength={120} placeholder="Remote — or on-site: Clermont, FL" className="field" />
-          <p className="mt-1 text-xs text-muted">Trades like HVAC, plumbing, and electrical: enter the job site city and state.</p></div>
+          <p className="mt-1 text-xs text-muted">On-site work: enter the job site’s city and state.</p></div>
         <div><label className="field-label" htmlFor="category">Category</label><select id="category" name="category" className="field">{OPEN_CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></div>
         <div><label className="field-label" htmlFor="clearance_required">Clearance required</label>
           <select id="clearance_required" name="clearance_required" className="field"><option value="none">None</option><option value="public_trust">Public Trust</option><option value="confidential">Confidential</option><option value="secret">Secret</option><option value="top_secret">Top Secret</option><option value="ts_sci">TS/SCI</option></select></div>
         <div><label className="field-label" htmlFor="budget_type">Budget type</label><select id="budget_type" name="budget_type" className="field"><option value="fixed">Fixed price</option><option value="hourly">Hourly</option></select></div>
         <div className="grid grid-cols-2 gap-3"><div><label className="field-label" htmlFor="budget_min">Min ($)</label><input id="budget_min" name="budget_min" inputMode="numeric" className="field" /></div><div><label className="field-label" htmlFor="budget_max">Max ($)</label><input id="budget_max" name="budget_max" inputMode="numeric" className="field" /></div></div>
-        <p className="text-xs text-muted sm:col-span-2">Client fees: 5% by card or 3% by bank transfer, plus a $9.99 contract-start fee. Shown again before you pay.</p>
+        <p className="text-xs text-muted sm:col-span-2">{FREELANCE_PAYMENTS_ENABLED
+          ? 'Client fees: 5% by card or 3% by bank transfer, plus a $9.99 contract-start fee. On-site jobs pay a booking fee instead of the contract-start fee. Shown again before you pay.'
+          : 'Posting is free. When you hire, you pay LanceNest a small booking fee based on the job price (from $4.99, never more than $99.99). It’s shown before you pay, and refunded if the freelancer declines within 48 hours.'}</p>
         <fieldset className="space-y-1 rounded-xl border border-line bg-paper p-4 text-sm sm:col-span-2">
           <legend className="px-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted">Is this really a freelance project?</legend>
           <label className="flex items-center gap-2"><input type="checkbox" name="set_hours" className="accent-navy" />You’ll set the person’s working hours</label>

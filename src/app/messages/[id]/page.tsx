@@ -9,6 +9,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import Avatar from '@/components/network/Avatar';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
+import { CONTACT_BLOCKED_MESSAGE } from '@/lib/contact';
 import { respondToRequest, sendMessage } from '../actions';
 import { blockUser, reportContent } from '@/app/network/actions';
 
@@ -115,7 +116,7 @@ export default async function ThreadPage({ params, searchParams }: { params: { i
         <p className="mb-3 rounded-xl border border-line bg-paper p-3 text-sm text-muted">Message request sent. You can send more once {other?.profile?.full_name ?? 'they'} accepts or replies — or once you follow each other.</p>
       )}
       {conv?.status === 'declined' && conv.requested_by === user.id && <p className="mb-3 rounded-xl border border-line bg-paper p-3 text-sm text-muted">This message request wasn’t accepted.</p>}
-      {searchParams.error && <div className="mb-3"><FormMessage error={searchParams.error === 'pending' ? 'Your message request is waiting for a reply — you can send more once they accept.' : searchParams.error === 'declined' ? 'This message request wasn’t accepted.' : searchParams.error === 'blocked' ? 'This conversation is closed because one of you has blocked the other.' : searchParams.error === 'rate' ? 'You’re sending messages very quickly. Please wait a few minutes.' : searchParams.error === 'pii' ? 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' : 'Your message didn’t send. Please try again.'} /></div>}
+      {searchParams.error && <div className="mb-3"><FormMessage error={searchParams.error === 'pending' ? 'Your message request is waiting for a reply — you can send more once they accept.' : searchParams.error === 'declined' ? 'This message request wasn’t accepted.' : searchParams.error === 'blocked' ? 'This conversation is closed because one of you has blocked the other.' : searchParams.error === 'rate' ? 'You’re sending messages very quickly. Please wait a few minutes.' : searchParams.error === 'pii' ? 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' : searchParams.error === 'contact' ? CONTACT_BLOCKED_MESSAGE : 'Your message didn’t send. Please try again.'} /></div>}
       {!(conv?.requested_by === user.id && ((conv?.status === 'request' && mySent > 0) || conv?.status === 'declined')) && <form action={sendMessage.bind(null, params.id)} data-reset className="sticky bottom-4 flex gap-2 rounded-2xl border border-line bg-ivory p-2 shadow-card">
         {(searchParams.draft || searchParams.error) && <input type="hidden" name="clean" value="1" />}
         <label htmlFor="msg" className="sr-only">Message</label>
