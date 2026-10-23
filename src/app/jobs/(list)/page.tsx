@@ -6,18 +6,13 @@ import { US_STATES } from '@/lib/states';
 import JobCard from '@/components/JobCard';
 import EmptyState from '@/components/EmptyState';
 import { getFeaturedJobs, searchJobs, type JobFilters } from '@/lib/jobs';
+import { ARRANGEMENTS, parseArrangements, stateOf, type Arrangement } from '@/lib/place';
 
 export const metadata: Metadata = {
   title: 'Find Jobs',
   description: 'Search veteran-friendly jobs, SkillBridge opportunities, and clearance roles on LanceNest.',
 };
 
-const ARRANGEMENTS = [
-  ['', 'Any arrangement'],
-  ['remote', 'Remote'],
-  ['hybrid', 'Hybrid'],
-  ['onsite', 'On-site'],
-];
 const TYPES = [
   ['', 'Any type'],
   ['full_time', 'Full-time'],
@@ -32,7 +27,37 @@ const CLEARANCE = [
   ['none', 'No clearance needed'],
 ];
 
-export default async function JobsPage({ searchParams }: { searchParams: JobFilters }) {
+/** "Remote jobs from anywhere, plus on-site jobs in Florida" — what the current place filter means. */
+function placeSummary(stateName: string | null, arr: Arrangement[]) {
+  if (!stateName) return null;
+  const local = (arr.length ? arr : (['hybrid', 'onsite'] as Arrangement[])).filter((a) => a !== 'remote');
+  const remote = !arr.length || arr.includes('remote');
+  const names = local.map((a) => (a === 'onsite' ? 'on-site' : a));
+  const parts = [remote && 'remote jobs from anywhere', names.length && `${names.join(' and ')} jobs in ${stateName}`].filter(Boolean) as string[];
+  const text = parts.join(', plus ');
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+export default async function JobsPage({ searchParams: raw }: { searchParams: JobFilters }) {
+  // A state typed in a "Location" box (e.g. from the homepage) becomes the state filter.
+  const typed = typeof raw.location === 'string' ? raw.location.trim() : '';
+  const typedState = !raw.state && typed ? stateOf(typed) : null;
+  const typedRemote = /^(remote|anywhere|work from home|wfh)$/i.test(typed);
+  const searchParams: JobFilters = { ...raw, state: raw.state || typedState?.[0] || undefined, location: typedState || typedRemote ? undefined : raw.location,
+    arrangement: typedRemote && !raw.arrangement ? 'remote' : raw.arrangement };
+  const arrangements = parseArrangements(searchParams.arrangement);
+  const stateName = searchParams.state && searchParams.state !== 'multi' ? stateOf(searchParams.state)?.[1] ?? null : null;
+  const place = placeSummary(stateName, arrangements);
+  // Links that change one filter and keep the rest.
+  const hrefWith = (change: Record<string, string | null>) => {
+    const p = new URLSearchParams();
+    const base: Record<string, string | undefined> = { q: searchParams.q, location: searchParams.location, state: searchParams.state, arrangement: arrangements.join(',') || undefined,
+      type: searchParams.type, clearance: searchParams.clearance, poly: searchParams.poly, veteran: searchParams.veteran };
+    Object.entries({ ...base, ...change }).forEach(([k, v]) => { if (v) p.set(k, v); });
+    return `/jobs${p.toString() ? `?${p}` : ''}`;
+  };
+  const toggle = (v: Arrangement) => hrefWith({ arrangement: (arrangements.includes(v) ? arrangements.filter((a) => a !== v) : [...arrangements, v]).join(',') || null });
+
   const [jobs, featured] = await Promise.all([searchJobs(searchParams), getFeaturedJobs()]);
   const listIds = [...jobs.map((j) => j.id), ...featured.map((j) => j.id)];
   const { data: earlyIds } = listIds.length ? await createClient().rpc('early_jobs', { ids: listIds }) : { data: [] };
@@ -55,20 +80,28 @@ export default async function JobsPage({ searchParams }: { searchParams: JobFilt
               <option value="multi">Multiple locations</option>
               {US_STATES.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
             </select>
-            {searchParams.arrangement && <input type="hidden" name="arrangement" value={searchParams.arrangement} />}
+            {arrangements.map((a) => <input key={a} type="hidden" name="arrangement" value={a} />)}
+            {searchParams.location && <input type="hidden" name="location" value={searchParams.location} />}
             {searchParams.type && <input type="hidden" name="type" value={searchParams.type} />}
             {searchParams.clearance && <input type="hidden" name="clearance" value={searchParams.clearance} />}
             {searchParams.poly && <input type="hidden" name="poly" value={searchParams.poly} />}
             {searchParams.veteran && <input type="hidden" name="veteran" value={searchParams.veteran} />}
             <button type="submit" className="btn btn-primary">Search</button>
           </form>
-          <div className="mt-4 flex flex-wrap gap-2" aria-label="Work arrangement">
-            {([['', 'All'], ['remote', 'Remote'], ['hybrid', 'Hybrid'], ['onsite', 'On-site']] as const).map(([v, l]) => {
-              const params = new URLSearchParams(Object.entries({ ...searchParams, arrangement: v, page: '' }).filter(([, x]) => x) as [string, string][]);
-              const active = (searchParams.arrangement ?? '') === v;
-              return <Link key={l} href={`/jobs${params.toString() ? `?${params}` : ''}`} className={`rounded-full border px-4 py-1.5 text-sm ${active ? 'border-brass bg-brass text-navy' : 'border-cream/30 text-cream hover:border-brass'}`}>{l}</Link>;
+          <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Work arrangement (pick one or more)">
+            <Link href={hrefWith({ arrangement: null })} aria-current={!arrangements.length ? 'true' : undefined}
+              className={`rounded-full border px-4 py-1.5 text-sm ${!arrangements.length ? 'border-brass bg-brass text-navy' : 'border-cream/30 text-cream hover:border-brass'}`}>Any</Link>
+            {ARRANGEMENTS.map(([v, l]) => {
+              const on = arrangements.includes(v);
+              return (
+                <Link key={v} href={toggle(v)} aria-pressed={on} role="button"
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm ${on ? 'border-brass bg-brass text-navy' : 'border-cream/30 text-cream hover:border-brass'}`}>
+                  {on && <span aria-hidden="true">✓</span>}{l}
+                </Link>
+              );
             })}
           </div>
+          {place && <p className="mt-3 text-sm text-cream/80">{place}.</p>}
         </div>
       </section>
 
@@ -77,13 +110,26 @@ export default async function JobsPage({ searchParams }: { searchParams: JobFilt
           <form action="/jobs" method="get" className="card space-y-5 p-5 lg:sticky lg:top-24">
             <p className="eyebrow">Filters</p>
             {searchParams.q && <input type="hidden" name="q" value={searchParams.q} />}
-            {searchParams.state && <input type="hidden" name="state" value={searchParams.state} />}
+            {searchParams.location && <input type="hidden" name="location" value={searchParams.location} />}
             <div>
-              <label htmlFor="arrangement" className="field-label">Work arrangement</label>
-              <select id="arrangement" name="arrangement" defaultValue={searchParams.arrangement ?? ''} className="field">
-                {ARRANGEMENTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              <label htmlFor="f-state" className="field-label">State</label>
+              <select id="f-state" name="state" defaultValue={searchParams.state ?? ''} className="field">
+                <option value="">Anywhere</option>
+                <option value="multi">Multiple locations</option>
+                {US_STATES.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
               </select>
             </div>
+            <fieldset>
+              <legend className="field-label">Work arrangement</legend>
+              <div className="mt-1 space-y-2">
+                {ARRANGEMENTS.map(([v, l]) => (
+                  <label key={v} className="flex items-center gap-2.5 text-sm text-ink">
+                    <input type="checkbox" name="arrangement" value={v} defaultChecked={arrangements.includes(v)} className="h-4 w-4 accent-navy" />{l}
+                  </label>
+                ))}
+              </div>
+              <p className="mt-2 text-xs leading-relaxed text-muted">Pick one or more. With a state picked, remote jobs from anywhere are included, and hybrid and on-site jobs are in that state.</p>
+            </fieldset>
             <div>
               <label htmlFor="type" className="field-label">Employment type</label>
               <select id="type" name="type" defaultValue={searchParams.type ?? ''} className="field">
@@ -117,6 +163,7 @@ export default async function JobsPage({ searchParams }: { searchParams: JobFilt
           <p className="mb-4 text-sm text-muted">
             {jobs.length} {jobs.length === 1 ? 'position' : 'positions'}
             {searchParams.q && <> for “{searchParams.q}”</>}
+            {place ? <> · {place.charAt(0).toLowerCase() + place.slice(1)}</> : searchParams.location ? <> near {searchParams.location}</> : null}
           </p>
           {jobs.length === 0 ? (
             <EmptyState

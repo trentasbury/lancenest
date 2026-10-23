@@ -31,9 +31,9 @@ export async function reportHire(requestId: string, formData: FormData) {
   if (!profileId || !Number.isFinite(salary) || salary < 1000000) redirect('/employer/shortlists?error=hire');
   const fee = r.engagement === 'contract' ? 0 : Math.max(0, Math.round(salary * PLACEMENT_RATE) - (r.amount_cents as number));
   await createAdminClient().from('shortlist_requests').update({ status: 'hired', hired_profile_id: profileId, placement_salary_cents: salary, placement_fee_cents: fee }).eq('id', requestId);
-  await tellAdmins(`${company.name} hired from the “${r.role_title}” shortlist — placement fee $${(fee / 100).toLocaleString()} to invoice.`);
+  await tellAdmins(`${company.name} hired from the “${r.role_title}” shortlist${fee ? ` — placement fee $${(fee / 100).toLocaleString()} to invoice` : ''}.`);
   await sendEmail('support@lancenest.com', { subject: `Placement: ${company.name} — ${r.role_title}`, preheader: `Invoice $${(fee / 100).toLocaleString()}`, tone: 'success', badge: 'Placement',
-    heading: `${company.name} made a hire`, paragraphs: [`Role: ${r.role_title}`, `First-year base salary: $${(salary / 100).toLocaleString()}`, `Placement fee (10% minus the shortlist fee): $${(fee / 100).toLocaleString()}`, 'Send the invoice from Stripe → Invoices. 90-day replacement guarantee applies.'],
+    heading: `${company.name} made a hire`, paragraphs: [`Role: ${r.role_title}`, `First-year base salary: $${(salary / 100).toLocaleString()}`, fee ? `Placement fee to invoice: $${(fee / 100).toLocaleString()}` : 'No placement fee: Search Sprints are a fixed fee. Recorded for hiring outcomes.'],
     cta: { label: 'Open shortlists', url: `${SITE}/admin/shortlists` } });
   revalidatePath('/employer/shortlists');
   redirect('/employer/shortlists?hired=1');

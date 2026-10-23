@@ -25,7 +25,7 @@ export async function updateSupportRequest(id: string, back: string, formData: F
     } else if (before.email) {
       await sendEmail(before.email as string, {
         subject: `Re: ${before.subject}`, preheader: 'A reply from LanceNest', tone: 'notice', badge: 'Support',
-        heading: `Re: ${before.subject}`, paragraphs: [reply, 'Reply to this email if you need anything else.'],
+        heading: `Re: ${before.subject}`, paragraphs: [reply, 'Need anything else? Send another message through the Help page (lancenest.com/help) or reply to this email.'],
         cta: { label: 'Visit LanceNest', url: SITE },
       });
     }

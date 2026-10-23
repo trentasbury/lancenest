@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { unstable_cache } from 'next/cache';
 import QueryNotice from '@/components/QueryNotice';
+import { ARRANGEMENT_LABELS, formatSalary } from '@/lib/format';
 
 const FEATURES = [
   { icon: '☆', title: 'Veteran Focused', body: 'Built by veterans, for veterans. Your record is read as an asset, never a gap.' },
@@ -24,9 +25,61 @@ const getStats = unstable_cache(async () => {
       admin.from('jobs').select('id', { count: 'exact', head: true }).eq('status', 'open'),
       admin.from('companies').select('id', { count: 'exact', head: true }).eq('is_verified', true),
     ]);
-    return { members: m.count ?? 0, jobs: j.count ?? 0, companies: c.count ?? 0 };
+    // The newest open role from a verified employer, for the "Hiring now" card in the hero.
+    const { data: newest } = await admin.from('jobs')
+      .select('title, location, work_arrangement, salary_min, salary_max, salary_period, company:companies!inner(name, is_verified)')
+      .eq('status', 'open').eq('company.is_verified', true).order('posted_at', { ascending: false }).limit(1);
+    const top = (newest ?? [])[0] as unknown as NewestJob | undefined;
+    return { members: m.count ?? 0, jobs: j.count ?? 0, companies: c.count ?? 0, newest: top ?? null };
   } catch { return null; }
-}, ['home-stats'], { revalidate: 600 });
+}, ['home-stats-v2'], { revalidate: 600 });
+
+type NewestJob = { title: string; location: string | null; work_arrangement: 'remote' | 'hybrid' | 'onsite'; salary_min: number | null; salary_max: number | null; salary_period: 'year' | 'hour'; company: { name: string } | null };
+
+/** "What did you do in the military?" — opens the translator with the code filled in. */
+function TranslateCard({ compact = false }: { compact?: boolean }) {
+  return (
+    <div className={`rounded-2xl border border-line/70 bg-ivory text-ink shadow-lift ${compact ? 'p-4' : 'p-5'}`}>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brass-dark">Free career translator</p>
+      <p className="mt-1 font-serif text-xl leading-snug text-navy">What did you do in the military?</p>
+      <form action="/resources" method="get" className="mt-3 flex gap-2">
+        <label htmlFor={compact ? 'mos-m' : 'mos'} className="sr-only">Your MOS, rating, or AFSC</label>
+        <input id={compact ? 'mos-m' : 'mos'} name="code" required placeholder="e.g. 0311" className="field min-w-0 flex-1 py-2.5 text-sm" />
+        <button type="submit" className="btn btn-primary shrink-0 px-4 py-2.5 text-sm" data-track="cta_home_translate">Translate</button>
+      </form>
+      <p className="mt-2.5 text-xs text-muted">Try{' '}
+        {[['0311', 'Marine rifleman'], ['11B', 'Army infantry'], ['3D1X2', 'Air Force cyber']].map(([code, label], i) => (
+          <span key={code}>{i > 0 && ' · '}<Link href={`/resources?code=${code}`} className="font-medium text-navy underline decoration-brass/60 underline-offset-2 hover:decoration-brass" title={label}>{code}</Link></span>
+        ))}
+      </p>
+    </div>
+  );
+}
+
+/** A real, current opening (or the count of open roles) to show the network is active. */
+function HiringNowCard({ stats }: { stats: Awaited<ReturnType<typeof getStats>> }) {
+  const job = stats?.newest;
+  const pay = job ? formatSalary(job.salary_min, job.salary_max, job.salary_period) : null;
+  return (
+    <Link href="/jobs" className="group block rounded-2xl border border-line/70 bg-ivory p-4 text-ink shadow-lift transition-transform hover:-translate-y-0.5" data-track="cta_home_hiring_now">
+      <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-olive">
+        <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#2f7a3e] opacity-60 motion-reduce:hidden" /><span className="relative inline-flex h-2 w-2 rounded-full bg-[#2f7a3e]" /></span>
+        Hiring now
+      </p>
+      {job ? (
+        <>
+          <p className="mt-1.5 text-sm font-semibold leading-snug text-ink">{job.title}</p>
+          <p className="mt-0.5 text-xs text-muted">{[job.company?.name, job.work_arrangement === 'remote' ? 'Remote' : job.location || ARRANGEMENT_LABELS[job.work_arrangement]].filter(Boolean).join(' · ')}{pay ? ` · ${pay}` : ''}</p>
+        </>
+      ) : (
+        <p className="mt-1.5 text-sm font-semibold leading-snug text-ink">Roles from verified employers</p>
+      )}
+      <p className="mt-2.5 text-xs font-semibold text-navy group-hover:underline">
+        {stats && stats.jobs > 1 ? `See all ${stats.jobs.toLocaleString()} open roles →` : 'See open roles →'}
+      </p>
+    </Link>
+  );
+}
 
 export const metadata: Metadata = { alternates: { canonical: '/' } };
 
@@ -60,7 +113,7 @@ export default async function HomePage() {
               <label htmlFor="hero-q" className="sr-only">Job title, keyword, or company</label>
               <input id="hero-q" name="q" placeholder="Job title, keyword, or company" className="flex-1 rounded-full px-5 py-3 text-[15px] text-ink outline-none placeholder:text-muted" />
               <label htmlFor="hero-location" className="sr-only">Location</label>
-              <input id="hero-location" name="location" placeholder="Location" className="rounded-full px-5 py-3 text-[15px] text-ink outline-none placeholder:text-muted sm:w-44 sm:border-l sm:border-line sm:rounded-none" />
+              <input id="hero-location" name="location" placeholder="State or Remote" className="rounded-full px-5 py-3 text-[15px] text-ink outline-none placeholder:text-muted sm:w-44 sm:border-l sm:border-line sm:rounded-none" />
               <button type="submit" className="btn btn-primary sm:px-7">Find Jobs →</button>
             </form>
 
@@ -69,37 +122,21 @@ export default async function HomePage() {
               <Link href="/signup?role=employer" className="btn border border-cream/30 text-ivory hover:bg-white/10" data-track="cta_home_employer_signup">I’m hiring veterans</Link>
             </div>
             <p className="mt-6 text-sm text-cream/60">Free for service members · 1,469 military jobs translated · Built by a Marine veteran</p>
+            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:hidden">
+              <TranslateCard compact />
+              <HiringNowCard stats={stats} />
+            </div>
           </div>
 
-          {/* Product glimpse: the photo with two illustrative cards floating over it. Decorative. */}
-          <div className="relative mx-auto hidden w-full max-w-[460px] lg:block" aria-hidden="true">
+          {/* The founder's photo, kept clear, with two things to do on its lower edges: translate your MOS, see who's hiring. */}
+          <div className="relative mx-auto hidden w-full max-w-[460px] pb-10 lg:block">
             <div className="relative aspect-[4/5] overflow-hidden rounded-[28px] shadow-lift ring-1 ring-white/10">
-              <Image src="/assets/hero-service.webp" alt="" fill priority quality={90} sizes="(min-width: 1024px) 460px, 0px" className="object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-navy-deep/70 via-transparent to-transparent" />
-              <p className="absolute bottom-4 left-5 text-xs text-cream/80">Our founder, U.S. Marine Corps veteran</p>
+              <Image src="/assets/hero-service.webp" alt="Our founder in uniform, U.S. Marine Corps" fill priority quality={90} sizes="(min-width: 1024px) 460px, 0px" className="object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-navy-deep/80 via-transparent to-transparent" />
+              <p className="absolute left-5 top-5 rounded-full bg-navy-deep/70 px-3 py-1 text-[11px] font-medium text-cream/90 backdrop-blur">Our founder · U.S. Marine Corps veteran</p>
             </div>
-            <div className="absolute -left-14 top-10 w-72 rounded-2xl border border-line/70 bg-ivory p-4 text-ink shadow-lift">
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-navy font-serif text-sm text-brass">JD</span>
-                <div className="min-w-0">
-                  <p className="flex items-center gap-1 text-sm font-semibold">Verified member <span className="flex h-4 w-4 items-center justify-center rounded-full bg-olive text-[9px] text-ivory">✓</span></p>
-                  <p className="truncate text-xs text-muted">USMC 0311 → Operations Coordinator</p>
-                </div>
-              </div>
-            </div>
-            <div className="absolute -right-8 bottom-16 w-72 rounded-2xl border border-line/70 bg-ivory p-4 text-ink shadow-lift">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold">Logistics Program Manager</p>
-                  <p className="mt-0.5 text-xs text-muted">Defense contractor · Hybrid</p>
-                </div>
-                <span className="shrink-0 whitespace-nowrap rounded-full bg-olive/10 px-2 py-0.5 text-[10px] font-semibold text-olive">Easy Apply</span>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                <span className="pill">Secret clearance</span>
-                <span className="pill">Veteran preferred</span>
-              </div>
-            </div>
+            <div className="absolute -left-14 bottom-28 w-[300px]"><TranslateCard /></div>
+            <div className="absolute -right-8 bottom-0 w-[250px]"><HiringNowCard stats={stats} /></div>
           </div>
         </div>
       </section>

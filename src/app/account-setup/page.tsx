@@ -43,12 +43,19 @@ export default async function AccountSetupPage({ searchParams }: { searchParams:
     redirect(profile?.role === 'employer' ? '/employer/dashboard' : profile?.role === 'admin' ? '/admin' : '/dashboard');
   }
 
+  // Reached when a signed-in account has no profile. Anyone else is sent where they belong.
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: existing } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
+  if (existing) redirect(existing.role === 'employer' ? '/employer/dashboard' : existing.role === 'admin' ? '/admin' : '/dashboard');
+
   return (
     <div className="container-page max-w-xl py-24 text-center">
       <h1 className="font-serif text-4xl font-medium">We couldn’t finish setting up your account</h1>
       <p className="mt-4 text-muted">
-        You’re signed in, but your LanceNest profile wasn’t created. Sign out and back in; if this keeps happening, contact
-        the LanceNest team so we can fix it for you.
+        You’re signed in, but your LanceNest profile wasn’t created. Sign out and back in; if this keeps happening,{' '}
+        <a href="/help?kind=bug&subject=Account%20setup" className="text-navy underline">tell us through the Help page</a> and we’ll fix it for you.
       </p>
       <form action={signOut} className="mt-8">
         <button type="submit" className="btn btn-primary">Sign out</button>

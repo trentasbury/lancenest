@@ -59,7 +59,7 @@ export default async function NetworkPage({ searchParams }: { searchParams: { ty
 
           {!saved && (
             <div className="space-y-3">
-              <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+              <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
                 {FEED_FILTERS.map(([v, label]) => (
                   <Link key={label} href={qs({ type: v || undefined, cursor: undefined })}
                     className={`whitespace-nowrap rounded-full border px-4 py-1.5 text-sm ${(type ?? '') === v ? 'border-navy bg-navy text-ivory' : 'border-line bg-ivory text-ink hover:border-brass'}`}>

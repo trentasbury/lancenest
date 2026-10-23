@@ -138,15 +138,15 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
                   </div>
                   <div className="flex gap-2">
                     <a href={`/api/resume-files/${r.id}`} className="btn btn-ghost border border-line py-1.5 text-xs">Download</a>
-                    {!r.is_default && <form action={setDefaultResume.bind(null, r.id as string)}><button className="btn btn-ghost py-1.5 text-xs">Make default</button></form>}
-                    <form action={removeResume.bind(null, r.id as string)}><button className="btn btn-ghost py-1.5 text-xs text-signal">Remove</button></form>
+                    {!r.is_default && <form action={setDefaultResume.bind(null, r.id as string)} data-done="Default résumé updated."><SubmitButton className="btn btn-ghost py-1.5 text-xs" pendingText="…">Make default</SubmitButton></form>}
+                    <form action={removeResume.bind(null, r.id as string)} data-done="Résumé removed."><SubmitButton className="btn btn-ghost py-1.5 text-xs text-signal" pendingText="…">Remove</SubmitButton></form>
                   </div>
                 </li>
               ))}
             </ul>
           ) : <p className="mb-5 text-sm text-muted">No résumé yet. Applications with a résumé get far more responses.</p>}
           {(resumes ?? []).length < 3 && (
-            <form action={uploadResume} className="space-y-3">
+            <form action={uploadResume} data-reset data-done="Résumé uploaded. It’s ready to send when you apply." className="space-y-3">
               <div>
                 <label htmlFor="resume-file" className="field-label">Add a résumé (PDF or Word, up to 4 MB)</label>
                 <input id="resume-file" name="resume" type="file" required accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="field text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-navy file:px-3 file:py-1.5 file:text-ivory" />

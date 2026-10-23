@@ -152,7 +152,7 @@ export async function decideCompany(companyId: string, decision: 'verified' | 'r
             heading: decision === 'revoked' ? `${name} is no longer verified.` : `We couldn’t verify ${name} yet.`,
             paragraphs: [note ? `Reason: ${note}` : 'We weren’t able to confirm the company details provided.',
               decision === 'revoked' ? 'Your open jobs have been paused while this is reviewed.' : 'You can update your details and resubmit from your dashboard — a state business ID or SAM.gov UEI makes review fastest.',
-              'Questions or want to appeal? Just reply to this email.'],
+              'Questions or want to appeal? Send us a message through the Help page (lancenest.com/help) or reply to this email.'],
             cta: { label: 'Go to your dashboard', url: `${SITE}/employer/dashboard` } } });
   }
   await admin.from('admin_actions').insert({ admin_id: user.id, action: `company_${decision}`, target_type: 'company', target_id: companyId, details: note ? { note } : {} });
@@ -178,7 +178,7 @@ export async function decideSkillBridge(companyId: string, decision: 'authorized
           cta: { label: 'Post a SkillBridge program', url: `${SITE}/employer/jobs/new` } }
       : { subject: 'About your SkillBridge request', preheader: 'We couldn’t find your organization on the DoD list.', tone: 'notice', badge: 'SkillBridge',
           heading: 'We couldn’t confirm your SkillBridge authorization.',
-          paragraphs: [`We couldn’t find ${c.name} on the official DoD SkillBridge directory. If your organization is listed under a different name, reply with that exact name and we’ll recheck.`,
+          paragraphs: [`We couldn’t find ${c.name} on the official DoD SkillBridge directory. If your organization is listed under a different name, send us that exact name through the Help page (lancenest.com/help) and we’ll recheck.`,
             'You can still hire transitioning members for roles that start after they separate.'],
           cta: { label: 'Open your dashboard', url: `${SITE}/employer/dashboard` } },
   });
@@ -224,7 +224,7 @@ export async function actOnMember(profileId: string, action: 'warning' | 'suspen
     title: action === 'warning' ? `Conduct warning: ${reason}` : action === 'suspension' ? `Your account is suspended for 7 days: ${reason}` : action === 'reinstated' ? 'Your account has been reinstated.' : 'Your account was removed.',
     email: { subject: CONDUCT[0], preheader: CONDUCT[1], tone: action === 'reinstated' ? 'success' : 'alert', badge: action === 'reinstated' ? 'Reinstated' : 'Code of Conduct',
       heading: CONDUCT[1],
-      paragraphs: [...(action === 'reinstated' ? [] : [`Reason: ${reason}`]), CONDUCT[2], 'To appeal, reply to this email within 30 days.'],
+      paragraphs: [...(action === 'reinstated' ? [] : [`Reason: ${reason}`]), CONDUCT[2], 'To appeal, write to us within 30 days through the Help page (lancenest.com/help) or reply to this email.'],
       cta: action === 'removal' ? { label: 'Read the Code of Conduct', url: `${SITE}/conduct` } : { label: 'View your account', url: `${SITE}/settings/account` } },
   });
   if (reportId) await admin.from('reports').update({ status: 'resolved' }).eq('id', reportId);
@@ -246,11 +246,11 @@ export async function decidePublicSafety(companyId: string, decision: 'approved'
       ? { subject: 'Your Public Safety rate is active', preheader: '30% off Professional and Federal, for as long as you subscribe.', tone: 'success', badge: 'Public Safety rate',
           heading: 'Thank you for serving your community.',
           paragraphs: [`${c.name} is approved for the LanceNest Public Safety rate: 30% off Professional and Federal, for as long as you’re subscribed. It’s applied automatically at checkout.`,
-            'Need annual invoice billing instead of a card? Reply to this email and we’ll set it up.'],
+            'Need annual invoice billing instead of a card? Tell us through the Help page (lancenest.com/help) or reply to this email, and we’ll set it up.'],
           cta: { label: 'See plans', url: `${SITE}/employers` } }
       : { subject: 'About your Public Safety rate request', preheader: 'We couldn’t confirm eligibility.', tone: 'notice', badge: 'Public Safety rate',
           heading: 'We couldn’t confirm eligibility yet.',
-          paragraphs: ['The Public Safety rate is for government police, sheriff, corrections, fire, and EMS agencies. If that’s you, reply with your agency’s official .gov page and we’ll take another look.'],
+          paragraphs: ['The Public Safety rate is for government police, sheriff, corrections, fire, and EMS agencies. If that’s you, send your agency’s official .gov page through the Help page (lancenest.com/help) and we’ll take another look.'],
           cta: { label: 'Open your dashboard', url: `${SITE}/employer/dashboard` } },
   });
   revalidatePath('/admin/companies');

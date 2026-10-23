@@ -62,7 +62,7 @@ export default async function PeoplePage({ searchParams: f }: { searchParams: { 
         <div className="flex gap-2 lg:col-span-5"><button className="btn btn-primary">Search</button><Link href="/people" className="btn btn-ghost">Clear</Link></div>
       </form>
       <p className="eyebrow mt-8">{people.length === 60 ? 'Top 60 results' : `${people.length} ${people.length === 1 ? 'person' : 'people'}`}</p>
-      <ul className="mt-3 grid gap-3 md:grid-cols-2">
+      <ul className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
         {people.map((p) => (
           <li key={p.id} className="card flex items-center gap-3 p-4">
             <Avatar name={p.full_name} src={p.avatar_url} />

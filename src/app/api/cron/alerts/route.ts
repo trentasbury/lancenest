@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { SITE, sendEmail } from '@/lib/email';
-import { US_STATES } from '@/lib/states';
+import { jobMatchesPlace, parseArrangements } from '@/lib/place';
 import { unsubscribeLinks } from '@/lib/emailLinks';
 import { sendFounderWelcomes } from '@/lib/founderWelcome';
 
@@ -34,8 +34,8 @@ export async function GET(request: NextRequest) {
         // Everyone gets the last 24 hours; cleared roles reach non-Federal members only after the 48-hour early-access window.
         const inWindow = cleared && !federal ? age >= 48 * H && age < 72 * H : age < 24 * H;
         if (!inWindow || (a.cleared_only && !cleared)) continue;
-        if (a.arrangement && j.work_arrangement !== a.arrangement) continue;
-        if (a.state) { const st = US_STATES.find(([c]) => c === a.state); const loc = (j.location ?? '').toLowerCase(); if (!st || !(loc.includes(`, ${st[0].toLowerCase()}`) || loc.includes(st[1].toLowerCase()))) continue; }
+        // Same rule as job search: a state means remote jobs from anywhere plus hybrid/on-site jobs in that state.
+        if (!jobMatchesPlace(j, a.state as string | null, parseArrangements(a.arrangement as string | null))) continue;
         if (a.keywords) { const hay = `${j.title} ${j.description ?? ''}`.toLowerCase(); if (!a.keywords.toLowerCase().split(/[\s,]+/).filter(Boolean).some((k: string) => hay.includes(k))) continue; }
         matches.set(j.id, j);
       }

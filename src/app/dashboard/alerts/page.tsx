@@ -8,6 +8,16 @@ import FormMessage from '@/components/FormMessage';
 import { createAlert, deleteAlert } from './actions';
 
 export const metadata: Metadata = { title: 'Job alerts' };
+
+/** e.g. "Remote, or hybrid/on-site in Florida" — the same rule job search uses. */
+function whereLabel(state: string | null, arrangement: string | null) {
+  const name = state ? US_STATES.find(([c]) => c === state)?.[1] ?? state : null;
+  const label = arrangement === 'onsite' ? 'On-site' : arrangement === 'hybrid' ? 'Hybrid' : arrangement === 'remote' ? 'Remote' : null;
+  if (!name) return label;
+  if (arrangement === 'remote') return 'Remote (anywhere)';
+  if (label) return `${label} in ${name}`;
+  return `Remote, or hybrid/on-site in ${name}`;
+}
 const CAP: Record<string, number> = { pro: 3, pro_plus: 10, federal_pro: 10 };
 
 export default async function AlertsPage({ searchParams }: { searchParams: { error?: string; saved?: string } }) {
@@ -34,16 +44,17 @@ export default async function AlertsPage({ searchParams }: { searchParams: { err
             {(alerts ?? []).length === 0 && <li className="p-5 text-sm text-muted">No alerts yet.</li>}
             {(alerts ?? []).map((a) => (
               <li key={a.id as string} className="flex items-center justify-between gap-3 p-4 text-sm">
-                <span>{[a.keywords && `“${a.keywords}”`, a.state, a.arrangement, a.cleared_only && 'cleared jobs only'].filter(Boolean).join(' · ') || 'All new jobs'}</span>
-                <form action={deleteAlert.bind(null, a.id as string)}><button className="text-xs text-muted hover:text-signal">Delete</button></form>
+                <span>{[a.keywords && `“${a.keywords}”`, whereLabel(a.state as string | null, a.arrangement as string | null), a.cleared_only && 'cleared jobs only'].filter(Boolean).join(' · ') || 'All new jobs'}</span>
+                <form action={deleteAlert.bind(null, a.id as string)} data-done="Alert deleted."><SubmitButton className="text-xs text-muted hover:text-signal" pendingText="…">Delete</SubmitButton></form>
               </li>
             ))}
           </ul>
           {(alerts ?? []).length < cap && (
             <form action={createAlert} className="card grid gap-3 p-5 sm:grid-cols-2">
               <input name="keywords" placeholder="Keywords (e.g. cybersecurity, logistics)" className="field sm:col-span-2" />
-              <select name="state" className="field"><option value="">Any state</option>{US_STATES.map(([c, n]) => <option key={c} value={c}>{n}</option>)}</select>
-              <select name="arrangement" className="field"><option value="">Any arrangement</option><option value="remote">Remote</option><option value="hybrid">Hybrid</option><option value="onsite">On-site</option></select>
+              <div><label htmlFor="alert-state" className="field-label">State</label><select id="alert-state" name="state" className="field"><option value="">Anywhere</option>{US_STATES.map(([c, n]) => <option key={c} value={c}>{n}</option>)}</select></div>
+              <div><label htmlFor="alert-arr" className="field-label">Work arrangement</label><select id="alert-arr" name="arrangement" className="field"><option value="">Remote, hybrid, or on-site</option><option value="remote">Remote only</option><option value="hybrid">Hybrid only</option><option value="onsite">On-site only</option></select></div>
+              <p className="text-xs text-muted sm:col-span-2">With a state picked, remote jobs from anywhere are included, and hybrid and on-site jobs are in that state.</p>
               {['pro_plus', 'federal_pro'].includes(plan) && <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="cleared_only" className="accent-navy" />Only jobs that require a security clearance</label>}
               <div className="sm:col-span-2"><SubmitButton className="btn btn-primary" pendingText="Saving…">Create alert</SubmitButton></div>
             </form>
