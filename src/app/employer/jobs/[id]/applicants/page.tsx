@@ -12,6 +12,7 @@ import Avatar from '@/components/network/Avatar';
 import SubmitButton from '@/components/SubmitButton';
 import { startConversation } from '@/app/messages/actions';
 import { saveToPool } from '@/app/employer/talent/actions';
+import PoolNotice from '@/components/employer/PoolNotice';
 
 export const metadata: Metadata = { title: 'Applicants' };
 
@@ -47,7 +48,7 @@ async function moveApplicant(applicationId: string, jobId: string, formData: For
 
 type App = { answers?: { q: string; a: string }[]; id: string; status: string; applied_at: string; profile_id: string; resume_id: string | null; profile: { full_name: string; username: string | null; headline: string | null; service_summary: string | null; verified: boolean } | null };
 
-export default async function ApplicantsPage({ params }: { params: { id: string } }) {
+export default async function ApplicantsPage({ params, searchParams }: { params: { id: string }; searchParams: { pool?: string } }) {
   const { user } = await requireRole(['employer'], '/employer/dashboard');
   const supabase = createClient();
   const [company, { data: job }] = await Promise.all([
@@ -90,6 +91,7 @@ export default async function ApplicantsPage({ params }: { params: { id: string 
           <Link href="/employers" className="text-sm text-muted underline">CSV export · Professional</Link>
         )}
       </div>
+      {searchParams.pool && <div className="mt-4"><PoolNotice pool={searchParams.pool} /></div>}
       <p className="mt-3 text-xs text-muted">
         <VerifiedNote />
         {apps.some(featured) && <> Priority applicants are Career Accelerator or Federal members, listed first as a paid member perk — not a ranking of their fit for this job.</>}

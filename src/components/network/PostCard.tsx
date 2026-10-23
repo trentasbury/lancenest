@@ -71,6 +71,7 @@ export default function PostCard({ post, signedIn, detail = false }: { post: Pos
   const eyebrow = MILESTONE_EYEBROW[post.post_type] ?? 'Update';
   const myReaction = REACTIONS.find(([r]) => r === v?.reaction);
   const canShare = !post.is_share && (post.visibility === 'public' || post.visibility === 'network');
+  const first = post.author?.full_name?.split(' ')[0] ?? 'this member';
 
   return (
     <article className={`card overflow-hidden ${isMilestone ? 'border-brass/50' : ''}`}>
@@ -90,7 +91,7 @@ export default function PostCard({ post, signedIn, detail = false }: { post: Pos
                   <>
                     <details>
                       <summary className="cursor-pointer rounded-lg px-3 py-2 hover:bg-cream">Edit post</summary>
-                      <form action={updatePost.bind(null, post.id)} className="space-y-2 p-2">
+                      <form action={updatePost.bind(null, post.id)} data-close data-done="Post updated." className="space-y-2 p-2">
                         <textarea name="body" defaultValue={post.body} rows={4} maxLength={3000} className="field text-sm" />
                         <select name="visibility" defaultValue={post.visibility} className="field text-sm">
                           {VISIBILITY.map(([val, label]) => <option key={val} value={val}>{label}</option>)}
@@ -105,20 +106,21 @@ export default function PostCard({ post, signedIn, detail = false }: { post: Pos
                   </>
                 ) : (
                   <>
-                    <form action={(v.followsAuthor ? unfollowUser : followUser).bind(null, post.author_id)}>
-                      <button type="submit" className="w-full rounded-lg px-3 py-2 text-left hover:bg-cream">
-                        {v.followsAuthor ? 'Unfollow' : 'Follow'} {post.author?.full_name?.split(' ')[0] ?? 'member'}
-                      </button>
+                    <form action={(v.followsAuthor ? unfollowUser : followUser).bind(null, post.author_id)} data-close
+                      data-done={v.followsAuthor ? `You unfollowed ${first}.` : `You’re following ${first}. Their posts will show in your feed.`}>
+                      <SubmitButton className="w-full rounded-lg px-3 py-2 text-left hover:bg-cream" pendingText="…">
+                        {v.followsAuthor ? 'Unfollow' : 'Follow'} {first}
+                      </SubmitButton>
                     </form>
-                    <form action={muteUser.bind(null, post.author_id)}>
-                      <button type="submit" className="w-full rounded-lg px-3 py-2 text-left hover:bg-cream">Mute (hide their posts)</button>
+                    <form action={muteUser.bind(null, post.author_id)} data-close data-done={`Muted. You won’t see ${first}’s posts in your feed. Undo anytime in Account settings → Blocked & muted.`}>
+                      <SubmitButton className="w-full rounded-lg px-3 py-2 text-left hover:bg-cream" pendingText="…">Mute (hide their posts)</SubmitButton>
                     </form>
-                    <form action={blockUser.bind(null, post.author_id)}>
-                      <button type="submit" className="w-full rounded-lg px-3 py-2 text-left hover:bg-cream">Block</button>
+                    <form action={blockUser.bind(null, post.author_id)} data-close data-done={`Blocked. You and ${first} can’t see each other’s posts or message each other. Undo anytime in Account settings → Blocked & muted.`}>
+                      <SubmitButton className="w-full rounded-lg px-3 py-2 text-left hover:bg-cream" pendingText="…">Block</SubmitButton>
                     </form>
                     <details>
                       <summary className="cursor-pointer rounded-lg px-3 py-2 text-signal hover:bg-signal/5">Report post</summary>
-                      <form action={reportContent.bind(null, 'post', post.id)} className="space-y-2 p-2">
+                      <form action={reportContent.bind(null, 'post', post.id)} data-close data-reset data-done="Thanks. Your report was received, and our team will review it." className="space-y-2 p-2">
                         <select name="reason" required defaultValue="" className="field text-sm">
                           <option value="" disabled>Choose a reason…</option>
                           {REPORT_REASONS.map(([val, label]) => <option key={val} value={val}>{label}</option>)}
@@ -163,7 +165,7 @@ export default function PostCard({ post, signedIn, detail = false }: { post: Pos
             {canShare && (
               <details className="relative" data-autoclose>
                 <summary className="cursor-pointer list-none rounded-lg px-3 py-2 text-ink hover:bg-cream">Share</summary>
-                <form action={sharePost.bind(null, post.id)} className="absolute bottom-full left-0 z-20 mb-1 w-72 space-y-2 rounded-xl border border-line bg-ivory p-3 shadow-card">
+                <form action={sharePost.bind(null, post.id)} data-close data-reset data-done="Shared to your network." className="absolute bottom-full left-0 z-20 mb-1 w-72 space-y-2 rounded-xl border border-line bg-ivory p-3 shadow-card">
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Share to your network</p>
                   <textarea name="body" rows={2} maxLength={3000} placeholder="Add a note (optional)" className="field text-sm" />
                   <select name="visibility" defaultValue="network" className="field text-sm">

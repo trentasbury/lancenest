@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: 'Account settings', robots: { index: 
 
 const ERRORS: Record<string, string> = {
   confirm: 'Type DELETE and check the box to confirm.',
-  failed: 'Your account couldn’t be deleted. Please try again or email support@lancenest.com.',
+  failed: 'Your account couldn’t be deleted. Please try again, or tell us through the Help page (lancenest.com/help) and we’ll do it for you.',
   admin: 'Admin accounts can’t be deleted from here. Remove the admin role first.',
 };
 
@@ -117,7 +117,7 @@ export default async function AccountPage({ searchParams }: { searchParams: { er
             ))}
           </ul>
         )}
-        <p className="mt-3 text-xs text-muted">See the <Link href="/conduct" className="underline">Code of Conduct</Link>. Appeals: support@lancenest.com within 30 days.</p>
+        <p className="mt-3 text-xs text-muted">See the <Link href="/conduct" className="underline">Code of Conduct</Link>. Appeals: <Link href="/help?kind=support&subject=Appeal" className="underline">Help page</Link> within 30 days.</p>
       </section>
 
       <section className="card border-signal/40 p-7">

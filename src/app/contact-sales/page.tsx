@@ -14,7 +14,7 @@ export default function ContactSalesPage({ searchParams }: { searchParams: { pla
       </div></section>
       <div className="container-page max-w-3xl py-12">
         {searchParams.sent ? (
-          <div className="card p-8 text-center"><p className="font-serif text-2xl text-navy">Thank you — we’ll be in touch within one business day.</p><p className="mt-2 text-muted">Questions in the meantime: support@lancenest.com</p></div>
+          <div className="card p-8 text-center"><p className="font-serif text-2xl text-navy">Thank you — we’ll be in touch within one business day.</p><p className="mt-2 text-muted">Questions in the meantime? <a href="/help?kind=support&subject=Sales" className="text-navy underline">Send us a message</a>.</p></div>
         ) : (
           <form action={requestCall} className="card grid gap-4 p-7 sm:grid-cols-2">
             {searchParams.error && <p className="text-sm text-signal sm:col-span-2">Please add your name, company, and a valid work email.</p>}

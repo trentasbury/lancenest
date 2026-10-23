@@ -14,7 +14,8 @@ export async function POST(request: NextRequest) {
     const { data } = await createAdminClient().from('billing_customers').select('stripe_customer_id').eq('profile_id', session.user.id).maybeSingle();
     customer = (data?.stripe_customer_id as string) ?? null; back = `${site}/plans`;
   } else {
-    const { data: company } = await createClient().from('companies').select('stripe_customer_id').eq('owner_id', session.user.id).maybeSingle();
+    // Billing IDs are server-only, so this owner-scoped read uses the server key.
+    const { data: company } = await createAdminClient().from('companies').select('stripe_customer_id').eq('owner_id', session.user.id).maybeSingle();
     customer = (company?.stripe_customer_id as string) ?? null;
   }
   if (!customer) return NextResponse.redirect(back, 303);

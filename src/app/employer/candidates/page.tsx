@@ -15,6 +15,7 @@ import Avatar from '@/components/network/Avatar';
 import SubmitButton from '@/components/SubmitButton';
 import { startConversation } from '@/app/messages/actions';
 import { saveToPool } from '@/app/employer/talent/actions';
+import PoolNotice from '@/components/employer/PoolNotice';
 import { deleteSavedSearch, saveSearch } from '@/app/employer/talent/searchActions';
 
 export const metadata: Metadata = { title: 'Candidate search' };
@@ -23,7 +24,7 @@ type Row = {
   profile_id: string; city: string | null; state: string | null; clearance_level: string; clearance_status: string | null; polygraph: string; availability: string; target_pay: string | null; verification_status: string; willing_to_relocate: boolean; separation_date: string | null; skillbridge_interest: boolean; open_to_transition_hiring: boolean; plan: string; boosted_until: string | null;
   profile: { full_name: string; username: string | null; headline: string | null; service_summary: string | null } | null;
 };
-type F = { q?: string; branch?: string; mos?: string; state?: string; skill?: string; clearance?: string; verified?: string; relocate?: string; transitioning?: string };
+type F = { q?: string; branch?: string; mos?: string; state?: string; skill?: string; clearance?: string; verified?: string; relocate?: string; transitioning?: string; pool?: string };
 const SELECT = 'profile_id, city, state, clearance_level, clearance_status, polygraph, availability, target_pay, verification_status, willing_to_relocate, separation_date, skillbridge_interest, open_to_transition_hiring, plan, boosted_until, profile:profiles!veteran_profiles_profile_id_fkey(full_name, username, headline, service_summary)';
 
 function intersect(a: string[] | null, b: string[]) {
@@ -35,6 +36,9 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
   const company = await getMyCompany(user.id);
   if (!company) redirect('/employer/dashboard');
   const paid = PAID.includes(company.plan);
+  // Saving a candidate returns here with the same search (minus any old notice).
+  const keep = new URLSearchParams(Object.entries(f).filter(([k, v]) => k !== 'pool' && typeof v === 'string' && v) as [string, string][]).toString();
+  const here = `/employer/candidates${keep ? `?${keep}` : ''}`;
   const cleared = CLEARANCE_SEARCH.includes(company.plan);
 
   if (!company.is_verified) {
@@ -136,7 +140,7 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
           {cleared && r.clearance_level !== 'none' && <span className="ml-2 rounded-full border border-brass/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-brass-dark" title="Self-reported by the member — confirm eligibility through official systems">{[CLEARANCE_LABEL[r.clearance_level], r.clearance_status && CLEARANCE_STATUS.find(([v]) => v === r.clearance_status)?.[1].split(' ')[0], POLY_SHORT[r.polygraph]].filter(Boolean).join(' · ')} · self-reported, not verified by LanceNest</span>}
         </p>
       </div>
-      <form action={saveToPool.bind(null, r.profile_id, '/employer/candidates')}><SubmitButton className="btn btn-ghost border border-line" pendingText="…">Save</SubmitButton></form>
+      <form action={saveToPool.bind(null, r.profile_id, here)}><SubmitButton className="btn btn-ghost border border-line" pendingText="…">Save</SubmitButton></form>
       <form action={startConversation.bind(null, r.profile_id)}>
         <SubmitButton className="btn btn-outline" pendingText="…">Message</SubmitButton>
       </form>
@@ -153,6 +157,7 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
         <p className="text-sm text-muted">Message your applicants anytime · {({ professional: '100', federal: '500', enterprise: '2,000' } as Record<string, string>)[company.plan] ?? '100'} new conversations a month with other members</p>
       </div>
       <p className="mt-3 text-xs text-muted"><VerifiedNote /> Clearances are self-reported; confirm eligibility in official systems.</p>
+      {f.pool && <div className="mt-4"><PoolNotice pool={f.pool} /></div>}
 
       {(savedSearches ?? []).length > 0 && (
         <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">

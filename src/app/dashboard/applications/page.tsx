@@ -27,7 +27,8 @@ export default async function ApplicationsPage() {
   const { data } = await createClient().from('applications')
     .select('id, status, source, applied_at, updated_at, job:jobs(title, slug, company:companies(name)), resume:resumes(file_name)')
     .eq('profile_id', user.id).order('applied_at', { ascending: false }).limit(200);
-  const rows = (data ?? []) as unknown as Row[];
+  // Company-site jobs the member said they didn't apply to aren't applications.
+  const rows = ((data ?? []) as unknown as Row[]).filter((r) => !(r.source === 'external' && r.status === 'withdrawn'));
   const active = rows.filter((r) => !['withdrawn', 'rejected'].includes(r.status));
 
   return (
@@ -49,7 +50,7 @@ export default async function ApplicationsPage() {
                 </div>
                 <p className={`text-sm font-semibold ${tone}`}>{label}</p>
                 {['applied', 'viewed', 'interview'].includes(r.status) && (
-                  <form action={withdraw.bind(null, r.id)}>
+                  <form action={withdraw.bind(null, r.id)} data-done={r.source === 'external' ? 'Removed from My applications.' : 'Application withdrawn. You can apply again from the job page.'}>
                     <SubmitButton className="btn btn-ghost py-1.5 text-xs" pendingText="…">{r.source === 'external' ? 'Didn’t apply? Remove' : 'Withdraw'}</SubmitButton>
                   </form>
                 )}

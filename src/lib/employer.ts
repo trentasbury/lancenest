@@ -1,6 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export type Plan = 'free' | 'professional' | 'federal' | 'enterprise';
 export const PAID: Plan[] = ['professional', 'federal', 'enterprise'];
@@ -20,10 +21,12 @@ export function monthStart() {
  * Both lookups run at once, and the result is shared by everything rendering in one request.
  */
 export const getMyCompany = cache(async (userId: string) => {
-  const supabase = createClient();
+  // Includes private fields (billing ID, credits, verification details), so it reads with the server key,
+  // strictly scoped to the company this signed-in user owns or belongs to. Never pass anyone else's id.
+  const admin = createAdminClient();
   const [{ data: own }, { data: m }] = await Promise.all([
-    supabase.from('companies').select('*').eq('owner_id', userId).maybeSingle(),
-    supabase.from('company_members').select('company:companies(*)').eq('profile_id', userId).maybeSingle(),
+    admin.from('companies').select('*').eq('owner_id', userId).maybeSingle(),
+    admin.from('company_members').select('company:companies(*)').eq('profile_id', userId).maybeSingle(),
   ]);
   if (own) return { ...own, isOwner: true } as MyCompany;
   const company = (m as unknown as { company: Record<string, unknown> | null } | null)?.company;

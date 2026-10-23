@@ -9,6 +9,7 @@ import JobErrors from '@/components/employer/JobErrors';
 import SubmitButton from '@/components/SubmitButton';
 import type { Job } from '@/lib/types';
 import { featureWithPlan, saveJob, setJobStatus } from '../actions';
+import { siteHost } from '@/lib/applyLinks';
 
 export const metadata: Metadata = { title: 'Manage job' };
 
@@ -21,7 +22,8 @@ export default async function ManageJobPage({ params, searchParams }: { params: 
     getMyCompany(user.id),
     supabase.from('applications').select('id', { count: 'exact', head: true }).eq('job_id', params.id).eq('source', 'lancenest').neq('status', 'withdrawn'),
   ]);
-  if (!data || (data.company as { owner_id: string }).owner_id !== user.id) notFound();
+  // The company's owner and its team members (recruiter seats) can manage its jobs.
+  if (!data || !co || (data as { company_id: string }).company_id !== co.id) notFound();
   const job = data as unknown as Job & { featured_until: string | null };
   const featured = job.featured_until && new Date(job.featured_until) > new Date();
   const paidPlan = co?.plan && co.plan !== 'free';
@@ -73,7 +75,7 @@ export default async function ManageJobPage({ params, searchParams }: { params: 
       )}
 
       <JobErrors error={searchParams.error} saved={searchParams.saved} />
-      <JobForm job={job} action={saveJob.bind(null, job.id)} />
+      <JobForm job={job} action={saveJob.bind(null, job.id)} verifiedHost={siteHost((co.verification_details as { website?: string } | null)?.website)} />
     </div>
   );
 }

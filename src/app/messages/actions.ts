@@ -89,8 +89,11 @@ export async function sendMessage(conversationId: string, formData: FormData) {
   const { error } = await createClient().from('messages').insert({ conversation_id: conversationId, sender_id: session.user.id, body });
   if (error) {
     const reason = error.code === 'P0015' ? 'pending' : error.code === 'P0016' ? 'declined' : error.code === 'P0009' ? 'pii' : error.code === 'P0002' ? 'rate' : error.message.includes("can't") ? 'blocked' : 'send';
-  
-  // Email the other person if they're away (throttled per conversation).
+    redirect(`/messages/${conversationId}?error=${reason}&at=${Date.now()}`); // unique, so a repeat error never clears the box
+  }
+
+  // The message was delivered: email the other person if they're away (throttled per conversation).
+  // Never for a failed send, so a blocked or declined sender can't reach the other person by email.
   try {
     const admin = createAdminClient();
     const { data: others } = await admin.from('conversation_participants').select('profile_id, last_emailed_at, profile:profiles(last_active_at)').eq('conversation_id', conversationId).neq('profile_id', session.user.id);
@@ -110,9 +113,9 @@ export async function sendMessage(conversationId: string, formData: FormData) {
       await admin.from('conversation_participants').update({ last_emailed_at: new Date().toISOString() }).eq('conversation_id', conversationId).eq('profile_id', o.profile_id);
     }
   } catch (err) { console.error('message email failed:', err); }
-  redirect(`/messages/${conversationId}?error=${reason}`);
-  }
   revalidatePath('/', 'layout');
+  // Drop a used ?draft= or an old ?error= from the address so the box clears and stale notices go away.
+  if (formData.get('clean')) redirect(`/messages/${conversationId}`);
 }
 
 /** Recipient accepts or declines a message request. */

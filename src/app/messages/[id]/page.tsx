@@ -59,15 +59,15 @@ export default async function ThreadPage({ params, searchParams }: { params: { i
           </div>
         </div>
         {other && (
-          <details className="relative">
+          <details className="relative" data-autoclose>
             <summary className="cursor-pointer list-none rounded-lg px-2 py-1 text-lg text-muted hover:bg-cream" aria-label="Conversation options">⋯</summary>
             <div className="absolute right-0 z-20 mt-1 w-64 space-y-1 rounded-xl border border-line bg-ivory p-2 text-sm shadow-card">
-              <form action={blockUser.bind(null, other.profile_id)}>
-                <button type="submit" className="w-full rounded-lg px-3 py-2 text-left hover:bg-cream">Block {other.profile?.full_name?.split(' ')[0]}</button>
+              <form action={blockUser.bind(null, other.profile_id)} data-close data-done="Blocked. Neither of you can message the other. Undo anytime in Account settings → Blocked & muted.">
+                <SubmitButton className="w-full rounded-lg px-3 py-2 text-left hover:bg-cream" pendingText="…">Block {other.profile?.full_name?.split(' ')[0]}</SubmitButton>
               </form>
               <details>
                 <summary className="cursor-pointer rounded-lg px-3 py-2 text-signal hover:bg-signal/5">Report this member</summary>
-                <form action={reportContent.bind(null, 'profile', other.profile_id)} className="space-y-2 p-2">
+                <form action={reportContent.bind(null, 'profile', other.profile_id)} data-close data-reset data-done="Thanks. Your report was received, and our team will review it." className="space-y-2 p-2">
                   <select name="reason" required defaultValue="" className="field text-sm">
                     <option value="" disabled>Reason…</option>
                     <option value="harassment">Harassment</option><option value="spam">Spam</option><option value="fraud">Fraud</option>
@@ -116,7 +116,8 @@ export default async function ThreadPage({ params, searchParams }: { params: { i
       )}
       {conv?.status === 'declined' && conv.requested_by === user.id && <p className="mb-3 rounded-xl border border-line bg-paper p-3 text-sm text-muted">This message request wasn’t accepted.</p>}
       {searchParams.error && <div className="mb-3"><FormMessage error={searchParams.error === 'pending' ? 'Your message request is waiting for a reply — you can send more once they accept.' : searchParams.error === 'declined' ? 'This message request wasn’t accepted.' : searchParams.error === 'blocked' ? 'This conversation is closed because one of you has blocked the other.' : searchParams.error === 'rate' ? 'You’re sending messages very quickly. Please wait a few minutes.' : searchParams.error === 'pii' ? 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' : 'Your message didn’t send. Please try again.'} /></div>}
-      {!(conv?.requested_by === user.id && ((conv?.status === 'request' && mySent > 0) || conv?.status === 'declined')) && <form action={sendMessage.bind(null, params.id)} className="sticky bottom-4 flex gap-2 rounded-2xl border border-line bg-ivory p-2 shadow-card">
+      {!(conv?.requested_by === user.id && ((conv?.status === 'request' && mySent > 0) || conv?.status === 'declined')) && <form action={sendMessage.bind(null, params.id)} data-reset className="sticky bottom-4 flex gap-2 rounded-2xl border border-line bg-ivory p-2 shadow-card">
+        {(searchParams.draft || searchParams.error) && <input type="hidden" name="clean" value="1" />}
         <label htmlFor="msg" className="sr-only">Message</label>
         <textarea id="msg" name="body" required rows={2} maxLength={4000} defaultValue={searchParams.draft} placeholder="Write a message…" className="field resize-none border-0 focus:ring-0" />
         <SubmitButton className="btn btn-primary shrink-0 self-end" pendingText="Sending…">Send</SubmitButton>

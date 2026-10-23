@@ -9,7 +9,8 @@ import { getSessionProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { reportContent } from '@/app/network/actions';
 import { ARRANGEMENT_LABELS, CLEARANCE_LABELS, EMPLOYMENT_LABELS, formatSalary, postedAgo } from '@/lib/format';
-import { applyToJob, toggleSaveJob } from '../actions';
+import { applyToJob, confirmSiteApply, toggleSaveJob } from '../actions';
+import CompanySiteApply from '@/components/jobs/CompanySiteApply';
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const job = await getJobBySlug(params.slug);
@@ -47,7 +48,7 @@ export default async function JobDetailPage({ params, searchParams }: { params: 
   const supabase = createClient();
   const none = Promise.resolve({ data: null });
   // Everything below depends only on the job and the viewer: one round of queries.
-  const [{ data: earlyRows }, { data: insightRows }, { data: myResumesRows }, , { data: s }, { data: a }] = await Promise.all([
+  const [{ data: earlyRows }, { data: insightRows }, { data: myResumesRows }, , { data: s }, { data: a }, { data: me }] = await Promise.all([
     supabase.rpc('early_jobs', { ids: [job.id] }),
     isVeteran ? supabase.rpc('applicant_insight', { j: job.id }) : Promise.resolve({ data: [] }),
     isVeteran && session ? supabase.from('resumes').select('id, file_name, is_default').eq('profile_id', session.user.id).order('uploaded_at', { ascending: false }) : Promise.resolve({ data: [] }),
@@ -55,7 +56,10 @@ export default async function JobDetailPage({ params, searchParams }: { params: 
     session ? supabase.from('job_views').insert({ job_id: job.id, viewer_id: session.user.id }).then(() => undefined, () => undefined) : Promise.resolve(undefined),
     isVeteran && session ? supabase.from('saved_jobs').select('job_id').eq('profile_id', session.user.id).eq('job_id', job.id).maybeSingle() : none,
     isVeteran && session ? supabase.from('applications').select('status, source').eq('profile_id', session.user.id).eq('job_id', job.id).maybeSingle() : none,
+    session?.profile?.role === 'veteran' ? supabase.from('veteran_profiles').select('verification_status').eq('profile_id', session.user.id).maybeSingle() : none,
   ]);
+  // Applying needs a verified account (admins can always apply).
+  const canApply = session?.profile?.role === 'admin' || (me as { verification_status?: string } | null)?.verification_status === 'verified';
   const isEarly = ((earlyRows ?? []) as string[]).length > 0;
   const insight = ((insightRows ?? []) as { stronger_than_pct: number; verified_pct: number; applicants_bucket: string }[])[0] ?? null;
   const myResumes = (myResumesRows ?? []) as { id: string; file_name: string; is_default: boolean }[];
@@ -119,7 +123,7 @@ export default async function JobDetailPage({ params, searchParams }: { params: 
             {(!!session && ['veteran', 'admin'].includes(session.profile?.role ?? '')) && (
               <details className="mt-3 text-xs text-muted">
                 <summary className="cursor-pointer hover:text-signal">Something wrong with this job? Report it</summary>
-                <form action={reportContent.bind(null, 'job', job.id)} className="mt-2 flex max-w-md flex-col gap-2 sm:flex-row">
+                <form action={reportContent.bind(null, 'job', job.id)} data-close data-reset data-done="Thanks. Your report was received, and our team will review this job." className="mt-2 flex max-w-md flex-col gap-2 sm:flex-row">
                   <select name="reason" required defaultValue="" className="field py-2 text-sm">
                     <option value="" disabled>Reason…</option>
                     <option value="fake_job">Fake or scam job</option>
@@ -179,24 +183,31 @@ export default async function JobDetailPage({ params, searchParams }: { params: 
           {searchParams?.apply === 'error' && <p className="rounded-lg bg-signal/10 px-4 py-3 text-sm text-signal">Your application didn’t go through. Make sure your profile is verified, then try again.</p>}
           {isVeteran && (
             <>
-              {applied ? (
-                appliedOnSite ? (
-                  <p className="rounded-xl border border-navy/20 bg-navy/[0.04] px-4 py-3 text-center text-sm text-navy">
-                    You opened {companyName}’s application. <Link href="/dashboard/applications" className="font-medium underline underline-offset-2">Track it in My applications</Link>
-                  </p>
-                ) : (
-                  <p className="rounded-xl border border-olive/30 bg-olive/10 px-4 py-3 text-center text-sm font-medium text-olive">
-                    ✓ Applied — status: {applicationStatus}
-                  </p>
-                )
+              {!canApply ? (
+                <div className="rounded-xl border border-brass/50 bg-brass/10 p-4 text-sm">
+                  <p className="font-medium text-ink">Get verified to apply</p>
+                  <p className="mt-1 text-xs text-muted">Employers on LanceNest hear only from verified service members. Verification takes a few minutes to submit.</p>
+                  <Link href="/dashboard/verification" className="btn btn-primary mt-3 w-full">Verify my service</Link>
+                </div>
+              ) : applied && !appliedOnSite ? (
+                <p className="rounded-xl border border-olive/30 bg-olive/10 px-4 py-3 text-center text-sm font-medium text-olive">
+                  ✓ Applied — status: {applicationStatus}
+                </p>
               ) : (
                 <>
-                  {siteApply && !easyApply && (
-                    <>
-                      <a href={`/api/jobs/${job.id}/external`} className="btn btn-primary w-full" data-track="job_apply_company_site">Apply on company site ↗</a>
-                      <p className="text-center text-xs text-muted">You’ll finish on {companyName}’s website. We’ll add it to My applications so you can track it.</p>
-                    </>
+                  {/* Applied on the company's own site (they can still Easy Apply when the job offers both). */}
+                  {applied && appliedOnSite && (
+                    <div className="rounded-xl border border-navy/20 bg-navy/[0.04] px-4 py-3 text-center text-sm text-navy">
+                      <p className="font-medium">✓ Applied on {companyName}’s site</p>
+                      <p className="mt-1 text-xs"><Link href="/dashboard/applications" className="underline underline-offset-2">Track it in My applications</Link>
+                        {siteApply && <> · <a href={`/api/jobs/${job.id}/external`} target="_blank" rel="noopener" className="underline underline-offset-2">Open their application ↗</a></>}</p>
+                      <form action={confirmSiteApply.bind(null, job.id, job.slug, false)} data-done="Removed from My applications." className="mt-2">
+                        <SubmitButton className="text-xs text-muted underline underline-offset-2 hover:text-ink" pendingText="…">Didn’t finish applying? Remove it</SubmitButton>
+                      </form>
+                      {easyApply && <p className="mt-2 text-xs text-muted">You can still Easy Apply below.</p>}
+                    </div>
                   )}
+                  {!applied && siteApply && !easyApply && <CompanySiteApply jobId={job.id} slug={job.slug} company={companyName} primary />}
                   {easyApply && (
                     <form action={applyToJob.bind(null, job.id, job.slug)} className="space-y-2">
                       {(myResumes ?? []).length > 0 ? (
@@ -220,9 +231,7 @@ export default async function JobDetailPage({ params, searchParams }: { params: 
                       <SubmitButton pendingText="Submitting…">{siteApply ? 'Easy Apply on LanceNest' : 'Easy Apply'}</SubmitButton>
                     </form>
                   )}
-                  {siteApply && easyApply && (
-                    <a href={`/api/jobs/${job.id}/external`} className="btn btn-outline w-full" data-track="job_apply_company_site">Apply on company site ↗</a>
-                  )}
+                  {!applied && siteApply && easyApply && <CompanySiteApply jobId={job.id} slug={job.slug} company={companyName} primary={false} />}
                 </>
               )}
               <form action={toggleSaveJob.bind(null, job.id, job.slug)}>

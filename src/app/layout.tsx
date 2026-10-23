@@ -23,6 +23,7 @@ const cormorant = localFont({
 });
 import PageViewBeacon from '@/components/PageViewBeacon';
 import AutoCloseDetails from '@/components/AutoCloseDetails';
+import Toaster from '@/components/Toaster';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -68,9 +69,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
         <Footer />
-              <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSONLD) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSONLD) }} />
         <PageViewBeacon />
         <AutoCloseDetails />
+        <Toaster />
       </body>
     </html>
   );

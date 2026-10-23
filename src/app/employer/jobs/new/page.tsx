@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import JobForm from '@/components/employer/JobForm';
 import JobErrors from '@/components/employer/JobErrors';
 import { saveJob } from '../actions';
+import { siteHost } from '@/lib/applyLinks';
 
 export const metadata: Metadata = { title: 'Post a job' };
 
@@ -19,7 +20,7 @@ export default async function NewJobPage({ searchParams }: { searchParams: { err
       <Link href="/employer/dashboard" className="text-sm text-muted hover:text-navy">← Employer dashboard</Link>
       <h1 className="font-serif text-4xl font-medium">Post a job</h1>
       <JobErrors error={searchParams.error} />
-      <JobForm action={saveJob.bind(null, null)} />
+      <JobForm action={saveJob.bind(null, null)} verifiedHost={siteHost((company.verification_details as { website?: string } | null)?.website)} />
     </div>
   );
 }

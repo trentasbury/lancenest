@@ -14,7 +14,8 @@ import { startConversation } from '@/app/messages/actions';
 // Shared by the page title and the page itself: one lookup per request.
 const getCompany = cache(async (slug: string) => {
   const supabase = createClient();
-  const { data } = await supabase.from('companies').select('*').eq('slug', slug).maybeSingle();
+  // Public columns only (verification details, notes and billing IDs are never sent to the browser).
+  const { data } = await supabase.from('companies').select('id, slug, name, logo_url, cover_url, industry, headquarters, website, about, mission, benefits, veteran_commitment, is_verified, owner_id').eq('slug', slug).maybeSingle();
   return (data as Company | null) ?? null;
 });
 
@@ -58,8 +59,8 @@ export default async function CompanyPage({ params }: { params: { slug: string }
                 </span>
               )}
               {company.website && (
-                <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-sm text-brass-light underline underline-offset-4">
-                  Visit website
+                <a href={company.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full border border-cream/30 px-3 py-1 text-[12px] font-medium text-cream hover:border-brass hover:text-brass-light">
+                  Visit website ↗ <span className="text-cream/60">{company.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '')}</span>
                 </a>
               )}
             </div>

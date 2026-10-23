@@ -12,7 +12,7 @@ export default function SecurityPage() {
       <S h="Access and accounts"><p>Data is encrypted in transit (TLS) and at rest by our infrastructure providers. Database-level access rules govern every table. Administrator access requires two-step verification. Sessions expire after 30 minutes of inactivity, and members are alerted to sign-ins from new devices.</p></S>
       <S h="Payments"><p>Card and bank payments are processed by Stripe; LanceNest never stores card numbers. Freelance milestone payments are held and released through Stripe Connect.</p></S>
       <S h="Providers"><p>We use established providers for hosting (Vercel), database and storage (Supabase), payments (Stripe), email (Resend), and bot protection (Cloudflare Turnstile).</p></S>
-      <S h="Report a concern"><p>Found a vulnerability or a security issue? Email <a href="mailto:support@lancenest.com?subject=Security" className="text-navy underline">support@lancenest.com</a> with “Security” in the subject. We review every report.</p></S>
+      <S h="Report a concern"><p>Found a vulnerability or a security issue? Tell us through the <a href="/help?kind=bug&subject=Security" className="text-navy underline">Help page</a>, or email <a href="mailto:support@lancenest.com?subject=Security" className="text-navy underline">support@lancenest.com</a> with “Security” in the subject. We review every report.</p></S>
     </article>
   );
 }

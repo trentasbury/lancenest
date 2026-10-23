@@ -50,7 +50,7 @@ export async function createCompany(_prev: FormState, formData: FormData): Promi
 /** Employer submits company details for review. Status can only be set to "pending" here; approval is admin-only. */
 export async function submitCompanyVerification(formData: FormData) {
   const { user } = await requireRole(['employer'], '/employer/dashboard');
-  const { data: company } = await createClient().from('companies').select('id, name, verification_status').eq('owner_id', user.id).maybeSingle();
+  const { data: company } = await createClient().from('companies').select('id, name, verification_status, website').eq('owner_id', user.id).maybeSingle();
   if (!company || company.verification_status === 'verified' || company.verification_status === 'pending') redirect('/employer/dashboard');
   const t = (k: string, max: number) => String(formData.get(k) ?? '').trim().slice(0, max);
   const website = t('website', 200);
@@ -60,6 +60,8 @@ export async function submitCompanyVerification(formData: FormData) {
     state: t('state', 2).toUpperCase() || null, state_id: t('state_id', 30) || null, uei: t('uei', 12).toUpperCase() || null,
     submitted_at: new Date().toISOString() };
   const admin = createAdminClient();
+  // The verified website also becomes the company page's "Visit website" link, if none was set.
+  const pageSite = company.website ? {} : { website };
 
   // Automatic approval: the account email was confirmed at signup, so a match between its domain and the
   // company website proves control of the company's email. Personal email providers never qualify.
@@ -78,7 +80,7 @@ export async function submitCompanyVerification(formData: FormData) {
   const autoApprove = domainMatch && ageDays !== null && ageDays >= MIN_DOMAIN_AGE_DAYS && siteOk;
   if (autoApprove) {
     await admin.from('companies').update({
-      verification_details: details, verification_status: 'verified', is_verified: true,
+      verification_details: details, verification_status: 'verified', is_verified: true, ...pageSite,
       verification_note: 'Auto-verified: confirmed work email matches the company website.',
     }).eq('id', company.id);
     await admin.from('admin_actions').insert({ admin_id: null, action: 'company_auto_verified', target_type: 'company', target_id: company.id, details: { email_domain: emailDomain, website: site, ...checks } });
@@ -95,7 +97,7 @@ export async function submitCompanyVerification(formData: FormData) {
     redirect('/employer/dashboard?verify=auto');
   }
 
-  await admin.from('companies').update({ verification_details: details, verification_status: 'pending', verification_note: null }).eq('id', company.id);
+  await admin.from('companies').update({ verification_details: details, verification_status: 'pending', verification_note: null, ...pageSite }).eq('id', company.id);
   const { data: admins } = await admin.from('profiles').select('id').eq('role', 'admin');
   if (admins?.length) {
     await admin.from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'company_verification', title: 'A company submitted verification for review', link: '/admin/companies' })));

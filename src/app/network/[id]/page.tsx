@@ -42,7 +42,7 @@ function CommentItem({ c, me, postAuthorId, postId, replies }: { c: Comment; me:
             {!c.parent_id && (
               <details>
                 <summary className="cursor-pointer hover:text-navy">Reply</summary>
-                <form action={addComment.bind(null, postId)} className="mt-2 flex gap-2">
+                <form action={addComment.bind(null, postId)} data-reset data-close className="mt-2 flex gap-2">
                   <input type="hidden" name="parent_id" value={c.id} />
                   <input name="body" required maxLength={2000} placeholder="Write a reply…" className="field py-2 text-sm" />
                   <SubmitButton className="btn btn-outline shrink-0 py-2" pendingText="…">Reply</SubmitButton>
@@ -52,7 +52,7 @@ function CommentItem({ c, me, postAuthorId, postId, replies }: { c: Comment; me:
             {mine && (
               <details>
                 <summary className="cursor-pointer hover:text-navy">Edit</summary>
-                <form action={updateComment.bind(null, c.id)} className="mt-2 flex gap-2">
+                <form action={updateComment.bind(null, c.id)} data-close className="mt-2 flex gap-2">
                   <input name="body" required defaultValue={c.body} maxLength={2000} className="field py-2 text-sm" />
                   <SubmitButton className="btn btn-outline shrink-0 py-2" pendingText="…">Save</SubmitButton>
                 </form>
@@ -64,7 +64,7 @@ function CommentItem({ c, me, postAuthorId, postId, replies }: { c: Comment; me:
             {!mine && (
               <details>
                 <summary className="cursor-pointer hover:text-signal">Report</summary>
-                <form action={reportContent.bind(null, 'comment', c.id)} className="mt-2 flex gap-2">
+                <form action={reportContent.bind(null, 'comment', c.id)} data-close data-reset data-done="Thanks. Your report was received, and our team will review it." className="mt-2 flex gap-2">
                   <select name="reason" required defaultValue="" className="field py-2 text-sm">
                     <option value="" disabled>Reason…</option>
                     <option value="spam">Spam</option><option value="harassment">Harassment</option><option value="fraud">Fraud</option>
@@ -87,7 +87,13 @@ function CommentItem({ c, me, postAuthorId, postId, replies }: { c: Comment; me:
   );
 }
 
-export default async function PostPage({ params }: { params: { id: string } }) {
+const COMMENT_ERRORS: Record<string, string> = {
+  pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.',
+  rate: 'You’re commenting very quickly. Please wait a few minutes and try again.',
+  comment: 'Your comment didn’t post. Please try again.',
+};
+
+export default async function PostPage({ params, searchParams }: { params: { id: string }; searchParams: { error?: string } }) {
   const session = await getSessionProfile();
   const me = session?.user.id ?? null;
   const post = await getPost(params.id, me);
@@ -131,8 +137,9 @@ export default async function PostPage({ params }: { params: { id: string } }) {
 
       <section id="comments" className="card scroll-mt-24 p-6">
         <h2 className="eyebrow">Comments ({post.comment_count})</h2>
+        {searchParams.error && <p role="alert" className="mt-3 rounded-lg bg-signal/10 px-4 py-3 text-sm text-signal">{COMMENT_ERRORS[searchParams.error] ?? COMMENT_ERRORS.comment}</p>}
         {session && (
-          <form action={addComment.bind(null, post.id)} className="mt-4 flex gap-2">
+          <form action={addComment.bind(null, post.id)} data-reset className="mt-4 flex gap-2">
             <label htmlFor="new-comment" className="sr-only">Add a comment</label>
             <input id="new-comment" name="body" required maxLength={2000} placeholder="Add a comment…" className="field" />
             <SubmitButton className="btn btn-primary shrink-0" pendingText="Posting…">Post</SubmitButton>

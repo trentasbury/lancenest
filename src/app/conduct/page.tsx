@@ -27,7 +27,7 @@ export default function ConductPage() {
           <li><strong>Strike 2 — 7-day suspension.</strong> You can’t use LanceNest during the suspension.</li>
           <li><strong>Strike 3 — Removal.</strong> Your account is permanently removed.</li>
         </ul>
-        <p>Serious violations — threats, harassment, fraud, impersonation, or sharing classified information — can lead to immediate removal. You can see your own conduct record in Account settings, and you can appeal any action by emailing <a className="text-navy underline" href="mailto:support@lancenest.com">support@lancenest.com</a> within 30 days.</p>
+        <p>Serious violations — threats, harassment, fraud, impersonation, or sharing classified information — can lead to immediate removal. You can see your own conduct record in Account settings, and you can appeal any action within 30 days through the <a className="text-navy underline" href="/help?kind=support&subject=Appeal">Help page</a> or by emailing <a className="text-navy underline" href="mailto:support@lancenest.com">support@lancenest.com</a>.</p>
       </section>
     </LegalPage>
   );

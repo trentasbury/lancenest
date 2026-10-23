@@ -55,7 +55,8 @@ export async function POST(request: NextRequest) {
   if (session.profile?.role !== 'employer') return NextResponse.redirect(`${site}/employers`, 303);
 
   const supabase = createClient();
-  const { data: company } = await supabase.from('companies').select('id, name, stripe_customer_id, is_verified, public_safety_status, training_listing_active').eq('owner_id', session.user.id).maybeSingle();
+  // Billing IDs are server-only (not readable by members), so this owner-scoped read uses the server key.
+  const { data: company } = await createAdminClient().from('companies').select('id, name, stripe_customer_id, is_verified, public_safety_status, training_listing_active').eq('owner_id', session.user.id).maybeSingle();
   if (!company) return NextResponse.redirect(`${site}/employer/dashboard?error=company`, 303);
   if (!company.is_verified) return NextResponse.redirect(`${site}/employer/dashboard?error=verify`, 303);
 

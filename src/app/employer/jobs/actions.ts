@@ -17,8 +17,15 @@ const money = (v: string) => {
   return Number.isFinite(n) && n > 0 ? n : null;
 };
 
-/** Create (jobId = null) or update a job. Ownership is enforced by row-level security. */
-export async function saveJob(jobId: string | null, formData: FormData) {
+export type JobFormState = { error: string; at: number } | null;
+const problem = (error: string): JobFormState => ({ error, at: Date.now() });
+
+/**
+ * Create (jobId = null) or update a job. Ownership is enforced by row-level security.
+ * Used with useFormState: anything that needs fixing comes back to the form (which keeps what was typed);
+ * a successful save goes to the job's page.
+ */
+export async function saveJob(jobId: string | null, _prev: JobFormState, formData: FormData): Promise<JobFormState> {
   const { user } = await requireRole(['employer'], '/employer/dashboard');
   const supabase = createClient();
   const company = await getMyCompany(user.id);
@@ -26,16 +33,15 @@ export async function saveJob(jobId: string | null, formData: FormData) {
 
   const title = t(formData, 'title', 140);
   const description = t(formData, 'description', 8000);
-  const back = jobId ? `/employer/jobs/${jobId}` : '/employer/jobs/new';
-  if (!title || !description) redirect(`${back}?error=required`);
-  if (formData.get('status') !== 'draft' && formData.get('attest') !== 'on') redirect(`${back}?error=attest`);
+  if (!title || !description) return problem('required');
+  if (formData.get('status') !== 'draft' && formData.get('attest') !== 'on') return problem('attest');
   // Screening questions may not ask about protected or high-risk topics (disability, medical, VA rating, age, religion, family, discharge, criminal history, citizenship beyond work authorization).
   const RISKY = /disab|medical|health|diagnos|va rating|disability rating|percent rating|pregnan|religio|church|age\b|birth|how old|married|spouse|children|kids|discharge|arrest|convict|criminal|felon|citizen|national origin|race|ethnic|gender|sexual|ptsd|tbi|medication|genetic|union/i;
-  for (let n = 0; n < 5; n++) { const q = String(formData.get(`question_${n}`) ?? ''); if (q && RISKY.test(q) && !/authorized to work/i.test(q)) redirect(`${back}?error=question`); }
+  for (let n = 0; n < 5; n++) { const q = String(formData.get(`question_${n}`) ?? ''); if (q && RISKY.test(q) && !/authorized to work/i.test(q)) return problem('question'); }
 
   const salaryMin = money(t(formData, 'salary_min', 12));
   const salaryMax = money(t(formData, 'salary_max', 12));
-  if (salaryMin && salaryMax && salaryMax < salaryMin) redirect(`${back}?error=salary`);
+  if (salaryMin && salaryMax && salaryMax < salaryMin) return problem('salary');
   const location = t(formData, 'location', 120);
 
   const fields = {
@@ -76,8 +82,8 @@ export async function saveJob(jobId: string | null, formData: FormData) {
   if (fields.status === 'open' && !isSkillBridge && (!salaryMin || !salaryMax)) publishError = 'salary_required';
   const text = [title, description, fields.responsibilities, fields.qualifications, fields.preferred_qualifications, fields.benefits].filter(Boolean).join('\n');
   if (fields.status === 'open' && scamSignals(text, 'block').length) publishError = 'scam';
-  // "Your website" and "Both" need a company link: keep the post as a draft (nothing typed is lost) until it's added.
-  if (fields.apply_mode !== 'easy' && !fields.apply_url) { fields.apply_mode = 'easy'; publishError = 'apply_url_missing'; }
+  // "Your website" and "Both" need the company's application link.
+  if (fields.apply_mode !== 'easy' && !fields.apply_url) return problem('apply_url_missing');
   if (fields.apply_mode === 'easy') fields.apply_url = null;
   if (publishError) fields.status = 'draft';
 
@@ -92,12 +98,12 @@ export async function saveJob(jobId: string | null, formData: FormData) {
     id = res.data?.id ?? null;
   }
   if (error) {
-    if (error.code === 'P0003') redirect(`${back}?error=limit`);
-    if (error.code === 'P0004') redirect(`${back}?error=company`);
-    if (error.code === 'P0007') redirect(`${back}?error=skillbridge`);
-    if (error.code === 'P0008') redirect(`${back}?error=apply_url`);
+    if (error.code === 'P0003') return problem('limit');
+    if (error.code === 'P0004') return problem('company');
+    if (error.code === 'P0007') return problem('skillbridge');
+    if (error.code === 'P0008') return problem('apply_url');
     console.error('saveJob failed:', error.message);
-    redirect(`${back}?error=save`);
+    return problem('save');
   }
   revalidatePath('/employer/dashboard');
   revalidatePath('/jobs');

@@ -33,7 +33,7 @@ export default function UnsubscribePage({ searchParams }: { searchParams: { u?: 
             <SubmitButton className="btn btn-primary" pendingText="Saving…">Unsubscribe</SubmitButton>
           </form>
         ) : (
-          <p className="mt-4 text-ink">That link isn’t valid or has been changed. Use the unsubscribe link in your latest email, or write <a href="mailto:support@lancenest.com" className="text-navy underline">support@lancenest.com</a> and we’ll take care of it.</p>
+          <p className="mt-4 text-ink">That link isn’t valid or has been changed. Use the unsubscribe link in your latest email, or <a href="/help?kind=support&subject=Unsubscribe" className="text-navy underline">tell us through the Help page</a> and we’ll take care of it.</p>
         )}
         <Link href="/" className="mt-6 inline-block text-sm text-navy underline decoration-brass underline-offset-4">Go to LanceNest</Link>
       </div>

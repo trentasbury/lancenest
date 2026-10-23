@@ -120,7 +120,13 @@ export async function addComment(postId: string, formData: FormData) {
   const body = t(formData, 'body', 2000);
   if (!body) return;
   const parent = t(formData, 'parent_id', 40);
-  await createClient().from('post_comments').insert({ post_id: postId, author_id: uid, body, parent_id: parent || null });
+  const { error } = await createClient().from('post_comments').insert({ post_id: postId, author_id: uid, body, parent_id: parent || null });
+  if (error) {
+    // Show why on the post (the comment box keeps what was typed).
+    const reason = error.code === 'P0009' ? 'pii' : error.code === 'P0002' ? 'rate' : 'comment';
+    if (reason === 'comment') console.error('addComment failed:', error.message);
+    redirect(`/network/${postId}?error=${reason}&at=${Date.now()}#comments`); // unique, so a repeat error never clears the box
+  }
   refresh();
 }
 

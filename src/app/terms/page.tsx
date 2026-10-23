@@ -85,7 +85,7 @@ export default function TermsPage() {
       </section>
       <section>
         <h2>Changes, law, and contact</h2>
-        <p>We may update these Terms and will notify members of significant changes. These Terms are governed by the laws of the State of Florida. Questions: <a className="text-navy underline" href="mailto:support@lancenest.com">support@lancenest.com</a>.</p>
+        <p>We may update these Terms and will notify members of significant changes. These Terms are governed by the laws of the State of Florida. Questions: <a className="text-navy underline" href="/help?kind=support&subject=Terms">Help page</a> or <a className="text-navy underline" href="mailto:support@lancenest.com">support@lancenest.com</a>.</p>
       </section>
     </LegalPage>
   );

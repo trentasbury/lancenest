@@ -13,7 +13,7 @@ export default async function SuspendedPage() {
       <p className="eyebrow text-signal">Account suspended</p>
       <h1 className="mt-3 font-serif text-4xl font-medium">Your account is suspended until {new Date(until).toLocaleDateString('en-US', { dateStyle: 'long' })}.</h1>
       {strike?.reason && <p className="mt-4 text-muted">Reason: {strike.reason as string}</p>}
-      <p className="mt-4 text-sm text-muted">Review our <Link href="/conduct" className="underline">Code of Conduct</Link>. A further violation leads to removal. To appeal, email support@lancenest.com.</p>
+      <p className="mt-4 text-sm text-muted">Review our <Link href="/conduct" className="underline">Code of Conduct</Link>. A further violation leads to removal. To appeal, <Link href="/help?kind=support&subject=Appeal" className="underline">send us a message through the Help page</Link>.</p>
       <Link href="/settings/account" className="btn btn-outline mx-auto mt-8">Account settings</Link>
     </div>
   );

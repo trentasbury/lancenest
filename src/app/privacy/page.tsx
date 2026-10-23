@@ -85,7 +85,7 @@ export default function PrivacyPage() {
       </section>
       <section>
         <h2>Changes and contact</h2>
-        <p>We will post updates here and notify members of significant changes. Questions: <a className="text-navy underline" href="mailto:support@lancenest.com">support@lancenest.com</a>.</p>
+        <p>We will post updates here and notify members of significant changes. Questions: <a className="text-navy underline" href="/help?kind=support&subject=Privacy">Help page</a> or <a className="text-navy underline" href="mailto:support@lancenest.com">support@lancenest.com</a>.</p>
       </section>
     </LegalPage>
   );
