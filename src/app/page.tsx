@@ -36,48 +36,42 @@ const getStats = unstable_cache(async () => {
 
 type NewestJob = { title: string; location: string | null; work_arrangement: 'remote' | 'hybrid' | 'onsite'; salary_min: number | null; salary_max: number | null; salary_period: 'year' | 'hour'; company: { name: string } | null };
 
-/** "What did you do in the military?" — opens the translator with the code filled in. */
-function TranslateCard({ compact = false }: { compact?: boolean }) {
+/**
+ * The hero panel: "What did you do in the military?" (opens the translator with the code filled in) and the
+ * newest real opening. Attached under the founder's photo on desktop; a card of its own on phones.
+ */
+function HeroPanel({ stats, attached = false }: { stats: Awaited<ReturnType<typeof getStats>>; attached?: boolean }) {
+  const job = stats?.newest;
+  const pay = job ? formatSalary(job.salary_min, job.salary_max, job.salary_period) : null;
+  const id = attached ? 'mos' : 'mos-m';
   return (
-    <div className={`rounded-2xl border border-line/70 bg-ivory text-ink shadow-lift ${compact ? 'p-4' : 'p-5'}`}>
+    <div className={`bg-ivory p-5 text-ink shadow-lift ${attached ? 'rounded-b-[28px]' : 'rounded-2xl'}`}>
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brass-dark">Free career translator</p>
       <p className="mt-1 font-serif text-xl leading-snug text-navy">What did you do in the military?</p>
       <form action="/resources" method="get" className="mt-3 flex gap-2">
-        <label htmlFor={compact ? 'mos-m' : 'mos'} className="sr-only">Your MOS, rating, or AFSC</label>
-        <input id={compact ? 'mos-m' : 'mos'} name="code" required placeholder="e.g. 0311" className="field min-w-0 flex-1 py-2.5 text-sm" />
-        <button type="submit" className="btn btn-primary shrink-0 px-4 py-2.5 text-sm" data-track="cta_home_translate">Translate</button>
+        <label htmlFor={id} className="sr-only">Your MOS, rating, or AFSC</label>
+        <input id={id} name="code" required placeholder="e.g. 0311" className="field min-w-0 flex-1 py-2.5 text-sm" />
+        <button type="submit" className="btn btn-primary shrink-0 px-5 py-2.5 text-sm" data-track="cta_home_translate">Translate</button>
       </form>
-      <p className="mt-2.5 text-xs text-muted">Try{' '}
+      <p className="mt-2 text-xs text-muted">Try{' '}
         {[['0311', 'Marine rifleman'], ['11B', 'Army infantry'], ['3D1X2', 'Air Force cyber']].map(([code, label], i) => (
           <span key={code}>{i > 0 && ' · '}<Link href={`/resources?code=${code}`} className="font-medium text-navy underline decoration-brass/60 underline-offset-2 hover:decoration-brass" title={label}>{code}</Link></span>
         ))}
       </p>
+      <Link href="/jobs" className="group mt-4 flex items-center gap-3 border-t border-line pt-4" data-track="cta_home_hiring_now">
+        <span className="relative flex h-2 w-2 shrink-0"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#2f7a3e] opacity-60 motion-reduce:hidden" /><span className="relative inline-flex h-2 w-2 rounded-full bg-[#2f7a3e]" /></span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2f7a3e]">Hiring now</span>
+          {job ? (
+            <>
+              <span className="block truncate text-sm font-semibold text-ink group-hover:text-navy">{job.title}</span>
+              <span className={`block text-xs text-muted ${attached ? 'truncate' : ''}`}>{[job.company?.name, job.work_arrangement === 'remote' ? 'Remote' : job.location || ARRANGEMENT_LABELS[job.work_arrangement], pay].filter(Boolean).join(' · ')}</span>
+            </>
+          ) : <span className="block text-sm font-semibold text-ink">Roles from verified employers</span>}
+        </span>
+        <span className="shrink-0 text-xs font-semibold text-navy group-hover:underline">{stats && stats.jobs > 1 ? `All ${stats.jobs.toLocaleString()} →` : 'See jobs →'}</span>
+      </Link>
     </div>
-  );
-}
-
-/** A real, current opening (or the count of open roles) to show the network is active. */
-function HiringNowCard({ stats }: { stats: Awaited<ReturnType<typeof getStats>> }) {
-  const job = stats?.newest;
-  const pay = job ? formatSalary(job.salary_min, job.salary_max, job.salary_period) : null;
-  return (
-    <Link href="/jobs" className="group block rounded-2xl border border-line/70 bg-ivory p-4 text-ink shadow-lift transition-transform hover:-translate-y-0.5" data-track="cta_home_hiring_now">
-      <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-olive">
-        <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#2f7a3e] opacity-60 motion-reduce:hidden" /><span className="relative inline-flex h-2 w-2 rounded-full bg-[#2f7a3e]" /></span>
-        Hiring now
-      </p>
-      {job ? (
-        <>
-          <p className="mt-1.5 text-sm font-semibold leading-snug text-ink">{job.title}</p>
-          <p className="mt-0.5 text-xs text-muted">{[job.company?.name, job.work_arrangement === 'remote' ? 'Remote' : job.location || ARRANGEMENT_LABELS[job.work_arrangement]].filter(Boolean).join(' · ')}{pay ? ` · ${pay}` : ''}</p>
-        </>
-      ) : (
-        <p className="mt-1.5 text-sm font-semibold leading-snug text-ink">Roles from verified employers</p>
-      )}
-      <p className="mt-2.5 text-xs font-semibold text-navy group-hover:underline">
-        {stats && stats.jobs > 1 ? `See all ${stats.jobs.toLocaleString()} open roles →` : 'See open roles →'}
-      </p>
-    </Link>
   );
 }
 
@@ -96,7 +90,7 @@ export default async function HomePage() {
       {/* Hero: what LanceNest is, a job search, and a glimpse of the product (like Contra and LinkedIn). */}
       <section className="relative overflow-hidden bg-navy-deep text-ivory">
         <div className="pointer-events-none absolute -right-40 -top-40 h-[520px] w-[520px] rounded-full bg-brass/10 blur-3xl" aria-hidden="true" />
-        <div className="container-page relative grid items-center gap-14 py-16 lg:grid-cols-[1.15fr_1fr] lg:py-24">
+        <div className="container-page relative grid items-center gap-14 py-16 lg:grid-cols-[1.15fr_1fr] lg:py-20">
           <div className="min-w-0">
             <p className="inline-flex items-center gap-2 rounded-full border border-brass/40 bg-white/5 px-3.5 py-1.5 text-xs font-medium text-brass-light">
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-olive text-[10px] text-ivory" aria-hidden="true">✓</span>
@@ -122,21 +116,16 @@ export default async function HomePage() {
               <Link href="/signup?role=employer" className="btn border border-cream/30 text-ivory hover:bg-white/10" data-track="cta_home_employer_signup">I’m hiring veterans</Link>
             </div>
             <p className="mt-6 text-sm text-cream/60">Free for service members · 1,469 military jobs translated · Built by a Marine veteran</p>
-            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:hidden">
-              <TranslateCard compact />
-              <HiringNowCard stats={stats} />
-            </div>
+            <div className="mt-8 max-w-md lg:hidden"><HeroPanel stats={stats} /></div>
           </div>
 
-          {/* The founder's photo, kept clear, with two things to do on its lower edges: translate your MOS, see who's hiring. */}
-          <div className="relative mx-auto hidden w-full max-w-[460px] pb-10 lg:block">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-[28px] shadow-lift ring-1 ring-white/10">
-              <Image src="/assets/hero-service.webp" alt="Our founder in uniform, U.S. Marine Corps" fill priority quality={90} sizes="(min-width: 1024px) 460px, 0px" className="object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-navy-deep/80 via-transparent to-transparent" />
-              <p className="absolute left-5 top-5 rounded-full bg-navy-deep/70 px-3 py-1 text-[11px] font-medium text-cream/90 backdrop-blur">Our founder · U.S. Marine Corps veteran</p>
+          {/* The founder's photo with one panel attached underneath: translate your MOS, and the newest real opening. */}
+          <div className="mx-auto hidden w-full max-w-[440px] lg:block">
+            <div className="relative aspect-[5/4] overflow-hidden rounded-t-[28px] ring-1 ring-white/10">
+              <Image src="/assets/hero-service.webp" alt="Our founder in uniform, U.S. Marine Corps" fill priority quality={90} sizes="(min-width: 1024px) 440px, 0px" className="object-cover object-[center_30%]" />
+              <p className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy-deep/90 to-transparent px-5 pb-3 pt-10 text-xs text-cream/85">Our founder · U.S. Marine Corps veteran</p>
             </div>
-            <div className="absolute -left-14 bottom-28 w-[300px]"><TranslateCard /></div>
-            <div className="absolute -right-8 bottom-0 w-[250px]"><HiringNowCard stats={stats} /></div>
+            <HeroPanel stats={stats} attached />
           </div>
         </div>
       </section>
