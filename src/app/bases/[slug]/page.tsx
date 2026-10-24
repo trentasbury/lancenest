@@ -62,7 +62,7 @@ export default async function BasePage(props: { params: Promise<{ slug: string }
           <section className="card p-6">
             <h2 className="eyebrow">Open jobs near {base.name}</h2>
             {local.length === 0 ? (
-              <p className="mt-3 text-sm text-muted">No public listings near {base.name} yet. Verified members see every job, including ones employers keep off public pages, and {remote.toLocaleString()} remote job{remote === 1 ? ' works' : 's work'} from anywhere.</p>
+              <p className="mt-3 text-sm text-muted">No public listings near {base.name} yet. Verified members see every job, including ones employers keep off public pages{remote > 0 ? <>, and {remote.toLocaleString()} remote job{remote === 1 ? ' works' : 's work'} from anywhere</> : null}.</p>
             ) : (
               <ul className="mt-3 divide-y divide-line">
                 {local.slice(0, 20).map(({ job }) => (
