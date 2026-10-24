@@ -70,6 +70,7 @@ export async function saveJob(jobId: string | null, _prev: JobFormState, formDat
     apply_url: t(formData, 'apply_url', 500) || null,
     screening_questions: [0, 1, 2, 3, 4].map((n) => ({ q: t(formData, `question_${n}`, 200), type: formData.get(`question_type_${n}`) === 'yesno' ? 'yesno' : 'text' })).filter((x) => x.q.length >= 3),
     multi_location: formData.get('multi_location') === 'on',
+    public_listing: formData.get('public_listing') === 'on',
   };
 
   // Pay transparency (required by law in several states) and scam screening before anything goes live.
@@ -107,6 +108,8 @@ export async function saveJob(jobId: string | null, _prev: JobFormState, formDat
   }
   revalidatePath('/employer/dashboard');
   revalidatePath('/jobs');
+  revalidatePath('/open-jobs');
+  revalidatePath('/open-jobs/[slug]', 'page');
   redirect(`/employer/jobs/${id}?${publishError ? `error=${publishError}` : 'saved=1'}`);
 }
 
@@ -118,6 +121,8 @@ export async function setJobStatus(jobId: string, status: 'open' | 'paused' | 'c
   if (error?.code === 'P0007') redirect(`/employer/jobs/${jobId}?error=skillbridge`);
   revalidatePath('/employer/dashboard');
   revalidatePath('/jobs');
+  revalidatePath('/open-jobs');
+  revalidatePath('/open-jobs/[slug]', 'page');
   redirect(`/employer/jobs/${jobId}?saved=1`);
 }
 

@@ -12,7 +12,7 @@ export default function Footer() {
         <div>
           <p className="eyebrow text-brass">Veterans</p>
           <ul className="mt-4 space-y-2.5 text-sm text-cream/80">
-            <li><Link href="/jobs" className="hover:text-brass">Find jobs</Link></li>
+            <li><Link href="/open-jobs" className="hover:text-brass">Find jobs</Link></li>
             <li><Link href="/resources" className="hover:text-brass">Translate your MOS</Link></li>
             <li><Link href="/careers" className="hover:text-brass">Military careers, translated</Link></li>
             <li><Link href="/guides" className="hover:text-brass">Transition guides</Link></li>

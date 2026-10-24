@@ -156,6 +156,15 @@ export default function JobForm({ job, action, verifiedHost = null }: {
         <label className="flex items-center gap-2.5 text-sm sm:pt-6"><input type="checkbox" name="clearance_eligible" defaultChecked={job?.clearance_eligible ?? false} className="h-4 w-4 accent-navy" />Will sponsor a clearance</label>
       </section>
 
+      <section className="card space-y-3 p-7">
+        <h2 className="font-serif text-2xl font-semibold">Who can see this job</h2>
+        <p className="text-sm text-muted">Verified members always see the full job, your company and the application.</p>
+        <label className="flex items-start gap-2.5 text-sm">
+          <input type="checkbox" name="public_listing" defaultChecked={(job as unknown as { public_listing?: boolean })?.public_listing ?? true} className="mt-0.5 h-4 w-4 accent-navy" />
+          <span>Also list it publicly so it can appear in Google job search. <span className="text-muted">The public listing hides your company name, logo, website and any links, emails or phone numbers in the text. Only verified members can see who’s hiring and apply.</span></span>
+        </label>
+      </section>
+
       <label className="flex items-start gap-2 rounded-xl border border-line bg-paper p-3 text-xs text-ink/85">
         <input type="checkbox" name="attest" required className="mt-0.5 accent-navy" />
         I confirm this posting, its pay information, its screening questions, and how we classify the role (employee or contractor) comply with applicable law, and that the work won’t require sharing classified information or CUI on LanceNest.

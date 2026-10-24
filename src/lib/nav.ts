@@ -18,7 +18,7 @@ export function safeNextPath(value: FormDataEntryValue | string | null | undefin
 
 /** Top menu for visitors who aren't signed in. */
 export const PUBLIC_LINKS: NavLink[] = [
-  { href: '/jobs', label: 'Find Jobs' },
+  { href: '/open-jobs', label: 'Find Jobs' },
   { href: '/employers', label: 'For Employers' },
   { href: '/resources', label: 'Resources' },
   { href: '/about', label: 'About' },
