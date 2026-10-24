@@ -43,7 +43,11 @@ export default function Composer({
         // The upload library loads only when there are photos, keeping the feed's first load light.
         const paths: string[] = [];
         const supabase = files.length ? (await import('@/lib/supabase/client')).createClient() : null;
-        for (const f of files) {
+        const { cleanImageFile } = files.length ? await import('@/lib/imageMeta') : { cleanImageFile: null };
+        for (const original of files) {
+          // GIFs carry no location data; other photos have theirs (GPS, camera details) removed before upload.
+          const f = original.type === 'image/gif' ? original : await cleanImageFile!(original);
+          if (!f) throw new Error('upload');
           const ext = f.type.split('/')[1].replace('jpeg', 'jpg');
           const path = `${userId}/${crypto.randomUUID()}.${ext}`;
           const { error: upErr } = await supabase!.storage.from('post-media').upload(path, f, { contentType: f.type });

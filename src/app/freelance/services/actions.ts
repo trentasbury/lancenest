@@ -40,7 +40,7 @@ export async function saveService(formData: FormData) {
   revalidatePath('/freelance/services/mine');
   revalidateTag('public-services', 'max');
   revalidatePath('/hire', 'layout');
-  redirect(`/freelance/services/mine?${error ? `error=${error.code === 'P0017' ? 'contact' : error.code === 'P0018' ? 'licensed' : 'save'}` : 'saved=1'}`);
+  redirect(`/freelance/services/mine?${error ? `error=${error.code === 'P0017' ? 'contact' : error.code === 'P0018' ? 'licensed' : error.code === 'P0021' ? 'package' : 'save'}` : 'saved=1'}`);
 }
 
 export type ServicePackage = { name: string; price_cents: number; days: number; includes: string };
@@ -109,7 +109,8 @@ export async function requestService(serviceId: string, formData: FormData) {
   const onSite = s.delivery !== 'remote';
   // The fee follows the real size of the job: an amount under the listed price doesn't lower it.
   // The lowest listed price (base or package) is the floor.
-  const floor = Math.min(s.price_cents as number, ...((s.packages as ServicePackage[] | null) ?? []).map((p) => p.price_cents));
+  const pkgPrices = (Array.isArray(s.packages) ? (s.packages as ServicePackage[]) : []).map((p) => p?.price_cents).filter((c): c is number => Number.isInteger(c) && c >= 2500);
+  const floor = Math.min(s.price_cents as number, ...pkgPrices);
   const fee = bookingRequired(onSite) ? bookingFeeCents(Math.max(amount, floor)) : 0;
   const { data: contract, error } = await admin.from('contracts').insert({
     client_id: user.id, freelancer_id: s.profile_id, service_id: s.id, title: s.title as string, request_note: note,

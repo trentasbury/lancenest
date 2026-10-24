@@ -1,5 +1,7 @@
 'use server';
 
+import { stripImageMetadata } from '@/lib/imageMeta';
+
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireRole } from '@/lib/auth';
@@ -20,7 +22,9 @@ export async function uploadCompanyImage(kind: 'logo' | 'cover', formData: FormD
   if (!(file instanceof File) || !TYPES[file.type]) redirect('/employer/company?error=type');
   if (file.size > 2 * 1024 * 1024) redirect('/employer/company?error=size');
   const path = `${user.id}/${kind}-${Date.now()}.${TYPES[file.type]}`;
-  const { error } = await supabase.storage.from('company-logos').upload(path, file, { contentType: file.type });
+  const clean = stripImageMetadata(new Uint8Array(await file.arrayBuffer()));
+  if (!clean) redirect('/employer/company?error=type');
+  const { error } = await supabase.storage.from('company-logos').upload(path, clean, { contentType: file.type });
   if (error) redirect('/employer/company?error=upload');
   const url = supabase.storage.from('company-logos').getPublicUrl(path).data.publicUrl;
   await createAdminClient().from('companies').update(kind === 'logo' ? { logo_url: url } : { cover_url: url }).eq('id', company.id);
@@ -82,7 +86,8 @@ export async function saveCommitments(formData: FormData) {
   if (!c?.is_verified) redirect('/employer/dashboard?verify=required');
   const pledge = formData.get('guard_reserve') === 'on';
   const wantsMsep = formData.get('msep') === 'on';
-  const msep = wantsMsep ? (c.msep_status === 'verified' ? 'verified' : 'pending') : 'none';
+  // A rejected request stays rejected (so the admin queue can't be refilled by toggling); support can reopen it.
+  const msep = c.msep_status === 'rejected' ? 'rejected' : wantsMsep ? (c.msep_status === 'verified' ? 'verified' : 'pending') : 'none';
   await admin.from('companies').update({ guard_reserve_pledge: pledge, msep_status: msep }).eq('id', c.id);
   if (msep === 'pending' && c.msep_status !== 'pending') {
     const { data: admins } = await admin.from('profiles').select('id').eq('role', 'admin');

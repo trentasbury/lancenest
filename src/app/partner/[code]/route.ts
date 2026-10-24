@@ -8,7 +8,8 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ code: s
   const { code } = await ctx.params;
   const site = (process.env.NEXT_PUBLIC_SITE_URL ?? request.nextUrl.origin).replace(/\/$/, '');
   const res = NextResponse.redirect(`${site}/signup?role=veteran`, 303);
-  const clean = decodeURIComponent(code).trim().toUpperCase();
+  let clean = '';
+  try { clean = decodeURIComponent(code).trim().toUpperCase(); } catch { /* a broken link still opens sign-up */ }
   if (/^[A-Z0-9-]{4,32}$/.test(clean)) {
     res.cookies.set('ln_partner', clean, { httpOnly: true, secure: true, sameSite: 'lax', path: '/', maxAge: 30 * 86400 });
   }

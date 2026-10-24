@@ -1,5 +1,7 @@
 'use server';
 
+import { stripImageMetadata } from '@/lib/imageMeta';
+
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getSessionProfile } from '@/lib/auth';
@@ -53,7 +55,10 @@ export async function uploadAvatar(formData: FormData) {
   if (file.size > 2 * 1024 * 1024) redirect(`${back}?photo=size`);
   const supabase = await createClient();
   const path = `${session.user.id}/avatar-${Date.now()}.${PHOTO_TYPES[file.type]}`;
-  const { error } = await supabase.storage.from('avatars').upload(path, file, { contentType: file.type });
+  // Hidden photo data (GPS location, camera details) is removed before the photo goes on public pages.
+  const clean = stripImageMetadata(new Uint8Array(await file.arrayBuffer()));
+  if (!clean) redirect(`${back}?photo=type`);
+  const { error } = await supabase.storage.from('avatars').upload(path, clean, { contentType: file.type });
   if (error) redirect(`${back}?photo=failed`);
   const url = supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
   await createAdminClient().from('profiles').update({ avatar_url: url }).eq('id', session.user.id);

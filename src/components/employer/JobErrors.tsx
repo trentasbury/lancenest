@@ -10,6 +10,7 @@ const MESSAGES: Record<string, string> = {
   apply_url_missing: 'Add your company’s application link — or choose Easy Apply on LanceNest.',
   apply_url: 'That application link isn’t allowed. Use a link on your verified company website or a standard applicant-tracking system (Workday, Greenhouse, Lever, iCIMS…). This protects veterans from phishing.',
   skillbridge: 'Only DoD-authorized SkillBridge organizations can publish SkillBridge programs. Request SkillBridge listing access from your dashboard — or choose another employment type.',
+  pay: 'Add a salary range before publishing. Every LanceNest job shows pay, and several states require it.',
   salary_required: 'Saved as a draft. Add a salary range to publish — every LanceNest job shows pay, and several states require it.',
   scam: 'Saved as a draft. This post contains wording often used in job scams (for example fees, gift cards, check deposits, or moving to another chat app). Edit it and publish again, or tell us through the Help page (lancenest.com/help) if we got it wrong.',
   company: 'Your job is saved as a draft. It can be published once your company is verified — submit verification from your dashboard.',
@@ -21,7 +22,7 @@ export default function JobErrors({ error, saved }: { error?: string; saved?: st
   if (error === 'limit') {
     return (
       <div className="card border-brass p-5">
-        <p className="font-medium">You’ve reached your plan’s open-job limit (Free: 2 · Professional: 10).</p>
+        <p className="font-medium">You’ve reached your plan’s open-job limit (Free: 2 · Starter: 5 · Professional: 10; SkillBridge programs don’t count).</p>
         <p className="mt-1 text-sm text-muted">Close one, add an extra slot for $39/month, or upgrade — Federal includes unlimited open jobs. Saved drafts don’t count.</p>
         <div className="mt-3 flex flex-wrap gap-2">
           <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="job_slot" /><button className="btn btn-outline">Add a slot · $39/mo</button></form>

@@ -21,8 +21,10 @@ export default function PortfolioForm({ userId }: { userId: string }) {
       if (!EXT[file.type]) { setBusy(false); return setError('Pictures can be JPG, PNG or WebP.'); }
       if (file.size > 8 * 1024 * 1024) { setBusy(false); return setError('That picture is over 8 MB.'); }
       const supabase = (await import('@/lib/supabase/client')).createClient();
+      const clean = await (await import('@/lib/imageMeta')).cleanImageFile(file);
+      if (!clean) { setBusy(false); return setError('That picture couldn’t be read. Try saving it again as JPG or PNG.'); }
       const path = `${userId}/portfolio-${Date.now()}.${EXT[file.type]}`;
-      const up = await supabase.storage.from('post-media').upload(path, file, { contentType: file.type, upsert: false });
+      const up = await supabase.storage.from('post-media').upload(path, clean, { contentType: file.type, upsert: false });
       if (up.error) { setBusy(false); return setError('The picture didn’t upload. Please try again.'); }
       fd.set('image_url', supabase.storage.from('post-media').getPublicUrl(path).data.publicUrl);
     }

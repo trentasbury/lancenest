@@ -104,6 +104,7 @@ export async function saveJob(jobId: string | null, _prev: JobFormState, formDat
     if (error.code === 'P0004') return problem('company');
     if (error.code === 'P0007') return problem('skillbridge');
     if (error.code === 'P0008') return problem('apply_url');
+    if (error.code === 'P0020') return problem('pay');
     console.error('saveJob failed:', error.message);
     return problem('save');
   }
@@ -119,6 +120,7 @@ export async function setJobStatus(jobId: string, status: 'open' | 'paused' | 'c
   if (error?.code === 'P0003') redirect(`/employer/jobs/${jobId}?error=limit`);
   if (error?.code === 'P0004') redirect(`/employer/jobs/${jobId}?error=company`);
   if (error?.code === 'P0007') redirect(`/employer/jobs/${jobId}?error=skillbridge`);
+  if (error?.code === 'P0020') redirect(`/employer/jobs/${jobId}?error=pay`);
   revalidatePath('/employer/dashboard');
   revalidatePath('/jobs');
   refreshPublicJobs();

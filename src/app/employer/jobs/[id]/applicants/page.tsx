@@ -75,7 +75,7 @@ export default async function ApplicantsPage(
   const rawApps = ((data ?? []) as unknown as App[]).map((a) => (a.status === 'applied' ? { ...a, status: 'viewed' } : a)) as App[];
   // The employer's own hiring system, when connected and this job came from it.
   const [{ data: ats }, { data: sentRows }] = await Promise.all([
-    adminDb().from('ats_connections').select('provider').eq('company_id', job.company_id).maybeSingle(),
+    adminDb().from('ats_connections').select('provider, created_at').eq('company_id', job.company_id).maybeSingle(),
     rawApps.length ? adminDb().from('ats_deliveries').select('application_id, status').in('application_id', rawApps.map((a) => a.id)) : Promise.resolve({ data: [] }),
   ]);
   const atsName = ats && (job as unknown as { external_source: string | null }).external_source === ats.provider ? ATS_LABEL[ats.provider as AtsProvider] : null;
@@ -140,7 +140,7 @@ export default async function ApplicantsPage(
                 </select>
                 <SubmitButton className="btn btn-outline py-2" pendingText="…">Update</SubmitButton>
               </form>
-              {atsName && (delivery.get(a.id) === 'sent'
+              {atsName && a.status !== 'withdrawn' && Date.parse(a.applied_at) >= Date.parse(ats!.created_at as string) && (delivery.get(a.id) === 'sent'
                 ? <span className="text-xs text-olive">✓ In {atsName}</span>
                 : <form action={sendApplicant.bind(null, a.id, job.id)}><SubmitButton className="btn btn-ghost border border-line py-2" pendingText="…">{delivery.get(a.id) === 'failed' ? `Retry ${atsName}` : `Send to ${atsName}`}</SubmitButton></form>)}
               {PAID.includes(company.plan) && <form action={saveToPool.bind(null, a.profile_id, `/employer/jobs/${job.id}/applicants`)}><SubmitButton className="btn btn-ghost border border-line py-2" pendingText="…">Save</SubmitButton></form>}

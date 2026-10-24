@@ -21,7 +21,9 @@ export function keepPercent(plan: string) {
 
 export async function proposalsUsedThisMonth(profileId: string) {
   const start = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-  const { count } = await (await createClient()).from('proposals').select('id', { count: 'exact', head: true }).eq('freelancer_id', profileId).gte('created_at', start);
+  // A free proposal returned this month (client closed without hiring, or hired without opening it) no longer counts.
+  const { count } = await (await createClient()).from('proposals').select('id', { count: 'exact', head: true }).eq('freelancer_id', profileId).gte('created_at', start)
+    .or('credit_refunded_at.is.null,used_credit.eq.true');
   return count ?? 0;
 }
 

@@ -19,13 +19,20 @@ type Result = { ok: true } | { ok: false; error: string };
 export async function sendApplicationToAts(applicationId: string): Promise<Result> {
   const admin = createAdminClient();
   const { data: app } = await admin.from('applications')
-    .select('id, profile_id, resume_id, answers, source, job:jobs!inner(id, title, company_id, external_source, external_id)')
+    .select('id, profile_id, resume_id, answers, source, status, applied_at, job:jobs!inner(id, title, company_id, external_source, external_id)')
     .eq('id', applicationId).maybeSingle();
-  const a = app as unknown as { id: string; profile_id: string; resume_id: string | null; answers: { q: string; a: string }[] | null; source: string;
+  const a = app as unknown as { id: string; profile_id: string; resume_id: string | null; answers: { q: string; a: string }[] | null; source: string; status: string; applied_at: string;
     job: { id: string; title: string; company_id: string; external_source: string | null; external_id: string | null } } | null;
   if (!a || a.source !== 'lancenest') return { ok: false, error: 'Not a LanceNest application.' };
-  const { data: conn } = await admin.from('ats_connections').select('provider, board, api_key_enc').eq('company_id', a.job.company_id).maybeSingle();
+  // Withdrawn applications are never sent.
+  if (a.status === 'withdrawn' || a.status === 'saved') return { ok: false, error: 'This applicant withdrew.' };
+  const { data: conn } = await admin.from('ats_connections').select('provider, board, api_key_enc, created_at').eq('company_id', a.job.company_id).maybeSingle();
   if (!conn) return { ok: false, error: 'No hiring system connected.' };
+  // Only people who applied after the connection was made saw the notice that their email and résumé go to the
+  // employer's own system, so earlier applicants are never sent.
+  if (Date.parse(a.applied_at) < Date.parse(conn.created_at as string)) {
+    return { ok: false, error: 'This person applied before your hiring system was connected, so their details stay on LanceNest. Message them here instead.' };
+  }
   const provider = conn.provider as AtsProvider;
   const record = async (r: Result) => {
     await admin.from('ats_deliveries').upsert({ application_id: a.id, company_id: a.job.company_id, provider, status: r.ok ? 'sent' : 'failed', error: r.ok ? null : short(r.error), sent_at: new Date().toISOString() });
