@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const isDev = process.env.NODE_ENV === 'development';
+// LanceNest's own Supabase project only (a wildcard would let anyone's Supabase files through the image optimizer).
+const supabaseHost = (() => { try { return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').hostname; } catch { return 'ugjdzruswfzdiskvetvy.supabase.co'; } })();
 
 // Where the site is allowed to load things from. Anything else is blocked by the browser.
 const csp = [
@@ -7,8 +9,8 @@ const csp = [
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://challenges.cloudflare.com`,
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self'",
-  "img-src 'self' data: blob: https://*.supabase.co",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com",
+  `img-src 'self' data: blob: https://${supabaseHost}`,
+  `connect-src 'self' https://${supabaseHost} wss://${supabaseHost} https://challenges.cloudflare.com`,
   "frame-src https://challenges.cloudflare.com",
   "object-src 'none'",
   "base-uri 'self'",
@@ -33,7 +35,8 @@ const nextConfig = {
   // Verification documents are uploaded through a server action (Vercel caps request bodies at 4.5 MB).
   experimental: { serverActions: { bodySizeLimit: '4mb' } },
   images: {
-    remotePatterns: [{ protocol: 'https', hostname: '*.supabase.co' }],
+    remotePatterns: [{ protocol: 'https', hostname: supabaseHost }],
+    dangerouslyAllowSVG: false,
   },
   async redirects() {
     // Old site URLs still in search results

@@ -3,7 +3,8 @@ import { getSessionProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PAID, getMyCompany } from '@/lib/employer';
 
-const cell = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+// A cell starting with = + - @ would run as a formula when the employer opens the file in Excel; prefix it so it stays text.
+const cell = (v: unknown) => { const s = String(v ?? ''); return `"${(/^[=+\-@\t\r]/.test(s) ? `'${s}` : s).replace(/"/g, '""')}"`; };
 
 /** Applicant export for paid plans (for importing into an ATS). No email addresses are exported. */
 export async function GET(request: NextRequest) {

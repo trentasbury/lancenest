@@ -25,6 +25,7 @@ import { DELIVERY_LABEL, PRICE_LABEL } from '@/lib/freelance';
 import { saveToPool } from '@/app/employer/talent/actions';
 import { decideRecommendation, writeRecommendation } from '@/app/network/recommendActions';
 import type { JobWithCompany } from '@/lib/types';
+import { safeHref } from '@/lib/safeHref';
 
 type Profile = { id: string; full_name: string; username: string; headline: string | null; location: string | null; avatar_url: string | null };
 type Vet = { plan?: string; about: string | null; clearance_level: string; verification_status: string; willing_to_relocate: boolean };
@@ -480,7 +481,7 @@ export default async function VeteranProfilePage({ params, searchParams }: { par
                         <li key={it.id as string} className="rounded-xl border border-line p-4">
                           <p className="font-medium">{it.title as string}</p>
                           {it.description && <p className="mt-1 text-sm text-muted">{it.description as string}</p>}
-                          {it.url && <a href={it.url as string} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-xs text-navy underline">View work ↗</a>}
+                          {safeHref(it.url as string) && <a href={safeHref(it.url as string)} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-xs text-navy underline">View work ↗</a>}
                         </li>
                       ))}
                     </ul>

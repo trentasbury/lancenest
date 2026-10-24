@@ -21,6 +21,7 @@ export async function createCompany(_prev: FormState, formData: FormData): Promi
   const name = String(formData.get('name') ?? '').trim();
   const website = String(formData.get('website') ?? '').trim();
   if (!name) return { error: 'Enter your company name.' };
+  if (/\blancenest\b/i.test(name)) return { error: 'Company names can’t include LanceNest.' };
   if (website && !/^https?:\/\//i.test(website)) return { error: 'Website should start with https://' };
 
   const base = slugify(name) || 'company';

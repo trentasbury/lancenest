@@ -10,6 +10,7 @@ import FormMessage from '@/components/FormMessage';
 import { BRANCHES, CLEARANCES, COMPONENTS, yearOf } from '@/lib/military';
 import { VISIBILITY } from '@/lib/network';
 import { shareProfileMilestone } from '@/app/network/actions';
+import { RESERVED_NAME_MESSAGE } from '@/lib/names';
 import {
   addEducation, addExperience, addService, addSkill, removeEducation, removeExperience,
   removeResume, removeService, removeSkill, saveBasics, setDefaultResume, uploadResume,
@@ -19,6 +20,7 @@ export const metadata: Metadata = { title: 'Edit profile' };
 
 const ERRORS: Record<string, string> = {
   name: 'Your name can’t be empty.',
+  reserved: RESERVED_NAME_MESSAGE,
   skill: 'Type a skill before adding it.',
   branch: 'Choose a branch of service.',
   years: 'The end year can’t be before the start year.',

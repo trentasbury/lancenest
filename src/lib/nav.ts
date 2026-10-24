@@ -12,7 +12,8 @@ export function roleHome(role?: Role | null): string {
 /** Only allow same-site relative redirects (prevents open-redirect abuse). */
 export function safeNextPath(value: FormDataEntryValue | string | null | undefined): string | null {
   const next = typeof value === 'string' ? value : null;
-  return next && next.startsWith('/') && !next.startsWith('//') ? next : null;
+  // Same-site paths only: "/x" yes; "//x" and "/\\x" (browsers read a backslash as a slash) and control characters no.
+  return next && /^\/(?![/\\])/.test(next) && !/[\\\u0000-\u001f]/.test(next) ? next : null;
 }
 
 /** Top menu for visitors who aren't signed in. */

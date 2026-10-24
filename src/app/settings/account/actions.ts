@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import { LAST_SEEN_COOKIE, SESSION_START_COOKIE } from '@/lib/session';
+import { isReservedName } from '@/lib/names';
 
 export async function deleteMyAccount(formData: FormData) {
   const session = await getSessionProfile();
@@ -75,6 +76,7 @@ export async function saveAccountProfile(formData: FormData) {
   const t = (k: string, max: number) => String(formData.get(k) ?? '').trim().slice(0, max);
   const fullName = t('full_name', 120);
   if (fullName.length < 2) redirect('/settings/account?profile=name');
+  if (isReservedName(fullName)) redirect('/settings/account?profile=reserved');
   await createClient().from('profiles').update({ full_name: fullName, headline: t('headline', 140) || null, location: t('location', 120) || null }).eq('id', session.user.id);
   revalidatePath('/', 'layout');
   redirect('/settings/account?profile=saved');

@@ -3,7 +3,8 @@ import { getSessionProfile } from '@/lib/auth';
 import { getMyCompany } from '@/lib/employer';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-const csv = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+// A cell starting with = + - @ would run as a formula when opened in Excel; prefix it so it stays text.
+const csv = (v: unknown) => { const s = String(v ?? ''); return `"${(/^[=+\-@\t\r]/.test(s) ? `'${s}` : s).replace(/"/g, '""')}"`; };
 
 /** Federal & Enterprise: every job, applicant, source, timestamp, and status change — for internal hiring records. */
 export async function GET(request: NextRequest) {

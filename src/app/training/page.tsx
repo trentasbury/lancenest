@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { FORMAT_LABEL, TRAINING_CATEGORIES } from '@/lib/training';
 import { OFFICIAL } from '@/lib/transition';
+import { safeHref } from '@/lib/safeHref';
 
 export const metadata: Metadata = { title: 'Training & Certifications' };
 type Program = { id: string; title: string; category: string; description: string; format: string; location: string | null; duration: string | null; cost: string | null;
@@ -44,7 +45,7 @@ export default async function TrainingPage({ searchParams }: { searchParams: { c
               </div>
               <p className="mt-2 text-sm text-ink/85">{p.description}</p>
               <div className="mt-3 flex flex-wrap items-center gap-3">
-                <a href={p.url} target="_blank" rel="noopener noreferrer" className="btn btn-primary py-2 text-sm">View program ↗</a>
+                <a href={safeHref(p.url)} target="_blank" rel="noopener noreferrer" className="btn btn-primary py-2 text-sm">View program ↗</a>
                 {p.gi_bill_approved && <span className="text-xs text-olive">GI Bill approved (per provider) — <a href={OFFICIAL.giBill} target="_blank" rel="noopener noreferrer" className="underline">confirm with VA</a></span>}
               </div>
             </article>
@@ -55,7 +56,7 @@ export default async function TrainingPage({ searchParams }: { searchParams: { c
             <p className="eyebrow">Upcoming info sessions</p>
             {(events ?? []).length === 0 ? <p className="mt-2 text-sm text-muted">None scheduled right now.</p> : (
               <ul className="mt-3 space-y-3 text-sm">{((events ?? []) as unknown as { title: string; starts_at: string; url: string; company: { name: string } | null }[]).map((e, i) => (
-                <li key={i}><a href={e.url} target="_blank" rel="noopener noreferrer" className="font-medium text-navy hover:underline">{e.title}</a><span className="block text-xs text-muted">{e.company?.name} · {new Date(e.starts_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</span></li>
+                <li key={i}><a href={safeHref(e.url)} target="_blank" rel="noopener noreferrer" className="font-medium text-navy hover:underline">{e.title}</a><span className="block text-xs text-muted">{e.company?.name} · {new Date(e.starts_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</span></li>
               ))}</ul>
             )}
           </div>

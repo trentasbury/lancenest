@@ -7,6 +7,7 @@ import { recordLogin } from '@/lib/devices';
 import { createClient } from '@/lib/supabase/server';
 import { roleHome, safeNextPath } from '@/lib/auth';
 import type { Role } from '@/lib/types';
+import { RESERVED_NAME_MESSAGE, isReservedName } from '@/lib/names';
 
 export type FormState = { error?: string; message?: string };
 
@@ -77,6 +78,7 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
 
   if (role !== 'veteran' && role !== 'employer') return { error: 'Choose how you’ll use LanceNest.' };
   if (!fullName) return { error: 'Enter your full name.' };
+  if (isReservedName(fullName)) return { error: RESERVED_NAME_MESSAGE };
   if (!email) return { error: 'Enter your email address.' };
   if (password.length < 8) return { error: 'Use a password of at least 8 characters.' };
 

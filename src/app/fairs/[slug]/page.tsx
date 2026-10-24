@@ -8,6 +8,7 @@ import SubmitButton from '@/components/SubmitButton';
 import VerifiedMark from '@/components/VerifiedMark';
 import { startConversation } from '@/app/messages/actions';
 import { leaveFair, registerFair, updateBooth } from '../actions';
+import { safeHref } from '@/lib/safeHref';
 
 export const metadata: Metadata = { title: 'Career fair' };
 type Booth = { id: string; pitch: string | null; video_url: string | null; company: { id: string; name: string; slug: string; logo_url: string | null; owner_id: string } | null };
@@ -46,7 +47,7 @@ export default async function FairPage({ params, searchParams }: { params: { slu
                 {b.pitch && <p className="mt-1 text-sm text-ink/85">{b.pitch}</p>}
               </div>
               <div className="flex shrink-0 flex-wrap gap-2">
-                {live && b.video_url && <a href={b.video_url} target="_blank" rel="noopener noreferrer" className="btn btn-primary py-2 text-sm">Join live ↗</a>}
+                {live && safeHref(b.video_url) && <a href={safeHref(b.video_url)} target="_blank" rel="noopener noreferrer" className="btn btn-primary py-2 text-sm">Join live ↗</a>}
                 <Link href={`/companies/${b.company?.slug}`} className="btn btn-outline py-2 text-sm">Open jobs</Link>
                 {profile.role !== 'employer' && b.company && <form action={startConversation.bind(null, b.company.owner_id)}><SubmitButton className="btn btn-ghost border border-line py-2 text-sm" pendingText="…">Message</SubmitButton></form>}
               </div>

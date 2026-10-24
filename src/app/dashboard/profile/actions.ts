@@ -6,6 +6,7 @@ import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { BRANCHES, CLEARANCES, COMPONENTS, yearToDate } from '@/lib/military';
 import { ensureOccupationsLoaded } from '@/lib/occupations';
+import { isReservedName } from '@/lib/names';
 
 const PAGE = '/dashboard/profile';
 
@@ -26,6 +27,7 @@ export async function saveBasics(formData: FormData) {
 
   const fullName = text(formData, 'full_name', 120);
   if (!fullName) done('basics', 'name');
+  if (isReservedName(fullName)) done('basics', 'reserved');
   const city = text(formData, 'city', 80);
   const state = text(formData, 'state', 40);
   const clearance = text(formData, 'clearance_level', 20);

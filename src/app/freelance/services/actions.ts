@@ -68,7 +68,8 @@ export async function requestService(serviceId: string, formData: FormData) {
   // Payout setup only matters once LanceNest handles milestone payments.
   if (FREELANCE_PAYMENTS_ENABLED && !fp?.payouts_enabled) redirect(`/freelance/services/${serviceId}?error=payouts`);
   const onSite = s.delivery !== 'remote';
-  const fee = bookingRequired(onSite) ? bookingFeeCents(amount) : 0;
+  // The fee follows the real size of the job: an amount under the listed price doesn't lower it.
+  const fee = bookingRequired(onSite) ? bookingFeeCents(Math.max(amount, s.price_cents as number)) : 0;
   const { data: contract, error } = await admin.from('contracts').insert({
     client_id: user.id, freelancer_id: s.profile_id, service_id: s.id, title: s.title as string, request_note: note,
     veteran_fee_rate: vetRateFor((vet?.plan as string) ?? 'free'),

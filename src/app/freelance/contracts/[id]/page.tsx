@@ -9,7 +9,7 @@ import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import { startConversation } from '@/app/messages/actions';
 import { CONTACT_BLOCKED } from '@/lib/contact';
-import { addMilestone, approveMilestone, cancelBooking, cancelMilestone, declineContract, payBooking, requestConversion, leaveReview, openDispute, requestChanges, submitMilestone } from '../actions';
+import { addMilestone, approveMilestone, cancelBooking, markContractComplete, cancelMilestone, declineContract, payBooking, requestConversion, leaveReview, openDispute, requestChanges, submitMilestone } from '../actions';
 
 export const metadata: Metadata = { title: 'Contract' };
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -70,6 +70,13 @@ export default async function ContractPage({ params, searchParams }: { params: {
       {awaitingBooking && isFreelancer && <p className="rounded-xl border border-line bg-paper p-4 text-sm">This request isn’t booked yet. You’ll be notified as soon as the client confirms it.</p>}
       {contract.booking_status === 'paid' && isClient && contract.booking_paid_at && <p className="text-xs text-muted">Booked {new Date(contract.booking_paid_at).toLocaleDateString('en-US', { dateStyle: 'medium' })} · booking fee {contract.booking_fee_cents ? usd(contract.booking_fee_cents) : ''} paid</p>}
       {searchParams.released && <FormMessage message="Payment released to the freelancer. Thank you!" />}
+      {searchParams.completed && <FormMessage message="Marked complete. Leave a review below. It helps other members hire with confidence." />}
+      {!FREELANCE_PAYMENTS_ENABLED && isClient && live && contract.booking_status === 'paid' && (
+        <form action={markContractComplete.bind(null, contract.id)} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-olive/40 bg-olive/5 p-4 text-sm">
+          <span>Job done? Mark it complete so you can both leave reviews, and it shows as verified work on their profile.</span>
+          <SubmitButton className="btn btn-primary py-1.5 text-xs" pendingText="…">Mark job complete</SubmitButton>
+        </form>
+      )}
       {FREELANCE_PAYMENTS_ENABLED ? (
         <div className="rounded-xl border border-olive/30 bg-olive/5 p-4 text-sm text-ink/85">
           <strong className="text-olive">Protected Payments.</strong> <a href="/payments-protection" className="text-navy underline">How it works</a> · The client funds each milestone before work starts. LanceNest holds the money and releases it when the client approves — or automatically 14 days after the work is submitted. Either side can open a dispute and LanceNest will decide.

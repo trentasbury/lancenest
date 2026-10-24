@@ -10,6 +10,7 @@ import type { Company, JobWithCompany } from '@/lib/types';
 import { getSessionProfile } from '@/lib/auth';
 import SubmitButton from '@/components/SubmitButton';
 import { startConversation } from '@/app/messages/actions';
+import { safeHref } from '@/lib/safeHref';
 
 // Shared by the page title and the page itself: one lookup per request.
 const getCompany = cache(async (slug: string) => {
@@ -59,7 +60,7 @@ export default async function CompanyPage({ params }: { params: { slug: string }
                 </span>
               )}
               {company.website && (
-                <a href={company.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full border border-cream/30 px-3 py-1 text-[12px] font-medium text-cream hover:border-brass hover:text-brass-light">
+                <a href={safeHref(company.website)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full border border-cream/30 px-3 py-1 text-[12px] font-medium text-cream hover:border-brass hover:text-brass-light">
                   Visit website ↗ <span className="text-cream/60">{company.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '')}</span>
                 </a>
               )}

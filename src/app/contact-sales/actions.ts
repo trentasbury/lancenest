@@ -12,7 +12,15 @@ export async function requestCall(formData: FormData) {
     size: t(formData, 'size', 40) || null, plan: t(formData, 'plan', 20) || null, needs: t(formData, 'needs', 2000) || null, times: t(formData, 'times', 300) || null };
   if (lead.name.length < 2 || lead.company.length < 2 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(lead.email)) redirect(`/contact-sales?error=1&plan=${lead.plan ?? ''}`);
   const admin = createAdminClient();
+  // Repeats from one address are dropped quietly; a flood still records leads but stops emailing support@ (daily email allowance).
+  const since = new Date(Date.now() - 3600_000).toISOString();
+  const [{ count: mine }, { count: all }] = await Promise.all([
+    admin.from('sales_leads').select('id', { count: 'exact', head: true }).eq('email', lead.email).gte('created_at', since),
+    admin.from('sales_leads').select('id', { count: 'exact', head: true }).gte('created_at', since),
+  ]);
+  if ((mine ?? 0) >= 3) redirect('/contact-sales?sent=1');
   await admin.from('sales_leads').insert(lead);
+  if ((all ?? 0) >= 30) redirect('/contact-sales?sent=1');
   const { data: admins } = await admin.from('profiles').select('id').eq('role', 'admin');
   if (admins?.length) await admin.from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'lead', title: `Call request: ${lead.company} (${lead.plan ?? 'plan not chosen'}) — ${lead.name}`, link: '/admin/leads' })));
   await sendEmail('support@lancenest.com', { subject: `Call request: ${lead.company}`, preheader: `${lead.name} · ${lead.plan ?? ''}`, tone: 'notice', badge: 'Sales',

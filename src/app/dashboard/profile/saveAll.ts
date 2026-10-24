@@ -5,6 +5,7 @@ import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { BRANCHES, CLEARANCES, CLEARANCE_STATUS, COMPONENTS, POLYGRAPH, yearToDate } from '@/lib/military';
 import { ensureOccupationsLoaded } from '@/lib/occupations';
+import { RESERVED_NAME_MESSAGE, isReservedName } from '@/lib/names';
 
 type Svc = { id?: string; branch: string; component: string; rank: string; duty_title: string; unit: string; occupation_code: string; start_year: string; end_year: string; description: string; deployments: string };
 type Exp = { id?: string; company: string; position: string; start_year: string; end_year: string; description: string };
@@ -22,6 +23,7 @@ export async function saveFullProfile(p: ProfilePayload): Promise<{ ok: boolean;
   const b = p.basics;
   const fullName = s(b.full_name, 120);
   if (!fullName) return { ok: false, error: 'Please enter your full name.' };
+  if (isReservedName(fullName)) return { ok: false, error: RESERVED_NAME_MESSAGE };
   const city = s(b.city, 80), state = s(b.state, 40);
   const { error: e1 } = await supabase.from('profiles').update({ full_name: fullName, headline: s(b.headline, 140) || null, location: [city, state].filter(Boolean).join(', ') || null, onboarding_completed: true }).eq('id', user.id);
   const { error: e2 } = await supabase.from('veteran_profiles').update({

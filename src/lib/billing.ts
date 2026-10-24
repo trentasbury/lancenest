@@ -2,6 +2,7 @@ import 'server-only';
 import type Stripe from 'stripe';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { BOOST_DAYS, CONTACT_PACK_SIZE, PROPOSAL_PACK_SIZE, stripe } from '@/lib/stripe';
+import { SEATS } from '@/lib/employer';
 
 const ACTIVE = new Set(['active', 'trialing', 'past_due']);
 
@@ -26,11 +27,20 @@ export async function recomputeCompany(companyId: string) {
     if (co) { const { rewardReferrer } = await import('@/lib/referrals'); await rewardReferrer(co.owner_id as string, 'company_paid'); }
   }
 
-  // Back on Free: keep the newest (2 + slots) open jobs, pause the rest. Nothing is deleted.
-  if (plan === 'free') {
+  // After any downgrade, apply the new plan's limits. Jobs over the limit are paused (newest stay open; nothing is
+  // deleted). Teammates over the seat limit lose access (earliest added stay); the owner can add them back after upgrading.
+  const jobCap = plan === 'free' ? 2 : plan === 'professional' ? 10 : null;
+  if (jobCap !== null) {
     const { data: open } = await admin.from('jobs').select('id').eq('company_id', companyId).eq('status', 'open').order('posted_at', { ascending: false });
-    const extra = (open ?? []).slice(2 + slots).map((j) => j.id as string);
+    const extra = (open ?? []).slice(jobCap + slots).map((j) => j.id as string);
     if (extra.length) await admin.from('jobs').update({ status: 'paused' }).in('id', extra);
+  }
+  const { data: members } = await admin.from('company_members').select('profile_id').eq('company_id', companyId).order('created_at');
+  const overSeats = (members ?? []).slice(Math.max((SEATS[plan] ?? 1) - 1, 0)).map((m) => m.profile_id as string);
+  if (overSeats.length) {
+    await admin.from('company_members').delete().eq('company_id', companyId).in('profile_id', overSeats);
+    const { data: co } = await admin.from('companies').select('owner_id').eq('id', companyId).maybeSingle();
+    if (co) await admin.from('notifications').insert({ profile_id: co.owner_id, type: 'billing', title: `Your plan now includes ${SEATS[plan] ?? 1} seat${(SEATS[plan] ?? 1) === 1 ? '' : 's'}, so ${overSeats.length} teammate${overSeats.length === 1 ? '' : 's'} lost access. Upgrade to add them back.`, link: '/employer/team' });
   }
 }
 

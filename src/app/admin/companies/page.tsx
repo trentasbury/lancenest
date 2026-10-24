@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import SubmitButton from '@/components/SubmitButton';
 import EmptyState from '@/components/EmptyState';
 import { decideCompany, decidePublicSafety, decideSkillBridge } from '../actions';
+import { safeHref } from '@/lib/safeHref';
 
 export const metadata: Metadata = { title: 'Company verification', robots: { index: false } };
 
@@ -84,7 +85,7 @@ export default async function CompanyQueue() {
             <div key={c.id as string} className="card p-6">
               <p className="font-serif text-2xl">{c.name as string}</p>
               <dl className="mt-3 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
-                <div><dt className="inline text-muted">Website: </dt><dd className="inline"><a href={d.website} target="_blank" rel="noopener noreferrer" className="text-navy underline">{d.website}</a></dd></div>
+                <div><dt className="inline text-muted">Website: </dt><dd className="inline"><a href={safeHref(d.website)} target="_blank" rel="noopener noreferrer" className="text-navy underline">{d.website}</a></dd></div>
                 <div><dt className="inline text-muted">Contact: </dt><dd className="inline">{email} · {d.role}</dd></div>
                 {d.linkedin && <div><dt className="inline text-muted">LinkedIn: </dt><dd className="inline break-all">{d.linkedin}</dd></div>}
                 {d.ein && <div><dt className="inline text-muted">EIN: </dt><dd className="inline">{d.ein}</dd></div>}

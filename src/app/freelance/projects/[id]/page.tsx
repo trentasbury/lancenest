@@ -100,7 +100,7 @@ export default async function ProjectPage({ params, searchParams }: { params: { 
                 <p className="mt-3 whitespace-pre-line text-sm text-ink/90">{p.cover_letter}</p>
                 <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-4">
                   <span className="text-xs capitalize text-muted">{p.status}</span>
-                  {needsBooking && ['submitted', 'shortlisted'].includes(p.status) && project.status === 'open' && <span className="text-xs text-muted">· {usd(bookingFeeCents(p.bid_amount * 100))} booking fee when you hire</span>}
+                  {needsBooking && ['submitted', 'shortlisted'].includes(p.status) && project.status === 'open' && <span className="text-xs text-muted">· {usd(bookingFeeCents(Math.max(p.bid_amount, project.budget_min ?? 0) * 100))} booking fee when you hire</span>}
                   {p.status !== 'shortlisted' && p.status !== 'declined' && <form action={setProposalStatus.bind(null, p.id, project.id, 'shortlisted')}><SubmitButton className="btn btn-outline py-1.5 text-xs" pendingText="…">Shortlist</SubmitButton></form>}
                   {p.status !== 'declined' && <form action={setProposalStatus.bind(null, p.id, project.id, 'declined')}><SubmitButton className="btn btn-ghost py-1.5 text-xs" pendingText="…">Decline</SubmitButton></form>}
                   <form action={startConversation.bind(null, p.freelancer_id)}><SubmitButton className="btn btn-outline py-1.5 text-xs" pendingText="…">Message</SubmitButton></form>
