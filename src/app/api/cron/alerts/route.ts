@@ -162,7 +162,8 @@ export async function GET(request: NextRequest) {
   let digests = 0;
   if (new Date().getUTCDay() === 1) {
     const weekAgo = new Date(now - 7 * 24 * H).toISOString();
-    const { count: newJobs } = await admin.from('jobs').select('id', { count: 'exact', head: true }).eq('status', 'open').gte('posted_at', weekAgo);
+    const { count: newJobs } = await admin.from('jobs').select('id, company:companies!inner(id)', { count: 'exact', head: true }).eq('status', 'open')
+      .eq('company.is_verified', true).not('company.owner_id', 'is', null).gte('posted_at', weekAgo);
     // Every verified member (the database returns at most 1,000 rows per request, so page through them).
     const members: { profile_id: string }[] = [];
     for (let from = 0; ; from += 1000) {

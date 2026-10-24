@@ -21,10 +21,14 @@ const getStats = unstable_cache(async () => {
   try {
     const { createAdminClient } = await import('@/lib/supabase/admin');
     const admin = createAdminClient();
-    const [m, j, c] = await Promise.all([
+    // Only real, verified employers count (placeholder companies with no owner never show anywhere public).
+    const [m, j, pj, c] = await Promise.all([
       admin.from('veteran_profiles').select('profile_id', { count: 'exact', head: true }).eq('verification_status', 'verified'),
-      admin.from('jobs').select('id', { count: 'exact', head: true }).eq('status', 'open'),
-      admin.from('companies').select('id', { count: 'exact', head: true }).eq('is_verified', true),
+      admin.from('jobs').select('id, company:companies!inner(id)', { count: 'exact', head: true })
+        .eq('status', 'open').eq('company.is_verified', true).not('company.owner_id', 'is', null),
+      admin.from('jobs').select('id, company:companies!inner(id)', { count: 'exact', head: true })
+        .eq('status', 'open').eq('public_listing', true).eq('company.is_verified', true).not('company.owner_id', 'is', null),
+      admin.from('companies').select('id', { count: 'exact', head: true }).eq('is_verified', true).not('owner_id', 'is', null),
     ]);
     // The newest open role from a verified employer, for the "Hiring now" card in the hero.
     const { data: newest } = await admin.from('jobs')
@@ -32,9 +36,9 @@ const getStats = unstable_cache(async () => {
       .eq('status', 'open').eq('public_listing', true).eq('company.is_verified', true).not('company.owner_id', 'is', null)
       .order('posted_at', { ascending: false }).limit(1);
     const top = (newest ?? [])[0] as unknown as NewestJob | undefined;
-    return { members: m.count ?? 0, jobs: j.count ?? 0, companies: c.count ?? 0, newest: top ?? null };
+    return { members: m.count ?? 0, jobs: j.count ?? 0, publicJobs: pj.count ?? 0, companies: c.count ?? 0, newest: top ?? null };
   } catch { return null; }
-}, ['home-stats-v3'], { revalidate: 600 });
+}, ['home-stats-v4'], { revalidate: 600 });
 
 type NewestJob = { title: string; location: string | null; work_arrangement: 'remote' | 'hybrid' | 'onsite'; salary_min: number | null; salary_max: number | null; salary_period: 'year' | 'hour' };
 
@@ -73,7 +77,7 @@ function HeroPanel({ stats, attached = false }: { stats: Awaited<ReturnType<type
           ) : <span className="block text-sm font-semibold text-ink">Roles from verified employers</span>}
         </span>
         <span className="shrink-0 text-xs font-semibold text-navy group-hover:underline">{/* Small counts read as empty at launch, so the number appears only once there are plenty of jobs. */}
-          {stats && stats.jobs >= 25 ? `All ${stats.jobs.toLocaleString()} →` : 'See jobs →'}</span>
+          {stats && stats.publicJobs >= 25 ? `All ${stats.publicJobs.toLocaleString()} →` : 'See jobs →'}</span>
       </Link>
     </div>
   );

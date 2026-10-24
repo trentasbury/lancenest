@@ -44,7 +44,8 @@ async function load(branchSlug: string, code: string) {
 
 // Open roles matching this occupation: refreshed hourly.
 const openRolesFor = unstable_cache(async (cats: string[]) => {
-  const { count } = await createAdminClient().from('jobs').select('id', { count: 'exact', head: true }).eq('status', 'open')
+  const { count } = await createAdminClient().from('jobs').select('id, company:companies!inner(id)', { count: 'exact', head: true }).eq('status', 'open')
+    .eq('company.is_verified', true).not('company.owner_id', 'is', null)
     .or(cats.slice(0, 3).map((c) => `title.ilike.%${c.replace(/[,()%]/g, ' ').trim()}%`).join(','));
   return count ?? 0;
 }, ['career-open-roles'], { revalidate: 3600 });
