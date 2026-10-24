@@ -13,9 +13,13 @@ import { siteHost } from '@/lib/applyLinks';
 
 export const metadata: Metadata = { title: 'Manage job' };
 
-export default async function ManageJobPage({ params, searchParams }: { params: { id: string }; searchParams: { error?: string; saved?: string } }) {
+export default async function ManageJobPage(
+  props: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; saved?: string }> }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const { user } = await requireRole(['employer'], '/employer/dashboard');
-  const supabase = createClient();
+  const supabase = await createClient();
   // Row-level security only returns this job to its own company (or if it's open).
   const [{ data }, co, { count: applicants }] = await Promise.all([
     supabase.from('jobs').select('*, company:companies!inner(owner_id)').eq('id', params.id).maybeSingle(),

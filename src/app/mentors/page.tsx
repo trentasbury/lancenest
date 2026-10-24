@@ -12,9 +12,10 @@ import { saveMentorProfile } from './actions';
 export const metadata: Metadata = { title: 'Mentors' };
 type Mentor = { profile_id: string; fields: string[]; bio: string | null; profile: { full_name: string; username: string | null; headline: string | null; avatar_url: string | null; verified: boolean } | null };
 
-export default async function MentorsPage({ searchParams }: { searchParams: { field?: string; saved?: string } }) {
+export default async function MentorsPage(props: { searchParams: Promise<{ field?: string; saved?: string }> }) {
+  const searchParams = await props.searchParams;
   const { user, profile } = await requireVerifiedMember('/mentors');
-  const supabase = createClient();
+  const supabase = await createClient();
   const field = MENTOR_FIELDS.includes(searchParams.field ?? '') ? searchParams.field! : null;
   let q = supabase.from('mentor_profiles').select('profile_id, fields, bio, profile:profiles(full_name, username, headline, avatar_url, verified)').eq('available', true).neq('profile_id', user.id);
   if (field) q = q.contains('fields', [field]);

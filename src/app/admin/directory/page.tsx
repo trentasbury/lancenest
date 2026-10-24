@@ -9,14 +9,17 @@ const TABS = [['veterans', 'Service members'], ['employers', 'Employers'], ['com
 const PAGE = 50;
 const d = (s?: string | null) => (s ? new Date(s).toLocaleDateString('en-US', { dateStyle: 'medium' }) : '—');
 
-export default async function DirectoryPage({ searchParams }: { searchParams: { tab?: string; q?: string; page?: string } }) {
+export default async function DirectoryPage(
+  props: { searchParams: Promise<{ tab?: string; q?: string; page?: string }> }
+) {
+  const searchParams = await props.searchParams;
   await requireAdmin('/admin/directory');
   const admin = createAdminClient();
   const tab = TABS.some(([t]) => t === searchParams.tab) ? searchParams.tab! : 'veterans';
   const q = sanitizeSearch(searchParams.q ?? '');
   const page = Math.max(1, Number(searchParams.page) || 1);
   const from = (page - 1) * PAGE, to = from + PAGE - 1;
-  let rows: { key: string; cells: (string | JSX.Element)[]; href: string }[] = [];
+  let rows: { key: string; cells: (string | React.JSX.Element)[]; href: string }[] = [];
   let head: string[] = [];
   let total = 0;
 

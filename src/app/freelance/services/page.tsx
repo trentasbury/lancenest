@@ -11,9 +11,12 @@ export const metadata: Metadata = { title: 'Services by verified service members
 type S = { id: string; title: string; category: string; description: string; price_cents: number; price_type: string; delivery: string; service_area: string | null;
   provider: { full_name: string; username: string | null; avatar_url: string | null; verified: boolean } | null };
 
-export default async function ServicesPage({ searchParams }: { searchParams: { category?: string; q?: string; where?: string } }) {
+export default async function ServicesPage(
+  props: { searchParams: Promise<{ category?: string; q?: string; where?: string }> }
+) {
+  const searchParams = await props.searchParams;
   await requireVerifiedMember('/freelance/services');
-  const supabase = createClient();
+  const supabase = await createClient();
   let query = supabase.from('service_listings').select('id, title, category, description, price_cents, price_type, delivery, service_area, provider:profiles!service_listings_profile_id_fkey(full_name, username, avatar_url, verified)').eq('status', 'active');
   if (searchParams.category && CATEGORIES.includes(searchParams.category)) query = query.eq('category', searchParams.category);
   const q = sanitizeSearch(searchParams.q ?? ''), where = sanitizeSearch(searchParams.where ?? '');

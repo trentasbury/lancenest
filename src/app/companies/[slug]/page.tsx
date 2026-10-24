@@ -14,23 +14,25 @@ import { safeHref } from '@/lib/safeHref';
 
 // Shared by the page title and the page itself: one lookup per request.
 const getCompany = cache(async (slug: string) => {
-  const supabase = createClient();
+  const supabase = await createClient();
   // Public columns only (verification details, notes and billing IDs are never sent to the browser).
   const { data } = await supabase.from('companies').select('id, slug, name, logo_url, cover_url, industry, headquarters, website, about, mission, benefits, veteran_commitment, is_verified, owner_id').eq('slug', slug).maybeSingle();
   return (data as Company | null) ?? null;
 });
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const company = await getCompany(params.slug);
   if (!company) return { title: 'Company not found' };
   return { title: `${company.name} Jobs`, description: company.about?.slice(0, 160) ?? `Open roles at ${company.name}.` };
 }
 
-export default async function CompanyPage({ params }: { params: { slug: string } }) {
+export default async function CompanyPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const company = await getCompany(params.slug);
   if (!company) notFound();
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const [{ data }, session] = await Promise.all([
     supabase
       .from('jobs')

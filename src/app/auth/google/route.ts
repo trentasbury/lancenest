@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   if (next) back.set('next', next);
   if (ref) back.set('ref', ref);
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: `${site}/auth/callback?${back}`, queryParams: { prompt: 'select_account' } },

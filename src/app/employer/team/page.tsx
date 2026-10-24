@@ -11,7 +11,8 @@ import { addTeamMember, removeTeamMember } from './actions';
 export const metadata: Metadata = { title: 'Hiring team' };
 const ERR: Record<string, string> = { notfound: 'No LanceNest account uses that email. Ask them to sign up as an employer (“I’m hiring”) first, then add them here.', ineligible: 'That account can’t be added — it must be an employer account that doesn’t own its own company.', seats: 'You’ve used every seat on your plan. Upgrade for more seats.', taken: 'That person is already on a hiring team.', save: 'That didn’t save — please try again.' };
 
-export default async function TeamPage({ searchParams }: { searchParams: { error?: string; added?: string } }) {
+export default async function TeamPage(props: { searchParams: Promise<{ error?: string; added?: string }> }) {
+  const searchParams = await props.searchParams;
   const { user } = await requireRole(['employer'], '/employer/team');
   const company = await getMyCompany(user.id);
   if (!company) redirect('/employer/dashboard');

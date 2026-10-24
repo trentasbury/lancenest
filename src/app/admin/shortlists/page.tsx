@@ -7,7 +7,8 @@ import { addCandidate, closeShortlist, deliverShortlist, removeCandidate } from 
 
 export const metadata: Metadata = { title: 'Shortlists', robots: { index: false } };
 
-export default async function AdminShortlistsPage({ searchParams }: { searchParams: { error?: string } }) {
+export default async function AdminShortlistsPage(props: { searchParams: Promise<{ error?: string }> }) {
+  const searchParams = await props.searchParams;
   await requireAdmin('/admin/shortlists');
   const admin = createAdminClient();
   const { data: reqs } = await admin.from('shortlist_requests').select('*, company:companies(name)').neq('status', 'awaiting_payment').order('due_at', { ascending: true }).limit(100);

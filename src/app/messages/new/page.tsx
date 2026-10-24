@@ -10,10 +10,11 @@ import { startConversation } from '../actions';
 
 export const metadata: Metadata = { title: 'New message' };
 
-export default async function NewMessagePage({ searchParams }: { searchParams: { q?: string } }) {
+export default async function NewMessagePage(props: { searchParams: Promise<{ q?: string }> }) {
+  const searchParams = await props.searchParams;
   const { user } = await requireVerifiedMember('/messages/new');
   const q = sanitizeSearch(searchParams.q ?? '');
-  const supabase = createClient();
+  const supabase = await createClient();
   const [{ data: people }, { data: following }] = await Promise.all([
     q ? supabase.from('profiles').select('id, full_name, headline, avatar_url, verified, role').neq('id', user.id).or(`full_name.ilike.%${q}%,headline.ilike.%${q}%`).order('verified', { ascending: false }).limit(25)
       : Promise.resolve({ data: [] as { id: string; full_name: string; headline: string | null; avatar_url: string | null; verified: boolean; role: string }[] }),

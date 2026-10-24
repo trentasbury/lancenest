@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const company = await getMyCompany(session.user.id);
   if (!company || !PAID.includes(company.plan)) return new NextResponse('Available on paid plans', { status: 403 });
   const jobId = request.nextUrl.searchParams.get('job') ?? '';
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: job } = await supabase.from('jobs').select('id, title, slug').eq('id', jobId).eq('company_id', company.id).maybeSingle();
   if (!job) return new NextResponse('Not found', { status: 404 });
   const { data } = await supabase.from('applications')

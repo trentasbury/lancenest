@@ -8,7 +8,7 @@ const when = (d: string) => new Date(d).toLocaleString('en-US', { dateStyle: 'fu
 
 export default async function FairsPage() {
   const { profile } = await requireVerifiedMember('/fairs');
-  const { data } = await createClient().from('career_fairs').select('id, slug, title, description, starts_at, ends_at').gte('ends_at', new Date(Date.now() - 30 * 86400000).toISOString()).order('starts_at');
+  const { data } = await (await createClient()).from('career_fairs').select('id, slug, title, description, starts_at, ends_at').gte('ends_at', new Date(Date.now() - 30 * 86400000).toISOString()).order('starts_at');
   const upcoming = (data ?? []).filter((f) => Date.parse(f.ends_at as string) > Date.now());
   return (
     <div className="container-page max-w-4xl space-y-6 py-10">

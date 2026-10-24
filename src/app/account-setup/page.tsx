@@ -13,9 +13,10 @@ const CHOICES = [
   ['employer', 'I’m hiring', 'Any company or recruiter — post roles and search verified military talent.'],
 ] as const;
 
-export default async function AccountSetupPage({ searchParams }: { searchParams: { choose?: string; next?: string } }) {
+export default async function AccountSetupPage(props: { searchParams: Promise<{ choose?: string; next?: string }> }) {
+  const searchParams = await props.searchParams;
   if (searchParams.choose) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) redirect('/login');
     const { data: profile } = await supabase.from('profiles').select('role, full_name').eq('id', user.id).maybeSingle();
@@ -44,7 +45,7 @@ export default async function AccountSetupPage({ searchParams }: { searchParams:
   }
 
   // Reached when a signed-in account has no profile. Anyone else is sent where they belong.
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
   const { data: existing } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();

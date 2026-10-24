@@ -39,7 +39,7 @@ type Education = { id: string; school: string; degree: string | null; field: str
 
 // Shared by the page title and the page itself: one lookup per request.
 const load = cache(async (username: string) => {
-  const supabase = createClient();
+  const supabase = await createClient();
   // Row-level security decides visibility: the owner, employers, admins, or anyone if the profile is public.
   const { data: profile } = await supabase
     .from('profiles')
@@ -58,7 +58,8 @@ const load = cache(async (username: string) => {
   return { supabase, profile: profile as Profile, vet: (vet as Vet) ?? null };
 });
 
-export async function generateMetadata({ params }: { params: { username: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ username: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const data = await load(params.username);
   if (!data || !data.vet) return { title: 'Profile', robots: { index: false } };
   return {
@@ -69,7 +70,11 @@ export async function generateMetadata({ params }: { params: { username: string 
 
 type Tab = 'profile' | 'posts' | 'photos';
 
-export default async function VeteranProfilePage({ params, searchParams }: { params: { username: string }; searchParams: { rec?: string; tab?: string; type?: string; cursor?: string; pool?: string; reported?: string; saved?: string } }) {
+export default async function VeteranProfilePage(
+  props: { params: Promise<{ username: string }>; searchParams: Promise<{ rec?: string; tab?: string; type?: string; cursor?: string; pool?: string; reported?: string; saved?: string }> }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const data = await load(params.username);
   if (!data) notFound();
   const { supabase, profile } = data;

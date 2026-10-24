@@ -22,7 +22,7 @@ export async function submitVerification(formData: FormData) {
   const idType = String(formData.get('id_type') ?? '');
   const memberNote = String(formData.get('member_note') ?? '').trim().slice(0, 300) || null;
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const cleanup = async () => { await supabase.storage.from(BUCKET).remove([docPath, idPath].filter((p) => p.startsWith(`${user.id}/`))); };
   const fail = async (code: string) => { await cleanup(); redirect(`${PAGE}?error=${code}`); };
 

@@ -7,7 +7,7 @@ export default async function SuspendedPage() {
   const session = await getSessionProfile();
   const until = session?.profile?.suspended_until;
   if (!until || new Date(until) <= new Date()) redirect('/');
-  const { data: strike } = await createClient().from('member_strikes').select('reason').eq('profile_id', session!.user.id).eq('level', 'suspension').order('created_at', { ascending: false }).limit(1).maybeSingle();
+  const { data: strike } = await (await createClient()).from('member_strikes').select('reason').eq('profile_id', session!.user.id).eq('level', 'suspension').order('created_at', { ascending: false }).limit(1).maybeSingle();
   return (
     <div className="container-page flex max-w-lg flex-col py-20 text-center">
       <p className="eyebrow text-signal">Account suspended</p>

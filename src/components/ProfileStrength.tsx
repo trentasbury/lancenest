@@ -4,7 +4,7 @@ import { SITE } from '@/lib/email';
 
 /** Profile strength checklist + invite card for the member dashboard. */
 export default async function ProfileStrength({ userId }: { userId: string }) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const [{ data: p }, { data: v }, { count: svc }, { count: exp }, { count: skills }, { count: resumes }, { count: invited }] = await Promise.all([
     supabase.from('profiles').select('avatar_url, headline, username').eq('id', userId).maybeSingle(),
     supabase.from('veteran_profiles').select('about, state, verification_status, desired_titles, pro_granted_until').eq('profile_id', userId).maybeSingle(),

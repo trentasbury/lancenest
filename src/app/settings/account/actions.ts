@@ -23,10 +23,10 @@ export async function deleteMyAccount(formData: FormData) {
     console.error('self-service deletion failed:', err);
     redirect('/settings/account?error=failed');
   }
-  await createClient().auth.signOut({ scope: 'local' }).catch(() => undefined);
-  cookies().getAll().filter((c) => c.name.startsWith('sb-')).forEach((c) => cookies().delete(c.name));
-  cookies().delete(LAST_SEEN_COOKIE);
-  cookies().delete(SESSION_START_COOKIE);
+  await (await createClient()).auth.signOut({ scope: 'local' }).catch(() => undefined);
+  { const jar = await cookies(); jar.getAll().filter((c) => c.name.startsWith('sb-')).forEach((c) => jar.delete(c.name)); }
+  (await cookies()).delete(LAST_SEEN_COOKIE);
+  (await cookies()).delete(SESSION_START_COOKIE);
   redirect('/?deleted=1');
 }
 
@@ -34,10 +34,10 @@ export async function deleteMyAccount(formData: FormData) {
 export async function signOutEverywhere() {
   const session = await getSessionProfile();
   if (!session) redirect('/login');
-  await createClient().auth.signOut({ scope: 'global' }).catch(() => undefined);
-  cookies().getAll().filter((c) => c.name.startsWith('sb-')).forEach((c) => cookies().delete(c.name));
-  cookies().delete(LAST_SEEN_COOKIE);
-  cookies().delete(SESSION_START_COOKIE);
+  await (await createClient()).auth.signOut({ scope: 'global' }).catch(() => undefined);
+  { const jar = await cookies(); jar.getAll().filter((c) => c.name.startsWith('sb-')).forEach((c) => jar.delete(c.name)); }
+  (await cookies()).delete(LAST_SEEN_COOKIE);
+  (await cookies()).delete(SESSION_START_COOKIE);
   redirect('/login?reason=everywhere');
 }
 
@@ -51,7 +51,7 @@ export async function uploadAvatar(formData: FormData) {
   const back = String(formData.get('back') ?? '').startsWith('/dashboard/profile') ? '/dashboard/profile' : '/settings/account';
   if (!(file instanceof File) || !PHOTO_TYPES[file.type]) redirect(`${back}?photo=type`);
   if (file.size > 2 * 1024 * 1024) redirect(`${back}?photo=size`);
-  const supabase = createClient();
+  const supabase = await createClient();
   const path = `${session.user.id}/avatar-${Date.now()}.${PHOTO_TYPES[file.type]}`;
   const { error } = await supabase.storage.from('avatars').upload(path, file, { contentType: file.type });
   if (error) redirect(`${back}?photo=failed`);
@@ -77,7 +77,7 @@ export async function saveAccountProfile(formData: FormData) {
   const fullName = t('full_name', 120);
   if (fullName.length < 2) redirect('/settings/account?profile=name');
   if (isReservedName(fullName)) redirect('/settings/account?profile=reserved');
-  await createClient().from('profiles').update({ full_name: fullName, headline: t('headline', 140) || null, location: t('location', 120) || null }).eq('id', session.user.id);
+  await (await createClient()).from('profiles').update({ full_name: fullName, headline: t('headline', 140) || null, location: t('location', 120) || null }).eq('id', session.user.id);
   revalidatePath('/', 'layout');
   redirect('/settings/account?profile=saved');
 }
@@ -86,14 +86,14 @@ export async function saveAccountProfile(formData: FormData) {
 export async function hideCompany(companyId: string) {
   const session = await getSessionProfile();
   if (!session) redirect('/login');
-  await createClient().from('hidden_companies').upsert({ profile_id: session.user.id, company_id: companyId }, { ignoreDuplicates: true });
+  await (await createClient()).from('hidden_companies').upsert({ profile_id: session.user.id, company_id: companyId }, { ignoreDuplicates: true });
   revalidatePath('/settings/account');
   redirect('/settings/account?hidden=1#privacy');
 }
 export async function unhideCompany(companyId: string) {
   const session = await getSessionProfile();
   if (!session) redirect('/login');
-  await createClient().from('hidden_companies').delete().eq('profile_id', session.user.id).eq('company_id', companyId);
+  await (await createClient()).from('hidden_companies').delete().eq('profile_id', session.user.id).eq('company_id', companyId);
   revalidatePath('/settings/account');
   redirect('/settings/account#privacy');
 }

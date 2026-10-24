@@ -20,9 +20,10 @@ const STEPS = [
   ['Start up to 180 days before separation', 'You keep full military pay, BAH, and benefits. The company does not pay you.'],
 ];
 
-export default async function TransitionPage({ searchParams }: { searchParams: { saved?: string } }) {
+export default async function TransitionPage(props: { searchParams: Promise<{ saved?: string }> }) {
+  const searchParams = await props.searchParams;
   const { user, profile } = await requireVerifiedMember('/transition');
-  const supabase = createClient();
+  const supabase = await createClient();
   const [{ data: vet }, { data: sb }, { data: partners }] = await Promise.all([
     profile.role === 'veteran' ? supabase.from('veteran_profiles').select('separation_date, open_to_transition_hiring, skillbridge_interest').eq('profile_id', user.id).maybeSingle() : Promise.resolve({ data: null }),
     supabase.from('jobs').select('*, company:companies(name, slug, logo_url, is_verified, industry)').eq('status', 'open').eq('employment_type', 'skillbridge').order('posted_at', { ascending: false }).limit(20),

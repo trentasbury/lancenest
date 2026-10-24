@@ -24,9 +24,13 @@ const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, minimum: 'Jobs o
 type Proposal = { id: string; freelancer_id: string; cover_letter: string; bid_amount: number; timeline: string | null; status: string; created_at: string;
   freelancer: { full_name: string; username: string | null; headline: string | null; verified: boolean; service_summary: string | null } | null };
 
-export default async function ProjectPage({ params, searchParams }: { params: { id: string }; searchParams: { error?: string; sent?: string } }) {
+export default async function ProjectPage(
+  props: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; sent?: string }> }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const { user, profile } = await requireVerifiedMember(`/freelance/projects/${params.id}`);
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: project } = await supabase.from('freelance_projects').select('*, company:companies(name, slug, is_verified)').eq('id', params.id).maybeSingle();
   if (!project) notFound();
   const isOwner = project.client_id === user.id;

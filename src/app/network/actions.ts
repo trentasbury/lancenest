@@ -20,7 +20,7 @@ export type PostState = { error?: string; ok?: boolean };
 
 export async function createPost(formData: FormData): Promise<PostState> {
   const uid = await me();
-  const supabase = createClient();
+  const supabase = await createClient();
   const post_type = pick(t(formData, 'post_type', 20), POST_TYPES, 'general');
   const milestoneRaw = t(formData, 'milestone', 30);
   const milestone = (MILESTONES_BY_TYPE[post_type] ?? []).some(([v]) => v === milestoneRaw) ? milestoneRaw : null;
@@ -67,7 +67,7 @@ export async function createPost(formData: FormData): Promise<PostState> {
 
 export async function updatePost(postId: string, formData: FormData) {
   const uid = await me();
-  await createClient()
+  await (await createClient())
     .from('network_posts')
     .update({ body: t(formData, 'body', 3000), visibility: pick(t(formData, 'visibility', 12), VISIBILITY, 'network'), edited_at: new Date().toISOString() })
     .eq('id', postId)
@@ -77,7 +77,7 @@ export async function updatePost(postId: string, formData: FormData) {
 
 export async function deletePost(postId: string, formData: FormData) {
   const uid = await me();
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: media } = await supabase.from('post_media').select('storage_path').eq('post_id', postId);
   const { error } = await supabase.from('network_posts').delete().eq('id', postId).eq('author_id', uid);
   if (!error && media?.length) await supabase.storage.from('post-media').remove(media.map((m) => m.storage_path as string));
@@ -88,7 +88,7 @@ export async function deletePost(postId: string, formData: FormData) {
 export async function reactToPost(postId: string, reaction: string) {
   const uid = await me();
   if (!REACTIONS.some(([v]) => v === reaction)) return;
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: existing } = await supabase.from('post_reactions').select('reaction').eq('post_id', postId).eq('profile_id', uid).maybeSingle();
   if (!existing) await supabase.from('post_reactions').insert({ post_id: postId, profile_id: uid, reaction });
   else if (existing.reaction === reaction) await supabase.from('post_reactions').delete().eq('post_id', postId).eq('profile_id', uid);
@@ -98,7 +98,7 @@ export async function reactToPost(postId: string, reaction: string) {
 
 export async function toggleSavePost(postId: string) {
   const uid = await me();
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase.from('post_saves').select('post_id').eq('post_id', postId).eq('profile_id', uid).maybeSingle();
   if (data) await supabase.from('post_saves').delete().eq('post_id', postId).eq('profile_id', uid);
   else await supabase.from('post_saves').insert({ post_id: postId, profile_id: uid });
@@ -107,7 +107,7 @@ export async function toggleSavePost(postId: string) {
 
 export async function sharePost(postId: string, formData: FormData) {
   const uid = await me();
-  const { error } = await createClient().from('network_posts').insert({
+  const { error } = await (await createClient()).from('network_posts').insert({
     author_id: uid, is_share: true, shared_post_id: postId, post_type: 'general',
     body: t(formData, 'body', 3000), visibility: pick(t(formData, 'visibility', 12), VISIBILITY, 'network'),
   });
@@ -120,7 +120,7 @@ export async function addComment(postId: string, formData: FormData) {
   const body = t(formData, 'body', 2000);
   if (!body) return;
   const parent = t(formData, 'parent_id', 40);
-  const { error } = await createClient().from('post_comments').insert({ post_id: postId, author_id: uid, body, parent_id: parent || null });
+  const { error } = await (await createClient()).from('post_comments').insert({ post_id: postId, author_id: uid, body, parent_id: parent || null });
   if (error) {
     // Show why on the post (the comment box keeps what was typed).
     const reason = error.code === 'P0009' ? 'pii' : error.code === 'P0002' ? 'rate' : 'comment';
@@ -134,14 +134,14 @@ export async function updateComment(commentId: string, formData: FormData) {
   const uid = await me();
   const body = t(formData, 'body', 2000);
   if (!body) return;
-  await createClient().from('post_comments').update({ body, edited_at: new Date().toISOString() }).eq('id', commentId).eq('author_id', uid);
+  await (await createClient()).from('post_comments').update({ body, edited_at: new Date().toISOString() }).eq('id', commentId).eq('author_id', uid);
   refresh();
 }
 
 export async function deleteComment(commentId: string) {
   await me();
   // Row-level security allows the comment's author or the post's author to delete.
-  await createClient().from('post_comments').delete().eq('id', commentId);
+  await (await createClient()).from('post_comments').delete().eq('id', commentId);
   refresh();
 }
 
@@ -151,7 +151,7 @@ export async function reportContent(targetType: 'post' | 'comment' | 'profile' |
   const uid = await me();
   const reason = t(formData, 'reason', 30);
   if (!REPORT_REASONS.includes(reason)) return;
-  await createClient().from('reports').insert({ reporter_id: uid, target_type: targetType, target_id: targetId, reason, details: t(formData, 'details', 1000) || null });
+  await (await createClient()).from('reports').insert({ reporter_id: uid, target_type: targetType, target_id: targetId, reason, details: t(formData, 'details', 1000) || null });
   refresh();
 }
 
@@ -161,51 +161,51 @@ export async function reportMember(targetId: string, username: string, formData:
   const uid = await me(back);
   const reason = t(formData, 'reason', 30);
   if (!REPORT_REASONS.includes(reason)) redirect(back);
-  const { error } = await createClient().from('reports').insert({ reporter_id: uid, target_type: 'profile', target_id: targetId, reason, details: t(formData, 'details', 1000) || null });
+  const { error } = await (await createClient()).from('reports').insert({ reporter_id: uid, target_type: 'profile', target_id: targetId, reason, details: t(formData, 'details', 1000) || null });
   if (error) console.error('reportMember failed:', error.message);
   redirect(`${back}?reported=${error ? 'error' : '1'}#notice`);
 }
 
 export async function followUser(targetId: string) {
   const uid = await me();
-  if (uid !== targetId) await createClient().from('user_follows').upsert({ follower_id: uid, following_id: targetId }, { ignoreDuplicates: true });
+  if (uid !== targetId) await (await createClient()).from('user_follows').upsert({ follower_id: uid, following_id: targetId }, { ignoreDuplicates: true });
   refresh();
 }
 
 export async function unfollowUser(targetId: string) {
   const uid = await me();
-  await createClient().from('user_follows').delete().eq('follower_id', uid).eq('following_id', targetId);
+  await (await createClient()).from('user_follows').delete().eq('follower_id', uid).eq('following_id', targetId);
   refresh();
 }
 
 export async function muteUser(targetId: string) {
   const uid = await me();
-  if (uid !== targetId) await createClient().from('user_mutes').upsert({ muter_id: uid, muted_id: targetId }, { ignoreDuplicates: true });
+  if (uid !== targetId) await (await createClient()).from('user_mutes').upsert({ muter_id: uid, muted_id: targetId }, { ignoreDuplicates: true });
   refresh();
 }
 
 export async function unmuteUser(targetId: string) {
   const uid = await me();
-  await createClient().from('user_mutes').delete().eq('muter_id', uid).eq('muted_id', targetId);
+  await (await createClient()).from('user_mutes').delete().eq('muter_id', uid).eq('muted_id', targetId);
   refresh();
 }
 
 export async function blockUser(targetId: string) {
   const uid = await me();
-  if (uid !== targetId) await createClient().from('user_blocks').upsert({ blocker_id: uid, blocked_id: targetId }, { ignoreDuplicates: true });
+  if (uid !== targetId) await (await createClient()).from('user_blocks').upsert({ blocker_id: uid, blocked_id: targetId }, { ignoreDuplicates: true });
   refresh();
 }
 
 export async function unblockUser(targetId: string) {
   const uid = await me();
-  await createClient().from('user_blocks').delete().eq('blocker_id', uid).eq('blocked_id', targetId);
+  await (await createClient()).from('user_blocks').delete().eq('blocker_id', uid).eq('blocked_id', targetId);
   refresh();
 }
 
 /** "Share this with your network?" — only ever runs when the member confirms. */
 export async function shareProfileMilestone(kind: 'experience' | 'education' | 'service', recordId: string, formData: FormData) {
   const uid = await me('/dashboard/profile');
-  const supabase = createClient();
+  const supabase = await createClient();
   const visibility = pick(t(formData, 'visibility', 12), VISIBILITY, 'network');
   let post: { post_type: string; milestone: string; headline: string | null; title?: string | null; organization?: string | null } | null = null;
 

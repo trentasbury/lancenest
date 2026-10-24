@@ -15,9 +15,12 @@ export const metadata: Metadata = { title: 'Employer Dashboard' };
 
 const PLAN_LABEL: Record<string, string> = { free: 'Free', professional: 'Professional', federal: 'Federal', enterprise: 'Enterprise' };
 
-export default async function EmployerDashboard({ searchParams }: { searchParams: { error?: string; verify?: string; skillbridge?: string; ps?: string } }) {
+export default async function EmployerDashboard(
+  props: { searchParams: Promise<{ error?: string; verify?: string; skillbridge?: string; ps?: string }> }
+) {
+  const searchParams = await props.searchParams;
   const { user, profile } = await requireRole(['employer'], '/employer/dashboard');
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const companyData = await getMyCompany(user.id);
   const company = companyData as (Company & { stripe_customer_id: string | null; contact_credits: number }) | null;

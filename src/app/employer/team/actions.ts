@@ -11,7 +11,7 @@ import { SITE, notifyMember } from '@/lib/email';
 export async function addTeamMember(formData: FormData) {
   const { user } = await requireRole(['employer'], '/employer/team');
   const email = String(formData.get('email') ?? '').trim().toLowerCase();
-  const { data: company } = await createClient().from('companies').select('id, name, is_verified').eq('owner_id', user.id).maybeSingle();
+  const { data: company } = await (await createClient()).from('companies').select('id, name, is_verified').eq('owner_id', user.id).maybeSingle();
   if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
   const admin = createAdminClient();
   const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 });
@@ -34,7 +34,7 @@ export async function addTeamMember(formData: FormData) {
 
 export async function removeTeamMember(profileId: string) {
   const { user } = await requireRole(['employer'], '/employer/team');
-  const { data: company } = await createClient().from('companies').select('id').eq('owner_id', user.id).maybeSingle();
+  const { data: company } = await (await createClient()).from('companies').select('id').eq('owner_id', user.id).maybeSingle();
   if (!company) redirect('/employer/dashboard');
   await createAdminClient().from('company_members').delete().eq('company_id', company.id).eq('profile_id', profileId);
   revalidatePath('/employer/team');

@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: 'Two-step login', robots: { index: fa
 
 export default async function MfaPage() {
   await requireRole(['admin'], '/security/mfa');
-  const supabase = createClient();
+  const supabase = await createClient();
   const [{ data: factors }, { data: aal }] = await Promise.all([
     supabase.auth.mfa.listFactors(),
     supabase.auth.mfa.getAuthenticatorAssuranceLevel(),

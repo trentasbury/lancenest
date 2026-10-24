@@ -99,7 +99,7 @@ export async function getFeed(opts: {
   viewerId: string | null; scope?: 'following' | 'everyone'; type?: string; cursor?: string;
   authorId?: string; savedOnly?: boolean; limit?: number; groupId?: string;
 }): Promise<{ posts: Post[]; nextCursor: string | null }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const limit = opts.limit ?? PAGE_SIZE;
   let q = supabase.from('network_posts').select(POST_SELECT);
   q = opts.groupId ? q.eq('group_id', opts.groupId) : q.is('group_id', null);
@@ -141,7 +141,7 @@ export async function getFeed(opts: {
 }
 
 export async function getPost(id: string, viewerId: string | null): Promise<Post | null> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase.from('network_posts').select(POST_SELECT).eq('id', id).maybeSingle();
   if (!data) return null;
   const post = data as Post;
@@ -152,7 +152,7 @@ export async function getPost(id: string, viewerId: string | null): Promise<Post
 /** Attaches shared originals and the viewer's own state (reaction, saved, following) in a few batched queries. */
 async function decorate(posts: Post[], viewerId: string | null) {
   if (!posts.length) return;
-  const supabase = createClient();
+  const supabase = await createClient();
   posts.forEach((p) => p.media?.sort((a, b) => a.position - b.position));
 
   const sharedIds = Array.from(new Set(posts.map((p) => p.shared_post_id).filter(Boolean))) as string[];
@@ -187,7 +187,7 @@ export type Suggestion = { id: string; full_name: string; username: string | nul
 
 /** "Grow Your Network": simple, explainable matching on data members can already see. */
 export async function getSuggestions(viewerId: string, limit = 5): Promise<Suggestion[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const [{ data: me }, { data: following }, { data: blocks }, { data: mySkills }, { data: pool }] = await Promise.all([
     supabase.from('profiles').select('service_summary, location').eq('id', viewerId).maybeSingle(),
     supabase.from('user_follows').select('following_id').eq('follower_id', viewerId),

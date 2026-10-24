@@ -14,9 +14,12 @@ export const metadata: Metadata = { title: 'Freelance' };
 type Project = { id: string; title: string; description: string; category: string | null; budget_type: string; budget_min: number | null; budget_max: number | null; clearance_required: string; status: string; created_at: string; company: { name: string; is_verified: boolean } | null };
 const budget = (p: Project) => (p.budget_min || p.budget_max) ? `$${(p.budget_min ?? p.budget_max)!.toLocaleString()}${p.budget_max && p.budget_min && p.budget_max !== p.budget_min ? `–$${p.budget_max.toLocaleString()}` : ''}${p.budget_type === 'hourly' ? '/hr' : ''}` : 'Budget open';
 
-export default async function FreelancePage({ searchParams }: { searchParams: { q?: string; category?: string; cleared?: string; mine?: string } }) {
+export default async function FreelancePage(
+  props: { searchParams: Promise<{ q?: string; category?: string; cleared?: string; mine?: string }> }
+) {
+  const searchParams = await props.searchParams;
   const { user, profile } = await requireVerifiedMember('/freelance');
-  const supabase = createClient();
+  const supabase = await createClient();
   const isVet = profile.role === 'veteran';
   const [{ data: fp }, { data: vet }] = isVet
     ? await Promise.all([

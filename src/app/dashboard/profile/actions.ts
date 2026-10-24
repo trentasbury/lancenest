@@ -23,7 +23,7 @@ function done(section: string, error?: string, share?: string): never {
 
 export async function saveBasics(formData: FormData) {
   const { user } = await requireRole(['veteran', 'admin'], PAGE);
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const fullName = text(formData, 'full_name', 120);
   if (!fullName) done('basics', 'name');
@@ -63,7 +63,7 @@ export async function saveBasics(formData: FormData) {
 
 export async function addSkill(formData: FormData) {
   const { user } = await requireRole(['veteran', 'admin'], PAGE);
-  const supabase = createClient();
+  const supabase = await createClient();
   const name = text(formData, 'skill', 60).replace(/[%_\\]/g, '');
   if (!name) done('skills', 'skill');
 
@@ -84,14 +84,14 @@ export async function addSkill(formData: FormData) {
 
 export async function removeSkill(skillId: string) {
   const { user } = await requireRole(['veteran', 'admin'], PAGE);
-  const supabase = createClient();
+  const supabase = await createClient();
   await supabase.from('profile_skills').delete().eq('profile_id', user.id).eq('skill_id', skillId);
   done('skills');
 }
 
 export async function addService(formData: FormData) {
   const { user } = await requireRole(['veteran', 'admin'], PAGE);
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const branch = text(formData, 'branch', 20);
   const component = text(formData, 'component', 10);
@@ -134,14 +134,14 @@ export async function addService(formData: FormData) {
 
 export async function removeService(id: string) {
   const { user } = await requireRole(['veteran', 'admin'], PAGE);
-  const supabase = createClient();
+  const supabase = await createClient();
   await supabase.from('military_service').delete().eq('id', id).eq('profile_id', user.id);
   done('service');
 }
 
 export async function addExperience(formData: FormData) {
   const { user } = await requireRole(['veteran', 'admin'], PAGE);
-  const supabase = createClient();
+  const supabase = await createClient();
   const company = text(formData, 'company', 120);
   const position = text(formData, 'position', 120);
   if (!company || !position) done('experience', 'experience');
@@ -163,14 +163,14 @@ export async function addExperience(formData: FormData) {
 
 export async function removeExperience(id: string) {
   const { user } = await requireRole(['veteran', 'admin'], PAGE);
-  const supabase = createClient();
+  const supabase = await createClient();
   await supabase.from('experience').delete().eq('id', id).eq('profile_id', user.id);
   done('experience');
 }
 
 export async function addEducation(formData: FormData) {
   const { user } = await requireRole(['veteran', 'admin'], PAGE);
-  const supabase = createClient();
+  const supabase = await createClient();
   const school = text(formData, 'school', 160);
   if (!school) done('education', 'school');
   const year = Number(formData.get('graduation_year'));
@@ -191,7 +191,7 @@ export async function addEducation(formData: FormData) {
 
 export async function removeEducation(id: string) {
   const { user } = await requireRole(['veteran', 'admin'], PAGE);
-  const supabase = createClient();
+  const supabase = await createClient();
   await supabase.from('education').delete().eq('id', id).eq('profile_id', user.id);
   done('education');
 }
@@ -209,7 +209,7 @@ export async function uploadResume(formData: FormData) {
   if (file.size > 4 * 1024 * 1024) done('resume', 'resume_size');
   const ext = RESUME_TYPES[file.type];
   if (!ext) done('resume', 'resume_type');
-  const supabase = createClient();
+  const supabase = await createClient();
   const { count } = await supabase.from('resumes').select('id', { count: 'exact', head: true }).eq('profile_id', user.id);
   if ((count ?? 0) >= 3) done('resume', 'resume_limit');
   const path = `${user.id}/resume-${Date.now()}.${ext}`;
@@ -225,7 +225,7 @@ export async function uploadResume(formData: FormData) {
 
 export async function setDefaultResume(id: string) {
   const { user } = await requireRole(['veteran', 'admin'], PAGE);
-  const supabase = createClient();
+  const supabase = await createClient();
   await supabase.from('resumes').update({ is_default: false }).eq('profile_id', user.id);
   await supabase.from('resumes').update({ is_default: true }).eq('id', id).eq('profile_id', user.id);
   done('resume');
@@ -234,7 +234,7 @@ export async function setDefaultResume(id: string) {
 /** Removing a résumé also removes it from past applications (employers lose access). */
 export async function removeResume(id: string) {
   const { user } = await requireRole(['veteran', 'admin'], PAGE);
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: old } = await supabase.from('resumes').select('id, storage_path, is_default').eq('id', id).eq('profile_id', user.id).maybeSingle();
   if (old) {
     await supabase.from('resumes').delete().eq('id', old.id);

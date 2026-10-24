@@ -15,21 +15,23 @@ function siteUrl() {
   return (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '');
 }
 
-function startSessionClock() {
+async function startSessionClock() {
   const now = String(Date.now());
-  cookies().set(LAST_SEEN_COOKIE, now, sessionCookieOptions);
-  cookies().set(SESSION_START_COOKIE, now, sessionCookieOptions);
+  const jar = await cookies();
+  jar.set(LAST_SEEN_COOKIE, now, sessionCookieOptions);
+  jar.set(SESSION_START_COOKIE, now, sessionCookieOptions);
 }
 
 /** Tells pre-built pages which menu to show before they load anything (a display hint only). */
-function setMenuHint(role: string | null | undefined) {
-  cookies().set(NAV_COOKIE, navRoleFor(role), navCookieOptions);
+async function setMenuHint(role: string | null | undefined) {
+  (await cookies()).set(NAV_COOKIE, navRoleFor(role), navCookieOptions);
 }
 
-function clearSessionClock() {
-  cookies().delete(LAST_SEEN_COOKIE);
-  cookies().delete(SESSION_START_COOKIE);
-  cookies().delete(NAV_COOKIE);
+async function clearSessionClock() {
+  const jar = await cookies();
+  jar.delete(LAST_SEEN_COOKIE);
+  jar.delete(SESSION_START_COOKIE);
+  jar.delete(NAV_COOKIE);
 }
 
 function field(formData: FormData, name: string) {
@@ -49,7 +51,7 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
   const password = String(formData.get('password') ?? '');
   if (!email || !password) return { error: 'Enter your email and password.' };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -63,10 +65,10 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
     return { error: 'That email and password combination didn’t match our records.' };
   }
 
-  startSessionClock();
+  await startSessionClock();
   await recordLogin(data.user.id, data.user.email);
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).maybeSingle();
-  setMenuHint(profile?.role as string | undefined);
+  await setMenuHint(profile?.role as string | undefined);
   redirect(safeNextPath(formData.get('next')) ?? roleHome((profile?.role as Role) ?? null));
 }
 
@@ -83,7 +85,7 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   if (password.length < 8) return { error: 'Use a password of at least 8 characters.' };
 
   const home = role === 'employer' ? '/employer/dashboard' : '/dashboard';
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -115,8 +117,8 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
 
   // Email confirmation disabled in Supabase -> a session exists immediately.
   if (data.session) {
-    startSessionClock();
-    setMenuHint(role);
+    await startSessionClock();
+    await setMenuHint(role);
     redirect(home);
   }
 
@@ -128,17 +130,17 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
 }
 
 export async function signOut() {
-  const supabase = createClient();
+  const supabase = await createClient();
   await supabase.auth.signOut();
-  clearSessionClock();
+  await clearSessionClock();
   redirect('/');
 }
 
 /** Called by the inactivity timer in the browser. */
 export async function signOutForInactivity() {
-  const supabase = createClient();
+  const supabase = await createClient();
   await supabase.auth.signOut({ scope: 'local' });
-  clearSessionClock();
+  await clearSessionClock();
   redirect('/login?reason=idle');
 }
 
@@ -151,7 +153,7 @@ export async function requestPasswordReset(_prev: FormState, formData: FormData)
   const email = field(formData, 'email');
   if (!email) return { error: 'Enter the email on your account.' };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${siteUrl()}/auth/callback?next=/reset-password`,
     captchaToken: captcha(formData),
@@ -167,7 +169,7 @@ export async function updatePassword(_prev: FormState, formData: FormData): Prom
   if (password.length < 8) return { error: 'Use a password of at least 8 characters.' };
   if (password !== confirm) return { error: 'Those passwords don’t match.' };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -177,6 +179,6 @@ export async function updatePassword(_prev: FormState, formData: FormData): Prom
   if (error) return { error: 'We couldn’t update your password. Try requesting a new reset link.' };
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
-  setMenuHint(profile?.role as string | undefined);
+  await setMenuHint(profile?.role as string | undefined);
   redirect(roleHome((profile?.role as Role) ?? null));
 }

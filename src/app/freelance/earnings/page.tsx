@@ -8,9 +8,10 @@ import { stripe } from '@/lib/stripe';
 export const metadata: Metadata = { title: 'Earnings' };
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-export default async function EarningsPage({ searchParams }: { searchParams: { error?: string } }) {
+export default async function EarningsPage(props: { searchParams: Promise<{ error?: string }> }) {
+  const searchParams = await props.searchParams;
   const { user } = await requireRole(['veteran', 'admin'], '/freelance/earnings');
-  const supabase = createClient();
+  const supabase = await createClient();
   const [{ data: contracts }, { data: fp }] = await Promise.all([
     supabase.from('contracts').select('id, title, veteran_fee_rate, milestones(amount_cents, status, released_at)').eq('freelancer_id', user.id),
     createAdminClient().from('freelancer_profiles').select('stripe_account_id, payouts_enabled').eq('profile_id', user.id).maybeSingle(), // payout IDs are server-only
@@ -25,7 +26,7 @@ export default async function EarningsPage({ searchParams }: { searchParams: { e
     }
   }
   // Live balance and recent payouts from Stripe (when payouts are set up).
-  let available = 0, pending = 0; let payouts: { amount: number; arrival_date: number; status: string }[] = [];
+  let available = 0, pending = 0;let payouts: { amount: number; arrival_date: number; status: string }[] = [];
   if (fp?.stripe_account_id) {
     try {
       const [bal, po] = await Promise.all([

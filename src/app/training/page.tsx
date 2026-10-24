@@ -9,8 +9,9 @@ export const metadata: Metadata = { title: 'Training & Certifications' };
 type Program = { id: string; title: string; category: string; description: string; format: string; location: string | null; duration: string | null; cost: string | null;
   gi_bill_approved: boolean; url: string; company: { name: string; slug: string; training_featured: boolean } | null };
 
-export default async function TrainingPage({ searchParams }: { searchParams: { category?: string } }) {
-  const supabase = createClient();
+export default async function TrainingPage(props: { searchParams: Promise<{ category?: string }> }) {
+  const searchParams = await props.searchParams;
+  const supabase = await createClient();
   let q = supabase.from('training_programs').select('id, title, category, description, format, location, duration, cost, gi_bill_approved, url, company:companies(name, slug, training_featured)').eq('status', 'live');
   const category = TRAINING_CATEGORIES.includes(searchParams.category ?? '') ? searchParams.category! : null;
   if (category) q = q.eq('category', category);

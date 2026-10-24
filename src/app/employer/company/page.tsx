@@ -13,10 +13,11 @@ export const metadata: Metadata = { title: 'Company page' };
 const ERR: Record<string, string> = { type: 'Upload a JPG, PNG, or WebP image.', size: 'Images must be under 2 MB.', upload: 'That upload didn’t go through — please try again.', plan: 'Cover photos are part of Professional and Federal plans.',
   website: 'Enter your full website address, like https://yourcompany.com.', details: 'Your company details didn’t save. Please try again.' };
 
-export default async function CompanyBrandingPage({ searchParams }: { searchParams: { error?: string; saved?: string } }) {
+export default async function CompanyBrandingPage(props: { searchParams: Promise<{ error?: string; saved?: string }> }) {
+  const searchParams = await props.searchParams;
   const { user } = await requireRole(['employer'], '/employer/company');
   const [{ data: c }, { data: v }] = await Promise.all([
-    createClient().from('companies').select('name, slug, plan, logo_url, cover_url, veteran_commitment, website, industry, headquarters, about, mission, benefits, is_verified').eq('owner_id', user.id).maybeSingle(),
+    (await createClient()).from('companies').select('name, slug, plan, logo_url, cover_url, veteran_commitment, website, industry, headquarters, about, mission, benefits, is_verified').eq('owner_id', user.id).maybeSingle(),
     // The verified website is private (server-only): it decides which links this company may use.
     createAdminClient().from('companies').select('verification_details').eq('owner_id', user.id).maybeSingle(),
   ]);

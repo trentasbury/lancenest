@@ -24,7 +24,7 @@ export async function saveService(formData: FormData) {
   if (title.length < 4 || description.length < 20 || !Number.isFinite(price) || price < 2000) redirect('/freelance/services/mine?error=required');
   if (scamSignals(`${title}\n${description}`, 'block').length) redirect('/freelance/services/mine?error=scam');
   const priceType = t(formData, 'price_type', 12), delivery = t(formData, 'delivery', 10);
-  const { error } = await createClient().from('service_listings').insert({
+  const { error } = await (await createClient()).from('service_listings').insert({
     profile_id: user.id, title, description, category: OPEN_CATEGORIES.includes(category) ? category : 'Other', price_cents: price,
     price_type: ['fixed', 'hourly', 'starting_at'].includes(priceType) ? priceType : 'fixed', delivery: ['remote', 'on_site', 'both'].includes(delivery) ? delivery : 'remote',
     service_area: t(formData, 'service_area', 120) || null,
@@ -35,13 +35,13 @@ export async function saveService(formData: FormData) {
 
 export async function setServiceStatus(id: string, status: 'active' | 'paused') {
   const { user } = await requireVerifiedMember('/freelance/services/mine');
-  await createClient().from('service_listings').update({ status, updated_at: new Date().toISOString() }).eq('id', id).eq('profile_id', user.id);
+  await (await createClient()).from('service_listings').update({ status, updated_at: new Date().toISOString() }).eq('id', id).eq('profile_id', user.id);
   revalidatePath('/freelance/services/mine');
 }
 
 export async function deleteService(id: string) {
   const { user } = await requireVerifiedMember('/freelance/services/mine');
-  await createClient().from('service_listings').delete().eq('id', id).eq('profile_id', user.id);
+  await (await createClient()).from('service_listings').delete().eq('id', id).eq('profile_id', user.id);
   revalidatePath('/freelance/services/mine');
 }
 
@@ -54,7 +54,7 @@ export async function requestService(serviceId: string, formData: FormData) {
   if (profile.role !== 'employer') redirect(`/freelance/services/${serviceId}`);
   const company = await getMyCompany(user.id);
   if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
-  const { data: s } = await createClient().from('service_listings').select('id, profile_id, title, price_cents, status, delivery').eq('id', serviceId).eq('status', 'active').maybeSingle();
+  const { data: s } = await (await createClient()).from('service_listings').select('id, profile_id, title, price_cents, status, delivery').eq('id', serviceId).eq('status', 'active').maybeSingle();
   if (!s || s.profile_id === user.id) redirect('/freelance/services');
   const amount = dollars(t(formData, 'amount', 12));
   const note = t(formData, 'note', 2000);

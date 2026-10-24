@@ -19,7 +19,7 @@ export default async function TalentPage() {
     return <div className="container-page max-w-3xl py-12"><h1 className="mb-6 font-serif text-4xl font-medium">Talent pools</h1>
       <Upsell title="Keep your best candidates organized." body="Save verified service members into lists like “Q1 cyber hires,” with private notes your team can revisit anytime." /></div>;
   }
-  const { data } = await createClient().from('talent_pool_items').select('id, list_name, note, created_at, profile:profiles!talent_pool_items_profile_id_fkey(full_name, username, headline, verified)').eq('company_id', company.id).order('created_at', { ascending: false });
+  const { data } = await (await createClient()).from('talent_pool_items').select('id, list_name, note, created_at, profile:profiles!talent_pool_items_profile_id_fkey(full_name, username, headline, verified)').eq('company_id', company.id).order('created_at', { ascending: false });
   const items = (data ?? []) as unknown as Item[];
   const lists = Array.from(new Set(items.map((i) => i.list_name)));
   return (

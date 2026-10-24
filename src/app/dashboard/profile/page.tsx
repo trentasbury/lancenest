@@ -55,10 +55,13 @@ function RemoveButton({ action }: { action: () => Promise<void> }) {
   );
 }
 
-export default async function EditProfilePage({ searchParams }: { searchParams: { saved?: string; error?: string; share?: string; photo?: string } }) {
+export default async function EditProfilePage(
+  props: { searchParams: Promise<{ saved?: string; error?: string; share?: string; photo?: string }> }
+) {
+  const searchParams = await props.searchParams;
   const { user, profile } = await requireRole(['veteran', 'admin'], '/dashboard/profile');
   if (profile.role === 'admin') await createAdminClient().from('veteran_profiles').upsert({ profile_id: user.id }, { onConflict: 'profile_id', ignoreDuplicates: true });
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: resumes } = await supabase.from('resumes').select('id, file_name, uploaded_at, is_default').eq('profile_id', user.id).order('uploaded_at', { ascending: false });
   const [{ data: vet }, { data: skillRows }, { data: service }, { data: experience }, { data: education }] = await Promise.all([

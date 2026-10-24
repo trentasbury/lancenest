@@ -14,7 +14,7 @@ export { roleHome, safeNextPath };
  * check instead of each repeating it.
  */
 export const getSessionProfile = cache(async () => {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -31,7 +31,7 @@ export const getSessionProfile = cache(async () => {
 
 /** The member's verification status, looked up once per request. */
 const getVerificationStatus = cache(async (profileId: string) => {
-  const { data } = await createClient().from('veteran_profiles').select('verification_status').eq('profile_id', profileId).maybeSingle();
+  const { data } = await (await createClient()).from('veteran_profiles').select('verification_status').eq('profile_id', profileId).maybeSingle();
   return (data?.verification_status as string | undefined) ?? null;
 });
 
@@ -58,7 +58,7 @@ export async function requireRole(roles: Role[], nextPath?: string) {
 /** Admin pages and actions: requires the admin role AND a session that passed two-step verification. */
 export async function requireAdmin(nextPath = '/admin') {
   const session = await requireRole(['admin'], nextPath);
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
   if (data?.currentLevel !== 'aal2') redirect('/security/mfa');
   return session;

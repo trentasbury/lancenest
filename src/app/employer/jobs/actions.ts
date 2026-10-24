@@ -22,12 +22,12 @@ const problem = (error: string): JobFormState => ({ error, at: Date.now() });
 
 /**
  * Create (jobId = null) or update a job. Ownership is enforced by row-level security.
- * Used with useFormState: anything that needs fixing comes back to the form (which keeps what was typed);
+ * Used with useActionState: anything that needs fixing comes back to the form (which keeps what was typed);
  * a successful save goes to the job's page.
  */
 export async function saveJob(jobId: string | null, _prev: JobFormState, formData: FormData): Promise<JobFormState> {
   const { user } = await requireRole(['employer'], '/employer/dashboard');
-  const supabase = createClient();
+  const supabase = await createClient();
   const company = await getMyCompany(user.id);
   if (!company) redirect('/employer/dashboard');
 
@@ -112,7 +112,7 @@ export async function saveJob(jobId: string | null, _prev: JobFormState, formDat
 
 export async function setJobStatus(jobId: string, status: 'open' | 'paused' | 'closed' | 'draft') {
   await requireRole(['employer'], '/employer/dashboard');
-  const { error } = await createClient().from('jobs').update({ status }).eq('id', jobId);
+  const { error } = await (await createClient()).from('jobs').update({ status }).eq('id', jobId);
   if (error?.code === 'P0003') redirect(`/employer/jobs/${jobId}?error=limit`);
   if (error?.code === 'P0004') redirect(`/employer/jobs/${jobId}?error=company`);
   if (error?.code === 'P0007') redirect(`/employer/jobs/${jobId}?error=skillbridge`);
@@ -126,7 +126,7 @@ const INCLUDED_FEATURES: Record<string, number> = { professional: 5, federal: In
 /** Uses a featured-job credit included in the company's paid plan. */
 export async function featureWithPlan(jobId: string) {
   const { user } = await requireRole(['employer'], '/employer/dashboard');
-  const supabase = createClient();
+  const supabase = await createClient();
   const company = await getMyCompany(user.id);
   const allowance = company ? INCLUDED_FEATURES[company.plan as string] ?? 0 : 0;
   if (!company || !allowance) redirect(`/employer/jobs/${jobId}?error=plan`);

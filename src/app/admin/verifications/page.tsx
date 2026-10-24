@@ -8,7 +8,10 @@ import { decideVerification } from '../actions';
 
 export const metadata: Metadata = { title: 'Verification queue', robots: { index: false } };
 
-export default async function VerificationQueue({ searchParams }: { searchParams: { req?: string; flag?: string; on?: string; why?: string } }) {
+export default async function VerificationQueue(
+  props: { searchParams: Promise<{ req?: string; flag?: string; on?: string; why?: string }> }
+) {
+  const searchParams = await props.searchParams;
   const { user } = await requireAdmin('/admin/verifications');
   const admin = createAdminClient();
   const { data } = await admin

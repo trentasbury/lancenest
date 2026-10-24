@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { signUp, type FormState } from '@/app/auth/actions';
 import SubmitButton from '../SubmitButton';
 import FormMessage from '../FormMessage';
@@ -24,7 +24,7 @@ export default function SignupForm() {
     const ref = p.get('ref');
     if (ref) setReferral(ref.slice(0, 80));
   }, []);
-  const [state, action] = useFormState<FormState, FormData>(signUp, {});
+  const [state, action] = useActionState<FormState, FormData>(signUp, {});
 
   if (state.message) {
     return (

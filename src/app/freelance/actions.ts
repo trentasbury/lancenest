@@ -14,7 +14,7 @@ const CLEARANCES = ['none', 'public_trust', 'confidential', 'secret', 'top_secre
 
 export async function saveFreelancerProfile(formData: FormData) {
   const { user } = await requireRole(['veteran'], '/freelance/profile');
-  const supabase = createClient();
+  const supabase = await createClient();
   const title = t(formData, 'title', 120);
   if (title.length < 2) redirect('/freelance/profile?error=title');
   const rate = money(t(formData, 'hourly_rate', 6));
@@ -39,7 +39,7 @@ export async function saveFreelancerProfile(formData: FormData) {
 export async function addPortfolioItem(formData: FormData) {
   const { user } = await requireRole(['veteran'], '/freelance/profile');
   const url = t(formData, 'url', 300);
-  const { error } = await createClient().from('portfolio_items').insert({
+  const { error } = await (await createClient()).from('portfolio_items').insert({
     profile_id: user.id, title: t(formData, 'title', 120), description: t(formData, 'description', 1500) || null,
     url: url ? (/^https?:\/\//i.test(url) ? url : `https://${url}`) : null,
   });
@@ -50,13 +50,13 @@ export async function addPortfolioItem(formData: FormData) {
 
 export async function removePortfolioItem(id: string) {
   const { user } = await requireRole(['veteran'], '/freelance/profile');
-  await createClient().from('portfolio_items').delete().eq('id', id).eq('profile_id', user.id);
+  await (await createClient()).from('portfolio_items').delete().eq('id', id).eq('profile_id', user.id);
   revalidatePath('/freelance/profile');
 }
 
 export async function createProject(formData: FormData) {
   const { user } = await requireRole(['employer'], '/freelance/projects/new');
-  const supabase = createClient();
+  const supabase = await createClient();
   const company = await getMyCompany(user.id);
   if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
   const title = t(formData, 'title', 140);
@@ -84,7 +84,7 @@ export async function createProject(formData: FormData) {
 
 export async function setProjectStatus(projectId: string, status: 'open' | 'closed') {
   const { user } = await requireRole(['employer'], '/freelance');
-  await createClient().from('freelance_projects').update({ status }).eq('id', projectId).eq('client_id', user.id);
+  await (await createClient()).from('freelance_projects').update({ status }).eq('id', projectId).eq('client_id', user.id);
   revalidatePath(`/freelance/projects/${projectId}`);
 }
 
@@ -93,7 +93,7 @@ export async function submitProposal(projectId: string, formData: FormData) {
   const bid = money(t(formData, 'bid_amount', 9));
   const cover = t(formData, 'cover_letter', 5000);
   if (!bid || bid < 25 || cover.length < 30) redirect(`/freelance/projects/${projectId}?error=proposal`);
-  const { error } = await createClient().from('proposals').insert({
+  const { error } = await (await createClient()).from('proposals').insert({
     project_id: projectId, freelancer_id: user.id, cover_letter: cover, bid_amount: bid, timeline: t(formData, 'timeline', 120) || null,
   });
   if (error) {
@@ -106,13 +106,13 @@ export async function submitProposal(projectId: string, formData: FormData) {
 
 export async function withdrawProposal(proposalId: string, projectId: string) {
   const { user } = await requireRole(['veteran'], '/freelance');
-  await createClient().from('proposals').update({ status: 'withdrawn' }).eq('id', proposalId).eq('freelancer_id', user.id);
+  await (await createClient()).from('proposals').update({ status: 'withdrawn' }).eq('id', proposalId).eq('freelancer_id', user.id);
   revalidatePath(`/freelance/projects/${projectId}`);
 }
 
 export async function setProposalStatus(proposalId: string, projectId: string, status: 'shortlisted' | 'declined') {
   await requireRole(['employer'], '/freelance');
   // Row-level security + a database trigger ensure only this project's client can do this.
-  await createClient().from('proposals').update({ status }).eq('id', proposalId).eq('project_id', projectId);
+  await (await createClient()).from('proposals').update({ status }).eq('id', proposalId).eq('project_id', projectId);
   revalidatePath(`/freelance/projects/${projectId}`);
 }

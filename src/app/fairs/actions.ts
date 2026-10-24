@@ -8,18 +8,18 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function registerFair(fairId: string, slug: string) {
   const { user } = await requireVerifiedMember(`/fairs/${slug}`);
-  await createClient().from('fair_registrations').insert({ fair_id: fairId, profile_id: user.id });
+  await (await createClient()).from('fair_registrations').insert({ fair_id: fairId, profile_id: user.id });
   revalidatePath(`/fairs/${slug}`);
 }
 export async function leaveFair(fairId: string, slug: string) {
   const { user } = await requireVerifiedMember(`/fairs/${slug}`);
-  await createClient().from('fair_registrations').delete().eq('fair_id', fairId).eq('profile_id', user.id);
+  await (await createClient()).from('fair_registrations').delete().eq('fair_id', fairId).eq('profile_id', user.id);
   revalidatePath(`/fairs/${slug}`);
 }
 export async function updateBooth(boothId: string, slug: string, formData: FormData) {
   await requireVerifiedMember(`/fairs/${slug}`);
   const video = String(formData.get('video_url') ?? '').trim().slice(0, 300);
-  await createClient().from('fair_booths').update({ pitch: String(formData.get('pitch') ?? '').trim().slice(0, 1000) || null, video_url: /^https:\/\//i.test(video) ? video : null }).eq('id', boothId);
+  await (await createClient()).from('fair_booths').update({ pitch: String(formData.get('pitch') ?? '').trim().slice(0, 1000) || null, video_url: /^https:\/\//i.test(video) ? video : null }).eq('id', boothId);
   revalidatePath(`/fairs/${slug}`);
   redirect(`/fairs/${slug}?saved=1`);
 }

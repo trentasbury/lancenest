@@ -15,7 +15,7 @@ const STATUS: Record<string, [string, string]> = {
 async function withdraw(id: string) {
   'use server';
   const { user } = await requireRole(['veteran'], '/dashboard/applications');
-  await createClient().from('applications').update({ status: 'withdrawn' }).eq('id', id).eq('profile_id', user.id);
+  await (await createClient()).from('applications').update({ status: 'withdrawn' }).eq('id', id).eq('profile_id', user.id);
   revalidatePath('/dashboard/applications');
 }
 
@@ -24,7 +24,7 @@ type Row = { id: string; status: string; source: string; applied_at: string; upd
 
 export default async function ApplicationsPage() {
   const { user } = await requireRole(['veteran'], '/dashboard/applications');
-  const { data } = await createClient().from('applications')
+  const { data } = await (await createClient()).from('applications')
     .select('id, status, source, applied_at, updated_at, job:jobs(title, slug, company:companies(name)), resume:resumes(file_name)')
     .eq('profile_id', user.id).order('applied_at', { ascending: false }).limit(200);
   // Company-site jobs the member said they didn't apply to aren't applications.

@@ -14,12 +14,15 @@ export const metadata: Metadata = { title: 'Search Sprint' };
 const STATUS: Record<string, string> = { awaiting_payment: 'Awaiting payment', sourcing: 'We’re sourcing', delivered: 'Delivered', hired: 'Hired', closed: 'Closed' };
 type Cand = { profile_id: string; note: string | null; profile: { full_name: string; username: string | null; headline: string | null; verified: boolean } | null };
 
-export default async function ShortlistsPage({ searchParams }: { searchParams: { error?: string; hired?: string; rerun?: string; free?: string } }) {
+export default async function ShortlistsPage(
+  props: { searchParams: Promise<{ error?: string; hired?: string; rerun?: string; free?: string }> }
+) {
+  const searchParams = await props.searchParams;
   const { user } = await requireRole(['employer'], '/employer/shortlists');
   if (!SHORTLISTS_ENABLED) return <div className="container-page max-w-2xl py-16 text-center"><h1 className="font-serif text-4xl font-medium">Sourcing help</h1><p className="mt-3 text-muted">Tell us about a hard-to-fill role and we’ll help you reach the right verified members.</p><Link href="/contact-sales" className="btn btn-primary mt-6">Book a call</Link></div>;
   const company = await getMyCompany(user.id);
   if (!company) redirect('/employer/dashboard');
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: reqs } = await supabase.from('shortlist_requests').select('*').eq('company_id', company.id).neq('status', 'awaiting_payment').order('created_at', { ascending: false });
   const ids = (reqs ?? []).map((r) => r.id as string);
   const { data: cands } = ids.length ? await supabase.from('shortlist_candidates').select('request_id, profile_id, note, profile:profiles(full_name, username, headline, verified)').in('request_id', ids) : { data: [] };

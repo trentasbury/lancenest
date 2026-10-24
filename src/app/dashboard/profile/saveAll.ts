@@ -19,7 +19,7 @@ const s = (v: unknown, max: number) => String(v ?? '').trim().slice(0, max);
 /** One Save for the whole profile: updates existing entries, adds new ones, removes deleted ones. */
 export async function saveFullProfile(p: ProfilePayload): Promise<{ ok: boolean; error?: string }> {
   const { user } = await requireRole(['veteran', 'admin'], '/dashboard/profile');
-  const supabase = createClient();
+  const supabase = await createClient();
   const b = p.basics;
   const fullName = s(b.full_name, 120);
   if (!fullName) return { ok: false, error: 'Please enter your full name.' };
@@ -102,7 +102,7 @@ export async function saveFullProfile(p: ProfilePayload): Promise<{ ok: boolean;
   return { ok: true };
 }
 
-async function removeOthers(supabase: ReturnType<typeof createClient>, table: 'military_service' | 'experience' | 'education', userId: string, keep: string[]) {
+async function removeOthers(supabase: Awaited<ReturnType<typeof createClient>>, table: 'military_service' | 'experience' | 'education', userId: string, keep: string[]) {
   let q = supabase.from(table).delete().eq('profile_id', userId);
   if (keep.length) q = q.not('id', 'in', `(${keep.join(',')})`);
   await q;

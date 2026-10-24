@@ -20,9 +20,10 @@ function whereLabel(state: string | null, arrangement: string | null) {
 }
 const CAP: Record<string, number> = { pro: 3, pro_plus: 10, federal_pro: 10 };
 
-export default async function AlertsPage({ searchParams }: { searchParams: { error?: string; saved?: string } }) {
+export default async function AlertsPage(props: { searchParams: Promise<{ error?: string; saved?: string }> }) {
+  const searchParams = await props.searchParams;
   const { user } = await requireRole(['veteran'], '/dashboard/alerts');
-  const supabase = createClient();
+  const supabase = await createClient();
   const [{ data: vet }, { data: alerts }] = await Promise.all([
     supabase.from('veteran_profiles').select('plan').eq('profile_id', user.id).maybeSingle(),
     supabase.from('job_alerts').select('id, keywords, state, arrangement, cleared_only').eq('profile_id', user.id).order('created_at'),

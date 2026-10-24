@@ -8,7 +8,8 @@ import { resolveDispute } from '../actions';
 
 export const metadata: Metadata = { title: 'Payment disputes', robots: { index: false } };
 
-export default async function DisputesPage({ searchParams }: { searchParams: { done?: string } }) {
+export default async function DisputesPage(props: { searchParams: Promise<{ done?: string }> }) {
+  const searchParams = await props.searchParams;
   await requireAdmin('/admin/disputes');
   const { data } = await createAdminClient().from('milestones')
     .select('id, title, amount_cents, dispute_reason, submission_note, updated_at, contract:contracts(id, title, client:profiles!contracts_client_id_fkey(full_name), freelancer:profiles!contracts_freelancer_id_fkey(full_name))')

@@ -12,9 +12,13 @@ import { joinGroup, leaveGroup, postInGroup } from '../actions';
 export const metadata: Metadata = { title: 'Group' };
 const ERR: Record<string, string> = { join: 'Join the group to post.', pii: 'Posts can’t include Social Security numbers.', empty: 'Write something first.', post: 'That didn’t post — please try again.' };
 
-export default async function GroupPage({ params, searchParams }: { params: { slug: string }; searchParams: { error?: string } }) {
+export default async function GroupPage(
+  props: { params: Promise<{ slug: string }>; searchParams: Promise<{ error?: string }> }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const { user } = await requireVerifiedMember(`/groups/${params.slug}`);
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: g } = await supabase.from('groups').select('id, slug, name, description').eq('slug', params.slug).maybeSingle();
   if (!g) notFound();
   const [{ count }, { data: me }, feed] = await Promise.all([

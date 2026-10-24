@@ -8,7 +8,10 @@ import { actOnMember } from '../actions';
 
 export const metadata: Metadata = { title: 'Members', robots: { index: false } };
 
-export default async function MembersAdmin({ searchParams }: { searchParams: { q?: string; id?: string; done?: string; err?: string } }) {
+export default async function MembersAdmin(
+  props: { searchParams: Promise<{ q?: string; id?: string; done?: string; err?: string }> }
+) {
+  const searchParams = await props.searchParams;
   await requireAdmin('/admin/members');
   const admin = createAdminClient();
   const q = sanitizeSearch(searchParams.q ?? '');

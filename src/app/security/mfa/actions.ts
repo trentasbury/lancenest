@@ -9,7 +9,7 @@ export type MfaState = { error?: string; factorId?: string; qr?: string; secret?
 /** Begins authenticator-app setup. Clears any abandoned, unverified setups first. */
 export async function startEnrollment(): Promise<MfaState> {
   await requireRole(['admin'], '/security/mfa');
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: list } = await supabase.auth.mfa.listFactors();
   for (const f of (list?.all ?? []).filter((f) => f.status === 'unverified')) {
     await supabase.auth.mfa.unenroll({ factorId: f.id });
@@ -24,7 +24,7 @@ export async function verifyCode(factorId: string, code: string): Promise<MfaSta
   await requireRole(['admin'], '/security/mfa');
   const clean = code.replace(/\D/g, '');
   if (clean.length !== 6) return { error: 'Enter the 6-digit code from your authenticator app.' };
-  const { error } = await createClient().auth.mfa.challengeAndVerify({ factorId, code: clean });
+  const { error } = await (await createClient()).auth.mfa.challengeAndVerify({ factorId, code: clean });
   if (error) return { error: 'That code didn’t match. Codes refresh every 30 seconds — try the current one.' };
   redirect('/admin');
 }

@@ -7,7 +7,8 @@ import { createFair } from '@/app/fairs/actions';
 
 export const metadata: Metadata = { title: 'Career fairs', robots: { index: false } };
 
-export default async function AdminFairsPage({ searchParams }: { searchParams: { created?: string; error?: string } }) {
+export default async function AdminFairsPage(props: { searchParams: Promise<{ created?: string; error?: string }> }) {
+  const searchParams = await props.searchParams;
   await requireAdmin('/admin/fairs');
   const admin = createAdminClient();
   const [{ data: fairs }, { data: booths }, { data: regs }] = await Promise.all([

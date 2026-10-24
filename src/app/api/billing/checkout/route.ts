@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   if (item.audience === 'veteran') {
     // Member plans: verified service members only; one Stripe customer per member (stored server-side only).
     if (session.profile?.role !== 'veteran') return NextResponse.redirect(`${site}/plans`, 303);
-    const { data: vet } = await createClient().from('veteran_profiles').select('verification_status, plan').eq('profile_id', session.user.id).maybeSingle();
+    const { data: vet } = await (await createClient()).from('veteran_profiles').select('verification_status, plan').eq('profile_id', session.user.id).maybeSingle();
     if (vet?.verification_status !== 'verified') return NextResponse.redirect(`${site}/dashboard/verification?required=1`, 303);
     // Proposal packs are only for the Free plan (paid plans already send unlimited proposals).
     if (item.kind === 'proposal_pack' && (vet?.plan ?? 'free') !== 'free') return NextResponse.redirect(`${site}/freelance`, 303);
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
   }
   if (session.profile?.role !== 'employer') return NextResponse.redirect(`${site}/employers`, 303);
 
-  const supabase = createClient();
+  const supabase = await createClient();
   // Billing IDs are server-only (not readable by members), so this owner-scoped read uses the server key.
   const { data: company } = await createAdminClient().from('companies').select('id, name, stripe_customer_id, is_verified, public_safety_status, training_listing_active').eq('owner_id', session.user.id).maybeSingle();
   if (!company) return NextResponse.redirect(`${site}/employer/dashboard?error=company`, 303);

@@ -38,7 +38,8 @@ function placeSummary(stateName: string | null, arr: Arrangement[]) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-export default async function JobsPage({ searchParams: raw }: { searchParams: JobFilters }) {
+export default async function JobsPage(props: { searchParams: Promise<JobFilters> }) {
+  const raw = await props.searchParams;
   // A state typed in a "Location" box (e.g. from the homepage) becomes the state filter.
   const typed = typeof raw.location === 'string' ? raw.location.trim() : '';
   const typedState = !raw.state && typed ? stateOf(typed) : null;
@@ -60,7 +61,7 @@ export default async function JobsPage({ searchParams: raw }: { searchParams: Jo
 
   const [jobs, featured] = await Promise.all([searchJobs(searchParams), getFeaturedJobs()]);
   const listIds = [...jobs.map((j) => j.id), ...featured.map((j) => j.id)];
-  const { data: earlyIds } = listIds.length ? await createClient().rpc('early_jobs', { ids: listIds }) : { data: [] };
+  const { data: earlyIds } = listIds.length ? await (await createClient()).rpc('early_jobs', { ids: listIds }) : { data: [] };
   const early = new Set(((earlyIds ?? []) as string[]));
   const featuredIds = new Set(featured.map((j) => j.id));
   const hasFilters = Object.values(searchParams).some(Boolean);

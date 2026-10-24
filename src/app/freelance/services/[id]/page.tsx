@@ -15,9 +15,13 @@ import { bookingFeeCents, bookingRequired, usd } from '@/lib/booking';
 export const metadata: Metadata = { title: 'Service' };
 const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, booking: 'We couldn’t open checkout. Please try again in a minute.', amount: 'Enter an amount of at least $25.', note: 'Describe what you need (at least a sentence).', payouts: 'This member hasn’t finished payout setup yet, so they can’t be hired through LanceNest yet. Message them to let them know.', save: 'That didn’t go through — please try again.' };
 
-export default async function ServicePage({ params, searchParams }: { params: { id: string }; searchParams: { error?: string } }) {
+export default async function ServicePage(
+  props: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string }> }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const { user, profile } = await requireVerifiedMember(`/freelance/services/${params.id}`);
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase.from('service_listings').select('*, provider:profiles!service_listings_profile_id_fkey(id, full_name, username, headline, avatar_url, verified)').eq('id', params.id).maybeSingle();
   if (!data) notFound();
   const s = data as unknown as { id: string; title: string; category: string; description: string; price_cents: number; price_type: string; delivery: string; service_area: string | null; profile_id: string;

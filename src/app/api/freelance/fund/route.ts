@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   // Switched off until payments counsel clears the fund flow (see lib/flags.ts).
   if (!FREELANCE_PAYMENTS_ENABLED) return NextResponse.redirect(`${site}/freelance`, 303);
   const method = form.get('method') === 'bank' ? 'bank' : 'card';
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: m } = await supabase.from('milestones').select('id, title, amount_cents, status, contract_id, contract:contracts(id, title, client_id, status, booking_status)').eq('id', milestoneId).maybeSingle();
   const ms = m as unknown as { id: string; title: string; amount_cents: number; status: string; contract_id: string; contract: { id: string; title: string; client_id: string; status: string; booking_status: string } } | null;
   if (!ms || ms.contract.client_id !== session.user.id || ms.status !== 'pending' || ms.contract.status !== 'active') return NextResponse.redirect(`${site}/freelance`, 303);

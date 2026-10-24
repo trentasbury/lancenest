@@ -27,9 +27,12 @@ const ACCEPTED = [
   ['Plus a photo ID', 'A driver’s license, state ID card, or U.S. passport (book or card) with the same name.'],
 ];
 
-export default async function VerificationPage({ searchParams }: { searchParams: { error?: string; submitted?: string; required?: string } }) {
+export default async function VerificationPage(
+  props: { searchParams: Promise<{ error?: string; submitted?: string; required?: string }> }
+) {
+  const searchParams = await props.searchParams;
   const { user } = await requireRole(['veteran'], '/dashboard/verification');
-  const supabase = createClient();
+  const supabase = await createClient();
   const [{ data: vet }, { data: latest }] = await Promise.all([
     supabase.from('veteran_profiles').select('verification_status').eq('profile_id', user.id).maybeSingle(),
     supabase.from('verification_requests').select('status, created_at, reviewed_at, notes').eq('profile_id', user.id).order('created_at', { ascending: false }).limit(1).maybeSingle(),

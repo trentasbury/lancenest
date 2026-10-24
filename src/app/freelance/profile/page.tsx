@@ -14,10 +14,13 @@ import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
 export const metadata: Metadata = { title: 'Freelancer profile' };
 const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, title: 'Add a professional title.', save: 'That didn’t save — please try again.', portfolio: 'Portfolio items need a title (and a valid link if you add one).', profile_first: 'Save your freelancer profile first, then set up payouts.' };
 
-export default async function FreelancerProfilePage({ searchParams }: { searchParams: { saved?: string; error?: string; payouts?: string } }) {
+export default async function FreelancerProfilePage(
+  props: { searchParams: Promise<{ saved?: string; error?: string; payouts?: string }> }
+) {
+  const searchParams = await props.searchParams;
   const { user, profile } = await requireVerifiedMember('/freelance/profile');
   if (profile.role !== 'veteran') redirect('/freelance');
-  const supabase = createClient();
+  const supabase = await createClient();
   const [{ data: fp }, { data: items }] = await Promise.all([
     createAdminClient().from('freelancer_profiles').select('profile_id, title, bio, hourly_rate, available, clearance_work, vosb, sdvosb, sam_uei, payouts_enabled, stripe_account_id').eq('profile_id', user.id).maybeSingle(),
     supabase.from('portfolio_items').select('*').eq('profile_id', user.id).order('created_at', { ascending: false }),

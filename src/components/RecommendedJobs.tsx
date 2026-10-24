@@ -6,7 +6,7 @@ type J = { id: string; slug: string; title: string; location: string | null; com
 
 /** Jobs ranked on the member's whole profile — civilian experience first, military background weighted by recency. */
 export default async function RecommendedJobs({ limit = 6, title = 'Recommended for you' }: { limit?: number; title?: string }) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: recs } = await supabase.rpc('recommended_jobs', { max_results: limit });
   const list = (recs ?? []) as Rec[];
   if (!list.length) {

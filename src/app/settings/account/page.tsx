@@ -18,10 +18,13 @@ const ERRORS: Record<string, string> = {
   admin: 'Admin accounts can’t be deleted from here. Remove the admin role first.',
 };
 
-export default async function AccountPage({ searchParams }: { searchParams: { error?: string; photo?: string; profile?: string; hq?: string; hidden?: string } }) {
+export default async function AccountPage(
+  props: { searchParams: Promise<{ error?: string; photo?: string; profile?: string; hq?: string; hidden?: string }> }
+) {
+  const searchParams = await props.searchParams;
   const { user, profile } = await requireRole(['veteran', 'employer', 'admin'], '/settings/account');
-  const { data: strikes } = await createClient().from('member_strikes').select('level, reason, created_at').eq('profile_id', user.id).order('created_at', { ascending: false });
-  const { data: devices } = await createClient().from('login_devices').select('label, first_seen, last_seen').eq('profile_id', user.id).order('last_seen', { ascending: false }).limit(10);
+  const { data: strikes } = await (await createClient()).from('member_strikes').select('level, reason, created_at').eq('profile_id', user.id).order('created_at', { ascending: false });
+  const { data: devices } = await (await createClient()).from('login_devices').select('label, first_seen, last_seen').eq('profile_id', user.id).order('last_seen', { ascending: false }).limit(10);
   return (
     <div className="container-page max-w-2xl space-y-6 py-10">
       <Link href={roleHome(profile.role)} className="text-sm text-muted hover:text-navy">← Dashboard</Link>
@@ -52,8 +55,8 @@ export default async function AccountPage({ searchParams }: { searchParams: { er
         </form>
       </section>
 
-      {(profile.role === 'veteran' || profile.role === 'admin') && await (async () => {
-        const db = createServerClient();
+      {(profile.role === 'veteran' || profile.role === 'admin') && (await (async () => {
+        const db = await createServerClient();
         const hq = sanitizeSearch(searchParams.hq ?? '');
         const [{ data: hidden }, { data: found }] = await Promise.all([
           db.from('hidden_companies').select('company_id, company:companies(name)').eq('profile_id', profile.id),
@@ -76,7 +79,7 @@ export default async function AccountPage({ searchParams }: { searchParams: { er
             ))}</ul>}
           </section>
         );
-      })()}
+      })())}
 
       <section className="card p-7">
         <h2 className="font-serif text-2xl font-semibold">Your account</h2>

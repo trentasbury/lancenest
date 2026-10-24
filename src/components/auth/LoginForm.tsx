@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { signIn, type FormState } from '@/app/auth/actions';
 import SubmitButton from '../SubmitButton';
 import FormMessage from '../FormMessage';
@@ -24,7 +24,7 @@ function noticeFor(p: URLSearchParams): string | undefined {
 
 /** The page is pre-built; where to go after login and any notice come from the address, read here. */
 export default function LoginForm() {
-  const [state, action] = useFormState<FormState, FormData>(signIn, {});
+  const [state, action] = useActionState<FormState, FormData>(signIn, {});
   const [next, setNext] = useState<string | undefined>();
   const [notice, setNotice] = useState<string | undefined>();
   useEffect(() => {

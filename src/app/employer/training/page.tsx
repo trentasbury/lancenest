@@ -19,9 +19,10 @@ const ERR: Record<string, string> = {
   save: 'That didn’t save — please try again.',
 };
 
-export default async function TrainingPartnerPage({ searchParams }: { searchParams: { error?: string; saved?: string } }) {
+export default async function TrainingPartnerPage(props: { searchParams: Promise<{ error?: string; saved?: string }> }) {
+  const searchParams = await props.searchParams;
   const { user } = await requireRole(['employer'], '/employer/training');
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: company } = await supabase.from('companies').select('id, name, is_verified, training_listing_active, training_featured').eq('owner_id', user.id).maybeSingle();
   if (!company) redirect('/employer/dashboard');
   const [{ data: programs }, { data: events }] = await Promise.all([

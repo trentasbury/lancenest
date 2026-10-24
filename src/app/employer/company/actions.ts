@@ -12,7 +12,7 @@ const TYPES: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png',
 /** Logo (every verified company) or cover photo (Professional and above), stored in the company's own folder. */
 export async function uploadCompanyImage(kind: 'logo' | 'cover', formData: FormData) {
   const { user } = await requireRole(['employer'], '/employer/company');
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: company } = await supabase.from('companies').select('id, slug, plan, is_verified').eq('owner_id', user.id).maybeSingle();
   if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
   if (kind === 'cover' && !['professional', 'federal', 'enterprise'].includes(company.plan as string)) redirect('/employer/company?error=plan');
@@ -30,7 +30,7 @@ export async function uploadCompanyImage(kind: 'logo' | 'cover', formData: FormD
 
 export async function saveCommitment(formData: FormData) {
   const { user } = await requireRole(['employer'], '/employer/company');
-  const { data: c } = await createClient().from('companies').update({ veteran_commitment: String(formData.get('veteran_commitment') ?? '').trim().slice(0, 2000) || null }).eq('owner_id', user.id).select('slug').maybeSingle();
+  const { data: c } = await (await createClient()).from('companies').update({ veteran_commitment: String(formData.get('veteran_commitment') ?? '').trim().slice(0, 2000) || null }).eq('owner_id', user.id).select('slug').maybeSingle();
   if (c?.slug) revalidatePath(`/companies/${c.slug}`);
   redirect('/employer/company?saved=1');
 }
@@ -65,7 +65,7 @@ export async function saveCompanyDetails(formData: FormData) {
     benefits: t('benefits', 2000) || null,
   };
   if (!company.is_verified && name) fields.name = name;
-  const { error } = await createClient().from('companies').update(fields).eq('id', company.id).eq('owner_id', user.id);
+  const { error } = await (await createClient()).from('companies').update(fields).eq('id', company.id).eq('owner_id', user.id);
   if (error) { console.error('saveCompanyDetails failed:', error.message); redirect('/employer/company?error=details'); }
   revalidatePath(`/companies/${company.slug}`);
   redirect('/employer/company?saved=details');

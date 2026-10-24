@@ -11,10 +11,11 @@ export const metadata: Metadata = { title: 'Your network' };
 type Person = { id: string; full_name: string; username: string | null; headline: string | null; service_summary: string | null; role: string };
 const P = 'id, full_name, username, headline, service_summary, role';
 
-export default async function PeoplePage({ searchParams }: { searchParams: { tab?: string } }) {
+export default async function PeoplePage(props: { searchParams: Promise<{ tab?: string }> }) {
+  const searchParams = await props.searchParams;
   const { user } = await requireRole(['veteran', 'employer', 'admin'], '/network/people');
   const tab = ['followers', 'following', 'muted', 'blocked'].includes(searchParams.tab ?? '') ? searchParams.tab! : 'following';
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // The tab's list and who you follow load together.
   const list =

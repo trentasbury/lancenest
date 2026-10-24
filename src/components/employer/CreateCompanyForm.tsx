@@ -1,13 +1,13 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { createCompany } from '@/app/employer/actions';
 import type { FormState } from '@/app/auth/actions';
 import SubmitButton from '../SubmitButton';
 import FormMessage from '../FormMessage';
 
 export default function CreateCompanyForm() {
-  const [state, action] = useFormState<FormState, FormData>(createCompany, {});
+  const [state, action] = useActionState<FormState, FormData>(createCompany, {});
   return (
     <form action={action} className="card grid gap-5 p-7 sm:grid-cols-2">
       <div className="sm:col-span-2">

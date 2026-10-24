@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server';
 export async function createAlert(formData: FormData) {
   const { user } = await requireRole(['veteran'], '/dashboard/alerts');
   const arrangement = String(formData.get('arrangement') ?? '');
-  const { error } = await createClient().from('job_alerts').insert({
+  const { error } = await (await createClient()).from('job_alerts').insert({
     profile_id: user.id, keywords: String(formData.get('keywords') ?? '').trim().slice(0, 120) || null,
     state: String(formData.get('state') ?? '').slice(0, 5) || null, arrangement: ['remote', 'hybrid', 'onsite'].includes(arrangement) ? arrangement : null,
     cleared_only: formData.get('cleared_only') === 'on',
@@ -18,6 +18,6 @@ export async function createAlert(formData: FormData) {
 
 export async function deleteAlert(id: string) {
   const { user } = await requireRole(['veteran'], '/dashboard/alerts');
-  await createClient().from('job_alerts').delete().eq('id', id).eq('profile_id', user.id);
+  await (await createClient()).from('job_alerts').delete().eq('id', id).eq('profile_id', user.id);
   revalidatePath('/dashboard/alerts');
 }

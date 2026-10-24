@@ -24,7 +24,7 @@ export default async function PlansPage() {
   const isVeteran = session?.profile?.role === 'veteran';
   let currentPlan = 'free';
   if (isVeteran && session) {
-    const { data } = await createClient().from('veteran_profiles').select('plan').eq('profile_id', session.user.id).maybeSingle();
+    const { data } = await (await createClient()).from('veteran_profiles').select('plan').eq('profile_id', session.user.id).maybeSingle();
     currentPlan = (data?.plan as string) ?? 'free';
   }
 

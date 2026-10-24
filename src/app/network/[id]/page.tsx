@@ -15,7 +15,8 @@ type Comment = {
   author: { full_name: string; username: string | null; role: string; verified: boolean } | null;
 };
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const session = await getSessionProfile();
   const post = await getPost(params.id, session?.user.id ?? null);
   if (!post) return { title: 'Post not found', robots: { index: false } };
@@ -93,13 +94,17 @@ const COMMENT_ERRORS: Record<string, string> = {
   comment: 'Your comment didn’t post. Please try again.',
 };
 
-export default async function PostPage({ params, searchParams }: { params: { id: string }; searchParams: { error?: string } }) {
+export default async function PostPage(
+  props: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string }> }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const session = await getSessionProfile();
   const me = session?.user.id ?? null;
   const post = await getPost(params.id, me);
   if (!post) notFound();
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const [{ data: commentRows }, { data: reactionRows }, { data: blocks }, { data: mutes }] = await Promise.all([
     supabase.from('post_comments').select('*, author:profiles!post_comments_author_id_fkey(full_name, username, role, verified)').eq('post_id', post.id).order('created_at').limit(300),
     supabase.from('post_reactions').select('reaction, profile:profiles!post_reactions_profile_id_fkey(full_name, username, role)').eq('post_id', post.id).limit(200),

@@ -16,7 +16,7 @@ async function requireVeteran(slug: string) {
 
 export async function toggleSaveJob(jobId: string, slug: string) {
   const userId = await requireVeteran(slug);
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: existing } = await supabase
     .from('saved_jobs')
     .select('job_id')
@@ -35,7 +35,7 @@ export async function toggleSaveJob(jobId: string, slug: string) {
 
 export async function applyToJob(jobId: string, slug: string, formData: FormData) {
   const userId = await requireVeteran(slug);
-  const supabase = createClient();
+  const supabase = await createClient();
   const resumeId = String(formData.get('resume_id') ?? '') || null;
   // Easy Apply: every screening question the employer added must be answered.
   const { data: job } = await supabase.from('jobs').select('screening_questions, apply_mode').eq('id', jobId).maybeSingle();
@@ -81,7 +81,7 @@ async function reapply(id: string, userId: string, jobId: string, resumeId: stri
 /** After "Apply on company site": the member tells us whether they finished applying there (like LinkedIn's "Did you apply?"). */
 export async function confirmSiteApply(jobId: string, slug: string, applied: boolean) {
   const userId = await requireVeteran(slug);
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: existing } = await supabase.from('applications').select('id, status, source').eq('profile_id', userId).eq('job_id', jobId).maybeSingle();
   if (applied) {
     if (!existing) await supabase.from('applications').insert({ profile_id: userId, job_id: jobId, source: 'external' });

@@ -11,7 +11,7 @@ const KINDS: [string, string][] = [['branch', 'Branches'], ['career', 'Careers']
 
 export default async function GroupsPage() {
   const { user } = await requireVerifiedMember('/groups');
-  const supabase = createClient();
+  const supabase = await createClient();
   const [{ data: groups }, { data: mine }, { data: counts }, { data: svc }, { data: vet }] = await Promise.all([
     supabase.from('groups').select('id, slug, name, kind, description').order('name'),
     supabase.from('group_members').select('group_id').eq('profile_id', user.id),

@@ -15,9 +15,13 @@ import { blockUser, reportContent } from '@/app/network/actions';
 
 export const metadata: Metadata = { title: 'Conversation' };
 
-export default async function ThreadPage({ params, searchParams }: { params: { id: string }; searchParams: { error?: string; draft?: string } }) {
+export default async function ThreadPage(
+  props: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; draft?: string }> }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const { user } = await requireRole(['veteran', 'employer', 'admin'], '/messages');
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // One round: row-level security returns nothing (and updates nothing) unless you're a participant.
   const [{ data: conv }, { count: mySentCount }, { data: participants }, { data: messages }] = await Promise.all([

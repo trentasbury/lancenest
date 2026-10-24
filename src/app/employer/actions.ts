@@ -13,7 +13,7 @@ import type { FormState } from '@/app/auth/actions';
 
 export async function createCompany(_prev: FormState, formData: FormData): Promise<FormState> {
   const { user } = await requireRole(['employer']);
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: existing } = await supabase.from('companies').select('id').eq('owner_id', user.id).maybeSingle();
   if (existing) return { error: 'Your account already has a company profile.' };
@@ -51,7 +51,7 @@ export async function createCompany(_prev: FormState, formData: FormData): Promi
 /** Employer submits company details for review. Status can only be set to "pending" here; approval is admin-only. */
 export async function submitCompanyVerification(formData: FormData) {
   const { user } = await requireRole(['employer'], '/employer/dashboard');
-  const { data: company } = await createClient().from('companies').select('id, name, verification_status, website').eq('owner_id', user.id).maybeSingle();
+  const { data: company } = await (await createClient()).from('companies').select('id, name, verification_status, website').eq('owner_id', user.id).maybeSingle();
   if (!company || company.verification_status === 'verified' || company.verification_status === 'pending') redirect('/employer/dashboard');
   const t = (k: string, max: number) => String(formData.get(k) ?? '').trim().slice(0, max);
   const website = t('website', 200);
@@ -111,7 +111,7 @@ export async function submitCompanyVerification(formData: FormData) {
 export async function requestSkillBridge(formData: FormData) {
   const { user } = await requireRole(['employer'], '/employer/dashboard');
   const orgName = String(formData.get('org_name') ?? '').trim().slice(0, 160);
-  const { data: company } = await createClient().from('companies').select('id, is_verified, skillbridge_status').eq('owner_id', user.id).maybeSingle();
+  const { data: company } = await (await createClient()).from('companies').select('id, is_verified, skillbridge_status').eq('owner_id', user.id).maybeSingle();
   if (!company?.is_verified || !orgName || company.skillbridge_status === 'authorized' || company.skillbridge_status === 'pending') redirect('/employer/dashboard');
   const admin = createAdminClient();
   await admin.from('companies').update({ skillbridge_status: 'pending', skillbridge_org_name: orgName, skillbridge_note: null }).eq('id', company.id);
@@ -128,7 +128,7 @@ export async function requestPublicSafety(formData: FormData) {
   const { user } = await requireRole(['employer'], '/employer/dashboard');
   const type = String(formData.get('agency_type') ?? '');
   const site = String(formData.get('official_site') ?? '').trim().slice(0, 200);
-  const { data: company } = await createClient().from('companies').select('id, name, is_verified, public_safety_status').eq('owner_id', user.id).maybeSingle();
+  const { data: company } = await (await createClient()).from('companies').select('id, name, is_verified, public_safety_status').eq('owner_id', user.id).maybeSingle();
   if (!company?.is_verified || !AGENCY_TYPES.includes(type) || !/^https?:\/\//i.test(site) || ['pending', 'approved'].includes(company.public_safety_status as string)) redirect('/employer/dashboard?ps=invalid');
   const admin = createAdminClient();
   await admin.from('companies').update({ public_safety_status: 'pending', public_safety_details: { agency_type: type, official_site: site, requested_at: new Date().toISOString() } }).eq('id', company.id);

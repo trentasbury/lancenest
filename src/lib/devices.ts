@@ -13,7 +13,7 @@ function describe(ua: string) {
 /** Remembers devices each member signs in from and alerts them (in-app, plus email if configured) about new ones. */
 export async function recordLogin(userId: string, email?: string | null) {
   try {
-    const ua = headers().get('user-agent') ?? 'unknown';
+    const ua = (await headers()).get('user-agent') ?? 'unknown';
     const hash = createHash('sha256').update(ua).digest('hex');
     const label = describe(ua);
     const admin = createAdminClient();

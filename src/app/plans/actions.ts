@@ -9,7 +9,7 @@ export async function joinWaitlist(plan: 'veteran_pro' | 'veteran_pro_plus' | 'v
   const session = await getSessionProfile();
   if (!session) redirect('/login?next=/plans');
   if (session.profile?.role !== 'veteran') redirect('/plans');
-  const supabase = createClient();
+  const supabase = await createClient();
   await supabase.from('plan_waitlist').upsert({ profile_id: session.user.id, plan }, { ignoreDuplicates: true });
   revalidatePath('/plans');
 }

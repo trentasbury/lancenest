@@ -12,9 +12,10 @@ import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
 export const metadata: Metadata = { title: 'My services' };
 const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, licensed: 'Licensed trades open on LanceNest once license verification launches.', ack: 'Please confirm both acknowledgments.', required: 'Add a title, a description of at least 20 characters, and a price of at least $25.', scam: 'That listing contains wording we don’t allow.', save: 'That didn’t save — please try again.' };
 
-export default async function MyServicesPage({ searchParams }: { searchParams: { error?: string; saved?: string } }) {
+export default async function MyServicesPage(props: { searchParams: Promise<{ error?: string; saved?: string }> }) {
+  const searchParams = await props.searchParams;
   const { user } = await requireVerifiedMember('/freelance/services/mine');
-  const supabase = createClient();
+  const supabase = await createClient();
   const [{ data: services }, { data: fp }] = await Promise.all([
     supabase.from('service_listings').select('id, title, price_cents, price_type, status').eq('profile_id', user.id).order('created_at', { ascending: false }),
     supabase.from('freelancer_profiles').select('payouts_enabled').eq('profile_id', user.id).maybeSingle(),

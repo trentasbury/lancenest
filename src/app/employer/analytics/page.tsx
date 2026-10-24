@@ -21,7 +21,7 @@ export default async function AnalyticsPage() {
       </div>
     );
   }
-  const supabase = createClient();
+  const supabase = await createClient();
   const since = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
   const { data: jobs } = await supabase.from('jobs').select('id, title, status, featured_until').eq('company_id', company.id).order('posted_at', { ascending: false });
   const ids = (jobs ?? []).map((j) => j.id as string);

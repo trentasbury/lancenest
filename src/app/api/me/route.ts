@@ -22,7 +22,7 @@ export async function GET() {
 
   const p = session.profile;
   const [{ count }, company] = await Promise.all([
-    createClient().from('notifications').select('id', { count: 'exact', head: true }).eq('profile_id', session.user.id).is('read_at', null),
+    (await createClient()).from('notifications').select('id', { count: 'exact', head: true }).eq('profile_id', session.user.id).is('read_at', null),
     p?.role === 'employer' ? getMyCompany(session.user.id) : Promise.resolve(null),
   ]);
 

@@ -9,7 +9,7 @@ import { TRAINING_CATEGORIES } from '@/lib/training';
 const t = (fd: FormData, k: string, max: number) => String(fd.get(k) ?? '').trim().slice(0, max);
 
 async function myCompanyId(userId: string) {
-  const { data } = await createClient().from('companies').select('id').eq('owner_id', userId).maybeSingle();
+  const { data } = await (await createClient()).from('companies').select('id').eq('owner_id', userId).maybeSingle();
   if (!data) redirect('/employer/dashboard');
   return data.id as string;
 }
@@ -28,7 +28,7 @@ export async function saveProgram(formData: FormData) {
     status: formData.get('publish') === 'on' ? 'live' : 'draft',
   };
   if (fields.title.length < 4 || fields.description.length < 20) redirect('/employer/training?error=required');
-  const { error } = await createClient().from('training_programs').insert(fields);
+  const { error } = await (await createClient()).from('training_programs').insert(fields);
   if (error) redirect(`/employer/training?error=${error.code === 'P0012' ? 'domain' : error.code === 'P0011' ? 'listing' : 'save'}`);
   revalidatePath('/employer/training');
   redirect('/employer/training?saved=1');
@@ -37,7 +37,7 @@ export async function saveProgram(formData: FormData) {
 export async function setProgramStatus(id: string, status: 'live' | 'draft') {
   const { user } = await requireRole(['employer'], '/employer/training');
   const companyId = await myCompanyId(user.id);
-  const { error } = await createClient().from('training_programs').update({ status }).eq('id', id).eq('company_id', companyId);
+  const { error } = await (await createClient()).from('training_programs').update({ status }).eq('id', id).eq('company_id', companyId);
   if (error) redirect(`/employer/training?error=${error.code === 'P0011' ? 'listing' : 'save'}`);
   revalidatePath('/employer/training');
 }
@@ -45,6 +45,6 @@ export async function setProgramStatus(id: string, status: 'live' | 'draft') {
 export async function deleteProgram(id: string) {
   const { user } = await requireRole(['employer'], '/employer/training');
   const companyId = await myCompanyId(user.id);
-  await createClient().from('training_programs').delete().eq('id', id).eq('company_id', companyId);
+  await (await createClient()).from('training_programs').delete().eq('id', id).eq('company_id', companyId);
   revalidatePath('/employer/training');
 }

@@ -16,7 +16,7 @@ const back = (id: string, q = '') => redirect(`/freelance/contracts/${id}${q}`);
 
 async function loadMilestone(milestoneId: string) {
   // RLS: only the two parties (or an admin) can read it.
-  const { data } = await createClient().from('milestones').select('id, contract_id, title, status, amount_cents, contract:contracts(id, title, client_id, freelancer_id, status)').eq('id', milestoneId).maybeSingle();
+  const { data } = await (await createClient()).from('milestones').select('id, contract_id, title, status, amount_cents, contract:contracts(id, title, client_id, freelancer_id, status)').eq('id', milestoneId).maybeSingle();
   return data as unknown as { id: string; contract_id: string; title: string; status: string; amount_cents: number; contract: { id: string; title: string; client_id: string; freelancer_id: string; status: string } } | null;
 }
 
@@ -33,7 +33,7 @@ async function goPayBooking(contractId: string, clientId: string, email: string 
  */
 export async function hireFreelancer(proposalId: string) {
   const { user } = await requireRole(['employer'], '/freelance');
-  const { data: p } = await createClient().from('proposals').select('id, bid_amount, status, freelancer_id, project:freelance_projects(id, title, client_id, status, work_location, budget_min)').eq('id', proposalId).maybeSingle();
+  const { data: p } = await (await createClient()).from('proposals').select('id, bid_amount, status, freelancer_id, project:freelance_projects(id, title, client_id, status, work_location, budget_min)').eq('id', proposalId).maybeSingle();
   const proposal = p as unknown as { id: string; bid_amount: number; status: string; freelancer_id: string; project: { id: string; title: string; client_id: string; status: string; work_location: string | null; budget_min: number | null } } | null;
   if (!proposal || proposal.project.client_id !== user.id) redirect('/freelance');
   const admin = createAdminClient();
@@ -102,7 +102,7 @@ export async function cancelBooking(contractId: string) {
 
 export async function addMilestone(contractId: string, formData: FormData) {
   const { user } = await requireRole(['employer'], '/freelance');
-  const { data: c } = await createClient().from('contracts').select('id, client_id, status, booking_status').eq('id', contractId).maybeSingle();
+  const { data: c } = await (await createClient()).from('contracts').select('id, client_id, status, booking_status').eq('id', contractId).maybeSingle();
   if (!c || c.client_id !== user.id || c.status !== 'active' || c.booking_status === 'awaiting_payment') back(contractId);
   const amount = Math.round(Number(t(formData, 'amount', 9).replace(/[$,\s]/g, '')) * 100);
   const title = t(formData, 'title', 140);
@@ -177,7 +177,7 @@ export async function leaveReview(contractId: string, revieweeId: string, formDa
   const rating = Math.round(Number(formData.get('rating')));
   if (!(rating >= 1 && rating <= 5)) back(contractId, '?error=review');
   // Row-level security enforces: completed contract, you’re a party, and you’re reviewing the other party.
-  await createClient().from('reviews').insert({ contract_id: contractId, reviewer_id: user.id, reviewee_id: revieweeId, rating, body: t(formData, 'body', 2000) || null });
+  await (await createClient()).from('reviews').insert({ contract_id: contractId, reviewer_id: user.id, reviewee_id: revieweeId, rating, body: t(formData, 'body', 2000) || null });
   revalidatePath(`/freelance/contracts/${contractId}`);
   back(contractId, '?reviewed=1');
 }

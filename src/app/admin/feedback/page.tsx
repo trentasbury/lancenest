@@ -17,7 +17,8 @@ type Row = {
   profile: { full_name: string; username: string | null; role: string } | null;
 };
 
-export default async function FeedbackQueue({ searchParams }: { searchParams: { view?: string } }) {
+export default async function FeedbackQueue(props: { searchParams: Promise<{ view?: string }> }) {
+  const searchParams = await props.searchParams;
   await requireAdmin('/admin/feedback');
   const view = VIEWS.some(([v]) => v === searchParams.view) ? searchParams.view! : 'open';
   const admin = createAdminClient();

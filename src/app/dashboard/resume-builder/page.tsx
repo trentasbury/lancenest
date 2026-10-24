@@ -14,7 +14,7 @@ type Svc = { branch: string; rank: string | null; duty_title: string | null; uni
 
 export default async function ResumeBuilderPage() {
   const { user, profile } = await requireVerifiedMember('/dashboard/resume-builder');
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: vet } = await supabase.from('veteran_profiles').select('plan, about, clearance_level, city, state').eq('profile_id', user.id).maybeSingle();
   const allowed = ['pro_plus', 'federal_pro'].includes((vet?.plan as string) ?? '');
   if (!allowed) {

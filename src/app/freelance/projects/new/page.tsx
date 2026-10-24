@@ -13,7 +13,8 @@ import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
 export const metadata: Metadata = { title: 'Post a project' };
 const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, classification: 'You checked a box that suggests employee-style control. Confirm the acknowledgment, or consider posting this as a job instead.', required: 'Add a title and a description of at least 20 characters.', budget: 'The maximum budget can’t be lower than the minimum.', scam: 'This description contains wording often used in scams (fees, gift cards, off-platform chat apps). Please revise it.', save: 'That didn’t post — please try again.', pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' };
 
-export default async function NewProjectPage({ searchParams }: { searchParams: { error?: string } }) {
+export default async function NewProjectPage(props: { searchParams: Promise<{ error?: string }> }) {
+  const searchParams = await props.searchParams;
   const { user, profile } = await requireVerifiedMember('/freelance/projects/new');
   if (profile.role !== 'employer') redirect('/freelance');
   const company = await getMyCompany(user.id);

@@ -30,17 +30,20 @@ const QUICK: [string, string][] = [
 
 type Req = { id: string; kind: string; subject: string; status: string; admin_reply: string | null; created_at: string };
 
-export default async function HelpPage({ searchParams }: { searchParams: { kind?: string; sent?: string; error?: string; from?: string; subject?: string } }) {
+export default async function HelpPage(
+  props: { searchParams: Promise<{ kind?: string; sent?: string; error?: string; from?: string; subject?: string }> }
+) {
+  const searchParams = await props.searchParams;
   const session = await getSessionProfile();
   const kind = KINDS.some(([v]) => v === searchParams.kind) ? searchParams.kind : 'support';
   // Pre-fill "which page" from the link that brought them here (same-site paths only).
-  const ref = headers().get('referer');
+  const ref = (await headers()).get('referer');
   let from = searchParams.from?.startsWith('/') ? searchParams.from : '';
   if (!from && ref) {
     try { const u = new URL(ref); if (/lancenest\.com$|localhost$/.test(u.hostname) && u.pathname !== '/help') from = u.pathname + u.search; } catch { /* ignore */ }
   }
   const { data: mine } = session
-    ? await createClient().from('support_requests').select('id, kind, subject, status, admin_reply, created_at').order('created_at', { ascending: false }).limit(20)
+    ? await (await createClient()).from('support_requests').select('id, kind, subject, status, admin_reply, created_at').order('created_at', { ascending: false }).limit(20)
     : { data: [] };
   const requests = (mine ?? []) as Req[];
 

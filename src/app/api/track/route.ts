@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       referrerHost = h && !h.endsWith('lancenest.com') && h !== request.nextUrl.hostname ? h.slice(0, 120) : null;
     } catch { referrerHost = null; }
 
-    const { data: { user } } = await createClient().auth.getUser();
+    const { data: { user } } = await (await createClient()).auth.getUser();
     const admin = createAdminClient();
     await admin.from('page_views').insert({ path: path.split('?')[0].slice(0, 300), visitor, profile_id: user?.id ?? null, referrer_host: ev ? null : referrerHost, event: ev });
     if (ev) return new NextResponse(null, { status: 204 });

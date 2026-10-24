@@ -13,7 +13,7 @@ const PLACEMENT_RATE = 0;   // Search Sprint is a fixed fee: no placement or suc
 async function myRequest(requestId: string) {
   const { user } = await requireRole(['employer'], '/employer/shortlists');
   const company = await getMyCompany(user.id);
-  const { data: r } = await createClient().from('shortlist_requests').select('*').eq('id', requestId).maybeSingle();
+  const { data: r } = await (await createClient()).from('shortlist_requests').select('*').eq('id', requestId).maybeSingle();
   if (!company || !r || r.company_id !== company.id) redirect('/employer/shortlists');
   return { r, company };
 }

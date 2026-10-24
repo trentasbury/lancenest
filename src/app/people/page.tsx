@@ -13,9 +13,12 @@ import { startConversation } from '@/app/messages/actions';
 export const metadata: Metadata = { title: 'People' };
 type Person = { id: string; avatar_url: string | null; full_name: string; username: string | null; headline: string | null; location: string | null; service_summary: string | null; verified: boolean; role: string };
 
-export default async function PeoplePage({ searchParams: f }: { searchParams: { q?: string; branch?: string; location?: string; mos?: string; skill?: string; type?: string } }) {
+export default async function PeoplePage(
+  props: { searchParams: Promise<{ q?: string; branch?: string; location?: string; mos?: string; skill?: string; type?: string }> }
+) {
+  const f = await props.searchParams;
   const { user, profile } = await requireVerifiedMember('/people');
-  const supabase = createClient();
+  const supabase = await createClient();
   // The MOS filter, skill filter, and hidden-from list are independent: look them up together.
   const none = Promise.resolve({ data: null });
   const [{ data: mosRows }, { data: skillRows }, { data: hiding }] = await Promise.all([

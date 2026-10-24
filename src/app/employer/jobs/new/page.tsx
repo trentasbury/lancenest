@@ -11,7 +11,8 @@ import { siteHost } from '@/lib/applyLinks';
 
 export const metadata: Metadata = { title: 'Post a job' };
 
-export default async function NewJobPage({ searchParams }: { searchParams: { error?: string } }) {
+export default async function NewJobPage(props: { searchParams: Promise<{ error?: string }> }) {
+  const searchParams = await props.searchParams;
   const { user } = await requireRole(['employer'], '/employer/jobs/new');
   const company = await getMyCompany(user.id);
   if (!company) redirect('/employer/dashboard');

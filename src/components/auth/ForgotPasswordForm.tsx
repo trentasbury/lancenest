@@ -1,14 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { requestPasswordReset, type FormState } from '@/app/auth/actions';
 import SubmitButton from '../SubmitButton';
 import FormMessage from '../FormMessage';
 import Turnstile from './Turnstile';
 
 export default function ForgotPasswordForm() {
-  const [state, action] = useFormState<FormState, FormData>(requestPasswordReset, {});
+  const [state, action] = useActionState<FormState, FormData>(requestPasswordReset, {});
   return (
     <form action={action} className="space-y-5">
       <div>

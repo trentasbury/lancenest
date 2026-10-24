@@ -10,7 +10,10 @@ export const metadata: Metadata = { title: 'Email preferences', robots: { index:
  * Landing page for the unsubscribe link in mailing-list emails. Unsubscribing takes one button press
  * (not the page visit itself), so email security scanners that open links can't unsubscribe anyone.
  */
-export default function UnsubscribePage({ searchParams }: { searchParams: { u?: string; l?: string; t?: string; done?: string; invalid?: string } }) {
+export default async function UnsubscribePage(
+  props: { searchParams: Promise<{ u?: string; l?: string; t?: string; done?: string; invalid?: string }> }
+) {
+  const searchParams = await props.searchParams;
   const { u = '', l = '', t = '' } = searchParams;
   const valid = verifyUnsubscribe(u, l, t);
   const listName = valid ? EMAIL_LISTS[l as keyof typeof EMAIL_LISTS] : null;

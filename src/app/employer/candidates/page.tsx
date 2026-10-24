@@ -31,7 +31,8 @@ function intersect(a: string[] | null, b: string[]) {
   return a === null ? b : a.filter((x) => b.includes(x));
 }
 
-export default async function CandidatesPage({ searchParams: f }: { searchParams: F }) {
+export default async function CandidatesPage(props: { searchParams: Promise<F> }) {
+  const f = await props.searchParams;
   const { user } = await requireRole(['employer'], '/employer/candidates');
   const company = await getMyCompany(user.id);
   if (!company) redirect('/employer/dashboard');
@@ -62,7 +63,7 @@ export default async function CandidatesPage({ searchParams: f }: { searchParams
     );
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   let ids: string[] | null = null;
   const q = sanitizeSearch(f.q ?? '');
   if (q) {

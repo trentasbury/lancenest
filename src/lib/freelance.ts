@@ -21,13 +21,13 @@ export function keepPercent(plan: string) {
 
 export async function proposalsUsedThisMonth(profileId: string) {
   const start = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-  const { count } = await createClient().from('proposals').select('id', { count: 'exact', head: true }).eq('freelancer_id', profileId).gte('created_at', start);
+  const { count } = await (await createClient()).from('proposals').select('id', { count: 'exact', head: true }).eq('freelancer_id', profileId).gte('created_at', start);
   return count ?? 0;
 }
 
 /** Extra proposals a Free member bought (used after the monthly free ones run out). */
 export async function proposalCredits(profileId: string) {
-  const { data } = await createClient().from('proposal_credits').select('credits').eq('profile_id', profileId).maybeSingle();
+  const { data } = await (await createClient()).from('proposal_credits').select('credits').eq('profile_id', profileId).maybeSingle();
   return (data?.credits as number | undefined) ?? 0;
 }
 

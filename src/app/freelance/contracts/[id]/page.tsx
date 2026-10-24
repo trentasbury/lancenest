@@ -22,9 +22,13 @@ const ERR: Record<string, string> = { booking: 'We couldn’t open checkout for 
 
 type M = { id: string; title: string; amount_cents: number; status: string; client_fee_cents: number; submission_note: string | null; change_request: string | null; dispute_reason: string | null; auto_release_at: string | null; released_at: string | null };
 
-export default async function ContractPage({ params, searchParams }: { params: { id: string }; searchParams: Record<string, string | undefined> }) {
+export default async function ContractPage(
+  props: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | undefined>> }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const { user } = await requireVerifiedMember(`/freelance/contracts/${params.id}`);
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: c } = await supabase.from('contracts')
     .select('id, title, status, veteran_fee_rate, client_id, freelancer_id, project_id, request_note, booking_status, booking_fee_cents, booking_paid_at, on_site, client:profiles!contracts_client_id_fkey(full_name), freelancer:profiles!contracts_freelancer_id_fkey(full_name, username)')
     .eq('id', params.id).maybeSingle();

@@ -37,7 +37,7 @@ type MyCompany = { id: string; name: string; slug: string; plan: Plan; is_verifi
 export const SEATS: Record<string, number> = { free: 1, professional: 2, federal: 5, enterprise: 20 };
 
 export async function contactUsage(companyId: string, plan: Plan) {
-  const { count } = await createClient().from('employer_contacts').select('*', { count: 'exact', head: true })
+  const { count } = await (await createClient()).from('employer_contacts').select('*', { count: 'exact', head: true })
     .eq('company_id', companyId).eq('source', 'allowance').gte('created_at', monthStart());
   const limit = CONTACTS_PER_MONTH[plan];
   return { used: count ?? 0, limit, remaining: Number.isFinite(limit) ? Math.max(limit - (count ?? 0), 0) : Infinity };

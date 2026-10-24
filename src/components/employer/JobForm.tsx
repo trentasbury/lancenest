@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import type { Job } from '@/lib/types';
 import type { JobFormState } from '@/app/employer/jobs/actions';
 import { applyLinkProblem } from '@/lib/applyLinks';
@@ -36,7 +36,7 @@ export default function JobForm({ job, action, verifiedHost = null }: {
   action: (prev: JobFormState, fd: FormData) => Promise<JobFormState>;
   verifiedHost?: string | null;
 }) {
-  const [state, formAction] = useFormState(action, null);
+  const [state, formAction] = useActionState(action, null);
   const [mode, setMode] = useState<Mode>((job?.apply_mode ?? (job?.apply_url ? 'both' : 'easy')) as Mode);
   const [url, setUrl] = useState(job?.apply_url ?? '');
   const [touched, setTouched] = useState(false);

@@ -5,7 +5,8 @@ import { applyCheckoutSession } from '@/lib/billing';
 
 export const metadata: Metadata = { title: 'Payment complete', robots: { index: false } };
 
-export default async function BillingSuccess({ searchParams }: { searchParams: { session_id?: string } }) {
+export default async function BillingSuccess(props: { searchParams: Promise<{ session_id?: string }> }) {
+  const searchParams = await props.searchParams;
   const { profile } = await requireRole(['employer', 'veteran'], '/dashboard');
   let result: Awaited<ReturnType<typeof applyCheckoutSession>> = { ok: false };
   try {

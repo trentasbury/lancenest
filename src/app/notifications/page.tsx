@@ -13,7 +13,7 @@ const ICON: Record<string, string> = {
 
 export default async function NotificationsPage() {
   const { user } = await requireRole(['veteran', 'employer', 'admin'], '/notifications');
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase.from('notifications').select('id, type, title, link, read_at, created_at').eq('profile_id', user.id).order('created_at', { ascending: false }).limit(60);
   // Opening the page marks everything as read.
   await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('profile_id', user.id).is('read_at', null);

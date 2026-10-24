@@ -13,9 +13,13 @@ import { safeHref } from '@/lib/safeHref';
 export const metadata: Metadata = { title: 'Career fair' };
 type Booth = { id: string; pitch: string | null; video_url: string | null; company: { id: string; name: string; slug: string; logo_url: string | null; owner_id: string } | null };
 
-export default async function FairPage({ params, searchParams }: { params: { slug: string }; searchParams: { saved?: string } }) {
+export default async function FairPage(
+  props: { params: Promise<{ slug: string }>; searchParams: Promise<{ saved?: string }> }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const { user, profile } = await requireVerifiedMember(`/fairs/${params.slug}`);
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: f } = await supabase.from('career_fairs').select('*').eq('slug', params.slug).maybeSingle();
   if (!f) notFound();
   const now = Date.now(), live = Date.parse(f.starts_at as string) <= now && now < Date.parse(f.ends_at as string), ended = now >= Date.parse(f.ends_at as string);

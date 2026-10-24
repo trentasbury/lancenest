@@ -11,7 +11,8 @@ export function generateStaticParams() {
   return BRANCH_SLUGS.filter(([branch]) => branch !== 'army').map(([branch]) => ({ branch }));
 }
 
-export function generateMetadata({ params }: { params: { branch: string } }): Metadata {
+export async function generateMetadata(props: { params: Promise<{ branch: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const branch = branchFromSlug(params.branch);
   return {
     title: `${branch ?? 'Military'} jobs translated to civilian careers`,
@@ -20,7 +21,8 @@ export function generateMetadata({ params }: { params: { branch: string } }): Me
   };
 }
 
-export default function BranchCareers({ params }: { params: { branch: string } }) {
+export default async function BranchCareers(props: { params: Promise<{ branch: string }> }) {
+  const params = await props.params;
   const branch = branchFromSlug(params.branch);
   if (!branch) notFound();
   return <CareersBrowser branch={branch} />;

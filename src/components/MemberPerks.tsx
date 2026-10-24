@@ -8,7 +8,7 @@ export default async function MemberPerks({ userId, boost }: { userId: string; b
   const user = { id: userId };
   const searchParams = { boost };
 
-          const supabase = createClient();
+          const supabase = await createClient();
           const [{ data: me }, { data: views30 }] = await Promise.all([
             supabase.from('veteran_profiles').select('plan, boosted_until').eq('profile_id', user.id).maybeSingle(),
             supabase.rpc('my_profile_view_count', { days: 30 }),

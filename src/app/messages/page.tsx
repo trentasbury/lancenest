@@ -11,9 +11,10 @@ export const metadata: Metadata = { title: 'Messages', robots: { index: false, f
 
 type Row = { conversation_id: string; profile_id: string; last_read_at: string | null; profile: { full_name: string; headline: string | null } | null };
 
-export default async function MessagesPage({ searchParams }: { searchParams: { error?: string; tab?: string } }) {
+export default async function MessagesPage(props: { searchParams: Promise<{ error?: string; tab?: string }> }) {
+  const searchParams = await props.searchParams;
   const { user, profile: me } = await requireRole(['veteran', 'employer', 'admin'], '/messages');
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: mine } = await supabase.from('conversation_participants').select('conversation_id, last_read_at').eq('profile_id', user.id);
   const ids = (mine ?? []).map((r) => r.conversation_id as string);

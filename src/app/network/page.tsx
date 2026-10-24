@@ -10,9 +10,12 @@ import ProfileMini from '@/components/network/ProfileMini';
 
 export const metadata: Metadata = { title: 'Network' };
 
-export default async function NetworkPage({ searchParams }: { searchParams: { type?: string; scope?: string; view?: string; cursor?: string } }) {
+export default async function NetworkPage(
+  props: { searchParams: Promise<{ type?: string; scope?: string; view?: string; cursor?: string }> }
+) {
+  const searchParams = await props.searchParams;
   const { user, profile } = await requireRole(['veteran', 'employer', 'admin'], '/network');
-  const supabase = createClient();
+  const supabase = await createClient();
   // Suggestions don't depend on anything below — start them now so they load alongside the feed.
   const suggestionsPromise = getSuggestions(user.id);
   const [{ count: followingCount }, { count: followerCount }] = await Promise.all([

@@ -6,10 +6,11 @@ import { createClient } from '@/lib/supabase/server';
  * "Apply on company site": count the click for the employer's analytics, add it to the member's tracker
  * (they confirm or remove it on the job page), then send them to the company's DB-validated link.
  */
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const session = await getSessionProfile();
   if (!session) return NextResponse.redirect(new URL(`/login?next=${encodeURIComponent(`/api/jobs/${params.id}/external`)}`, request.url));
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: job } = await supabase.from('jobs').select('id, apply_url, apply_mode, slug').eq('id', params.id).maybeSingle();
   if (!job?.apply_url || job.apply_mode === 'easy') return NextResponse.redirect(new URL(job ? `/jobs/${job.slug}` : '/jobs', request.url));
   if (session.profile?.role === 'veteran') {

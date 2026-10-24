@@ -11,7 +11,8 @@ export const metadata: Metadata = { alternates: { canonical: '/resources' },
 
 const BRANCH_LIST = ['Army', 'Marine Corps', 'Navy', 'Air Force', 'Space Force', 'Coast Guard'];
 
-export default async function ResourcesPage({ searchParams }: { searchParams: { code?: string; branch?: string } }) {
+export default async function ResourcesPage(props: { searchParams: Promise<{ code?: string; branch?: string }> }) {
+  const searchParams = await props.searchParams;
   // Public reference data: no sign-in cookies needed.
   const supabase = publicDb();
   const branch = BRANCH_LIST.includes(searchParams.branch ?? '') ? searchParams.branch! : null;

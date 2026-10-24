@@ -27,9 +27,10 @@ const TOOLS = [
 
 type AppRow = { id: string; status: string; applied_at: string; job: { title: string; slug: string } | null };
 
-export default async function VeteranDashboard({ searchParams }: { searchParams: { boost?: string } }) {
+export default async function VeteranDashboard(props: { searchParams: Promise<{ boost?: string }> }) {
+  const searchParams = await props.searchParams;
   const { user, profile } = await requireRole(['veteran'], '/dashboard');
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const [{ data: vet }, { count: savedCount }, { data: apps }, latestJobs] = await Promise.all([
     supabase.from('veteran_profiles').select('verification_status').eq('profile_id', user.id).maybeSingle(),

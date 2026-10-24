@@ -12,7 +12,8 @@ type Recent = { id: string; full_name: string; role: string; created_at: string 
 
 const DELETE_MSG: Record<string, string> = { ok: 'Member deleted.', notfound: 'No account with that email.', confirm: 'Type DELETE to confirm.', self: 'You can’t delete your own admin account here.' };
 
-export default async function AdminPage({ searchParams }: { searchParams: { deleted?: string } }) {
+export default async function AdminPage(props: { searchParams: Promise<{ deleted?: string }> }) {
+  const searchParams = await props.searchParams;
   const { count: pendingCompanies } = await createAdminClient().from('companies').select('id', { count: 'exact', head: true }).eq('verification_status', 'pending');
   // Server-side role check FIRST — only then use the service-role client.
   await requireAdmin('/admin');

@@ -12,7 +12,8 @@ import { ARRANGEMENT_LABELS, CLEARANCE_LABELS, EMPLOYMENT_LABELS, formatSalary, 
 import { applyToJob, confirmSiteApply, toggleSaveJob } from '../actions';
 import CompanySiteApply from '@/components/jobs/CompanySiteApply';
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const job = await getJobBySlug(params.slug);
   if (!job) return { title: 'Job not found' };
   const where = job.location ? ` in ${job.location}` : '';
@@ -39,13 +40,17 @@ function Section({ title, text }: { title: string; text: string | null }) {
   );
 }
 
-export default async function JobDetailPage({ params, searchParams }: { params: { slug: string }; searchParams?: { apply?: string } }) {
+export default async function JobDetailPage(
+  props: { params: Promise<{ slug: string }>; searchParams?: Promise<{ apply?: string }> }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const job = await getJobBySlug(params.slug);
   if (!job) notFound();
 
   const session = await getSessionProfile();
   const isVeteran = (!!session && ['veteran', 'admin'].includes(session.profile?.role ?? ''));
-  const supabase = createClient();
+  const supabase = await createClient();
   const none = Promise.resolve({ data: null });
   // Everything below depends only on the job and the viewer: one round of queries.
   const [{ data: earlyRows }, { data: insightRows }, { data: myResumesRows }, , { data: s }, { data: a }, { data: me }] = await Promise.all([

@@ -47,7 +47,8 @@ const openRolesFor = unstable_cache(async (cats: string[]) => {
   return count ?? 0;
 }, ['career-open-roles'], { revalidate: 3600 });
 
-export async function generateMetadata({ params }: { params: { branch: string; code: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ branch: string; code: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const o = await load(params.branch, params.code);
   if (!o) return { title: 'Military career translator' };
   const civ = (o.civilian_categories ?? []).slice(0, 3).join(', ');
@@ -58,7 +59,8 @@ export async function generateMetadata({ params }: { params: { branch: string; c
   };
 }
 
-export default async function CareerPage({ params }: { params: { branch: string; code: string } }) {
+export default async function CareerPage(props: { params: Promise<{ branch: string; code: string }> }) {
+  const params = await props.params;
   const o = await load(params.branch, params.code);
   if (!o) notFound();
   const cats = (o.civilian_categories ?? []).slice(0, 6);

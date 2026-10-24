@@ -24,7 +24,7 @@ async function moveApplicant(applicationId: string, jobId: string, formData: For
   const status = String(formData.get('status') ?? '');
   if (!STAGES.some(([s]) => s === status)) return;
   // Row-level security: only the hiring company can update; the applicant is notified by a database trigger.
-  await createClient().from('applications').update({ status }).eq('id', applicationId).eq('job_id', jobId);
+  await (await createClient()).from('applications').update({ status }).eq('id', applicationId).eq('job_id', jobId);
   // Email the applicant about meaningful stage changes (the in-app notification already fires from the database).
   if (['interview', 'offer', 'not_selected'].includes(status)) {
     const { createAdminClient } = await import('@/lib/supabase/admin');
@@ -48,9 +48,13 @@ async function moveApplicant(applicationId: string, jobId: string, formData: For
 
 type App = { answers?: { q: string; a: string }[]; id: string; status: string; applied_at: string; profile_id: string; resume_id: string | null; profile: { full_name: string; username: string | null; headline: string | null; service_summary: string | null; verified: boolean } | null };
 
-export default async function ApplicantsPage({ params, searchParams }: { params: { id: string }; searchParams: { pool?: string } }) {
+export default async function ApplicantsPage(
+  props: { params: Promise<{ id: string }>; searchParams: Promise<{ pool?: string }> }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const { user } = await requireRole(['employer'], '/employer/dashboard');
-  const supabase = createClient();
+  const supabase = await createClient();
   const [company, { data: job }] = await Promise.all([
     getMyCompany(user.id),
     supabase.from('jobs').select('id, title, company_id').eq('id', params.id).maybeSingle(),
