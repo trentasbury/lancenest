@@ -7,7 +7,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { stripe } from '@/lib/stripe';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
-import { addPortfolioItem, removePortfolioItem, saveFreelancerProfile } from '../actions';
+import { removePortfolioItem, saveFreelancerProfile } from '../actions';
+import PortfolioForm from './PortfolioForm';
 import { CONTACT_BLOCKED } from '@/lib/contact';
 import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
 
@@ -83,19 +84,14 @@ export default async function FreelancerProfilePage(
           <ul className="mt-5 divide-y divide-line rounded-xl border border-line">
             {(items ?? []).map((it) => (
               <li key={it.id as string} className="flex items-start justify-between gap-4 p-4">
-                <div><p className="font-medium">{it.title as string}</p>{it.description && <p className="text-sm text-muted">{it.description as string}</p>}{it.url && <a href={it.url as string} target="_blank" rel="noopener noreferrer" className="text-xs text-navy underline">{it.url as string}</a>}</div>
+                <div className="flex gap-3">{it.image_url && <img src={it.image_url as string} alt="" className="h-16 w-20 shrink-0 rounded-lg object-cover" />}<div><p className="font-medium">{it.title as string}</p>{it.description && <p className="text-sm text-muted">{it.description as string}</p>}{it.url && <a href={it.url as string} target="_blank" rel="noopener noreferrer" className="text-xs text-navy underline">{it.url as string}</a>}</div></div>
                 <form action={removePortfolioItem.bind(null, it.id as string)}><button className="text-xs text-muted hover:text-signal">Remove</button></form>
               </li>
             ))}
           </ul>
         )}
         {fp ? (
-          <form action={addPortfolioItem} className="mt-5 grid gap-3 sm:grid-cols-2">
-            <input name="title" required placeholder="Project title" className="field" />
-            <input name="url" placeholder="Link (optional)" className="field" />
-            <textarea name="description" rows={2} placeholder="What you did and the result" className="field sm:col-span-2" />
-            <div><SubmitButton className="btn btn-outline" pendingText="Adding…">Add to portfolio</SubmitButton></div>
-          </form>
+          <PortfolioForm userId={user.id} />
         ) : <p className="mt-4 text-sm text-muted">Create your freelancer profile to add portfolio work.</p>}
       </section>
     </div>

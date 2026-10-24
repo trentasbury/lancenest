@@ -56,6 +56,12 @@ export default async function AdminPage(props: { searchParams: Promise<{ deleted
           <Link href="/admin/verifications" className="transition-opacity hover:opacity-80">
             <StatCard label="Pending verifications →" value={pendingVerifications} hint="Open the review queue" />
           </Link>
+          <Link href="/admin/ambassadors" className="transition-opacity hover:opacity-80">
+            <StatCard label="Ambassadors →" value="Approve" hint="Base ambassador applications" />
+          </Link>
+          <Link href="/admin/credentials" className="transition-opacity hover:opacity-80">
+            <StatCard label="Licenses & certificates →" value="Review" hint="Trade licenses unlock HVAC, electrical and plumbing work" />
+          </Link>
           <Link href="/admin/shortlists" className="transition-opacity hover:opacity-80">
             <StatCard label="Verified Shortlists →" value="Deliver" hint="Paid requests due in 3 business days" />
           </Link>

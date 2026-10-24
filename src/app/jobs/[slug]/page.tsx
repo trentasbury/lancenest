@@ -11,6 +11,8 @@ import { reportContent } from '@/app/network/actions';
 import { ARRANGEMENT_LABELS, CLEARANCE_LABELS, EMPLOYMENT_LABELS, formatSalary, postedAgo } from '@/lib/format';
 import { applyToJob, confirmSiteApply, toggleSaveJob } from '../actions';
 import CompanySiteApply from '@/components/jobs/CompanySiteApply';
+import FitExplainer from '@/components/jobs/FitExplainer';
+import { AI_ENABLED } from '@/lib/ai';
 
 export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const params = await props.params;
@@ -186,6 +188,7 @@ export default async function JobDetailPage(
           {searchParams?.apply === 'done' && <p className="rounded-lg bg-olive/10 px-4 py-3 text-sm text-olive">✓ Application sent. Track it under My applications.</p>}
           {searchParams?.apply === 'answers' && <p className="rounded-lg bg-signal/10 px-4 py-3 text-sm text-signal">Please answer every question to apply.</p>}
           {searchParams?.apply === 'error' && <p className="rounded-lg bg-signal/10 px-4 py-3 text-sm text-signal">Your application didn’t go through. Make sure your profile is verified, then try again.</p>}
+          {isVeteran && canApply && AI_ENABLED && <FitExplainer slug={job.slug} />}
           {isVeteran && (
             <>
               {!canApply ? (

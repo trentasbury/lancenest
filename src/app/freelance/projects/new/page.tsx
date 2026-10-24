@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireVerifiedMember } from '@/lib/auth';
 import { getMyCompany } from '@/lib/employer';
-import { OPEN_CATEGORIES } from '@/lib/freelance';
+import { CATEGORIES } from '@/lib/freelance';
+import { LICENSED_TRADES } from '@/lib/flags';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import { createProject } from '../../actions';
@@ -30,7 +31,7 @@ export default async function NewProjectPage(props: { searchParams: Promise<{ er
         <div className="sm:col-span-2"><label className="field-label" htmlFor="description">Scope of work</label><textarea id="description" name="description" required rows={7} maxLength={8000} placeholder="Deliverables, timeline, tools, and anything a freelancer needs to know." className="field" /></div>
         <div><label className="field-label" htmlFor="work_location">Where</label><input id="work_location" name="work_location" maxLength={120} placeholder="Remote — or on-site: Clermont, FL" className="field" />
           <p className="mt-1 text-xs text-muted">On-site work: enter the job site’s city and state.</p></div>
-        <div><label className="field-label" htmlFor="category">Category</label><select id="category" name="category" className="field">{OPEN_CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></div>
+        <div><label className="field-label" htmlFor="category">Category</label><select id="category" name="category" className="field">{CATEGORIES.map((c) => <option key={c} value={c}>{c}{LICENSED_TRADES.includes(c) ? ' (licensed pros only)' : ''}</option>)}</select><p className="mt-1 text-xs text-muted">HVAC, electrical, plumbing, construction and roofing projects get proposals only from members with a verified license for that trade.</p></div>
         <div><label className="field-label" htmlFor="clearance_required">Clearance required</label>
           <select id="clearance_required" name="clearance_required" className="field"><option value="none">None</option><option value="public_trust">Public Trust</option><option value="confidential">Confidential</option><option value="secret">Secret</option><option value="top_secret">Top Secret</option><option value="ts_sci">TS/SCI</option></select></div>
         <div><label className="field-label" htmlFor="budget_type">Budget type</label><select id="budget_type" name="budget_type" className="field"><option value="fixed">Fixed price</option><option value="hourly">Hourly</option></select></div>

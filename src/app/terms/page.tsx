@@ -40,13 +40,15 @@ export default function TermsPage() {
         <h2>Eligibility and accounts</h2>
         <ul>
           <li>You must be at least 18 years old.</li>
-          <li>Service member accounts are for active duty, Guard, Reserve, transitioning, and veteran members. Employer accounts are for organizations and recruiters hiring for real positions.</li>
+          <li>Service member accounts are for active duty, Guard, Reserve, transitioning, and veteran members. Military spouse accounts are for the current or surviving spouse of a service member or veteran. Employer accounts are for organizations and recruiters hiring for real positions.</li>
+          <li>Inviting a spouse: an invite link from your account verifies whoever accepts it as your spouse. Send it only to your spouse. Inviting anyone else is a false statement and grounds for removing both accounts.</li>
           <li>Provide accurate information, keep your password secure, and tell us promptly if you believe your account was compromised. You are responsible for activity on your account.</li>
         </ul>
       </section>
       <section>
         <h2>Verification</h2>
-        <p>A Verified Veteran badge means our team reviewed a document you provided. It is not a background check or a guarantee of anyone’s identity, character, or qualifications. Submitting false or altered documents will result in removal.</p>
+        <p>A Verified Veteran or Verified Military Spouse badge means our team reviewed a document you provided, or a verified member confirmed you. It is not a background check or a guarantee of anyone’s identity, character, or qualifications. Submitting false or altered documents will result in removal.</p>
+        <p><strong>Licenses and certificates.</strong> A verified license or certificate means a reviewer checked the document you sent (and, for trade licenses, the issuing board’s public lookup) on the day of review. You must keep any license current, hold the permits and insurance your work requires, and remove a license that lapses or is suspended. Offering licensed trade work without a valid license is prohibited.</p>
       </section>
       <section>
         <h2>What you may not do</h2>
@@ -62,10 +64,15 @@ export default function TermsPage() {
       <section>
         <h2>Employers</h2>
         <p>Employers must post only real, lawful positions; comply with applicable employment laws, including equal employment opportunity and veterans’ reemployment protections; and use candidate information only for recruiting. Employers may not charge candidates to apply or be hired.</p>
+        <p><strong>Public job listings.</strong> Unless you turn it off for a job, its details are also shown on LanceNest’s public job pages and may appear in search engines such as Google. Your company’s name, logo and website, and any emails, links or phone numbers in the text, are hidden there. You confirm you have the right to publish every job you post or import, including jobs imported from your hiring system.</p>
+        <p><strong>Veteran outreach report.</strong> The report summarizes activity on LanceNest. It is not legal advice and does not by itself satisfy any legal obligation, such as listing jobs with a state employment service or determining protected-veteran status.</p>
       </section>
       <section>
         <h2>Your content</h2>
         <p>You own what you post. You give LanceNest a non-exclusive, worldwide, royalty-free license to host, display, and distribute it as needed to operate the service, according to the audience you choose. You can delete your content at any time. We may remove content or suspend accounts that violate these Terms.</p>
+        <p><strong>Employer ratings.</strong> Ratings must reflect your own honest, first-hand experience as a current or former employee. Don’t name individuals, share confidential or classified information, or post anything false. Ratings are shown without your name, and employers can reply publicly. We may remove ratings that break these rules, and we don’t edit what anyone writes.</p>
+        <p><strong>AI tools.</strong> AI drafts (such as the résumé writer and job fit) can be wrong. Check everything before you use it; you are responsible for what you put on your profile or send to employers. Don’t paste classified or controlled information, or other people’s personal information, into them.</p>
+        <p><strong>Ambassadors.</strong> Ambassadors follow the ambassador rules on the Ambassadors page, including not soliciting on a military installation without permission and never asking people they supervise to join. Ambassador rewards are plan credit, can change, and end if the rules are broken.</p>
         <p><strong>Copyright.</strong> Post only content you own or have permission to use. We respond to copyright notices as described in our <Link href="/copyright" className="text-navy underline">Copyright policy</Link>, and we end the accounts of repeat infringers.</p>
       </section>
       <section>

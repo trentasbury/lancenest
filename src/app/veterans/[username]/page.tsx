@@ -145,7 +145,7 @@ export default async function VeteranProfilePage(
     supabase.from('service_listings').select('id, title, category, price_cents, price_type, delivery, service_area').eq('profile_id', profile.id).eq('status', 'active').order('created_at', { ascending: false }),
     supabase.from('reviews').select('rating, body, created_at').eq('reviewee_id', profile.id).order('created_at', { ascending: false }).limit(5),
     supabase.from('freelancer_profiles').select('title, bio, hourly_rate, available, clearance_work, vosb, sdvosb').eq('profile_id', profile.id).maybeSingle(),
-    supabase.from('portfolio_items').select('id, title, description, url').eq('profile_id', profile.id).order('created_at', { ascending: false }).limit(6),
+    supabase.from('portfolio_items').select('id, title, description, url, image_url').eq('profile_id', profile.id).order('created_at', { ascending: false }).limit(6),
     getFeed({ viewerId, authorId: profile.id, type: 'photos', limit: tab === 'photos' ? 48 : 6 }),
     // Row-level security counts only the posts this viewer is allowed to see.
     supabase.from('network_posts').select('id', { count: 'exact', head: true }).eq('author_id', profile.id).is('group_id', null),
@@ -158,6 +158,8 @@ export default async function VeteranProfilePage(
   const services = (service ?? []) as unknown as Service[];
   const experience = (experienceRows ?? []) as Experience[];
   const education = (educationRows ?? []) as Education[];
+  const { verifiedCredentials } = await import('@/lib/credentials');
+  const credentials = await verifiedCredentials(profile.id);
   const skills = ((skillRows ?? []) as unknown as { skill: { name: string } | null }[]).map((r) => r.skill?.name).filter(Boolean) as string[];
   const primary = services[0];
   const translated = Array.from(new Set(services.flatMap((s) => s.occupation?.civilian_categories ?? []))).slice(0, 8);
@@ -460,6 +462,20 @@ export default async function VeteranProfilePage(
                     <div className="mt-4 flex flex-wrap gap-2">{skills.map((s) => <span key={s} className="rounded-full border border-line px-3.5 py-1.5 text-sm text-ink/85">{s}</span>)}</div>
                   )}
                 </section>
+
+                {credentials.length > 0 && (
+                  <section>
+                    <SectionHead id="credentials" title="Verified licenses & certificates" />
+                    <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+                      {credentials.map((c) => (
+                        <li key={c.id} className="rounded-xl border border-olive/30 bg-olive/5 px-4 py-3 text-sm">
+                          <p className="font-medium text-ink">✓ {c.name}</p>
+                          <p className="text-xs text-muted">{[c.kind === 'license' ? `${c.trade} license` : 'Certificate', c.state, c.issuer].filter(Boolean).join(' · ')}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
               </div>
 
               {freelance && (
@@ -483,10 +499,13 @@ export default async function VeteranProfilePage(
                   {(portfolio ?? []).length > 0 && (
                     <ul className="mt-5 grid gap-3 sm:grid-cols-2">
                       {(portfolio ?? []).map((it) => (
-                        <li key={it.id as string} className="rounded-xl border border-line p-4">
+                        <li key={it.id as string} className="overflow-hidden rounded-xl border border-line">
+                          {it.image_url && <img src={it.image_url as string} alt={it.title as string} className="aspect-[4/3] w-full object-cover" loading="lazy" />}
+                          <div className="p-4">
                           <p className="font-medium">{it.title as string}</p>
                           {it.description && <p className="mt-1 text-sm text-muted">{it.description as string}</p>}
                           {safeHref(it.url as string) && <a href={safeHref(it.url as string)} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-xs text-navy underline">View work ↗</a>}
+                          </div>
                         </li>
                       ))}
                     </ul>

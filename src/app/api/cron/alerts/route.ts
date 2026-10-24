@@ -136,6 +136,20 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // ---------- Expired licenses: mark them, and pause trade services that no longer have a valid license ----------
+  {
+    const today = new Date(now).toISOString().slice(0, 10);
+    const { data: lapsed } = await admin.from('credentials').update({ status: 'expired' }).eq('status', 'verified').lt('expires_on', today).select('profile_id, kind, trade, name');
+    for (const c of (lapsed ?? []) as { profile_id: string; kind: string; trade: string | null; name: string }[]) {
+      if (c.kind === 'license' && c.trade) {
+        const { data: still } = await admin.from('credentials').select('id').eq('profile_id', c.profile_id).eq('trade', c.trade).eq('status', 'verified').or(`expires_on.is.null,expires_on.gte.${today}`).limit(1);
+        if (!still?.length) await admin.from('service_listings').update({ status: 'paused' }).eq('profile_id', c.profile_id).eq('category', c.trade).eq('status', 'active');
+      }
+      const { notifyMember } = await import('@/lib/email');
+      await notifyMember(c.profile_id, { type: 'verification', link: '/dashboard/credentials', title: `Your ${c.kind} “${c.name}” has expired. Add the renewed one to keep it on your profile${c.trade ? ' and keep your trade services listed' : ''}.` });
+    }
+  }
+
   // ---------- Expire free Pro months earned through referrals ----------
   const { data: expired } = await admin.from('veteran_profiles').select('profile_id').not('granted_plan', 'is', null).lt('pro_granted_until', new Date().toISOString());
   if (expired?.length) {

@@ -42,6 +42,8 @@ export async function addPortfolioItem(formData: FormData) {
   const { error } = await (await createClient()).from('portfolio_items').insert({
     profile_id: user.id, title: t(formData, 'title', 120), description: t(formData, 'description', 1500) || null,
     url: url ? (/^https?:\/\//i.test(url) ? url : `https://${url}`) : null,
+    // Pictures must be in the member's own folder in LanceNest storage (the database checks this too).
+    image_url: /^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/public\/post-media\//.test(t(formData, 'image_url', 400)) ? t(formData, 'image_url', 400) : null,
   });
   if (error) redirect(`/freelance/profile?error=${error.code === 'P0017' ? 'contact' : 'portfolio'}`);
   revalidatePath('/freelance/profile');
@@ -72,7 +74,7 @@ export async function createProject(formData: FormData) {
   const clearance = t(formData, 'clearance_required', 14);
   const { data, error } = await supabase.from('freelance_projects').insert({
     client_id: user.id, company_id: company.id, title, description,
-    category: OPEN_CATEGORIES.includes(category) ? category : null,
+    category: CATEGORIES.includes(category) ? category : null,
     work_location: t(formData, 'work_location', 120) || 'Remote',
     budget_type: t(formData, 'budget_type', 6) === 'hourly' ? 'hourly' : 'fixed', budget_min: min, budget_max: max,
     clearance_required: CLEARANCES.includes(clearance) ? clearance : 'none',
@@ -97,7 +99,7 @@ export async function submitProposal(projectId: string, formData: FormData) {
     project_id: projectId, freelancer_id: user.id, cover_letter: cover, bid_amount: bid, timeline: t(formData, 'timeline', 120) || null,
   });
   if (error) {
-    const code = error.code === 'P0009' ? 'pii' : error.code === 'P0017' ? 'contact' : error.code === 'P0006' ? 'limit' : error.code === 'P0005' ? 'closed' : error.code === '23505' ? 'duplicate' : 'save';
+    const code = error.code === 'P0009' ? 'pii' : error.code === 'P0017' ? 'contact' : error.code === 'P0018' ? 'licensed' : error.code === 'P0006' ? 'limit' : error.code === 'P0005' ? 'closed' : error.code === '23505' ? 'duplicate' : 'save';
     redirect(`/freelance/projects/${projectId}?error=${code}`);
   }
   revalidatePath(`/freelance/projects/${projectId}`);

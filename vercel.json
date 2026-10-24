@@ -1,7 +1,23 @@
 {
-  "regions": ["pdx1"],
+  "regions": [
+    "pdx1"
+  ],
   "crons": [
-    { "path": "/api/cron/auto-release", "schedule": "0 14 * * *" },
-    { "path": "/api/cron/alerts", "schedule": "0 12 * * *" }
+    {
+      "path": "/api/cron/auto-release",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/alerts",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/job-feeds",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/newsletter",
+      "schedule": "0 15 * * 2"
+    }
   ]
 }

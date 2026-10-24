@@ -29,7 +29,12 @@ export default function PrivacyPage() {
           <li><strong>Profile information you choose to add:</strong> headline, about, location, military service (branch, rank, occupation code, years, deployments), civilian experience, education, skills, and security clearance level. We never ask for clearance investigation details.</li>
           <li><strong>Verification documents:</strong> when you verify your service, the two files you upload: a service document (for example a DD-214 with your Social Security number blacked out) and a photo ID (a driver’s license, state ID, or passport with the ID number covered). See “Verification documents” below.</li>
           <li><strong>Activity:</strong> jobs you save or apply to, posts, comments, reactions, follows, messages, and reports you submit.</li>
-          <li><strong>Company information</strong> for employer accounts, and job postings they publish.</li>
+          <li><strong>Company information</strong> for employer accounts, and job postings they publish or import from their hiring system.</li>
+          <li><strong>Military spouse accounts:</strong> if a service member invites you, we record that link between the two accounts (shown to neither employers nor other members).</li>
+          <li><strong>Licenses and certificates</strong> you add: name, issuer, state, license number and expiration, plus the file you upload for review. License numbers are never shown on your profile.</li>
+          <li><strong>Workplaces and employer ratings:</strong> companies you list as a current or past workplace, and ratings you write. Ratings are stored with your account so we can prevent fake ratings, but they are never shown with your name, and employers can’t see who wrote them.</li>
+          <li><strong>Device notifications:</strong> if you turn them on, a technical address for your device’s notification service. Notifications never include message text.</li>
+          <li><strong>Newsletter:</strong> if you subscribe to the weekly jobs newsletter, your email address and when you confirmed it.</li>
           <li><strong>Technical data:</strong> security cookies that keep you signed in and sign you out after inactivity, and basic request logs used to operate and secure the service. We count page visits with our own private analytics: no cookies, no cross-site tracking, and visitors are identified only by an anonymous code that changes every day. We do not use advertising or tracking cookies.</li>
         </ul>
       </section>
@@ -44,7 +49,9 @@ export default function PrivacyPage() {
           <li>To run your account, show your profile, and connect you with employers and other members.</li>
           <li>To translate military experience into civilian terms and suggest jobs and people you may want to connect with.</li>
           <li>To verify service, prevent fraud and abuse, enforce our Terms, and keep the platform secure.</li>
-          <li>To send account emails (confirmations, password resets, and notifications you can see in your account).</li>
+          <li>To send account emails (confirmations, password resets, and notifications you can see in your account), device notifications you turn on, and the newsletter if you subscribe.</li>
+          <li>To show pay insights built from the pay ranges employers post (groups appear only with several employers, so no one employer’s pay can be identified).</li>
+          <li>If you use an AI tool, to send the parts of your profile and text you provide to our AI provider to write your draft. It is used only to answer your request, and our provider does not use it to train its models.</li>
         </ul>
         <p><strong>We do not sell your personal information,</strong> and we do not share it with advertisers.</p>
       </section>
@@ -60,7 +67,7 @@ export default function PrivacyPage() {
       </section>
       <section>
         <h2>Service providers</h2>
-        <p>We use trusted providers to operate LanceNest: Supabase (database, authentication, file storage), Vercel (hosting), Cloudflare Turnstile (bot protection), Resend (email delivery), and Google (if you choose to sign in with Google). When paid plans launch, payments will be processed by Stripe; we will not store full card numbers. These providers process data only to provide their services to us.</p>
+        <p>We use trusted providers to operate LanceNest: Supabase (database, authentication, file storage), Vercel (hosting), Cloudflare Turnstile (bot protection), Resend (email delivery), Anthropic (AI drafts, only when you use an AI tool), Google, Apple, Mozilla or Microsoft push services (only if you turn on device notifications), and Google (if you choose to sign in with Google). When paid plans launch, payments will be processed by Stripe; we will not store full card numbers. These providers process data only to provide their services to us.</p>
       </section>
       <section>
         <h2>Security</h2>

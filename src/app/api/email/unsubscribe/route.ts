@@ -10,5 +10,6 @@ export async function POST(request: NextRequest) {
   const u = p.get('u') ?? '', l = p.get('l') ?? '', t = p.get('t') ?? '';
   if (!verifyUnsubscribe(u, l, t)) return NextResponse.json({ ok: false }, { status: 400 });
   if (l === 'digest') await createAdminClient().from('profiles').update({ email_digest: false }).eq('id', u);
+  if (l === 'newsletter') await createAdminClient().from('newsletter_subscribers').update({ status: 'unsubscribed' }).eq('id', u);
   return NextResponse.json({ ok: true });
 }

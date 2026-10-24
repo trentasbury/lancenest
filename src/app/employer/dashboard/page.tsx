@@ -179,6 +179,7 @@ export default async function EmployerDashboard(
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="eyebrow">Your job postings</h2>
                 <Link href="/employer/jobs/new" className="btn btn-primary">Post a job</Link>
+                <Link href="/employer/jobs/import" className="btn btn-outline">Import jobs</Link>
                 <Link href={`/companies/${company.slug}`} className="text-sm text-navy underline decoration-brass underline-offset-4">View public company page →</Link>
               </div>
               <div className="mt-4">

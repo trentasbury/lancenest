@@ -7,15 +7,17 @@ import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import { deleteService, saveService, setServiceStatus } from '../actions';
 import { CONTACT_BLOCKED } from '@/lib/contact';
-import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
+import { FREELANCE_PAYMENTS_ENABLED, LICENSED_TRADES } from '@/lib/flags';
 
 export const metadata: Metadata = { title: 'My services' };
-const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, licensed: 'Licensed trades open on LanceNest once license verification launches.', ack: 'Please confirm both acknowledgments.', required: 'Add a title, a description of at least 20 characters, and a price of at least $25.', scam: 'That listing contains wording we don’t allow.', save: 'That didn’t save — please try again.' };
+const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, licensed: 'That trade needs your verified license first. Add it under Licenses & certificates; once it’s verified you can list the service.', ack: 'Please confirm both acknowledgments.', required: 'Add a title, a description of at least 20 characters, and a price of at least $25.', scam: 'That listing contains wording we don’t allow.', save: 'That didn’t save — please try again.' };
 
 export default async function MyServicesPage(props: { searchParams: Promise<{ error?: string; saved?: string }> }) {
   const searchParams = await props.searchParams;
   const { user } = await requireVerifiedMember('/freelance/services/mine');
   const supabase = await createClient();
+  const { licensedTrades } = await import('@/lib/credentials');
+  const trades = await licensedTrades(user.id);
   const [{ data: services }, { data: fp }] = await Promise.all([
     supabase.from('service_listings').select('id, title, price_cents, price_type, status').eq('profile_id', user.id).order('created_at', { ascending: false }),
     supabase.from('freelancer_profiles').select('payouts_enabled').eq('profile_id', user.id).maybeSingle(),
@@ -28,6 +30,7 @@ export default async function MyServicesPage(props: { searchParams: Promise<{ er
       {FREELANCE_PAYMENTS_ENABLED && !fp?.payouts_enabled && <p className="rounded-xl border border-brass bg-brass/10 p-4 text-sm">Before anyone can hire you, <Link href="/freelance/profile" className="font-medium text-navy underline">set up payouts</Link> (about 5 minutes with Stripe).</p>}
       {searchParams.error && <FormMessage error={ERR[searchParams.error] ?? ERR.save} />}
       {searchParams.saved && <FormMessage message="Service listed." />}
+      <p className="text-sm text-muted">Offer HVAC, electrical, plumbing, construction or roofing work? <Link href="/dashboard/credentials" className="text-navy underline">Add your trade license</Link> and those categories open once it’s verified.</p>
       <ul className="card divide-y divide-line">
         {(services ?? []).length === 0 && <li className="p-5 text-sm text-muted">No services yet.</li>}
         {(services ?? []).map((s) => (
@@ -43,7 +46,12 @@ export default async function MyServicesPage(props: { searchParams: Promise<{ er
       <form action={saveService} className="card grid gap-3 p-6 sm:grid-cols-2">
         <p className="font-medium sm:col-span-2">Add a service</p>
         <input name="title" required maxLength={100} placeholder="e.g. Mobile auto repair — brakes, oil, diagnostics" className="field sm:col-span-2" />
-        <select name="category" className="field">{OPEN_CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select>
+        <select name="category" className="field">
+          {OPEN_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+          <optgroup label="Licensed trades (verified license required)">
+            {LICENSED_TRADES.map((c) => <option key={c} value={c} disabled={!trades.includes(c)}>{c}{trades.includes(c) ? ' ✓ licensed' : ' (add your license)'}</option>)}
+          </optgroup>
+        </select>
         <select name="delivery" className="field"><option value="on_site">On-site</option><option value="remote">Remote</option><option value="both">On-site or remote</option></select>
         <input name="price" required inputMode="decimal" placeholder="Price ($)" className="field" />
         <select name="price_type" className="field"><option value="fixed">Fixed price</option><option value="starting_at">Starting at</option><option value="hourly">Per hour</option></select>

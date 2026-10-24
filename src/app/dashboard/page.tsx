@@ -18,11 +18,13 @@ const TOOLS = [
   { href: '/dashboard/applications', label: 'My applications', hint: 'Track every job you’ve applied to' },
   { href: '/dashboard/alerts', label: 'Job alerts', hint: 'New matches sent to your inbox' },
   { href: '/dashboard/resume-builder', label: 'Résumé builder', hint: 'Turn your service into a civilian résumé' },
+  { href: '/dashboard/resume-writer', label: 'AI résumé writer', hint: 'Your MOS and evals in civilian words' },
   { href: '/training', label: 'Training & certifications', hint: 'Programs for GI Bill and SkillBridge' },
   { href: '/groups', label: 'Groups', hint: 'Connect by branch, field, and location' },
   { href: '/mentors', label: 'Mentors', hint: 'Advice from members who’ve made the move' },
   { href: '/fairs', label: 'Career fairs', hint: 'Virtual hiring events' },
   { href: '/freelance/earnings', label: 'Freelance earnings', hint: 'Contracts and payouts' },
+  { href: '/dashboard/credentials', label: 'Licenses & certificates', hint: 'Verified badges; unlock trade work' },
 ];
 
 type AppRow = { id: string; status: string; applied_at: string; job: { title: string; slug: string } | null };

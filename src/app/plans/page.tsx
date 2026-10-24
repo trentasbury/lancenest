@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getSessionProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import RenewalNote from '@/components/RenewalNote';
+import { AI_ENABLED } from '@/lib/ai';
 
 export const metadata: Metadata = { alternates: { canonical: '/plans' },
   title: 'Plans for Veterans',
@@ -12,11 +13,11 @@ export const metadata: Metadata = { alternates: { canonical: '/plans' },
 const PLANS = [
   { id: null, key: 'free', name: 'Free', price: '$0', note: 'Always, for every verified service member',
     features: ['Verified profile with military & professional career', 'Apply to every job with up to 3 résumés', 'Network, messaging, and People search',
-      'Transition Hub & SkillBridge', 'See how many people viewed your profile', '5 freelance proposals a month, plus 5 more for $5 anytime', 'Freelance fee: 15%'] },
+      'Transition Hub & SkillBridge', 'See how many people viewed your profile', '5 freelance proposals a month, plus 5 more for $5 anytime', ...(AI_ENABLED ? ['3 AI résumé and job-fit drafts a month'] : []), 'Freelance fee: 15%'] },
   { id: 'veteran_pro' as const, key: 'pro', name: 'Pro', price: '$25', note: 'per month · or $229/year paid up front (save 24%)', month: 'veteran_pro_month', year: 'veteran_pro_year',
-    features: ['Everything in Free', 'See exactly who viewed your profile', 'Applicant insights: how you compare on every job', 'Daily job alerts by email (3)', 'Unlimited freelance proposals', 'Pro badge on your profile', 'Freelance fee: 10%'] },
+    features: ['Everything in Free', 'See exactly who viewed your profile', 'Applicant insights: how you compare on every job', 'Daily job alerts by email (3)', 'Unlimited freelance proposals', 'Pro badge on your profile', ...(AI_ENABLED ? ['40 AI résumé and job-fit drafts a month'] : []), 'Freelance fee: 10%'] },
   { id: 'veteran_pro_plus' as const, key: 'pro_plus', name: 'Career Accelerator', price: '$45', note: 'per month · or $399/year paid up front (save 26%)', month: 'veteran_pro_plus_month', year: 'veteran_pro_plus_year', featured: true,
-    features: ['Everything in Pro', 'Military résumé builder: a civilian-ready résumé draft in one click — then edit and tailor it', 'Applicant insights and 10 job alerts, including cleared-only', '48-hour early access to jobs that list a clearance requirement (your clearance is self-reported)', 'Priority applicant: listed first on jobs and freelance proposals, labeled for employers', 'Featured profile boost twice a month — clearly labeled for employers', 'Priority messages in employer inboxes', 'Freelance: unlimited proposals · 8% fee'] },
+    features: ['Everything in Pro', 'Military résumé builder: a civilian-ready résumé draft in one click — then edit and tailor it', 'Applicant insights and 10 job alerts, including cleared-only', '48-hour early access to jobs that list a clearance requirement (your clearance is self-reported)', 'Priority applicant: listed first on jobs and freelance proposals, labeled for employers', 'Featured profile boost twice a month — clearly labeled for employers', 'Priority messages in employer inboxes', ...(AI_ENABLED ? ['60 AI résumé and job-fit drafts a month'] : []), 'Freelance: unlimited proposals · 8% fee'] },
 ];
 
 export default async function PlansPage() {
@@ -37,6 +38,7 @@ export default async function PlansPage() {
           <p className="mx-auto mt-5 max-w-2xl text-cream/80">
             Your profile, verification, and every job on LanceNest cost nothing. Upgrade anytime; cancel anytime from your billing page.
           </p>
+          <p className="mx-auto mt-4 inline-block rounded-full border border-brass/60 px-4 py-1.5 text-sm text-brass-light">Separating within a year? Verified members get 90 days of Pro free. <a href="/transition" className="underline">Add your date</a></p>
         </div>
       </section>
 

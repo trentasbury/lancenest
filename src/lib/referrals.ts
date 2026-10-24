@@ -57,7 +57,17 @@ export async function rewardReferrer(referredProfileId: string, event: 'member_a
     .eq('referrer_id', ref.id).gt('cents', 0).gte('created_at', new Date(Date.now() - 365 * 86400000).toISOString());
   // A service member who brings a paying company earns 2 months, outside the yearly cap (every one is a new paying customer).
   if (vetBringsCompany) return rewardVeteranForCompany(ref.id as string, referredProfileId, who(referred.full_name), plan, cents, customer);
-  const capped = (recent ?? 0) >= REFERRAL_CAP_PER_YEAR;
+  // Base ambassadors: every verified member they bring earns a free month (no yearly cap; Pro time if they're on Free).
+  const { isActiveAmbassador, grantAmbassadorMonth } = await import('@/lib/ambassadors');
+  const ambassador = event === 'member_active' && refIsMember && (await isActiveAmbassador(ref.id as string));
+  if (ambassador && !(cents > 0 && customer)) {
+    const { error: e } = await admin.from('referral_rewards').insert({ referred_id: referredProfileId, referrer_id: ref.id, cents: 0, note: 'ambassador: 1 month of Pro' });
+    if (e) return;
+    await grantAmbassadorMonth(ref.id as string);
+    await notifyMember(ref.id as string, { type: 'referral', link: '/ambassadors', title: `${who(referred.full_name)} joined and got verified on your ambassador link: you’ve earned another free month of Pro. Thank you.` });
+    return;
+  }
+  const capped = !ambassador && (recent ?? 0) >= REFERRAL_CAP_PER_YEAR;
   const pay = cents > 0 && !!customer && !capped;
   // Record first (primary key on referred_id makes this pay out at most once).
   const { error } = await admin.from('referral_rewards').insert({ referred_id: referredProfileId, referrer_id: ref.id, cents: pay ? cents : 0, note: pay ? LABEL[plan] : capped ? 'cap reached' : 'free plan' });

@@ -11,5 +11,6 @@ export async function confirmUnsubscribe(formData: FormData) {
   const t = String(formData.get('t') ?? '');
   if (!verifyUnsubscribe(u, l, t)) redirect('/unsubscribe?invalid=1');
   if (l === 'digest') await createAdminClient().from('profiles').update({ email_digest: false }).eq('id', u);
+  if (l === 'newsletter') await createAdminClient().from('newsletter_subscribers').update({ status: 'unsubscribed' }).eq('id', u);
   redirect('/unsubscribe?done=1');
 }

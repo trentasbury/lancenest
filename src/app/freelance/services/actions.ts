@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { requireVerifiedMember } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { OPEN_CATEGORIES } from '@/lib/freelance';
+import { CATEGORIES, OPEN_CATEGORIES } from '@/lib/freelance';
 import { vetRateFor } from '@/lib/payments';
 import { scamSignals } from '@/lib/scam';
 import { getMyCompany } from '@/lib/employer';
@@ -24,8 +24,12 @@ export async function saveService(formData: FormData) {
   if (title.length < 4 || description.length < 20 || !Number.isFinite(price) || price < 2000) redirect('/freelance/services/mine?error=required');
   if (scamSignals(`${title}\n${description}`, 'block').length) redirect('/freelance/services/mine?error=scam');
   const priceType = t(formData, 'price_type', 12), delivery = t(formData, 'delivery', 10);
+  // Licensed trades need the member's verified license for that trade (the database checks this too).
+  const { licensedTrades } = await import('@/lib/credentials');
+  const allowed = OPEN_CATEGORIES.includes(category) || (await licensedTrades(user.id)).includes(category);
+  if (!allowed && CATEGORIES.includes(category)) redirect('/freelance/services/mine?error=licensed');
   const { error } = await (await createClient()).from('service_listings').insert({
-    profile_id: user.id, title, description, category: OPEN_CATEGORIES.includes(category) ? category : 'Other', price_cents: price,
+    profile_id: user.id, title, description, category: allowed ? category : 'Other', price_cents: price,
     price_type: ['fixed', 'hourly', 'starting_at'].includes(priceType) ? priceType : 'fixed', delivery: ['remote', 'on_site', 'both'].includes(delivery) ? delivery : 'remote',
     service_area: t(formData, 'service_area', 120) || null,
   });
