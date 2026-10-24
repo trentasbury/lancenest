@@ -14,6 +14,10 @@ export type JobFilters = {
   clearance?: string;
   poly?: string;
   veteran?: string;
+  /** "1": jobs a spouse can keep through a PCS move (remote or multi-location). */
+  pcs?: string;
+  /** msep: Military Spouse Employment Partnership employers; guard: employers with the Guard & Reserve pledge. */
+  employer?: string;
 };
 
 import { parseArrangements, placeFilter } from './place';
@@ -22,7 +26,10 @@ const JOB_SELECT = '*, company:companies(name, slug, logo_url, is_verified, indu
 
 export async function searchJobs(filters: JobFilters, limit = 50): Promise<JobWithCompany[]> {
   const supabase = await createClient();
-  let query = supabase.from('jobs').select(JOB_SELECT).eq('status', 'open');
+  const byEmployer = filters.employer === 'msep' || filters.employer === 'guard';
+  let query = supabase.from('jobs').select(byEmployer ? JOB_SELECT.replace('companies(', 'companies!inner(') : JOB_SELECT).eq('status', 'open');
+  if (filters.employer === 'msep') query = query.eq('company.msep_status', 'verified');
+  if (filters.employer === 'guard') query = query.eq('company.guard_reserve_pledge', true);
 
   const q = sanitizeSearch(filters.q ?? '');
   let textExpr: string | null = null;
@@ -49,9 +56,10 @@ export async function searchJobs(filters: JobFilters, limit = 50): Promise<JobWi
     placeExpr = placeFilter(filters.state, arrangements);
   }
   // Both conditions must hold, so they go into one filter joined with and().
-  const both = [textExpr, placeExpr].filter(Boolean) as string[];
+  const pcsExpr = filters.pcs === '1' ? 'or(work_arrangement.eq.remote,multi_location.eq.true)' : null;
+  const both = [textExpr, placeExpr, pcsExpr].filter(Boolean) as string[];
   if (both.length === 1) query = query.or(both[0]);
-  if (both.length === 2) query = query.or(`and(${both.join(',')})`);
+  if (both.length >= 2) query = query.or(`and(${both.join(',')})`);
   if (filters.type && ['full_time', 'part_time', 'contract', 'internship', 'skillbridge'].includes(filters.type)) {
     query = query.eq('employment_type', filters.type);
   }
@@ -66,7 +74,7 @@ export async function searchJobs(filters: JobFilters, limit = 50): Promise<JobWi
     console.error('searchJobs failed:', error.message);
     return [];
   }
-  return (data ?? []) as JobWithCompany[];
+  return (data ?? []) as unknown as JobWithCompany[];
 }
 
 /** One lookup per request: the page title and the page share it. */

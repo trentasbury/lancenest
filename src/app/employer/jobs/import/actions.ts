@@ -4,8 +4,9 @@ import { revalidatePath } from 'next/cache';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { PAID, getMyCompany } from '@/lib/employer';
+import { FEED_SYNC, getMyCompany } from '@/lib/employer';
 import { importJobs, readFeed, validSource, type FeedKind, type ImportResult } from '@/lib/jobImport';
+import { refreshPublicJobs } from '@/lib/publicRefresh';
 
 export type ImportState = { result?: ImportResult; error?: string };
 const KINDS: FeedKind[] = ['greenhouse', 'lever', 'ashby', 'xml'];
@@ -29,10 +30,10 @@ export async function runImport(_prev: ImportState, formData: FormData): Promise
   if (!jobs.length) return { error: 'We reached the job board, but it has no open jobs right now.' };
 
   const result = await importJobs(await createClient(), company.id, kind, jobs);
-  const autoSync = formData.get('auto_sync') === 'on' && PAID.includes(company.plan);
+  const autoSync = formData.get('auto_sync') === 'on' && FEED_SYNC.includes(company.plan);
   await createAdminClient().from('job_feeds').upsert({ company_id: company.id, kind, source: src, auto_sync: autoSync, last_synced_at: new Date().toISOString(), last_result: result }, { onConflict: 'company_id' });
   revalidatePath('/employer/dashboard');
   revalidatePath('/jobs');
-  revalidatePath('/open-jobs');
+  refreshPublicJobs();
   return { result };
 }

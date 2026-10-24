@@ -53,7 +53,7 @@ export async function startConversation(otherId: string, formData?: FormData) {
       const { count: proposed } = await admin.from('proposals').select('id, project:freelance_projects!inner(client_id)', { count: 'exact', head: true }).eq('freelancer_id', otherId).eq('project.client_id', me);
       const isApplicant = (applied ?? 0) > 0 || (proposed ?? 0) > 0;
       if (!isApplicant) {
-        if (co.plan === 'free') redirect('/messages?error=plan');
+        if (co.plan === 'free' || co.plan === 'starter') redirect('/messages?error=plan');
         const CAP: Record<string, number> = { professional: 100, federal: 500, enterprise: 2000 };
         const { data: team } = await admin.from('company_members').select('profile_id').eq('company_id', co.id);
         const ids = [co.owner_id, ...(team ?? []).map((t) => t.profile_id as string)];

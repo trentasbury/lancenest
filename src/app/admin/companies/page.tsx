@@ -4,7 +4,7 @@ import { requireAdmin } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import SubmitButton from '@/components/SubmitButton';
 import EmptyState from '@/components/EmptyState';
-import { decideCompany, decidePublicSafety, decideSkillBridge } from '../actions';
+import { decideCompany, decideMsep, decidePublicSafety, decideSkillBridge } from '../actions';
 import { safeHref } from '@/lib/safeHref';
 
 export const metadata: Metadata = { title: 'Company verification', robots: { index: false } };
@@ -17,6 +17,7 @@ export default async function CompanyQueue() {
   const admin = createAdminClient();
   const { data: sbPending } = await admin.from('companies').select('id, name, skillbridge_org_name').eq('skillbridge_status', 'pending');
   const { data: psPending } = await admin.from('companies').select('id, name, public_safety_details').eq('public_safety_status', 'pending');
+  const { data: msepPending } = await admin.from('companies').select('id, name, slug').eq('msep_status', 'pending');
   const [{ data: pending }, { data: verified }] = await Promise.all([
     admin.from('companies').select('id, name, slug, owner_id, verification_details, created_at').eq('verification_status', 'pending').order('updated_at'),
     admin.from('companies').select('id, name, slug').eq('verification_status', 'verified').order('updated_at', { ascending: false }).limit(20),
@@ -52,6 +53,24 @@ export default async function CompanyQueue() {
                   </li>
                 );
               })}
+            </ul>
+          </section>
+        )}
+        {(msepPending ?? []).length > 0 && (
+          <section className="card border-navy/30 p-6">
+            <p className="eyebrow">MSEP partners to confirm</p>
+            <p className="mt-1 text-sm text-muted">Find each company on the DoD’s public MSEP partner list before confirming.</p>
+            <ul className="mt-4 space-y-3">
+              {(msepPending ?? []).map((c) => (
+                <li key={c.id as string} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line p-4">
+                  <Link href={`/companies/${c.slug as string}`} className="font-medium text-navy hover:underline">{c.name as string}</Link>
+                  <div className="flex flex-wrap gap-2">
+                    <a href="https://msepjobs.militaryonesource.mil/msep/" target="_blank" rel="noopener noreferrer" className="btn btn-ghost border border-line px-3 py-1.5 text-xs">MSEP site ↗</a>
+                    <form action={decideMsep.bind(null, c.id as string, 'rejected')}><SubmitButton className="btn btn-outline border-signal px-3 py-1.5 text-xs text-signal" pendingText="…">Not on list</SubmitButton></form>
+                    <form action={decideMsep.bind(null, c.id as string, 'verified')}><SubmitButton className="btn btn-primary px-3 py-1.5 text-xs" pendingText="…">Confirm</SubmitButton></form>
+                  </div>
+                </li>
+              ))}
             </ul>
           </section>
         )}

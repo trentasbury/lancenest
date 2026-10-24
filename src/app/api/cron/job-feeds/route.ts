@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { importJobs, readFeed, type FeedKind } from '@/lib/jobImport';
-import { PAID } from '@/lib/employer';
+import { FEED_SYNC } from '@/lib/employer';
+import { refreshPublicJobs } from '@/lib/publicRefresh';
 
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
   let synced = 0;
   for (const f of (feeds ?? []) as unknown as { company_id: string; kind: FeedKind; source: string; company: { plan: string; is_verified: boolean } }[]) {
     if (Date.now() - started > 45000) break;
-    if (!PAID.includes(f.company.plan as never)) { await admin.from('job_feeds').update({ auto_sync: false }).eq('company_id', f.company_id); continue; }
+    if (!FEED_SYNC.includes(f.company.plan as never)) { await admin.from('job_feeds').update({ auto_sync: false }).eq('company_id', f.company_id); continue; }
     try {
       const jobs = await readFeed(f.kind, f.source);
       const result = await importJobs(admin, f.company_id, f.kind, jobs);
@@ -27,5 +28,6 @@ export async function GET(request: NextRequest) {
       await admin.from('job_feeds').update({ last_synced_at: new Date().toISOString(), last_result: { error: (e as Error).message } }).eq('company_id', f.company_id);
     }
   }
+  if (synced) refreshPublicJobs();
   return NextResponse.json({ ok: true, synced });
 }

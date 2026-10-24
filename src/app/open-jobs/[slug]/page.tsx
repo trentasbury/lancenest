@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getPublicJob, jobPostingJsonLd, ldJson } from '@/lib/publicJobs';
+import { getPublicJob, getPublicJobIndexed, jobPostingJsonLd, ldJson } from '@/lib/publicJobs';
+import { responseDays, responseLabel } from '@/lib/responsiveness';
 import { ARRANGEMENT_LABELS, CLEARANCE_LABELS, EMPLOYMENT_LABELS, formatSalary, postedAgo } from '@/lib/format';
 import { CANONICAL_ORIGIN } from '@/lib/seo';
 
@@ -40,8 +41,10 @@ function Section({ title, text }: { title: string; text: string | null }) {
 
 export default async function PublicJobPage(props: { params: Promise<{ slug: string }> }) {
   const { slug } = await props.params;
-  const job = await getPublicJob(slug);
-  if (!job) notFound();
+  const indexed = await getPublicJobIndexed(slug);
+  if (!indexed) notFound();
+  const { job } = indexed;
+  const fast = responseLabel((await responseDays([indexed.companyId])).get(indexed.companyId));
   const salary = formatSalary(job.salary_min, job.salary_max, job.salary_period);
   const memberUrl = `/jobs/${job.slug}`;
   const poly = job.polygraph_required === 'full_scope' ? ' w/ Full-Scope Poly' : job.polygraph_required === 'ci' ? ' w/ CI Poly' : '';
@@ -58,6 +61,7 @@ export default async function PublicJobPage(props: { params: Promise<{ slug: str
         <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-olive/40 bg-olive/10 px-3 py-1 text-xs font-semibold text-olive">
           ✓ Employer reviewed by LanceNest
         </p>
+        {fast && <p className="ml-2 mt-2 inline-flex items-center rounded-full border border-olive/40 bg-olive/10 px-3 py-1 text-xs font-semibold text-olive">{fast}</p>}
 
         <div className="mt-6 flex flex-wrap gap-2">
           <span className="pill">{ARRANGEMENT_LABELS[job.work_arrangement]}</span>

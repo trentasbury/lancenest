@@ -13,6 +13,8 @@ export default function Footer() {
           <p className="eyebrow text-brass">Veterans</p>
           <ul className="mt-4 space-y-2.5 text-sm text-cream/80">
             <li><Link href="/open-jobs" className="hover:text-brass">Find jobs</Link></li>
+            <li><Link href="/bases" className="hover:text-brass">Jobs near base</Link></li>
+            <li><Link href="/fairs" className="hover:text-brass">Virtual career fairs</Link></li>
             <li><Link href="/pay" className="hover:text-brass">Pay insights</Link></li>
             <li><Link href="/newsletter" className="hover:text-brass">Weekly jobs newsletter</Link></li>
             <li><Link href="/ambassadors" className="hover:text-brass">Become an ambassador</Link></li>
@@ -28,6 +30,7 @@ export default function Footer() {
           <ul className="mt-4 space-y-2.5 text-sm text-cream/80">
             <li><Link href="/employers" className="hover:text-brass">Plans</Link></li>
             <li><Link href="/signup?role=employer" className="hover:text-brass">Create a company account</Link></li>
+            <li><Link href="/hire" className="hover:text-brass">Hire a veteran freelancer</Link></li>
             <li><Link href="/about" className="hover:text-brass">About LanceNest</Link></li>
             <li><Link href="/help" className="hover:text-brass">Help & feedback</Link></li>
           </ul>

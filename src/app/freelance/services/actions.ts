@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireVerifiedMember } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -28,25 +28,60 @@ export async function saveService(formData: FormData) {
   const { licensedTrades } = await import('@/lib/credentials');
   const allowed = OPEN_CATEGORIES.includes(category) || (await licensedTrades(user.id)).includes(category);
   if (!allowed && CATEGORIES.includes(category)) redirect('/freelance/services/mine?error=licensed');
+  const packages = readPackages(formData);
+  if (packages === null) redirect('/freelance/services/mine?error=package');
+  if (scamSignals(packages.map((p) => `${p.name}\n${p.includes}`).join('\n'), 'block').length) redirect('/freelance/services/mine?error=scam');
   const { error } = await (await createClient()).from('service_listings').insert({
+    packages, public_listing: formData.get('public_listing') === 'on',
     profile_id: user.id, title, description, category: allowed ? category : 'Other', price_cents: price,
     price_type: ['fixed', 'hourly', 'starting_at'].includes(priceType) ? priceType : 'fixed', delivery: ['remote', 'on_site', 'both'].includes(delivery) ? delivery : 'remote',
     service_area: t(formData, 'service_area', 120) || null,
   });
   revalidatePath('/freelance/services/mine');
+  revalidateTag('public-services', 'max');
+  revalidatePath('/hire', 'layout');
   redirect(`/freelance/services/mine?${error ? `error=${error.code === 'P0017' ? 'contact' : error.code === 'P0018' ? 'licensed' : 'save'}` : 'saved=1'}`);
+}
+
+export type ServicePackage = { name: string; price_cents: number; days: number; includes: string };
+
+/**
+ * Up to 3 packages (like Fiverr's basic, standard and premium). A row left blank is skipped; a half-filled row
+ * returns null so the form can say what's missing.
+ */
+function readPackages(formData: FormData): ServicePackage[] | null {
+  const out: ServicePackage[] = [];
+  for (const i of [1, 2, 3]) {
+    const name = t(formData, `pkg${i}_name`, 40), priceRaw = t(formData, `pkg${i}_price`, 12), daysRaw = t(formData, `pkg${i}_days`, 3), includes = t(formData, `pkg${i}_includes`, 200);
+    if (!name && !priceRaw && !daysRaw && !includes) continue;
+    const price = dollars(priceRaw), days = Number.parseInt(daysRaw, 10);
+    if (name.length < 3 || !Number.isFinite(price) || price < 2500 || !(days >= 1 && days <= 90) || includes.length < 5) return null;
+    out.push({ name, price_cents: price, days, includes });
+  }
+  return out;
+}
+
+/** Opt in or out of the public service page (first name and last initial, city, no contact details). */
+export async function setServicePublic(id: string, on: boolean) {
+  const { user } = await requireVerifiedMember('/freelance/services/mine');
+  await (await createClient()).from('service_listings').update({ public_listing: on, updated_at: new Date().toISOString() }).eq('id', id).eq('profile_id', user.id);
+  revalidatePath('/freelance/services/mine');
+  revalidateTag('public-services', 'max');
+  revalidatePath('/hire', 'layout');
 }
 
 export async function setServiceStatus(id: string, status: 'active' | 'paused') {
   const { user } = await requireVerifiedMember('/freelance/services/mine');
   await (await createClient()).from('service_listings').update({ status, updated_at: new Date().toISOString() }).eq('id', id).eq('profile_id', user.id);
   revalidatePath('/freelance/services/mine');
+  revalidateTag('public-services', 'max');
 }
 
 export async function deleteService(id: string) {
   const { user } = await requireVerifiedMember('/freelance/services/mine');
   await (await createClient()).from('service_listings').delete().eq('id', id).eq('profile_id', user.id);
   revalidatePath('/freelance/services/mine');
+  revalidateTag('public-services', 'max');
 }
 
 /**
@@ -58,7 +93,7 @@ export async function requestService(serviceId: string, formData: FormData) {
   if (profile.role !== 'employer') redirect(`/freelance/services/${serviceId}`);
   const company = await getMyCompany(user.id);
   if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
-  const { data: s } = await (await createClient()).from('service_listings').select('id, profile_id, title, price_cents, status, delivery').eq('id', serviceId).eq('status', 'active').maybeSingle();
+  const { data: s } = await (await createClient()).from('service_listings').select('id, profile_id, title, price_cents, status, delivery, packages').eq('id', serviceId).eq('status', 'active').maybeSingle();
   if (!s || s.profile_id === user.id) redirect('/freelance/services');
   const amount = dollars(t(formData, 'amount', 12));
   const note = t(formData, 'note', 2000);
@@ -73,7 +108,9 @@ export async function requestService(serviceId: string, formData: FormData) {
   if (FREELANCE_PAYMENTS_ENABLED && !fp?.payouts_enabled) redirect(`/freelance/services/${serviceId}?error=payouts`);
   const onSite = s.delivery !== 'remote';
   // The fee follows the real size of the job: an amount under the listed price doesn't lower it.
-  const fee = bookingRequired(onSite) ? bookingFeeCents(Math.max(amount, s.price_cents as number)) : 0;
+  // The lowest listed price (base or package) is the floor.
+  const floor = Math.min(s.price_cents as number, ...((s.packages as ServicePackage[] | null) ?? []).map((p) => p.price_cents));
+  const fee = bookingRequired(onSite) ? bookingFeeCents(Math.max(amount, floor)) : 0;
   const { data: contract, error } = await admin.from('contracts').insert({
     client_id: user.id, freelancer_id: s.profile_id, service_id: s.id, title: s.title as string, request_note: note,
     veteran_fee_rate: vetRateFor((vet?.plan as string) ?? 'free'),

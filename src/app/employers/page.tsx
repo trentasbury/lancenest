@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { unstable_cache } from 'next/cache';
 import { foundingSpotsLeft } from '@/lib/billing';
 import RenewalNote from '@/components/RenewalNote';
+import { CostComparison, SampleCandidate } from './Showcase';
 
 // Display only: refreshed every 5 minutes. Checkout always re-checks the live count.
 const spotsLeftForDisplay = unstable_cache(() => foundingSpotsLeft().catch(() => 0), ['founding-spots-left'], { revalidate: 300 });
@@ -18,6 +19,8 @@ export const metadata: Metadata = { alternates: { canonical: '/employers' },
 const PLANS = [
   { name: 'Free', price: '$0', note: 'To get started', cta: 'Create a free account',
     features: ['No placement fees on job-post hires', 'Company recruiting page', '2 open job posts', 'Applicant pipeline with résumés and verified work', 'Message applicants to your jobs'] },
+  { name: 'Starter', price: '$99', note: 'per month · or $990/year paid up front (2 months free)', cta: 'Start with Starter',
+    features: ['5 open job posts (extra slots $39/mo)', 'Company recruiting page', 'Applicant pipeline with résumés and verified work', 'Message applicants to your jobs', 'Import and daily sync from Greenhouse, Lever or Ashby', '1 team seat', 'Talent search is on Professional'] },
   { name: 'Professional', price: '$249', note: 'per month · or $2,490/year paid up front (2 months free)', cta: 'Start with Professional', featured: true,
     features: ['10 open job posts (extra slots $39/mo)', 'Search every verified member’s full profile', 'Transitioning talent search (separating in 12 months)', 'Hiring analytics: views, applicants, conversion', '5 featured jobs a month, included', 'Talent pools: save candidates to lists with private notes', 'Saved searches with daily new-match emails', '2 team seats', 'Branded company page: cover photo and “Why veterans work here”', 'Applicant export (CSV)'] },
   { name: 'Federal', price: '$999', note: 'per month · or $9,990/year paid up front (2 months free) · Founding Employers: $7,500 for the first year, paid up front', cta: 'Start with Federal',
@@ -26,7 +29,7 @@ const PLANS = [
     features: ['Everything in Federal', 'Volume pricing for multiple hiring teams', 'Invoice billing', 'Dedicated support'] },
 ];
 
-const CHECKOUT: Record<string, string> = { Professional: 'employer_professional', Federal: 'employer_federal' };
+const CHECKOUT: Record<string, string> = { Starter: 'employer_starter', Professional: 'employer_professional', Federal: 'employer_federal' };
 
 export default async function EmployersPage() {
   const spotsLeft = await spotsLeftForDisplay();
@@ -37,7 +40,7 @@ export default async function EmployersPage() {
         <div className="container-page py-16 text-center">
           <p className="eyebrow text-brass">For Employers</p>
           <h1 className="mx-auto mt-4 max-w-3xl font-serif text-5xl font-medium leading-tight text-ivory">
-            Verified, federal-ready veteran talent — in days, not months.
+            Verified, federal-ready veteran talent, without the noise.
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-cream/80">
             Built for federal primes, subcontractors, and GovCon small businesses. Every candidate’s military service is verified. Post jobs, search, and hire directly —
@@ -61,12 +64,12 @@ export default async function EmployersPage() {
       </section>
 
       <div className="container-page py-16">
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {PLANS.map((plan) => (
-            <div key={plan.name} className={`card flex flex-col p-8 ${plan.featured ? 'border-brass ring-1 ring-brass' : ''}`}>
-              {plan.featured && <p className="eyebrow mb-3">Most popular</p>}
+            <div key={plan.name} className={`card flex flex-col p-6 ${plan.featured ? 'border-brass ring-1 ring-brass' : ''}`}>
+              {plan.featured && <p className="eyebrow mb-3">Recommended</p>}
               <h2 className="font-serif text-2xl font-semibold">{plan.name}</h2>
-              <p className="mt-4 font-serif text-5xl font-medium text-navy">{plan.price}</p>
+              <p className="mt-4 font-serif text-[2.75rem] font-medium leading-none text-navy">{plan.price}</p>
               <p className="text-sm text-muted">{plan.note}</p>
               {plan.name === 'Professional' && founding > 0 && (
                 <p className="mt-3 rounded-lg border border-brass bg-brass/10 px-3 py-2 text-xs font-semibold text-brass-dark">
@@ -103,27 +106,36 @@ export default async function EmployersPage() {
 
           <div className="mt-12 overflow-x-auto rounded-2xl border border-line bg-ivory" tabIndex={0} role="region" aria-label="Plan comparison">
             <table className="w-full min-w-[640px] text-left text-sm">
-              <thead className="border-b border-line bg-paper text-xs uppercase tracking-[0.12em] text-muted"><tr><th className="p-3">Compare plans</th><th className="p-3">Free</th><th className="p-3">Professional</th><th className="p-3">Federal</th><th className="p-3">Enterprise</th></tr></thead>
+              <thead className="border-b border-line bg-paper text-xs uppercase tracking-[0.12em] text-muted"><tr><th className="p-3">Compare plans</th><th className="p-3">Free</th><th className="p-3">Starter</th><th className="p-3">Professional</th><th className="p-3">Federal</th><th className="p-3">Enterprise</th></tr></thead>
               <tbody className="divide-y divide-line">
-                <tr><td className="p-3 font-medium">Verified company page</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
-                <tr><td className="p-3 font-medium">Team seats</td><td className="p-3">1</td><td className="p-3">2</td><td className="p-3">5</td><td className="p-3">Custom</td></tr>
-                <tr><td className="p-3 font-medium">Open jobs</td><td className="p-3">2</td><td className="p-3">10</td><td className="p-3">Unlimited</td><td className="p-3">Unlimited</td></tr>
-                <tr><td className="p-3 font-medium">Screening questions and applicant pipeline</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
-                <tr><td className="p-3 font-medium">Message applicants</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
-                <tr><td className="p-3 font-medium">Search all verified members</td><td className="p-3">—</td><td className="p-3">✓</td><td className="p-3">✓ + clearance filters</td><td className="p-3">✓</td></tr>
-                <tr><td className="p-3 font-medium">New conversations with any member</td><td className="p-3">—</td><td className="p-3">100/month</td><td className="p-3">500/month</td><td className="p-3">2,000/month</td></tr>
-                <tr><td className="p-3 font-medium">Saved searches, talent pools, notes</td><td className="p-3">—</td><td className="p-3">✓</td><td className="p-3">✓ (team-shared)</td><td className="p-3">✓</td></tr>
-                <tr><td className="p-3 font-medium">Featured jobs</td><td className="p-3">Add-on</td><td className="p-3">5/month</td><td className="p-3">Unlimited</td><td className="p-3">Unlimited</td></tr>
-                <tr><td className="p-3 font-medium">Reports and CSV export</td><td className="p-3">Basic</td><td className="p-3">✓</td><td className="p-3">✓ + veteran outreach report</td><td className="p-3">Custom</td></tr>
-                <tr><td className="p-3 font-medium">Support</td><td className="p-3">Email</td><td className="p-3">Email</td><td className="p-3">Priority</td><td className="p-3">Dedicated contact</td></tr>
-                <tr><td className="p-3 font-medium">Invoicing, security review, custom terms</td><td className="p-3">—</td><td className="p-3">—</td><td className="p-3">—</td><td className="p-3">✓</td></tr>
+                <tr><td className="p-3 font-medium">Verified company page</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
+                <tr><td className="p-3 font-medium">Team seats</td><td className="p-3">1</td><td className="p-3">1</td><td className="p-3">2</td><td className="p-3">5</td><td className="p-3">Custom</td></tr>
+                <tr><td className="p-3 font-medium">Open jobs</td><td className="p-3">2</td><td className="p-3">5</td><td className="p-3">10</td><td className="p-3">Unlimited</td><td className="p-3">Unlimited</td></tr>
+                <tr><td className="p-3 font-medium">Screening questions and applicant pipeline</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
+                <tr><td className="p-3 font-medium">Message applicants</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
+                <tr><td className="p-3 font-medium">Search all verified members</td><td className="p-3">—</td><td className="p-3">—</td><td className="p-3">✓</td><td className="p-3">✓ + clearance filters</td><td className="p-3">✓</td></tr>
+                <tr><td className="p-3 font-medium">New conversations with any member</td><td className="p-3">—</td><td className="p-3">—</td><td className="p-3">100/month</td><td className="p-3">500/month</td><td className="p-3">2,000/month</td></tr>
+                <tr><td className="p-3 font-medium">Saved searches, talent pools, notes</td><td className="p-3">—</td><td className="p-3">—</td><td className="p-3">✓</td><td className="p-3">✓ (team-shared)</td><td className="p-3">✓</td></tr>
+                <tr><td className="p-3 font-medium">Featured jobs</td><td className="p-3">Add-on</td><td className="p-3">Add-on</td><td className="p-3">5/month</td><td className="p-3">Unlimited</td><td className="p-3">Unlimited</td></tr>
+                <tr><td className="p-3 font-medium">Reports and CSV export</td><td className="p-3">Basic</td><td className="p-3">Basic</td><td className="p-3">✓</td><td className="p-3">✓ + veteran outreach report</td><td className="p-3">Custom</td></tr>
+                <tr><td className="p-3 font-medium">Support</td><td className="p-3">Email</td><td className="p-3">Email</td><td className="p-3">Email</td><td className="p-3">Priority</td><td className="p-3">Dedicated contact</td></tr>
+                <tr><td className="p-3 font-medium">Invoicing, security review, custom terms</td><td className="p-3">—</td><td className="p-3">—</td><td className="p-3">—</td><td className="p-3">—</td><td className="p-3">✓</td></tr>
               </tbody>
             </table>
           </div>
         <p className="mt-8 text-center text-sm text-muted">
-          Every employer account starts free, and no plan charges a fee when you hire through a job post. Paid plans renew automatically until you cancel; upgrade, downgrade, or cancel anytime in Billing. Add-ons: featured job boost $49 · extra job slot $39/month. <strong>Public Safety rate:</strong> government police, sheriff, corrections, fire, and EMS agencies get 30% off Professional and Federal — annual invoicing available. <strong>Virtual career fair booths:</strong> $499, or $399 on Professional and Federal. <strong>Training providers:</strong> list programs for $149/month (featured +$99/month; sponsored info sessions $500).
+          Every employer account starts free, and no plan charges a fee when you hire through a job post. Paid plans renew automatically until you cancel; upgrade, downgrade, or cancel anytime in Billing. Add-ons: featured job boost $49 · extra job slot $39/month. <strong>DoD SkillBridge programs</strong> are free to post on every plan and don’t count toward your job limit. <strong>Public Safety rate:</strong> government police, sheriff, corrections, fire, and EMS agencies get 30% off Professional and Federal — annual invoicing available. <strong>Virtual career fair booths:</strong> $499, or $399 on Professional and Federal. <strong>Training providers:</strong> list programs for $149/month (featured +$99/month; sponsored info sessions $500).
         </p>
       </div>
+      <CostComparison />
+      <SampleCandidate />
+      <section className="border-y border-line bg-cream">
+        <div className="container-page flex flex-col items-start justify-between gap-4 py-10 md:flex-row md:items-center">
+          <div className="max-w-2xl"><p className="eyebrow">Already posting elsewhere?</p><p className="mt-2 font-serif text-2xl text-navy">Keep ClearanceJobs and LinkedIn. Add LanceNest in a minute.</p>
+            <p className="mt-1 text-sm text-muted">Import your open jobs from Greenhouse, Lever or Ashby, and paid plans stay in sync every day. Nothing else in your process changes.</p></div>
+          <Link href="/signup?role=employer" className="btn btn-outline shrink-0">Import your jobs</Link>
+        </div>
+      </section>
       <section className="bg-paper">
         <div className="container-page grid gap-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
           {[['Candidate quality', 'Verified military service — not a background check or clearance verification.'],

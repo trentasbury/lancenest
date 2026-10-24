@@ -4,6 +4,7 @@ import { SITE, sendEmail } from '@/lib/email';
 import { jobMatchesPlace, parseArrangements } from '@/lib/place';
 import { unsubscribeLinks } from '@/lib/emailLinks';
 import { sendFounderWelcomes } from '@/lib/founderWelcome';
+import { notifyMember } from '@/lib/email';
 
 type Job = { id: string; slug: string; title: string; description: string | null; location: string | null; work_arrangement: string | null; clearance_required: string | null; posted_at: string; company: { name: string } | null };
 const H = 3600000;
@@ -193,8 +194,58 @@ export async function GET(request: NextRequest) {
     for (let i = 0; i < members.length; i += 10) await Promise.all(members.slice(i, i + 10).map((m) => digestFor(m).catch(() => undefined)));
   }
 
+  // ---------- Applicants who haven't heard back in 30 days: one plain notice each ----------
+  let staleNotices = 0;
+  {
+    const { data: stale } = await admin.from('applications').select('id, profile_id, job:jobs!inner(title, status)')
+      .eq('source', 'lancenest').in('status', ['applied', 'viewed'])
+      .lt('applied_at', new Date(now - 30 * 24 * H).toISOString()).gte('applied_at', new Date(now - 31 * 24 * H).toISOString()).limit(2000);
+    const rows = ((stale ?? []) as unknown as { id: string; profile_id: string; job: { title: string; status: string } }[]).filter((r) => r.job.status === 'open');
+    if (rows.length) {
+      await admin.from('notifications').insert(rows.map((r) => ({ profile_id: r.profile_id, type: 'application_status', link: '/dashboard/applications',
+        title: `No update yet on “${r.job.title}” after 30 days. It’s still open, so it’s worth applying to similar roles too.` })));
+      staleNotices = rows.length;
+    }
+  }
+
+  // ---------- Free Pro (transition or partner) ends in 7 days: offer 25% off a first year ----------
+  {
+    const { data: ending } = await admin.from('veteran_profiles').select('profile_id, granted_plan')
+      .not('granted_plan', 'is', null).gte('pro_granted_until', new Date(now + 6 * 24 * H).toISOString()).lt('pro_granted_until', new Date(now + 7 * 24 * H).toISOString()).limit(1000);
+    for (const e of ending ?? []) {
+      await notifyMember(e.profile_id as string, { type: 'plan', link: '/plans',
+        title: 'Your free Pro ends in 7 days. Keep it for 25% off your first year.',
+        email: { subject: 'Your free LanceNest Pro ends in 7 days', preheader: 'Keep it for 25% off your first year.', tone: 'notice', badge: 'Pro',
+          heading: 'Keep Pro for 25% off your first year.', paragraphs: ['Your free months of Pro end in 7 days. Choose a yearly plan before then, or within 60 days after, and your first year is 25% off.', 'Nothing changes if you do nothing: you move back to Free, which stays free.'],
+          cta: { label: 'Keep Pro', url: `${SITE}/plans` } } }).catch(() => undefined);
+    }
+  }
+
+  // ---------- Mondays: tell employers which applicants have waited more than 7 days ----------
+  let employerNudges = 0;
+  if (new Date(now).getUTCDay() === 1) {
+    const { data: waiting } = await admin.from('applications').select('id, job:jobs!inner(id, status, company:companies!inner(id, owner_id, name))')
+      .eq('source', 'lancenest').eq('status', 'applied').lt('applied_at', new Date(now - 7 * 24 * H).toISOString()).limit(5000);
+    const byCompany = new Map<string, { owner: string; name: string; count: number; jobs: Set<string> }>();
+    for (const w of (waiting ?? []) as unknown as { job: { id: string; status: string; company: { id: string; owner_id: string | null; name: string } } }[]) {
+      if (w.job.status !== 'open' || !w.job.company.owner_id) continue;
+      const e = byCompany.get(w.job.company.id) ?? { owner: w.job.company.owner_id, name: w.job.company.name, count: 0, jobs: new Set<string>() };
+      e.count++; e.jobs.add(w.job.id); byCompany.set(w.job.company.id, e);
+    }
+    for (const e of byCompany.values()) {
+      await notifyMember(e.owner, { type: 'applicants_waiting', link: '/employer/dashboard',
+        title: `${e.count} applicant${e.count === 1 ? ' has' : 's have'} waited more than 7 days for an answer.`,
+        email: { subject: `${e.count} applicant${e.count === 1 ? ' is' : 's are'} waiting on ${e.name}`, preheader: 'A quick yes, no or “we’re reviewing” keeps your response badge.', tone: 'notice', badge: 'Applicants waiting',
+          heading: `${e.count} applicant${e.count === 1 ? ' is' : 's are'} still waiting to hear from you`,
+          paragraphs: [`Across ${e.jobs.size} open job${e.jobs.size === 1 ? '' : 's'}, ${e.count} verified member${e.count === 1 ? ' has' : 's have'} waited more than a week.`,
+            'Opening an application marks it viewed. Employers who answer within 14 days show a “usually responds” badge on their jobs, and those jobs get more applicants.'],
+          cta: { label: 'Review applicants', url: `${SITE}/employer/dashboard` } } }).catch(() => undefined);
+      employerNudges++;
+    }
+  }
+
   // ---------- The founder's personal welcome, the morning after verification ----------
   const founderWelcomes = await sendFounderWelcomes(now).catch((err) => { console.error('founder welcomes failed:', err); return 0; });
 
-  return NextResponse.json({ memberEmails, employerEmails, digests, founderWelcomes });
+  return NextResponse.json({ memberEmails, employerEmails, digests, founderWelcomes, staleNotices, employerNudges });
 }

@@ -18,7 +18,7 @@ export async function recomputeCompany(companyId: string) {
   const { data: subs } = await admin.from('subscriptions').select('kind, plan, status').eq('company_id', companyId);
   const live = (subs ?? []).filter((s) => ACTIVE.has(s.status as string));
   const plans = live.filter((s) => s.kind === 'plan').map((s) => s.plan as string);
-  const plan = plans.includes('enterprise') ? 'enterprise' : plans.includes('federal') ? 'federal' : plans.includes('professional') ? 'professional' : 'free';
+  const plan = plans.includes('enterprise') ? 'enterprise' : plans.includes('federal') ? 'federal' : plans.includes('professional') ? 'professional' : plans.includes('starter') ? 'starter' : 'free';
   const slots = live.filter((s) => s.kind === 'job_slot').length;
   await admin.from('companies').update({ plan, extra_job_slots: slots, training_listing_active: plans.includes('training'), training_featured: plans.includes('training') && plans.includes('training_featured') }).eq('id', companyId);
 
@@ -29,9 +29,9 @@ export async function recomputeCompany(companyId: string) {
 
   // After any downgrade, apply the new plan's limits. Jobs over the limit are paused (newest stay open; nothing is
   // deleted). Teammates over the seat limit lose access (earliest added stay); the owner can add them back after upgrading.
-  const jobCap = plan === 'free' ? 2 : plan === 'professional' ? 10 : null;
+  const jobCap = plan === 'free' ? 2 : plan === 'starter' ? 5 : plan === 'professional' ? 10 : null;
   if (jobCap !== null) {
-    const { data: open } = await admin.from('jobs').select('id').eq('company_id', companyId).eq('status', 'open').order('posted_at', { ascending: false });
+    const { data: open } = await admin.from('jobs').select('id').eq('company_id', companyId).eq('status', 'open').neq('employment_type', 'skillbridge').order('posted_at', { ascending: false });
     const extra = (open ?? []).slice(jobCap + slots).map((j) => j.id as string);
     if (extra.length) await admin.from('jobs').update({ status: 'paused' }).in('id', extra);
   }

@@ -1,8 +1,9 @@
 import 'server-only';
 import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { CANONICAL_ORIGIN } from '@/lib/seo';
-import { stateOf } from '@/lib/place';
+import { locatedIn, stateOf } from '@/lib/place';
 import type { ClearanceLevel, EmploymentType, WorkArrangement } from '@/lib/types';
 import { employerNames, scrubText } from '@/lib/scrub';
 
@@ -34,19 +35,21 @@ export type PublicJob = {
   clearance_required: ClearanceLevel;
   clearance_eligible: boolean;
   polygraph_required: string | null;
+  multi_location: boolean;
   posted_at: string;
   updated_at: string;
 };
 
-const COLUMNS = 'slug, title, location, work_arrangement, employment_type, salary_min, salary_max, salary_period, description, responsibilities, qualifications, preferred_qualifications, benefits, veteran_preferred, clearance_required, clearance_eligible, polygraph_required, posted_at, updated_at';
+const COLUMNS = 'slug, title, location, work_arrangement, employment_type, salary_min, salary_max, salary_period, description, responsibilities, qualifications, preferred_qualifications, benefits, veteran_preferred, clearance_required, clearance_eligible, polygraph_required, multi_location, posted_at, updated_at, company_id';
 const TEXT_FIELDS = ['title', 'description', 'responsibilities', 'qualifications', 'preferred_qualifications', 'benefits', 'location'] as const;
 
-type Row = PublicJob & { company: { name: string | null; website: string | null; is_verified: boolean; owner_id: string | null } | null };
+type Row = PublicJob & { company_id: string; company: { name: string | null; website: string | null; is_verified: boolean; owner_id: string | null } | null };
 
 function toPublic(r: Row): PublicJob {
   const names = employerNames(r.company?.name ?? null, r.company?.website ?? null);
-  const out = { ...r } as PublicJob & { company?: unknown };
+  const out = { ...r } as PublicJob & { company?: unknown; company_id?: unknown };
   delete out.company;
+  delete out.company_id;
   for (const f of TEXT_FIELDS) {
     const v = out[f];
     if (typeof v === 'string') (out as Record<string, unknown>)[f] = scrubText(v, names);
@@ -61,12 +64,15 @@ function publicQuery() {
     .eq('company.is_verified', true).not('company.owner_id', 'is', null);
 }
 
-export const getPublicJob = cache(async (slug: string): Promise<PublicJob | null> => {
+/** The job plus its company id (server-side only, for the response badge). */
+export const getPublicJobIndexed = cache(async (slug: string): Promise<IndexedJob | null> => {
   if (!/^[a-z0-9-]{1,160}$/.test(slug)) return null;
   const { data, error } = await publicQuery().eq('slug', slug).maybeSingle();
   if (error) console.error('getPublicJob failed:', error.message);
-  return data ? toPublic(data as unknown as Row) : null;
+  return data ? { job: toPublic(data as unknown as Row), companyId: (data as unknown as Row).company_id } : null;
 });
+
+export const getPublicJob = cache(async (slug: string): Promise<PublicJob | null> => (await getPublicJobIndexed(slug))?.job ?? null);
 
 export async function listPublicJobs(page = 1, perPage = 30): Promise<{ jobs: PublicJob[]; total: number }> {
   const from = (Math.max(1, page) - 1) * perPage;
@@ -156,4 +162,66 @@ export function jobPostingJsonLd(job: PublicJob) {
 /** JSON for a <script type="application/ld+json"> tag; "<" is escaped so job text can't close the tag. */
 export function ldJson(data: unknown) {
   return JSON.stringify(data).replace(/</g, '\\u003c');
+}
+
+/**
+ * Every public job, scrubbed, for search and the base and MOS pages. Cached 10 minutes (tag "public-jobs"; job
+ * changes refresh it). The company id stays on the server for response badges and counts, never in the page.
+ */
+export type IndexedJob = { job: PublicJob; companyId: string };
+export const allPublicJobs = unstable_cache(async (): Promise<IndexedJob[]> => {
+  const out: IndexedJob[] = [];
+  for (let from = 0; from < 5000; from += 1000) {
+    const { data, error } = await publicQuery().order('posted_at', { ascending: false }).range(from, from + 999);
+    if (error) { console.error('allPublicJobs failed:', error.message); break; }
+    const rows = (data ?? []) as unknown as Row[];
+    out.push(...rows.map((r) => ({ job: toPublic(r), companyId: r.company_id })));
+    if (rows.length < 1000) break;
+  }
+  return out;
+}, ['public-jobs-all-v1'], { revalidate: 600, tags: ['public-jobs'] });
+
+export type PublicFilters = { q?: string; where?: string; clearance?: string; pay?: string; pcs?: string };
+
+const yearly = (j: PublicJob) => {
+  const top = j.salary_max ?? j.salary_min;
+  return top == null ? null : j.salary_period === 'hour' ? top * 2080 : top;
+};
+
+/**
+ * Search over the scrubbed text only, so a company's name can't be used to find (and unmask) its jobs.
+ * where = a state code, or "remote". With a state, remote jobs are included, as on the member job search.
+ */
+export function filterPublicJobs(all: IndexedJob[], f: PublicFilters): IndexedJob[] {
+  const words = (f.q ?? '').toLowerCase().replace(/[^a-z0-9+#.\s-]/g, ' ').split(/\s+/).filter((w) => w.length > 1).slice(0, 8);
+  const where = (f.where ?? '').trim();
+  const st = where && where !== 'remote' ? stateOf(where) : null;
+  const minPay = Number.parseInt(f.pay ?? '', 10);
+  return all.filter(({ job }) => {
+    if (words.length) {
+      const hay = `${job.title} ${job.description} ${job.qualifications ?? ''} ${job.responsibilities ?? ''}`.toLowerCase();
+      if (!words.every((w) => hay.includes(w))) return false;
+    }
+    if (where === 'remote' && job.work_arrangement !== 'remote') return false;
+    if (st && job.work_arrangement !== 'remote' && !locatedIn(job.location, st[0])) return false;
+    if (f.clearance === 'required' && job.clearance_required === 'none') return false;
+    if (f.clearance === 'none' && job.clearance_required !== 'none') return false;
+    if (Number.isFinite(minPay) && minPay > 0) { const y = yearly(job); if (y == null || y < minPay) return false; }
+    if (f.pcs === '1' && job.work_arrangement !== 'remote' && !job.multi_location) return false;
+    return true;
+  });
+}
+
+const GENERIC = new Set(['and', 'with', 'senior', 'junior', 'lead', 'assistant', 'associate', 'specialist', 'level', 'entry', 'staff']);
+/**
+ * Public jobs whose titles fit any of these civilian roles (for MOS and base pages): a role matches when the
+ * title has at least two of its words (or its only word).
+ */
+export function jobsForRoles(all: IndexedJob[], roles: string[], limit = 6): IndexedJob[] {
+  const phrases = roles.map((r) => r.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length >= 3 && !GENERIC.has(w))).filter((p) => p.length);
+  if (!phrases.length) return [];
+  return all.filter(({ job }) => {
+    const t = job.title.toLowerCase();
+    return phrases.some((p) => p.filter((w) => t.includes(w)).length >= Math.min(2, p.length));
+  }).slice(0, limit);
 }

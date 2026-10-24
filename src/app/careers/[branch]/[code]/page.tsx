@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import { unstable_cache } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { branchFromSlug, publicDb } from '@/lib/careers';
+import { allPublicJobs, jobsForRoles } from '@/lib/publicJobs';
+import { formatSalary } from '@/lib/format';
 
 export const revalidate = 86400;
 
@@ -66,6 +68,7 @@ export default async function CareerPage(props: { params: Promise<{ branch: stri
   const cats = (o.civilian_categories ?? []).slice(0, 6);
   const skills = (o.civilian_skills ?? []).slice(0, 12);
   const openRoles = cats.length ? await openRolesFor(cats) : 0;
+  const fitting = cats.length ? jobsForRoles(await allPublicJobs(), cats) : [];
   return (
     <>
       <section className="bg-navy-deep text-ivory"><div className="container-page py-14">
@@ -77,6 +80,20 @@ export default async function CareerPage(props: { params: Promise<{ branch: stri
       <div className="container-page grid gap-8 py-12 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
           {cats.length > 0 && <section className="card p-7"><h2 className="eyebrow">Civilian career paths</h2><ul className="mt-4 grid gap-2 sm:grid-cols-2">{cats.map((c) => <li key={c} className="rounded-xl border border-line bg-paper px-4 py-3 font-medium text-navy">{c}</li>)}</ul></section>}
+          {fitting.length > 0 && (
+            <section className="card p-7">
+              <h2 className="eyebrow">Open jobs that fit</h2>
+              <ul className="mt-4 divide-y divide-line">
+                {fitting.map(({ job }) => (
+                  <li key={job.slug} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                    <div className="min-w-0"><Link href={`/open-jobs/${job.slug}`} className="font-medium text-navy hover:underline">{job.title}</Link><p className="text-xs text-muted">Verified employer{job.location ? ` · ${job.location}` : ''}{job.work_arrangement === 'remote' ? ' · Remote' : ''}</p></div>
+                    {formatSalary(job.salary_min, job.salary_max, job.salary_period) && <span className="text-sm font-semibold text-navy">{formatSalary(job.salary_min, job.salary_max, job.salary_period)}</span>}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/open-jobs" className="mt-3 inline-block text-sm text-navy underline decoration-brass underline-offset-4">See all open jobs →</Link>
+            </section>
+          )}
           {skills.length > 0 && <section className="card p-7"><h2 className="eyebrow">Skills employers recognize</h2><div className="mt-4 flex flex-wrap gap-2">{skills.map((s) => <span key={s} className="pill">{s}</span>)}</div></section>}
           {(() => {
             const certs = certsFor(`${o.title} ${cats.join(' ')} ${skills.join(' ')}`);

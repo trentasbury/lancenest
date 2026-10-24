@@ -11,6 +11,9 @@ import VerificationBadge from '@/components/VerificationBadge';
 import JobCard from '@/components/JobCard';
 import { searchJobs } from '@/lib/jobs';
 import { postedAgo } from '@/lib/format';
+import { cookies } from 'next/headers';
+import PartnerCodeForm from '@/components/PartnerCodeForm';
+import ShareMoment from '@/components/ShareMoment';
 
 export const metadata: Metadata = { title: 'Dashboard' };
 
@@ -29,12 +32,12 @@ const TOOLS = [
 
 type AppRow = { id: string; status: string; applied_at: string; job: { title: string; slug: string } | null };
 
-export default async function VeteranDashboard(props: { searchParams: Promise<{ boost?: string; spouse?: string }> }) {
+export default async function VeteranDashboard(props: { searchParams: Promise<{ boost?: string; spouse?: string; code?: string }> }) {
   const searchParams = await props.searchParams;
   const { user, profile } = await requireRole(['veteran'], '/dashboard');
   const supabase = await createClient();
 
-  const [{ data: vet }, { count: savedCount }, { data: apps }, latestJobs] = await Promise.all([
+  const [{ data: vet }, { count: savedCount }, { data: apps }, latestJobs, { data: lastReview }] = await Promise.all([
     supabase.from('veteran_profiles').select('verification_status, member_type').eq('profile_id', user.id).maybeSingle(),
     supabase.from('saved_jobs').select('job_id', { count: 'exact', head: true }).eq('profile_id', user.id),
     supabase
@@ -44,7 +47,10 @@ export default async function VeteranDashboard(props: { searchParams: Promise<{ 
       .order('applied_at', { ascending: false })
       .limit(5),
     searchJobs({}, 3),
+    supabase.from('verification_requests').select('reviewed_at').eq('profile_id', user.id).eq('status', 'verified').order('reviewed_at', { ascending: false }).limit(1).maybeSingle(),
   ]);
+  const partnerCode = (await cookies()).get('ln_partner')?.value;
+  const newlyVerified = !!lastReview?.reviewed_at && Date.now() - Date.parse(lastReview.reviewed_at as string) < 14 * 86400000;
 
   const applications = (apps ?? []) as unknown as AppRow[];
   const firstName = profile.full_name.split(' ')[0] || 'there';
@@ -65,6 +71,8 @@ export default async function VeteranDashboard(props: { searchParams: Promise<{ 
 
       <div className="container-page space-y-10 py-10">
         {searchParams.spouse && vet?.verification_status === 'verified' && <p className="rounded-xl border border-olive/40 bg-olive/10 px-4 py-3 text-sm text-olive">✓ You’re verified as a military spouse. Everything on LanceNest is unlocked.</p>}
+        {vet?.verification_status === 'verified' && (partnerCode || searchParams.code) && <PartnerCodeForm back="/dashboard" result={searchParams.code} prefill={partnerCode} />}
+        {vet?.verification_status === 'verified' && newlyVerified && <ShareMoment title="You’re verified." body="Let your network know you’re on LanceNest, the verified network for people who served." />}
         {vet?.verification_status === 'verified' && <MemberPerks userId={user.id} boost={searchParams.boost} />}
         {vet?.verification_status === 'verified' && <RecommendedJobs limit={4} title="Jobs for you" />}
         <ProfileStrength userId={user.id} />

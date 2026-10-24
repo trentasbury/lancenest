@@ -70,3 +70,24 @@ export async function saveCompanyDetails(formData: FormData) {
   revalidatePath(`/companies/${company.slug}`);
   redirect('/employer/company?saved=details');
 }
+
+/**
+ * Employer commitments shown as badges. The Guard & Reserve pledge is the employer's own promise. MSEP partnership
+ * is checked by an admin against the public partner list before the badge appears.
+ */
+export async function saveCommitments(formData: FormData) {
+  const { user } = await requireRole(['employer'], '/employer/company');
+  const admin = createAdminClient();
+  const { data: c } = await admin.from('companies').select('id, slug, name, is_verified, msep_status').eq('owner_id', user.id).maybeSingle();
+  if (!c?.is_verified) redirect('/employer/dashboard?verify=required');
+  const pledge = formData.get('guard_reserve') === 'on';
+  const wantsMsep = formData.get('msep') === 'on';
+  const msep = wantsMsep ? (c.msep_status === 'verified' ? 'verified' : 'pending') : 'none';
+  await admin.from('companies').update({ guard_reserve_pledge: pledge, msep_status: msep }).eq('id', c.id);
+  if (msep === 'pending' && c.msep_status !== 'pending') {
+    const { data: admins } = await admin.from('profiles').select('id').eq('role', 'admin');
+    if (admins?.length) await admin.from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'company_review', title: `${c.name} says it's an MSEP partner. Check the public list.`, link: '/admin/companies' })));
+  }
+  revalidatePath(`/companies/${c.slug}`);
+  redirect('/employer/company?saved=1');
+}

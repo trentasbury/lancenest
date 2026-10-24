@@ -3,10 +3,15 @@ import { cache } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-export type Plan = 'free' | 'professional' | 'federal' | 'enterprise';
+export type Plan = 'free' | 'starter' | 'professional' | 'federal' | 'enterprise';
+/** Plans with talent search, analytics and exports. Starter is a paid plan without them. */
 export const PAID: Plan[] = ['professional', 'federal', 'enterprise'];
+/** Plans whose job feeds re-sync every day. */
+export const FEED_SYNC: Plan[] = ['starter', 'professional', 'federal', 'enterprise'];
+/** Open-job cap by plan (null = unlimited). Matches private.enforce_job_limit. */
+export const JOB_CAP: Record<Plan, number | null> = { free: 2, starter: 5, professional: 10, federal: null, enterprise: null };
 /** New candidates an employer may contact first each month (beyond people who applied). */
-export const CONTACTS_PER_MONTH: Record<Plan, number> = { free: 0, professional: 50, federal: Infinity, enterprise: Infinity };
+export const CONTACTS_PER_MONTH: Record<Plan, number> = { free: 0, starter: 0, professional: 50, federal: Infinity, enterprise: Infinity };
 export const CLEARANCE_SEARCH: Plan[] = ['federal', 'enterprise'];
 export const CLEARANCE_ORDER = ['none', 'public_trust', 'confidential', 'secret', 'top_secret', 'ts_sci'];
 export const CLEARANCE_LABEL: Record<string, string> = { none: 'None', public_trust: 'Public Trust', confidential: 'Confidential', secret: 'Secret', top_secret: 'Top Secret', ts_sci: 'TS/SCI' };
@@ -34,7 +39,7 @@ export const getMyCompany = cache(async (userId: string) => {
 });
 
 type MyCompany = { id: string; name: string; slug: string; plan: Plan; is_verified: boolean; verification_status: string; contact_credits: number; extra_job_slots: number; stripe_customer_id: string | null; isOwner: boolean } & Record<string, unknown>;
-export const SEATS: Record<string, number> = { free: 1, professional: 2, federal: 5, enterprise: 20 };
+export const SEATS: Record<string, number> = { free: 1, starter: 1, professional: 2, federal: 5, enterprise: 20 };
 
 export async function contactUsage(companyId: string, plan: Plan) {
   const { count } = await (await createClient()).from('employer_contacts').select('*', { count: 'exact', head: true })

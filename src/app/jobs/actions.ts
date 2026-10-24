@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { notifyMember } from '@/lib/email';
+import { after } from 'next/server';
 
 async function requireVeteran(slug: string) {
   const session = await getSessionProfile();
@@ -38,7 +39,7 @@ export async function applyToJob(jobId: string, slug: string, formData: FormData
   const supabase = await createClient();
   const resumeId = String(formData.get('resume_id') ?? '') || null;
   // Easy Apply: every screening question the employer added must be answered.
-  const { data: job } = await supabase.from('jobs').select('screening_questions, apply_mode').eq('id', jobId).maybeSingle();
+  const { data: job } = await supabase.from('jobs').select('screening_questions, apply_mode, company_id').eq('id', jobId).maybeSingle();
   if (job?.apply_mode === 'external') redirect(`/jobs/${slug}`); // this employer takes applications on its own site only
   const questions = ((job?.screening_questions as { q: string; type: string }[] | null) ?? []).slice(0, 5);
   const answers = questions.map((q, i) => ({ q: q.q, a: String(formData.get(`answer_${i}`) ?? '').trim().slice(0, 1000) }));
@@ -46,7 +47,10 @@ export async function applyToJob(jobId: string, slug: string, formData: FormData
   const { data: existing } = await supabase.from('applications').select('id, status, source').eq('profile_id', userId).eq('job_id', jobId).maybeSingle();
   let error: { message: string } | null = null;
   if (!existing) {
-    ({ error } = await supabase.from('applications').insert({ profile_id: userId, job_id: jobId, resume_id: resumeId, source: 'lancenest', answers }));
+    let inserted: { id: string } | null = null;
+    ({ data: inserted, error } = await supabase.from('applications').insert({ profile_id: userId, job_id: jobId, resume_id: resumeId, source: 'lancenest', answers }).select('id').single());
+    // Employers who connected their hiring system can have new applicants sent there (after the response).
+    if (inserted && job?.company_id) { const id = inserted.id, co = job.company_id as string; after(async () => { const { autoSendApplication } = await import('@/lib/atsPush'); await autoSendApplication(id, co); }); }
   } else if (existing.status === 'withdrawn' || existing.source === 'external') {
     // Applying again after withdrawing, or Easy Apply after opening the company's own application:
     // turn the record into a real LanceNest application (résumé and answers included) and tell the employer.

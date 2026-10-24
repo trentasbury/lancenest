@@ -63,6 +63,9 @@ export default function PrivacyPage() {
           <li><strong>Your résumé</strong> is visible only to you and to verified companies you’ve applied to, sent a proposal to, or are messaging with — plus verified employers on paid plans. Other members can never see it, and each download link expires within a minute.</li>
           <li><strong>Posts</strong> follow the audience you choose: Public, Network (all members), Connections, or Private (only you).</li>
           <li><strong>Messages</strong> are visible only to the people in the conversation, and to our team when investigating a report.</li>
+          <li><strong>Employers’ hiring systems:</strong> if an employer connects its own hiring system (Greenhouse, Lever or Ashby), applications you send to that employer’s jobs are copied there: your name, email, résumé, screening answers and a link to your profile. The job page tells you before you apply. That employer then handles your application under its own policies.</li>
+          <li><strong>Public service pages:</strong> if you choose to show a freelance service publicly, anyone can see your first name and last initial, your city and state, and the service. Your photo, full name and contact details are never shown there.</li>
+          <li><strong>Employer response times:</strong> we measure how quickly each employer answers applicants and may show a “usually responds” badge. This uses application dates only and never identifies applicants.</li>
         </ul>
       </section>
       <section>

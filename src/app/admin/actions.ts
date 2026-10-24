@@ -8,6 +8,7 @@ import { rewardReferrer } from '@/lib/referrals';
 import { deleteMemberCompletely } from '@/lib/account';
 import { identityHash } from '@/lib/identity';
 import { SITE, notifyMember } from '@/lib/email';
+import { refreshPublicJobs } from '@/lib/publicRefresh';
 
 /** Approve or reject a verification request. Role is checked BEFORE the service-role client is used. */
 export async function decideVerification(requestId: string, decision: 'verified' | 'failed', formData: FormData) {
@@ -143,8 +144,7 @@ export async function decideCompany(companyId: string, decision: 'verified' | 'r
   if (!company) return;
   const verified = decision === 'verified';
   await admin.from('companies').update({ is_verified: verified, verification_status: verified ? 'verified' : 'rejected', verification_note: note }).eq('id', companyId);
-  revalidatePath('/open-jobs');
-  revalidatePath('/open-jobs/[slug]', 'page');
+  refreshPublicJobs();
   if (!verified) await admin.from('jobs').update({ status: 'paused' }).eq('company_id', companyId).eq('status', 'open');
   if (company.owner_id) {
     const name = company.name as string;
@@ -170,6 +170,19 @@ export async function decideCompany(companyId: string, decision: 'verified' | 'r
 }
 
 /** Confirm (or reject) a company's DoD SkillBridge authorization after checking skillbridge.osd.mil. */
+/** MSEP partner badge: confirmed only after checking the DoD's public MSEP partner list. */
+export async function decideMsep(companyId: string, decision: 'verified' | 'rejected') {
+  const { user } = await requireAdmin();
+  const admin = createAdminClient();
+  const { data: c } = await admin.from('companies').select('owner_id, name, slug').eq('id', companyId).maybeSingle();
+  await admin.from('companies').update({ msep_status: decision }).eq('id', companyId);
+  await admin.from('admin_actions').insert({ admin_id: user.id, action: `msep_${decision}`, target_type: 'company', target_id: companyId, details: {} });
+  if (c?.owner_id) await admin.from('notifications').insert({ profile_id: c.owner_id, type: 'company_review', link: '/employer/company',
+    title: decision === 'verified' ? `${c.name} now shows the Military Spouse Employment Partner badge.` : `We couldn’t find ${c.name} on the public MSEP partner list, so the badge isn’t shown.` });
+  if (c?.slug) revalidatePath(`/companies/${c.slug}`);
+  revalidatePath('/admin/companies');
+}
+
 export async function decideSkillBridge(companyId: string, decision: 'authorized' | 'rejected') {
   const { user } = await requireAdmin();
   const admin = createAdminClient();

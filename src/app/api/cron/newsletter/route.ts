@@ -23,6 +23,11 @@ export async function GET(request: NextRequest) {
   const guide = GUIDES[Math.floor(Date.now() / (7 * 86400000)) % GUIDES.length];
 
   const admin = createAdminClient();
+  // This week's sponsored employer, if one is scheduled: clearly labeled, one per issue.
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: sp } = await admin.from('newsletter_sponsors').select('headline, body, company:companies!inner(slug, name, is_verified)').eq('issue_date', today).maybeSingle();
+  const sponsor = sp as unknown as { headline: string; body: string; company: { slug: string; name: string; is_verified: boolean } } | null;
+  const sponsorLine = sponsor?.company.is_verified ? [`Sponsored · ${sponsor.company.name}: ${sponsor.headline}. ${sponsor.body} (${SITE}/companies/${sponsor.company.slug})`] : [];
   const started = Date.now();
   let sent = 0;
   const { data: subs } = await admin.from('newsletter_subscribers').select('id, email').eq('status', 'active')
@@ -31,7 +36,7 @@ export async function GET(request: NextRequest) {
     if (Date.now() - started > 50000) break;
     await sendEmail(s.email as string, {
       subject: `${fresh.length} new job${fresh.length === 1 ? '' : 's'} for veterans this week`, preheader: fresh[0].title, tone: 'notice', badge: 'This week on LanceNest',
-      heading: 'New jobs from verified employers', paragraphs: [...lines, `Guide of the week: ${guide.title} (${SITE}/guides/${guide.slug})`, 'Employer names and applications are for verified members. Joining is free.'],
+      heading: 'New jobs from verified employers', paragraphs: [...lines, ...sponsorLine, `Guide of the week: ${guide.title} (${SITE}/guides/${guide.slug})`, 'Employer names and applications are for verified members. Joining is free.'],
       cta: { label: 'See the jobs', url: `${SITE}/open-jobs` },
       unsubscribe: { ...unsubscribeLinks(SITE, s.id as string, 'newsletter'), reason: 'You’re getting this because you subscribed to the LanceNest jobs newsletter.' },
     });

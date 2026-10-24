@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getSessionProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { CATALOG, foundingCoupon, foundingFederalCoupon, publicSafetyCoupon, stripe, type ProductKey } from '@/lib/stripe';
+import { CATALOG, foundingCoupon, foundingFederalCoupon, keepProCoupon, publicSafetyCoupon, stripe, type ProductKey } from '@/lib/stripe';
 import { foundingSpotsLeft } from '@/lib/billing';
 import { RENEWAL_CHECKOUT_MESSAGE } from '@/components/RenewalNote';
 
@@ -43,8 +43,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.redirect(checkout.url!, 303);
     }
     const meta = { profile_id: session.user.id, kind: 'plan', plan: item.plan as string, product };
+    // Keep Pro: members whose free transition or partner Pro ended in the last 60 days (or ends within 14) get 25% off a first annual plan.
+    let keepPro: string | null = null;
+    if (item.interval === 'year') {
+      const { data: g } = await admin.from('veteran_profiles').select('pro_granted_until').eq('profile_id', session.user.id).maybeSingle();
+      const until = g?.pro_granted_until ? Date.parse(g.pro_granted_until as string) : NaN;
+      const [{ count: grants }, { count: partner }, { count: paidBefore }] = await Promise.all([
+        admin.from('member_grants').select('profile_id', { count: 'exact', head: true }).eq('profile_id', session.user.id),
+        admin.from('partner_redemptions').select('profile_id', { count: 'exact', head: true }).eq('profile_id', session.user.id),
+        admin.from('subscriptions').select('id', { count: 'exact', head: true }).eq('profile_id', session.user.id),
+      ]);
+      if (((grants ?? 0) + (partner ?? 0)) > 0 && !(paidBefore ?? 0) && until > Date.now() - 60 * 86400000 && until < Date.now() + 14 * 86400000) keepPro = await keepProCoupon();
+    }
     const checkout = await stripe().checkout.sessions.create({
-      mode: 'subscription', customer, allow_promotion_codes: true,
+      mode: 'subscription', customer, ...(keepPro ? { discounts: [{ coupon: keepPro }] } : { allow_promotion_codes: true }),
       line_items: [{ quantity: 1, price_data: { currency: 'usd', unit_amount: item.amount, recurring: { interval: item.interval! }, product_data: { name: item.name } } }],
       subscription_data: { metadata: meta }, metadata: meta,
       custom_text: { submit: { message: RENEWAL_CHECKOUT_MESSAGE } },

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import JobForm from '@/components/employer/JobForm';
 import JobErrors from '@/components/employer/JobErrors';
 import SubmitButton from '@/components/SubmitButton';
@@ -30,7 +31,11 @@ export default async function ManageJobPage(
   if (!data || !co || (data as { company_id: string }).company_id !== co.id) notFound();
   const job = data as unknown as Job & { featured_until: string | null };
   const featured = job.featured_until && new Date(job.featured_until) > new Date();
-  const paidPlan = co?.plan && co.plan !== 'free';
+  // Starter pays for boosts like Free; Professional includes 5 a month, Federal and Enterprise unlimited.
+  const paidPlan = co?.plan && co.plan !== 'free' && co.plan !== 'starter';
+  // Free and Starter can't search members; show them how many verified members want roles like this one.
+  const { data: matchCount } = !paidPlan && job.status === 'open' ? await createAdminClient().rpc('job_match_count', { j: job.id }) : { data: null };
+  const matches = Number(matchCount ?? 0);
 
   const statusButtons: [string, 'open' | 'paused' | 'closed' | 'draft'][] =
     job.status === 'open' ? [['Pause', 'paused'], ['Close', 'closed']]
@@ -57,6 +62,16 @@ export default async function ManageJobPage(
           ))}
         </div>
       </div>
+
+      {!paidPlan && matches > 0 && (
+        <div className="card flex flex-col gap-3 border-navy/30 bg-paper p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-medium text-ink">{matches.toLocaleString()} verified member{matches === 1 ? ' is' : 's are'} looking for roles like this.</p>
+            <p className="text-sm text-muted">Professional lets you search their full profiles and message them first, instead of waiting for applicants.</p>
+          </div>
+          <Link href="/employers" className="btn btn-primary shrink-0">Upgrade to message them</Link>
+        </div>
+      )}
 
       {job.status === 'open' && (
         <div className="card flex flex-col gap-3 border-brass/50 p-5 sm:flex-row sm:items-center sm:justify-between">

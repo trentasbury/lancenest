@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import SubmitButton from '@/components/SubmitButton';
-import { saveCommitment, saveCompanyDetails, uploadCompanyImage } from './actions';
+import { saveCommitment, saveCommitments, saveCompanyDetails, uploadCompanyImage } from './actions';
 import FlashNotice from '@/components/profile/FlashNotice';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { siteHost } from '@/lib/applyLinks';
@@ -19,7 +19,7 @@ export default async function CompanyBrandingPage(props: { searchParams: Promise
   const [{ data: c }, { data: v }] = await Promise.all([
     (await createClient()).from('companies').select('name, slug, plan, logo_url, cover_url, veteran_commitment, website, industry, headquarters, about, mission, benefits, is_verified').eq('owner_id', user.id).maybeSingle(),
     // The verified website is private (server-only): it decides which links this company may use.
-    createAdminClient().from('companies').select('verification_details').eq('owner_id', user.id).maybeSingle(),
+    createAdminClient().from('companies').select('verification_details, msep_status, guard_reserve_pledge').eq('owner_id', user.id).maybeSingle(),
   ]);
   if (!c) redirect('/employer/dashboard');
   const verifiedHost = siteHost((v?.verification_details as { website?: string } | null)?.website);
@@ -72,6 +72,25 @@ export default async function CompanyBrandingPage(props: { searchParams: Promise
         {!paid && <p className="text-xs text-muted">Shown on your page for every plan; Professional pages feature it prominently under your cover photo.</p>}
         <SubmitButton className="btn btn-primary" pendingText="Saving…">Save</SubmitButton>
       </form>
+      <CommitmentsForm msep={(v?.msep_status as string) ?? 'none'} pledge={!!v?.guard_reserve_pledge} />
     </div>
+  );
+}
+
+function CommitmentsForm({ msep, pledge }: { msep: string; pledge: boolean }) {
+  return (
+    <form action={saveCommitments} className="card space-y-4 p-6">
+      <div><p className="eyebrow">Commitments</p><p className="mt-1 text-sm text-muted">Shown as badges on your jobs and company page, and members can filter jobs by them.</p></div>
+      <label className="flex items-start gap-3 text-sm text-ink">
+        <input type="checkbox" name="guard_reserve" defaultChecked={pledge} className="mt-0.5 h-4 w-4 accent-navy" />
+        <span><strong>Guard &amp; Reserve pledge.</strong> We support employees who serve in the National Guard and Reserve, including drill weekends, annual training and deployments, as USERRA requires and beyond.</span>
+      </label>
+      <label className="flex items-start gap-3 text-sm text-ink">
+        <input type="checkbox" name="msep" defaultChecked={msep === 'pending' || msep === 'verified'} className="mt-0.5 h-4 w-4 accent-navy" />
+        <span><strong>Military Spouse Employment Partnership (MSEP) partner.</strong> We’re a DoD MSEP partner employer.{' '}
+          {msep === 'verified' ? <span className="text-olive">✓ Confirmed</span> : msep === 'pending' ? <span className="text-muted">We’re checking the public partner list.</span> : msep === 'rejected' ? <span className="text-signal">We couldn’t find you on the public partner list.</span> : null}</span>
+      </label>
+      <SubmitButton className="btn btn-primary" pendingText="Saving…">Save commitments</SubmitButton>
+    </form>
   );
 }

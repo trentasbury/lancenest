@@ -13,6 +13,9 @@ import SubmitButton from '@/components/SubmitButton';
 import { startConversation } from '@/app/messages/actions';
 import { saveToPool } from '@/app/employer/talent/actions';
 import PoolNotice from '@/components/employer/PoolNotice';
+import { sendApplicant } from '@/app/employer/hiring-system/actions';
+import { ATS_LABEL, type AtsProvider } from '@/lib/atsPush';
+import { createAdminClient as adminDb } from '@/lib/supabase/admin';
 
 export const metadata: Metadata = { title: 'Applicants' };
 
@@ -26,7 +29,7 @@ async function moveApplicant(applicationId: string, jobId: string, formData: For
   // Row-level security: only the hiring company can update; the applicant is notified by a database trigger.
   await (await createClient()).from('applications').update({ status }).eq('id', applicationId).eq('job_id', jobId);
   // Email the applicant about meaningful stage changes (the in-app notification already fires from the database).
-  if (['interview', 'offer', 'not_selected'].includes(status)) {
+  if (['interview', 'offer', 'rejected'].includes(status)) {
     const { createAdminClient } = await import('@/lib/supabase/admin');
     const { sendEmail, SITE } = await import('@/lib/email');
     const admin = createAdminClient();
@@ -39,14 +42,14 @@ async function moveApplicant(applicationId: string, jobId: string, formData: For
         : status === 'offer' ? { subject: `Offer stage: ${title}`, heading: `${company} moved you to the offer stage.`, tone: 'success' as const }
         : { subject: `Update on ${title}`, heading: `An update from ${company}.`, tone: 'notice' as const };
       await sendEmail(u.user.email, { subject: copy.subject, preheader: copy.heading, tone: copy.tone, badge: 'Application update', heading: copy.heading,
-        paragraphs: [status === 'not_selected' ? `${company} has decided not to move forward with your application for ${title}. Keep going — new roles are posted every day.` : `Your application for ${title} moved forward. Check your messages for next steps.`],
+        paragraphs: [status === 'rejected' ? `${company} has decided not to move forward with your application for ${title}. Keep going — new roles are posted every day.` : `Your application for ${title} moved forward. Check your messages for next steps.`],
         cta: { label: 'View my applications', url: `${SITE}/dashboard/applications` } });
     }
   }
   revalidatePath(`/employer/jobs/${jobId}/applicants`);
 }
 
-type App = { answers?: { q: string; a: string }[]; id: string; status: string; applied_at: string; profile_id: string; resume_id: string | null; profile: { full_name: string; username: string | null; headline: string | null; service_summary: string | null; verified: boolean } | null };
+type App = { answers?: { q: string; a: string }[]; command_approval?: string | null; id: string; status: string; applied_at: string; profile_id: string; resume_id: string | null; profile: { full_name: string; username: string | null; headline: string | null; service_summary: string | null; verified: boolean } | null };
 
 export default async function ApplicantsPage(
   props: { params: Promise<{ id: string }>; searchParams: Promise<{ pool?: string }> }
@@ -57,7 +60,7 @@ export default async function ApplicantsPage(
   const supabase = await createClient();
   const [company, { data: job }] = await Promise.all([
     getMyCompany(user.id),
-    supabase.from('jobs').select('id, title, company_id').eq('id', params.id).maybeSingle(),
+    supabase.from('jobs').select('id, title, company_id, employment_type, external_source').eq('id', params.id).maybeSingle(),
   ]);
   if (!job || !company || job.company_id !== company.id) notFound();
 
@@ -66,10 +69,17 @@ export default async function ApplicantsPage(
   const [, { data }] = await Promise.all([
     supabase.from('applications').update({ status: 'viewed' }).eq('job_id', job.id).eq('status', 'applied').eq('source', 'lancenest'),
     supabase.from('applications')
-      .select('id, status, applied_at, profile_id, resume_id, answers, profile:profiles!applications_profile_id_fkey(full_name, username, headline, service_summary, verified)')
+      .select('id, status, applied_at, profile_id, resume_id, answers, command_approval, profile:profiles!applications_profile_id_fkey(full_name, username, headline, service_summary, verified)')
       .eq('job_id', job.id).eq('source', 'lancenest').neq('status', 'withdrawn').order('applied_at', { ascending: false }),
   ]);
   const rawApps = ((data ?? []) as unknown as App[]).map((a) => (a.status === 'applied' ? { ...a, status: 'viewed' } : a)) as App[];
+  // The employer's own hiring system, when connected and this job came from it.
+  const [{ data: ats }, { data: sentRows }] = await Promise.all([
+    adminDb().from('ats_connections').select('provider').eq('company_id', job.company_id).maybeSingle(),
+    rawApps.length ? adminDb().from('ats_deliveries').select('application_id, status').in('application_id', rawApps.map((a) => a.id)) : Promise.resolve({ data: [] }),
+  ]);
+  const atsName = ats && (job as unknown as { external_source: string | null }).external_source === ats.provider ? ATS_LABEL[ats.provider as AtsProvider] : null;
+  const delivery = new Map(((sentRows ?? []) as { application_id: string; status: string }[]).map((r) => [r.application_id, r.status]));
   const ids = rawApps.map((a) => a.profile_id);
   const [{ data: plans }, { data: track }] = rawApps.length
     ? await Promise.all([
@@ -116,6 +126,9 @@ export default async function ApplicantsPage(
                 <p className="truncate text-sm text-muted">{[a.profile?.headline, a.profile?.service_summary].filter(Boolean).join(' · ')}</p>
                 <p className="text-xs text-muted">Applied {new Date(a.applied_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}
                   {a.resume_id && <> · <a href={`/api/resume-files/${a.resume_id}`} className="text-navy underline">Résumé sent with this application</a></>}</p>
+                {job.employment_type === 'skillbridge' && (
+                  <p className="mt-2 text-xs"><span className="font-semibold text-ink">Command approval:</span> <span className="text-muted">{({ not_started: 'Not started', requested: 'Requested', approved: 'Approved', denied: 'Denied' } as Record<string, string>)[a.command_approval ?? 'not_started']}</span> <span className="text-muted">(updated by the service member)</span></p>
+                )}
                 {(a.answers ?? []).length > 0 && (
                   <dl className="mt-2 space-y-1 rounded-lg bg-paper p-3 text-xs">{(a.answers ?? []).map((x, i) => <div key={i}><dt className="font-semibold text-ink">{x.q}</dt><dd className="text-ink/80">{x.a}</dd></div>)}</dl>
                 )}
@@ -127,6 +140,9 @@ export default async function ApplicantsPage(
                 </select>
                 <SubmitButton className="btn btn-outline py-2" pendingText="…">Update</SubmitButton>
               </form>
+              {atsName && (delivery.get(a.id) === 'sent'
+                ? <span className="text-xs text-olive">✓ In {atsName}</span>
+                : <form action={sendApplicant.bind(null, a.id, job.id)}><SubmitButton className="btn btn-ghost border border-line py-2" pendingText="…">{delivery.get(a.id) === 'failed' ? `Retry ${atsName}` : `Send to ${atsName}`}</SubmitButton></form>)}
               {PAID.includes(company.plan) && <form action={saveToPool.bind(null, a.profile_id, `/employer/jobs/${job.id}/applicants`)}><SubmitButton className="btn btn-ghost border border-line py-2" pendingText="…">Save</SubmitButton></form>}
               <form action={startConversation.bind(null, a.profile_id)}>
                 <SubmitButton className="btn btn-primary py-2" pendingText="…">Message</SubmitButton>

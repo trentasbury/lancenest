@@ -31,13 +31,16 @@ export type Company = {
   benefits: string | null;
   veteran_commitment: string | null;
   is_verified: boolean;
-  plan: 'free' | 'professional' | 'federal' | 'enterprise';
+  plan: 'free' | 'starter' | 'professional' | 'federal' | 'enterprise';
   extra_job_slots?: number;
+  msep_status?: 'none' | 'pending' | 'verified' | 'rejected';
+  guard_reserve_pledge?: boolean;
 };
 
 export type Job = {
   id: string;
   company_id: string;
+  external_source?: string | null;
   slug: string;
   title: string;
   department: string | null;

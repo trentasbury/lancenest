@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { unstable_cache } from 'next/cache';
 import QueryNotice from '@/components/QueryNotice';
+import { ExampleJobCard, ExampleMemberCard } from '@/components/ExampleCards';
 import { ARRANGEMENT_LABELS, formatSalary } from '@/lib/format';
 
 const FEATURES = [
@@ -27,18 +28,20 @@ const getStats = unstable_cache(async () => {
     ]);
     // The newest open role from a verified employer, for the "Hiring now" card in the hero.
     const { data: newest } = await admin.from('jobs')
-      .select('title, location, work_arrangement, salary_min, salary_max, salary_period, company:companies!inner(name, is_verified)')
-      .eq('status', 'open').eq('company.is_verified', true).order('posted_at', { ascending: false }).limit(1);
+      .select('title, location, work_arrangement, salary_min, salary_max, salary_period, company:companies!inner(is_verified, owner_id)')
+      .eq('status', 'open').eq('public_listing', true).eq('company.is_verified', true).not('company.owner_id', 'is', null)
+      .order('posted_at', { ascending: false }).limit(1);
     const top = (newest ?? [])[0] as unknown as NewestJob | undefined;
     return { members: m.count ?? 0, jobs: j.count ?? 0, companies: c.count ?? 0, newest: top ?? null };
   } catch { return null; }
-}, ['home-stats-v2'], { revalidate: 600 });
+}, ['home-stats-v3'], { revalidate: 600 });
 
-type NewestJob = { title: string; location: string | null; work_arrangement: 'remote' | 'hybrid' | 'onsite'; salary_min: number | null; salary_max: number | null; salary_period: 'year' | 'hour'; company: { name: string } | null };
+type NewestJob = { title: string; location: string | null; work_arrangement: 'remote' | 'hybrid' | 'onsite'; salary_min: number | null; salary_max: number | null; salary_period: 'year' | 'hour' };
 
 /**
  * The hero panel: "What did you do in the military?" (opens the translator with the code filled in) and the
- * newest real opening. Attached under the founder's photo on desktop; a card of its own on phones.
+ * newest real opening (employer kept anonymous, as on the public job pages). Attached under the photo on desktop;
+ * a card of its own on phones.
  */
 function HeroPanel({ stats, attached = false }: { stats: Awaited<ReturnType<typeof getStats>>; attached?: boolean }) {
   const job = stats?.newest;
@@ -58,24 +61,25 @@ function HeroPanel({ stats, attached = false }: { stats: Awaited<ReturnType<type
           <span key={code}>{i > 0 && ' · '}<Link href={`/resources?code=${code}`} className="font-medium text-navy underline decoration-brass/60 underline-offset-2 hover:decoration-brass" title={label}>{code}</Link></span>
         ))}
       </p>
-      <Link href="/jobs" className="group mt-4 flex items-center gap-3 border-t border-line pt-4" data-track="cta_home_hiring_now">
+      <Link href="/open-jobs" className="group mt-4 flex items-center gap-3 border-t border-line pt-4" data-track="cta_home_hiring_now">
         <span className="relative flex h-2 w-2 shrink-0"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#2f7a3e] opacity-60 motion-reduce:hidden" /><span className="relative inline-flex h-2 w-2 rounded-full bg-[#2f7a3e]" /></span>
         <span className="min-w-0 flex-1">
           <span className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2f7a3e]">Hiring now</span>
           {job ? (
             <>
               <span className="block truncate text-sm font-semibold text-ink group-hover:text-navy">{job.title}</span>
-              <span className={`block text-xs text-muted ${attached ? 'truncate' : ''}`}>{[job.company?.name, job.work_arrangement === 'remote' ? 'Remote' : job.location || ARRANGEMENT_LABELS[job.work_arrangement], pay].filter(Boolean).join(' · ')}</span>
+              <span className={`block text-xs text-muted ${attached ? 'truncate' : ''}`}>{['Verified employer', job.work_arrangement === 'remote' ? 'Remote' : job.location || ARRANGEMENT_LABELS[job.work_arrangement], pay].filter(Boolean).join(' · ')}</span>
             </>
           ) : <span className="block text-sm font-semibold text-ink">Roles from verified employers</span>}
         </span>
-        <span className="shrink-0 text-xs font-semibold text-navy group-hover:underline">{stats && stats.jobs > 1 ? `All ${stats.jobs.toLocaleString()} →` : 'See jobs →'}</span>
+        <span className="shrink-0 text-xs font-semibold text-navy group-hover:underline">{/* Small counts read as empty at launch, so the number appears only once there are plenty of jobs. */}
+          {stats && stats.jobs >= 25 ? `All ${stats.jobs.toLocaleString()} →` : 'See jobs →'}</span>
       </Link>
     </div>
   );
 }
 
-const TRUST = ['Every member verified by a person', 'Free for service members', '1,469 military jobs translated', 'Built by a Marine veteran'];
+const TRUST = ['Every member verified by a person', 'No anonymous employers, ever', 'Free for service members', '1,469 military jobs translated'];
 
 export const metadata: Metadata = { alternates: { canonical: '/' } };
 
@@ -101,11 +105,11 @@ export default async function HomePage() {
               Jobs, freelance work, mentors, and a network of verified service members and veterans, plus the employers who want to hire them.
             </p>
 
-            <form action="/jobs" method="get" className="mt-9 flex w-full max-w-2xl flex-col gap-2 rounded-2xl bg-ivory p-2 shadow-lift sm:flex-row sm:rounded-full">
-              <label htmlFor="hero-q" className="sr-only">Job title, keyword, or company</label>
-              <input id="hero-q" name="q" placeholder="Job title, keyword, or company" className="flex-1 rounded-full px-5 py-3 text-[15px] text-ink outline-none placeholder:text-muted" />
+            <form action="/open-jobs" method="get" className="mt-9 flex w-full max-w-2xl flex-col gap-2 rounded-2xl bg-ivory p-2 shadow-lift sm:flex-row sm:rounded-full">
+              <label htmlFor="hero-q" className="sr-only">Job title or keyword</label>
+              <input id="hero-q" name="q" placeholder="Job title or keyword" className="flex-1 rounded-full px-5 py-3 text-[15px] text-ink outline-none placeholder:text-muted" />
               <label htmlFor="hero-location" className="sr-only">Location</label>
-              <input id="hero-location" name="location" placeholder="State or Remote" className="rounded-full px-5 py-3 text-[15px] text-ink outline-none placeholder:text-muted sm:w-44 sm:border-l sm:border-line sm:rounded-none" />
+              <input id="hero-location" name="where" placeholder="State or Remote" className="rounded-full px-5 py-3 text-[15px] text-ink outline-none placeholder:text-muted sm:w-44 sm:border-l sm:border-line sm:rounded-none" />
               <button type="submit" className="btn btn-primary sm:px-7">Find Jobs →</button>
             </form>
 
@@ -125,11 +129,11 @@ export default async function HomePage() {
             <div className="mt-8 max-w-md lg:hidden"><HeroPanel stats={stats} /></div>
           </div>
 
-          {/* The founder's photo with one panel attached underneath: translate your MOS, and the newest real opening. */}
+          {/* A photo with one panel attached underneath: translate your MOS, and the newest real opening. */}
           <div className="mx-auto hidden w-full max-w-[440px] lg:block">
             <div className="relative aspect-[5/4] overflow-hidden rounded-t-[28px] ring-1 ring-white/10">
-              <Image src="/assets/hero-service.webp" alt="Our founder in uniform, U.S. Marine Corps" fill priority quality={90} sizes="(min-width: 1024px) 440px, 0px" className="object-cover object-[center_30%]" />
-              <p className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy-deep/90 to-transparent px-5 pb-3 pt-10 text-xs text-cream/85">Our founder · U.S. Marine Corps veteran</p>
+              <Image src="/assets/hero-service.webp" alt="A U.S. Marine in uniform" fill priority quality={90} sizes="(min-width: 1024px) 440px, 0px" className="object-cover object-[center_30%]" />
+              <p className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy-deep/90 to-transparent px-5 pb-3 pt-10 text-xs text-cream/85">Built by veterans, for veterans</p>
             </div>
             <HeroPanel stats={stats} attached />
           </div>
@@ -199,6 +203,19 @@ export default async function HomePage() {
             ))}
           </ol>
           <Link href="/resources" className="btn btn-outline mt-10">Translate your MOS →</Link>
+        </div>
+      </section>
+
+      {/* A look at the product before signing up: made-up examples, clearly labeled. */}
+      <section className="bg-ivory">
+        <div className="container-page grid items-center gap-10 py-16 lg:grid-cols-[1fr_1.2fr]">
+          <div>
+            <p className="eyebrow">A look inside</p>
+            <h2 className="mt-2 font-serif text-3xl font-medium text-navy">Verified profiles. Jobs with pay posted. Employers who answer.</h2>
+            <p className="mt-3 text-muted">Every member and every employer is checked by a person. Jobs show pay, and each employer’s typical response time once it has answered enough applicants.</p>
+            <Link href="/signup?role=veteran" className="btn btn-primary mt-6">Create your free profile</Link>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2"><ExampleMemberCard /><ExampleJobCard /></div>
         </div>
       </section>
 

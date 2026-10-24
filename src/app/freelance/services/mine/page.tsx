@@ -5,12 +5,12 @@ import { createClient } from '@/lib/supabase/server';
 import { OPEN_CATEGORIES } from '@/lib/freelance';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
-import { deleteService, saveService, setServiceStatus } from '../actions';
+import { deleteService, saveService, setServicePublic, setServiceStatus } from '../actions';
 import { CONTACT_BLOCKED } from '@/lib/contact';
 import { FREELANCE_PAYMENTS_ENABLED, LICENSED_TRADES } from '@/lib/flags';
 
 export const metadata: Metadata = { title: 'My services' };
-const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, licensed: 'That trade needs your verified license first. Add it under Licenses & certificates; once it’s verified you can list the service.', ack: 'Please confirm both acknowledgments.', required: 'Add a title, a description of at least 20 characters, and a price of at least $25.', scam: 'That listing contains wording we don’t allow.', save: 'That didn’t save — please try again.' };
+const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, licensed: 'That trade needs your verified license first. Add it under Licenses & certificates; once it’s verified you can list the service.', ack: 'Please confirm both acknowledgments.', required: 'Add a title, a description of at least 20 characters, and a price of at least $25.', scam: 'That listing contains wording we don’t allow.', package: 'Each package needs a name, a price of at least $25, a delivery time of 1–90 days, and what’s included.', save: 'That didn’t save — please try again.' };
 
 export default async function MyServicesPage(props: { searchParams: Promise<{ error?: string; saved?: string }> }) {
   const searchParams = await props.searchParams;
@@ -19,7 +19,7 @@ export default async function MyServicesPage(props: { searchParams: Promise<{ er
   const { licensedTrades } = await import('@/lib/credentials');
   const trades = await licensedTrades(user.id);
   const [{ data: services }, { data: fp }] = await Promise.all([
-    supabase.from('service_listings').select('id, title, price_cents, price_type, status').eq('profile_id', user.id).order('created_at', { ascending: false }),
+    supabase.from('service_listings').select('id, title, price_cents, price_type, status, public_listing').eq('profile_id', user.id).order('created_at', { ascending: false }),
     supabase.from('freelancer_profiles').select('payouts_enabled').eq('profile_id', user.id).maybeSingle(),
   ]);
   return (
@@ -35,8 +35,9 @@ export default async function MyServicesPage(props: { searchParams: Promise<{ er
         {(services ?? []).length === 0 && <li className="p-5 text-sm text-muted">No services yet.</li>}
         {(services ?? []).map((s) => (
           <li key={s.id as string} className="flex flex-wrap items-center justify-between gap-3 p-4">
-            <div><Link href={`/freelance/services/${s.id}`} className="font-medium text-navy hover:underline">{s.title as string}</Link><p className="text-xs text-muted">${((s.price_cents as number) / 100).toLocaleString()} · {s.status === 'active' ? 'Active' : 'Paused'}</p></div>
+            <div><Link href={`/freelance/services/${s.id}`} className="font-medium text-navy hover:underline">{s.title as string}</Link><p className="text-xs text-muted">${((s.price_cents as number) / 100).toLocaleString()} · {s.status === 'active' ? 'Active' : 'Paused'} · {s.public_listing ? 'On the public Hire page' : 'Members and employers only'}</p></div>
             <div className="flex gap-2">
+              <form action={setServicePublic.bind(null, s.id as string, !s.public_listing)}><SubmitButton className="btn btn-ghost border border-line py-1.5 text-xs" pendingText="…">{s.public_listing ? 'Hide from public' : 'Show publicly'}</SubmitButton></form>
               <form action={setServiceStatus.bind(null, s.id as string, s.status === 'active' ? 'paused' : 'active')}><SubmitButton className="btn btn-outline py-1.5 text-xs" pendingText="…">{s.status === 'active' ? 'Pause' : 'Activate'}</SubmitButton></form>
               <form action={deleteService.bind(null, s.id as string)}><button className="btn btn-ghost py-1.5 text-xs text-signal">Delete</button></form>
             </div>
@@ -57,6 +58,18 @@ export default async function MyServicesPage(props: { searchParams: Promise<{ er
         <select name="price_type" className="field"><option value="fixed">Fixed price</option><option value="starting_at">Starting at</option><option value="hourly">Per hour</option></select>
         <input name="service_area" maxLength={120} placeholder="Service area (e.g. Clermont, FL — 25 miles)" className="field sm:col-span-2" />
         <textarea name="description" required rows={4} maxLength={3000} placeholder="What’s included, your experience, tools, and turnaround" className="field sm:col-span-2" />
+        <fieldset className="space-y-2 sm:col-span-2">
+          <legend className="field-label">Packages <span className="font-normal text-muted">(optional, up to 3, like basic, standard and premium)</span></legend>
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="grid gap-2 rounded-xl border border-line p-3 sm:grid-cols-[1fr_110px_90px]">
+              <input name={`pkg${i}_name`} maxLength={40} placeholder={['Basic', 'Standard', 'Premium'][i - 1]} aria-label={`Package ${i} name`} className="field" />
+              <input name={`pkg${i}_price`} inputMode="decimal" placeholder="Price ($)" aria-label={`Package ${i} price`} className="field" />
+              <input name={`pkg${i}_days`} inputMode="numeric" placeholder="Days" aria-label={`Package ${i} delivery days`} className="field" />
+              <input name={`pkg${i}_includes`} maxLength={200} placeholder="What’s included" aria-label={`Package ${i} includes`} className="field sm:col-span-3" />
+            </div>
+          ))}
+        </fieldset>
+        <label className="flex items-start gap-2 text-sm sm:col-span-2"><input type="checkbox" name="public_listing" className="mt-1 accent-navy" /><span>Show this service on the public Hire page. It shows your first name and last initial, your city, and the service, never your photo or contact details. Clients sign in to book.</span></label>
         <label className="flex items-start gap-2 text-sm sm:col-span-2"><input type="checkbox" name="license_ack" required className="mt-1 accent-navy" />I hold any license, certification, or insurance this work legally requires where I perform it.</label>
         <label className="flex items-start gap-2 text-sm sm:col-span-2"><input type="checkbox" name="duty_ack" required className="mt-1 accent-navy" />If I’m currently serving, I have my command’s approval for off-duty employment where required, and I won’t use government time, equipment, or my rank or uniform to promote this work.</label>
         <div className="sm:col-span-2"><SubmitButton className="btn btn-primary" pendingText="Saving…">List service</SubmitButton></div>

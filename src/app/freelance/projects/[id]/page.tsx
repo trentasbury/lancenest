@@ -42,6 +42,11 @@ export default async function ProjectPage(
     .select('id, freelancer_id, cover_letter, bid_amount, timeline, status, created_at, freelancer:profiles!proposals_freelancer_id_fkey(full_name, username, headline, verified, service_summary)')
     .eq('project_id', project.id).order('created_at');
   const rawProposals = (proposalRows ?? []) as unknown as Proposal[];
+  // The client has now seen these proposals (a Free member's unseen proposal is returned if the client hires someone else).
+  if (isOwner && rawProposals.length) {
+    const { createAdminClient } = await import('@/lib/supabase/admin');
+    await createAdminClient().from('proposals').update({ viewed_at: new Date().toISOString() }).eq('project_id', project.id).is('viewed_at', null);
+  }
   const fIds = rawProposals.map((p) => p.freelancer_id);
   const [{ data: fPlans }, { data: track }] = isOwner && fIds.length
     ? await Promise.all([supabase.from('veteran_profiles').select('profile_id, plan').in('profile_id', fIds), supabase.rpc('verified_work_summary', { ids: fIds })])
@@ -104,7 +109,7 @@ export default async function ProjectPage(
                 <p className="mt-3 whitespace-pre-line text-sm text-ink/90">{p.cover_letter}</p>
                 <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-4">
                   <span className="text-xs capitalize text-muted">{p.status}</span>
-                  {needsBooking && ['submitted', 'shortlisted'].includes(p.status) && project.status === 'open' && <span className="text-xs text-muted">· {usd(bookingFeeCents(Math.max(p.bid_amount, project.budget_min ?? 0) * 100))} booking fee when you hire</span>}
+                  {needsBooking && ['submitted', 'shortlisted'].includes(p.status) && project.status === 'open' && <span className="text-xs text-muted">· You’d pay {usd(p.bid_amount * 100 + bookingFeeCents(Math.max(p.bid_amount, project.budget_min ?? 0) * 100))} in all: {usd(p.bid_amount * 100)} to the freelancer and a {usd(bookingFeeCents(Math.max(p.bid_amount, project.budget_min ?? 0) * 100))} booking fee to LanceNest when you hire</span>}
                   {p.status !== 'shortlisted' && p.status !== 'declined' && <form action={setProposalStatus.bind(null, p.id, project.id, 'shortlisted')}><SubmitButton className="btn btn-outline py-1.5 text-xs" pendingText="…">Shortlist</SubmitButton></form>}
                   {p.status !== 'declined' && <form action={setProposalStatus.bind(null, p.id, project.id, 'declined')}><SubmitButton className="btn btn-ghost py-1.5 text-xs" pendingText="…">Decline</SubmitButton></form>}
                   <form action={startConversation.bind(null, p.freelancer_id)}><SubmitButton className="btn btn-outline py-1.5 text-xs" pendingText="…">Message</SubmitButton></form>

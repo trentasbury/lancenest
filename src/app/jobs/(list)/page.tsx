@@ -7,6 +7,7 @@ import JobCard from '@/components/JobCard';
 import EmptyState from '@/components/EmptyState';
 import { getFeaturedJobs, searchJobs, type JobFilters } from '@/lib/jobs';
 import { ARRANGEMENTS, parseArrangements, stateOf, type Arrangement } from '@/lib/place';
+import { responseDays, responseLabel } from '@/lib/responsiveness';
 
 export const metadata: Metadata = {
   title: 'Find Jobs',
@@ -53,7 +54,7 @@ export default async function JobsPage(props: { searchParams: Promise<JobFilters
   const hrefWith = (change: Record<string, string | null>) => {
     const p = new URLSearchParams();
     const base: Record<string, string | undefined> = { q: searchParams.q, location: searchParams.location, state: searchParams.state, arrangement: arrangements.join(',') || undefined,
-      type: searchParams.type, clearance: searchParams.clearance, poly: searchParams.poly, veteran: searchParams.veteran };
+      type: searchParams.type, clearance: searchParams.clearance, poly: searchParams.poly, veteran: searchParams.veteran, pcs: searchParams.pcs, employer: searchParams.employer };
     Object.entries({ ...base, ...change }).forEach(([k, v]) => { if (v) p.set(k, v); });
     return `/jobs${p.toString() ? `?${p}` : ''}`;
   };
@@ -63,6 +64,8 @@ export default async function JobsPage(props: { searchParams: Promise<JobFilters
   const listIds = [...jobs.map((j) => j.id), ...featured.map((j) => j.id)];
   const { data: earlyIds } = listIds.length ? await (await createClient()).rpc('early_jobs', { ids: listIds }) : { data: [] };
   const early = new Set(((earlyIds ?? []) as string[]));
+  const speed = await responseDays([...jobs, ...featured].map((j) => j.company_id));
+  const responds = (j: { company_id: string }) => responseLabel(speed.get(j.company_id));
   const featuredIds = new Set(featured.map((j) => j.id));
   const hasFilters = Object.values(searchParams).some(Boolean);
 
@@ -87,6 +90,8 @@ export default async function JobsPage(props: { searchParams: Promise<JobFilters
             {searchParams.clearance && <input type="hidden" name="clearance" value={searchParams.clearance} />}
             {searchParams.poly && <input type="hidden" name="poly" value={searchParams.poly} />}
             {searchParams.veteran && <input type="hidden" name="veteran" value={searchParams.veteran} />}
+            {searchParams.pcs && <input type="hidden" name="pcs" value={searchParams.pcs} />}
+            {searchParams.employer && <input type="hidden" name="employer" value={searchParams.employer} />}
             <button type="submit" className="btn btn-primary">Search</button>
           </form>
           <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Work arrangement (pick one or more)">
@@ -153,6 +158,18 @@ export default async function JobsPage(props: { searchParams: Promise<JobFilters
               <input type="checkbox" name="veteran" value="1" defaultChecked={searchParams.veteran === '1'} className="h-4 w-4 accent-navy" />
               Veteran preferred only
             </label>
+            <label className="flex items-start gap-2.5 text-sm text-ink">
+              <input type="checkbox" name="pcs" value="1" defaultChecked={searchParams.pcs === '1'} className="mt-0.5 h-4 w-4 accent-navy" />
+              <span>Keeps through a PCS move<span className="block text-xs text-muted">Remote, or hiring in several locations</span></span>
+            </label>
+            <div>
+              <label htmlFor="employer" className="field-label">Employer commitments</label>
+              <select id="employer" name="employer" defaultValue={searchParams.employer ?? ''} className="field">
+                <option value="">Any verified employer</option>
+                <option value="msep">Military Spouse Employment Partnership</option>
+                <option value="guard">Guard &amp; Reserve pledge</option>
+              </select>
+            </div>
             <div className="flex gap-2">
               <button type="submit" className="btn btn-primary flex-1">Apply</button>
               {hasFilters && <Link href="/jobs" className="btn btn-outline">Clear</Link>}
@@ -175,8 +192,8 @@ export default async function JobsPage(props: { searchParams: Promise<JobFilters
           ) : (
             <div className="space-y-4">
               {!Object.values(searchParams).some(Boolean) && <RecommendedJobs limit={5} />}
-              {!Object.values(searchParams).some(Boolean) && featured.map((job) => <JobCard key={`f-${job.id}`} job={job} early={early.has(job.id)} />)}
-              {jobs.filter((job) => Object.values(searchParams).some(Boolean) || !featuredIds.has(job.id)).map((job) => <JobCard key={job.id} job={job} early={early.has(job.id)} />)}
+              {!Object.values(searchParams).some(Boolean) && featured.map((job) => <JobCard key={`f-${job.id}`} job={job} early={early.has(job.id)} responds={responds(job)} />)}
+              {jobs.filter((job) => Object.values(searchParams).some(Boolean) || !featuredIds.has(job.id)).map((job) => <JobCard key={job.id} job={job} early={early.has(job.id)} responds={responds(job)} />)}
             </div>
           )}
         </section>

@@ -59,6 +59,12 @@ export default async function AdminPage(props: { searchParams: Promise<{ deleted
           <Link href="/admin/ambassadors" className="transition-opacity hover:opacity-80">
             <StatCard label="Ambassadors →" value="Approve" hint="Base ambassador applications" />
           </Link>
+          <Link href="/admin/partners" className="transition-opacity hover:opacity-80">
+            <StatCard label="Partner Pro codes →" value="Create" hint="Free Pro for transition offices, veterans’ groups and nonprofits" />
+          </Link>
+          <Link href="/admin/newsletter" className="transition-opacity hover:opacity-80">
+            <StatCard label="Newsletter sponsors →" value="Schedule" hint="One labeled sponsored employer per weekly issue" />
+          </Link>
           <Link href="/admin/credentials" className="transition-opacity hover:opacity-80">
             <StatCard label="Licenses & certificates →" value="Review" hint="Trade licenses unlock HVAC, electrical and plumbing work" />
           </Link>

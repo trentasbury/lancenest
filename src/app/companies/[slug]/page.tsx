@@ -18,7 +18,7 @@ import CompanyCommunity from './CompanyCommunity';
 const getCompany = cache(async (slug: string) => {
   const supabase = await createClient();
   // Public columns only (verification details, notes and billing IDs are never sent to the browser).
-  const { data } = await supabase.from('companies').select('id, slug, name, logo_url, cover_url, industry, headquarters, website, about, mission, benefits, veteran_commitment, is_verified, owner_id').eq('slug', slug).maybeSingle();
+  const { data } = await supabase.from('companies').select('id, slug, name, logo_url, cover_url, industry, headquarters, website, about, mission, benefits, veteran_commitment, is_verified, owner_id, msep_status, guard_reserve_pledge').eq('slug', slug).maybeSingle();
   return (data as Company | null) ?? null;
 });
 
@@ -72,6 +72,8 @@ export default async function CompanyPage(props: { params: Promise<{ slug: strin
                   ✦ Veteran-Friendly Employer
                 </span>
               )}
+              {company.msep_status === 'verified' && <span className="inline-flex items-center rounded-full border border-cream/40 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-cream">Military Spouse Employment Partner</span>}
+              {company.guard_reserve_pledge && <span className="inline-flex items-center rounded-full border border-cream/40 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-cream">Guard &amp; Reserve pledge</span>}
               {company.website && (
                 <a href={safeHref(company.website)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full border border-cream/30 px-3 py-1 text-[12px] font-medium text-cream hover:border-brass hover:text-brass-light">
                   Visit website ↗ <span className="text-cream/60">{company.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '')}</span>

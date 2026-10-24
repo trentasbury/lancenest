@@ -20,6 +20,7 @@ export function safeNextPath(value: FormDataEntryValue | string | null | undefin
 export const PUBLIC_LINKS: NavLink[] = [
   { href: '/open-jobs', label: 'Find Jobs' },
   { href: '/employers', label: 'For Employers' },
+  { href: '/hire', label: 'Hire Freelancers' },
   { href: '/resources', label: 'Resources' },
   { href: '/about', label: 'About' },
 ];

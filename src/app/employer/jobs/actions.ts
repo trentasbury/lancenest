@@ -9,6 +9,7 @@ import { slugify } from '@/lib/format';
 import { scamSignals } from '@/lib/scam';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { BOOST_DAYS } from '@/lib/stripe';
+import { refreshPublicJobs } from '@/lib/publicRefresh';
 
 const t = (fd: FormData, k: string, max: number) => String(fd.get(k) ?? '').trim().slice(0, max);
 const oneOf = (v: string, allowed: string[], fallback: string) => (allowed.includes(v) ? v : fallback);
@@ -108,8 +109,7 @@ export async function saveJob(jobId: string | null, _prev: JobFormState, formDat
   }
   revalidatePath('/employer/dashboard');
   revalidatePath('/jobs');
-  revalidatePath('/open-jobs');
-  revalidatePath('/open-jobs/[slug]', 'page');
+  refreshPublicJobs();
   redirect(`/employer/jobs/${id}?${publishError ? `error=${publishError}` : 'saved=1'}`);
 }
 
@@ -121,8 +121,7 @@ export async function setJobStatus(jobId: string, status: 'open' | 'paused' | 'c
   if (error?.code === 'P0007') redirect(`/employer/jobs/${jobId}?error=skillbridge`);
   revalidatePath('/employer/dashboard');
   revalidatePath('/jobs');
-  revalidatePath('/open-jobs');
-  revalidatePath('/open-jobs/[slug]', 'page');
+  refreshPublicJobs();
   redirect(`/employer/jobs/${jobId}?saved=1`);
 }
 

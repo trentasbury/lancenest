@@ -3,7 +3,7 @@ import type { JobWithCompany } from '@/lib/types';
 import { ARRANGEMENT_LABELS, CLEARANCE_LABELS, EMPLOYMENT_LABELS, formatSalary, postedAgo } from '@/lib/format';
 import CompanyMark from './CompanyMark';
 
-export default function JobCard({ job, early }: { job: JobWithCompany; early?: boolean }) {
+export default function JobCard({ job, early, responds }: { job: JobWithCompany; early?: boolean; responds?: string | null }) {
   const salary = formatSalary(job.salary_min, job.salary_max, job.salary_period);
   const companyName = job.company?.name ?? 'Company';
 
@@ -31,6 +31,7 @@ export default function JobCard({ job, early }: { job: JobWithCompany; early?: b
           {early && <span className="pill border-brass/60 bg-brass/10 text-brass-dark">Be an early applicant</span>}
           {job.employment_type === 'skillbridge' && <span className="pill border-olive/50 bg-olive/10 text-olive">DoD SkillBridge · keep military pay</span>}
           {job.veteran_preferred && <span className="pill border-brass/50 bg-brass/10 text-brass-dark">Veteran preferred</span>}
+          {responds && <span className="pill border-olive/40 bg-olive/10 text-olive">{responds}</span>}
           {job.clearance_required !== 'none' && (
             <span className="pill border-navy/30 bg-navy/5 text-navy">{CLEARANCE_LABELS[job.clearance_required]}{(job as unknown as { polygraph_required?: string }).polygraph_required === 'full_scope' ? ' w/ Full-Scope Poly' : (job as unknown as { polygraph_required?: string }).polygraph_required === 'ci' ? ' w/ CI Poly' : ''} clearance</span>
           )}

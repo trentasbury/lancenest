@@ -5,7 +5,11 @@ import { roleHome } from '@/lib/nav';
 
 const PROTECTED_PREFIXES = ['/dashboard', '/employer', '/admin', '/applications', '/saved-jobs', '/messages', '/onboarding', '/settings', '/network', '/notifications', '/security/mfa', '/jobs', '/billing', '/freelance', '/transition', '/people', '/training', '/groups', '/mentors', '/fairs'];
 
+// Public front doors inside members-only areas: the fair schedule (each fair's page stays members-only).
+const PUBLIC_EXACT = new Set(['/fairs']);
+
 function isProtected(path: string) {
+  if (PUBLIC_EXACT.has(path)) return false;
   return PROTECTED_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
 }
 

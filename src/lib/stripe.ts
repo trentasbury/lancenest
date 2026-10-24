@@ -8,6 +8,7 @@ export function stripe() {
 }
 
 export type ProductKey =
+  | 'employer_starter_month' | 'employer_starter_year'
   | 'employer_professional_month' | 'employer_professional_year'
   | 'employer_federal_month' | 'employer_federal_year'
   | 'training_listing_month' | 'training_listing_year' | 'training_featured' | 'training_webinar' | 'fair_booth' | 'fair_booth_member' | 'shortlist' | 'shortlist_member' | 'shortlist_federal' | 'shortlist_federal_credit'
@@ -15,7 +16,9 @@ export type ProductKey =
   | 'job_slot' | 'job_boost' | 'contact_pack' | 'proposal_pack';
 
 /** Single source of truth for what we sell. Prices in cents. */
-export const CATALOG: Record<ProductKey, { name: string; amount: number; interval?: 'month' | 'year'; plan?: 'professional' | 'federal' | 'veteran_pro' | 'veteran_pro_plus' | 'veteran_federal_pro' | 'training' | 'training_featured'; audience?: 'veteran'; kind: 'plan' | 'job_slot' | 'job_boost' | 'contact_pack' | 'training_webinar' | 'fair_booth' | 'shortlist' | 'proposal_pack' }> = {
+export const CATALOG: Record<ProductKey, { name: string; amount: number; interval?: 'month' | 'year'; plan?: 'starter' | 'professional' | 'federal' | 'veteran_pro' | 'veteran_pro_plus' | 'veteran_federal_pro' | 'training' | 'training_featured'; audience?: 'veteran'; kind: 'plan' | 'job_slot' | 'job_boost' | 'contact_pack' | 'training_webinar' | 'fair_booth' | 'shortlist' | 'proposal_pack' }> = {
+  employer_starter_month: { name: 'LanceNest Starter (monthly)', amount: 9900, interval: 'month', plan: 'starter', kind: 'plan' },
+  employer_starter_year: { name: 'LanceNest Starter (annual)', amount: 99000, interval: 'year', plan: 'starter', kind: 'plan' },
   employer_professional_month: { name: 'LanceNest Professional (monthly)', amount: 24900, interval: 'month', plan: 'professional', kind: 'plan' },
   employer_professional_year: { name: 'LanceNest Professional (annual)', amount: 249000, interval: 'year', plan: 'professional', kind: 'plan' },
   employer_federal_month: { name: 'LanceNest Federal (monthly)', amount: 99900, interval: 'month', plan: 'federal', kind: 'plan' },
@@ -82,5 +85,14 @@ export async function publicSafetyCoupon() {
   const id = 'lancenest-public-safety';
   try { await stripe().coupons.retrieve(id); }
   catch { await stripe().coupons.create({ id, name: 'Public Safety rate — 30% off', percent_off: 30, duration: 'forever' }); }
+  return id;
+}
+
+/** Keep Pro: 25% off the first year of a member plan, offered when free transition or partner Pro ends. */
+export const KEEP_PRO_PERCENT = 25;
+export async function keepProCoupon() {
+  const id = 'lancenest-keep-pro-25';
+  try { await stripe().coupons.retrieve(id); }
+  catch { await stripe().coupons.create({ id, name: 'Keep Pro — 25% off your first year', percent_off: KEEP_PRO_PERCENT, duration: 'once' }); }
   return id;
 }

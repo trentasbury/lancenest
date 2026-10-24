@@ -399,6 +399,25 @@ export default async function VeteranProfilePage(
                 </div>
               </section>
 
+              {/* Freelancers lead with their work (like Contra), ahead of the résumé. */}
+              {freelance && (portfolio ?? []).length > 0 && (
+                <section className="card p-6 sm:p-8">
+                  <SectionHead title="Work samples" />
+                    <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+                      {(portfolio ?? []).map((it) => (
+                        <li key={it.id as string} className="overflow-hidden rounded-xl border border-line">
+                          {it.image_url && <img src={it.image_url as string} alt={it.title as string} className="aspect-[4/3] w-full object-cover" loading="lazy" />}
+                          <div className="p-4">
+                          <p className="font-medium">{it.title as string}</p>
+                          {it.description && <p className="mt-1 text-sm text-muted">{it.description as string}</p>}
+                          {safeHref(it.url as string) && <a href={safeHref(it.url as string)} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-xs text-navy underline">View work ↗</a>}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                </section>
+              )}
+
               <div className="card space-y-8 p-6 sm:p-8">
                 <section>
                   <SectionHead id="about" title="About me" edit={edit('about')} />
@@ -496,20 +515,6 @@ export default async function VeteranProfilePage(
                   )}
                   {freelance.bio && <p className="mt-3 whitespace-pre-line text-sm text-ink/90">{freelance.bio as string}</p>}
                   {(reviews ?? []).filter((r) => r.body).slice(0, 3).map((r, i) => <blockquote key={i} className="mt-3 border-l-2 border-brass pl-3 text-sm italic text-ink/80">“{r.body as string}”</blockquote>)}
-                  {(portfolio ?? []).length > 0 && (
-                    <ul className="mt-5 grid gap-3 sm:grid-cols-2">
-                      {(portfolio ?? []).map((it) => (
-                        <li key={it.id as string} className="overflow-hidden rounded-xl border border-line">
-                          {it.image_url && <img src={it.image_url as string} alt={it.title as string} className="aspect-[4/3] w-full object-cover" loading="lazy" />}
-                          <div className="p-4">
-                          <p className="font-medium">{it.title as string}</p>
-                          {it.description && <p className="mt-1 text-sm text-muted">{it.description as string}</p>}
-                          {safeHref(it.url as string) && <a href={safeHref(it.url as string)} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-xs text-navy underline">View work ↗</a>}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
                 </section>
               )}
 

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { getMyCompany } from '@/lib/employer';
+import { JOB_CAP, getMyCompany } from '@/lib/employer';
+import { ownResponseNote, responseDays } from '@/lib/responsiveness';
 import Link from 'next/link';
 import CompanyVerification from '@/components/employer/CompanyVerification';
 import { requestPublicSafety, requestSkillBridge } from '@/app/employer/actions';
@@ -13,7 +14,7 @@ import type { Company } from '@/lib/types';
 
 export const metadata: Metadata = { title: 'Employer Dashboard' };
 
-const PLAN_LABEL: Record<string, string> = { free: 'Free', professional: 'Professional', federal: 'Federal', enterprise: 'Enterprise' };
+const PLAN_LABEL: Record<string, string> = { free: 'Free', starter: 'Starter', professional: 'Professional', federal: 'Federal', enterprise: 'Enterprise' };
 
 export default async function EmployerDashboard(
   props: { searchParams: Promise<{ error?: string; verify?: string; skillbridge?: string; ps?: string }> }
@@ -80,8 +81,9 @@ export default async function EmployerDashboard(
               <StatCard label="Active jobs" value={activeJobs} hint={`${totalJobs} total`} />
               <StatCard label="Applicants" value={applicants} />
               <StatCard label="Interviews" value={interviews} />
-              <StatCard label="Plan" value={PLAN_LABEL[company.plan] ?? company.plan} hint={company.plan === 'free' || company.plan === 'professional' ? `${activeJobs} of ${(company.plan === 'free' ? 2 : 10) + (company.extra_job_slots ?? 0)} open posts used` : 'Unlimited job posts'} />
+              <StatCard label="Plan" value={PLAN_LABEL[company.plan] ?? company.plan} hint={JOB_CAP[company.plan] != null ? `${activeJobs} of ${(JOB_CAP[company.plan] ?? 0) + (company.extra_job_slots ?? 0)} open posts used` : 'Unlimited job posts'} />
             </div>
+            <ResponseNote companyId={company.id} />
 
             {searchParams.error && <p role="alert" className="text-sm text-signal">That purchase couldn’t start. Please try again.</p>}
 
@@ -145,14 +147,15 @@ export default async function EmployerDashboard(
               <Link href="/employer/analytics" className="card p-5 hover:border-brass"><p className="eyebrow">Hiring analytics</p><p className="mt-2 font-serif text-xl text-navy">Views & applicants →</p></Link>
               <Link href="/employer/training" className="card p-5 hover:border-brass"><p className="eyebrow">Training listings</p><p className="mt-2 font-serif text-xl text-navy">List programs →</p></Link>
               <Link href="/fairs" className="card p-5 hover:border-brass"><p className="eyebrow">Career fairs</p><p className="mt-2 font-serif text-xl text-navy">Book a booth →</p></Link>
+              <Link href="/employer/hiring-system" className="card p-5 hover:border-brass"><p className="eyebrow">Your hiring system</p><p className="mt-2 font-serif text-xl text-navy">Greenhouse, Lever, Ashby →</p></Link>
             </nav>
 
             <section className="card flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="eyebrow">Your plan: {PLAN_LABEL[company.plan] ?? company.plan}</p>
                 <p className="mt-1 text-sm text-muted">
-                  {company.plan === 'free'
-                    ? 'Upgrade for unlimited posts, candidate search, and analytics — or add single job slots as you need them.'
+                  {company.plan === 'free' || company.plan === 'starter'
+                    ? 'Upgrade for more posts, candidate search, and analytics — or add single job slots as you need them.'
                     : 'Thank you for hiring veterans. Manage your card, invoices, and plan anytime.'}
                 </p>
               </div>
@@ -161,8 +164,12 @@ export default async function EmployerDashboard(
                 {(company as unknown as { isOwner: boolean }).isOwner && company.plan === 'free' && (
                   <>
                     <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="employer_professional_month" /><button className="btn btn-primary">Professional · $249/mo (Founding: $149/mo for 12 months)</button></form>
+                    <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="employer_starter_month" /><button className="btn btn-outline">Starter · $99/mo</button></form>
                     <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="job_slot" /><button className="btn btn-outline">+1 job slot · $39/mo</button></form>
                   </>
+                )}
+                {(company as unknown as { isOwner: boolean }).isOwner && company.plan === 'starter' && (
+                  <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="employer_professional_month" /><button className="btn btn-primary">Upgrade to Professional · $249/mo</button></form>
                 )}
                 {company.plan === 'professional' && (
                   <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="employer_federal_month" /><button className="btn btn-primary">Upgrade to Federal · $999/mo</button></form>
@@ -173,7 +180,7 @@ export default async function EmployerDashboard(
                 )}
               </div>
             </section>
-            {(company.plan === 'free' || company.plan === 'professional') && <RenewalNote className="-mt-6" />}
+            {(company.plan === 'free' || company.plan === 'starter' || company.plan === 'professional') && <RenewalNote className="-mt-6" />}
 
             <section>
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -207,4 +214,10 @@ export default async function EmployerDashboard(
       </div>
     </>
   );
+}
+
+/** The employer's own response time, and what earns the public "usually responds" badge. */
+async function ResponseNote({ companyId }: { companyId: string }) {
+  const days = (await responseDays([companyId])).get(companyId);
+  return <p className="-mt-2 rounded-xl border border-line bg-paper px-4 py-3 text-sm text-ink/85"><strong className="text-navy">Response time.</strong> {ownResponseNote(days)}</p>;
 }

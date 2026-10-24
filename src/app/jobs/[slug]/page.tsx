@@ -13,6 +13,8 @@ import { applyToJob, confirmSiteApply, toggleSaveJob } from '../actions';
 import CompanySiteApply from '@/components/jobs/CompanySiteApply';
 import FitExplainer from '@/components/jobs/FitExplainer';
 import { AI_ENABLED } from '@/lib/ai';
+import { responseDays, responseLabel } from '@/lib/responsiveness';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const params = await props.params;
@@ -52,6 +54,14 @@ export default async function JobDetailPage(
 
   const session = await getSessionProfile();
   const isVeteran = (!!session && ['veteran', 'admin'].includes(session.profile?.role ?? ''));
+  // Employer commitments and response speed (public facts about the employer, read with the server key).
+  const [speed, { data: commit }, { data: atsConn }] = await Promise.all([
+    responseDays([job.company_id]),
+    createAdminClient().from('companies').select('msep_status, guard_reserve_pledge').eq('id', job.company_id).maybeSingle(),
+    createAdminClient().from('ats_connections').select('provider').eq('company_id', job.company_id).maybeSingle(),
+  ]);
+  const toEmployerSystem = !!atsConn && job.external_source === atsConn.provider;
+  const fast = responseLabel(speed.get(job.company_id));
   const supabase = await createClient();
   const none = Promise.resolve({ data: null });
   // Everything below depends only on the job and the viewer: one round of queries.
@@ -109,6 +119,13 @@ export default async function JobDetailPage(
               <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-olive/40 bg-olive/10 px-3 py-1 text-xs font-semibold text-olive">
                 ✓ Verified company — reviewed by LanceNest
               </p>
+            )}
+            {(fast || commit?.msep_status === 'verified' || commit?.guard_reserve_pledge) && (
+              <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
+                {fast && <span className="rounded-full border border-olive/40 bg-olive/10 px-3 py-1 text-olive">{fast}</span>}
+                {commit?.msep_status === 'verified' && <span className="rounded-full border border-navy/30 bg-navy/5 px-3 py-1 text-navy">Military Spouse Employment Partner</span>}
+                {commit?.guard_reserve_pledge && <span className="rounded-full border border-navy/30 bg-navy/5 px-3 py-1 text-navy">Guard &amp; Reserve pledge</span>}
+              </div>
             )}
             {isEarly && <p className="mt-2 inline-block rounded-full border border-brass/60 bg-brass/10 px-3 py-1 text-xs font-semibold text-brass-dark">Be an early applicant</p>}
             {(!!session && ['veteran', 'admin'].includes(session.profile?.role ?? '')) && (insight ? (
@@ -237,6 +254,7 @@ export default async function JobDetailPage(
                         </div>
                       ))}
                       <SubmitButton pendingText="Submitting…">{siteApply ? 'Easy Apply on LanceNest' : 'Easy Apply'}</SubmitButton>
+                      {toEmployerSystem && <p className="text-xs text-muted">This employer receives applications in its own hiring system, so your name, email, résumé and answers are sent there too.</p>}
                     </form>
                   )}
                   {!applied && siteApply && easyApply && <CompanySiteApply jobId={job.id} slug={job.slug} company={companyName} primary={false} />}

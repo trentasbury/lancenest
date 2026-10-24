@@ -1,7 +1,7 @@
 /** Freelance marketplace fees — single source of truth for when the marketplace launches. */
 export const FREELANCE_FEES = {
-  veteranRate: { free: 0.15, pro: 0.1, pro_plus: 0.08, federal_pro: 0.06 } as Record<string, number>,
-  foundingFreelancerRate: 0.05, // first 20 freelancers, for 6 months
+  veteranRate: { free: 0.1, pro: 0.07, pro_plus: 0.05, federal_pro: 0.04 } as Record<string, number>, // veterans keep at least 90%
+  foundingFreelancerRate: 0.03, // first 20 freelancers, for 6 months
   clientRate: { card: 0.05, bank: 0.03 }, // bank transfers cost LanceNest 0.8% (max $5) vs ~3% for cards
   contractStartCents: 999, // per new contract, paid by the client (Upwork charges up to $14.99)
   smallProjectCents: 0, // on projects under $200 (Fiverr charges $3.50)

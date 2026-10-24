@@ -36,6 +36,19 @@ export default function AboutPage() {
         ))}
       </div>
 
+      <section className="border-t border-line bg-paper">
+        <div className="container-page grid items-center gap-10 py-16 md:grid-cols-[320px_1fr]">
+          <div className="relative mx-auto aspect-[4/5] w-full max-w-[320px] overflow-hidden rounded-3xl ring-1 ring-line">
+            <Image src="/assets/hero-service.webp" alt="LanceNest's founder in uniform, U.S. Marine Corps" fill quality={90} sizes="320px" className="object-cover object-[center_30%]" />
+          </div>
+          <div>
+            <p className="eyebrow">Our founder</p>
+            <h2 className="mt-2 font-serif text-3xl font-medium text-navy">Founded by a U.S. Marine Corps veteran.</h2>
+            <p className="mt-3 max-w-xl text-muted">LanceNest was started by a Marine who made the move from service to a civilian career. It’s built with the veterans, spouses and employers who use it.</p>
+          </div>
+        </div>
+      </section>
+
       <section className="bg-cream py-16 text-center">
         <h2 className="font-serif text-4xl font-medium">Free for every service member. Always.</h2>
         <div className="mt-8 flex flex-wrap justify-center gap-3">

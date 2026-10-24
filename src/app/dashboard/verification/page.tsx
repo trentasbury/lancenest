@@ -104,7 +104,14 @@ export default async function VerificationPage(
             </div>
             {status === 'verified' && <p className="mt-4 text-sm text-muted">You’re verified. Both of your files were deleted as soon as the reviewer approved them — we don’t keep them.</p>}
             {status === 'pending' && latest && (
-              <p className="mt-4 text-sm text-muted">Submitted {new Date(latest.created_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}. A reviewer will check your documents by hand.</p>
+              <>
+                <p className="mt-4 text-sm text-muted">Submitted {new Date(latest.created_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}. A reviewer will check your documents by hand, usually within 48 hours.</p>
+                <ol className="mt-5 grid gap-2 text-xs sm:grid-cols-3" aria-label="Review progress">
+                  {[['Submitted', true], ['In review', true], ['Decision and badge', false]].map(([label, done], i) => (
+                    <li key={label as string} className={`rounded-lg border px-3 py-2 ${done ? 'border-olive/50 bg-olive/10 text-olive' : 'border-line text-muted'}`}><span className="font-semibold">{i + 1}.</span> {label as string}{i === 1 && <span className="block text-[11px] text-muted">{Math.max(0, Math.round((Date.now() - Date.parse(latest.created_at)) / 3600000))} hours so far</span>}</li>
+                  ))}
+                </ol>
+              </>
             )}
             {status === 'failed' && (
               <p className="mt-4 text-sm text-signal">
@@ -114,6 +121,21 @@ export default async function VerificationPage(
           </div>
 
           {canSubmit && <VerificationForm userId={user.id} spouse={spouse} />}
+
+          {status !== 'verified' && (
+            <div className="card p-6">
+              <p className="font-semibold text-ink">While you wait</p>
+              <p className="mt-1 text-sm text-muted">Get everything ready so you can apply the moment your badge is on.</p>
+              <ul className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+                {[['/dashboard/profile', 'Build your profile', 'Employers see it as soon as you’re verified'],
+                  ['/resources', 'Translate your MOS', 'See the civilian roles your job prepares you for'],
+                  ['/open-jobs', 'Browse open jobs', 'Every job shows pay; save the ones you like'],
+                  ['/guides', 'Read the transition guides', 'Résumés, interviews, pay and benefits']].map(([href, title, body]) => (
+                  <li key={href}><Link href={href} className="block rounded-xl border border-line p-3 hover:border-brass"><span className="font-medium text-navy">{title} →</span><span className="block text-xs text-muted">{body}</span></Link></li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         <aside className="space-y-5">
