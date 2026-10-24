@@ -27,6 +27,8 @@ export default async function ReportsPage() {
   const profileIds = reports.filter((r) => r.target_type === 'profile').map((r) => r.target_id);
   const jobIds = reports.filter((r) => r.target_type === 'job').map((r) => r.target_id);
   const { data: jobs } = jobIds.length ? await admin.from('jobs').select('id, title, slug, status').in('id', jobIds) : { data: [] };
+  const ratingIds = reports.filter((r) => r.target_type === 'rating').map((r) => r.target_id);
+  const { data: ratings } = ratingIds.length ? await admin.from('company_ratings').select('id, pros, cons, overall, status, company:companies(name, slug)').in('id', ratingIds) : { data: [] };
   const [{ data: posts }, { data: comments }, { data: profiles }] = await Promise.all([
     postIds.length ? admin.from('network_posts').select('id, headline, body').in('id', postIds) : Promise.resolve({ data: [] }),
     commentIds.length ? admin.from('post_comments').select('id, post_id, body').in('id', commentIds) : Promise.resolve({ data: [] }),
@@ -48,6 +50,10 @@ export default async function ReportsPage() {
     if (r.target_type === 'job') {
       const j = (jobs ?? []).find((x) => x.id === r.target_id);
       return j ? { text: `Job: ${j.title} (${j.status})`, href: `/jobs/${j.slug}` } : { text: 'Job already removed', href: null };
+    }
+    if (r.target_type === 'rating') {
+      const x = (ratings ?? []).find((y) => y.id === r.target_id) as unknown as { overall: number; pros: string | null; cons: string | null; status: string; company: { name: string; slug: string } | null } | undefined;
+      return x ? { text: `Rating of ${x.company?.name ?? 'a company'} (${x.overall}★, ${x.status}): ${[x.pros, x.cons].filter(Boolean).join(' / ') || 'no text'}`, href: x.company ? `/companies/${x.company.slug}#ratings` : null } : { text: 'Rating already removed', href: null };
     }
     return { text: `${r.target_type} ${r.target_id.slice(0, 8)}`, href: null };
   };

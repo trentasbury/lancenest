@@ -10,17 +10,19 @@ import Turnstile from './Turnstile';
 import GoogleButton from './GoogleButton';
 
 const OPTIONS = [
-  { value: 'veteran', title: 'I’m a service member or veteran', body: 'Active duty, National Guard, Reserve, transitioning, or veteran — build your profile and find your next role.' },
-  { value: 'employer', title: 'I’m hiring', body: 'Any company or recruiter — no military background or veteran ownership required. Post roles and search verified military talent.' },
+  { value: 'veteran', title: 'I’m a service member or veteran', body: 'Active duty, Guard, Reserve, transitioning, or veteran.' },
+  { value: 'spouse', title: 'I’m a military spouse', body: 'Remote and portable jobs, freelance work, and a network that gets PCS moves.' },
+  { value: 'employer', title: 'I’m hiring', body: 'Any company or recruiter. Post roles and search verified military talent.' },
 ] as const;
 
 /** The page is pre-built; ?role=employer and ?ref=… (referral links) are read here, in the browser. */
 export default function SignupForm() {
-  const [role, setRole] = useState<'veteran' | 'employer'>('veteran');
+  const [role, setRole] = useState<'veteran' | 'spouse' | 'employer'>('veteran');
   const [referral, setReferral] = useState<string | undefined>();
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     if (p.get('role') === 'employer') setRole('employer');
+    if (p.get('role') === 'spouse') setRole('spouse');
     const ref = p.get('ref');
     if (ref) setReferral(ref.slice(0, 80));
   }, []);
@@ -41,11 +43,11 @@ export default function SignupForm() {
       {referral && <input type="hidden" name="ref" value={referral} />}
       <fieldset>
         <legend className="field-label">How will you use LanceNest?</legend>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-2.5">
           {OPTIONS.map((o) => (
             <label
               key={o.value}
-              className={`cursor-pointer rounded-xl border p-4 transition-colors ${
+              className={`cursor-pointer rounded-xl border px-4 py-3 transition-colors ${
                 role === o.value ? 'border-brass bg-brass/10' : 'border-line bg-white hover:border-brass/50'
               }`}
             >
@@ -84,7 +86,7 @@ export default function SignupForm() {
       <FormMessage error={state.error} />
       <SubmitButton pendingText="Creating your account…">Create account</SubmitButton>
       <p className="text-center text-xs text-muted">
-        Service members verify their service after signup to unlock jobs and the network. By creating an account, with email or Google, you agree to our <Link href="/terms" className="underline">Terms</Link>, <Link href="/conduct" className="underline">Code of Conduct</Link>, and <Link href="/privacy" className="underline">Privacy Policy</Link>.
+        Members verify after signup to unlock jobs and the network. By creating an account, with email or Google, you agree to our <Link href="/terms" className="underline">Terms</Link>, <Link href="/conduct" className="underline">Code of Conduct</Link>, and <Link href="/privacy" className="underline">Privacy Policy</Link>.
       </p>
       <p className="text-center text-sm text-muted">
         Already a member? <Link href="/login" className="text-navy underline decoration-brass underline-offset-4">Log in</Link>

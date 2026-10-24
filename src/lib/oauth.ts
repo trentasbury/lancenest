@@ -30,6 +30,16 @@ export async function makeEmployerIfNew(userId: string, createdAt: string | null
   return true;
 }
 
+/** "I'm a military spouse" through Google: mark a brand-new, untouched member account as a spouse account. */
+export async function makeSpouseIfNew(userId: string, createdAt: string | null | undefined): Promise<boolean> {
+  if (!isFreshAccount(createdAt)) return false;
+  const admin = createAdminClient();
+  const { count } = await admin.from('verification_requests').select('id', { count: 'exact', head: true }).eq('profile_id', userId);
+  if ((count ?? 0) > 0) return false;
+  const { error } = await admin.from('veteran_profiles').update({ member_type: 'spouse' }).eq('profile_id', userId).eq('verification_status', 'not_verified');
+  return !error;
+}
+
 /** Referral links: remember who invited a brand-new member (same rule as email sign-up). */
 export async function applyReferral(userId: string, refRaw: string | null | undefined) {
   const ref = (refRaw ?? '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 60);

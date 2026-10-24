@@ -79,6 +79,11 @@ export async function notifyMember(profileId: string, n: { type: string; title: 
   try {
     const admin = createAdminClient();
     if (n.inApp !== false) await admin.from('notifications').insert({ profile_id: profileId, type: n.type, title: n.title, link: n.link });
+    // Also to their phone or browser, if they turned on notifications there.
+    if (n.inApp !== false) {
+      const { sendPush } = await import('@/lib/push');
+      await sendPush(profileId, { title: 'LanceNest', body: n.title, url: n.link, tag: n.type });
+    }
     if (n.email) {
       const { data } = await admin.auth.admin.getUserById(profileId);
       if (data?.user?.email) await sendEmail(data.user.email, n.email);

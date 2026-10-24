@@ -11,6 +11,8 @@ import { getSessionProfile } from '@/lib/auth';
 import SubmitButton from '@/components/SubmitButton';
 import { startConversation } from '@/app/messages/actions';
 import { safeHref } from '@/lib/safeHref';
+import { getMyCompany } from '@/lib/employer';
+import CompanyCommunity from './CompanyCommunity';
 
 // Shared by the page title and the page itself: one lookup per request.
 const getCompany = cache(async (slug: string) => {
@@ -27,8 +29,9 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
   return { title: `${company.name} Jobs`, description: company.about?.slice(0, 160) ?? `Open roles at ${company.name}.` };
 }
 
-export default async function CompanyPage(props: { params: Promise<{ slug: string }> }) {
+export default async function CompanyPage(props: { params: Promise<{ slug: string }>; searchParams: Promise<{ work?: string; rate?: string }> }) {
   const params = await props.params;
+  const { work, rate } = await props.searchParams;
   const company = await getCompany(params.slug);
   if (!company) notFound();
 
@@ -43,6 +46,14 @@ export default async function CompanyPage(props: { params: Promise<{ slug: strin
     getSessionProfile(),
   ]);
   const jobs = (data ?? []) as JobWithCompany[];
+  // Who is looking: verified members see names and reviews; the company's own team can reply to ratings.
+  let viewer: { id: string; role: string; verifiedMember: boolean; ownsCompany: boolean } | null = null;
+  if (session?.profile) {
+    const role = session.profile.role;
+    const { data: v } = role === 'veteran' ? await supabase.from('veteran_profiles').select('verification_status').eq('profile_id', session.user.id).maybeSingle() : { data: null };
+    const mine = role === 'employer' ? await getMyCompany(session.user.id) : null;
+    viewer = { id: session.user.id, role, verifiedMember: role === 'admin' || role === 'employer' || v?.verification_status === 'verified', ownsCompany: mine?.id === company.id };
+  }
 
   return (
     <>
@@ -94,6 +105,7 @@ export default async function CompanyPage(props: { params: Promise<{ slug: strin
               )}
             </div>
           </section>
+          <CompanyCommunity company={{ id: company.id, slug: company.slug, name: company.name }} viewer={viewer} work={work} rate={rate} />
         </div>
         <aside className="space-y-5">
           {company.veteran_commitment && (

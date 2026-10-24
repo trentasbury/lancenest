@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: 'Create your account', alternates: { 
 // their dashboard before reaching this page (middleware).
 export default function SignupPage() {
   return (
-    <AuthShell title="Join LanceNest" subtitle="Free for every service member and veteran — always.">
+    <AuthShell title="Join LanceNest" subtitle="Free for every service member, veteran and military spouse — always.">
       <SignupForm />
     </AuthShell>
   );

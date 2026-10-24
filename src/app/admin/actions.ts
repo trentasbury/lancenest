@@ -59,13 +59,16 @@ export async function decideVerification(requestId: string, decision: 'verified'
     details: note ? { note } : {},
   });
 
+  const { data: who } = await admin.from('veteran_profiles').select('member_type').eq('profile_id', request.profile_id).maybeSingle();
+  const spouse = who?.member_type === 'spouse';
+  if (decision === 'verified' && spouse) await admin.from('spouse_links').upsert({ spouse_id: request.profile_id, sponsor_id: null, method: 'documents' }, { onConflict: 'spouse_id', ignoreDuplicates: true });
   if (decision === 'verified') await rewardReferrer(request.profile_id, 'member_active');
   await notifyMember(request.profile_id, decision === 'verified'
     ? { type: 'verification', link: '/dashboard', title: 'You’re verified ✓ — jobs, the network, messaging, and freelance are unlocked.',
-        email: { subject: 'You’re verified on LanceNest', preheader: 'Jobs, the network, messaging, and freelance are now unlocked.', tone: 'success', badge: '✓ Verified service member',
-          heading: 'Welcome aboard — your service is verified.',
-          paragraphs: ['Thank you for your service. Your Verified badge is now on your profile, and everything on LanceNest is unlocked: jobs, the Network, messaging, and freelance work.',
-            'Your service document and photo ID have been permanently deleted, as promised.',
+        email: { subject: 'You’re verified on LanceNest', preheader: 'Jobs, the network, messaging, and freelance are now unlocked.', tone: 'success', badge: spouse ? '✓ Verified military spouse' : '✓ Verified service member',
+          heading: spouse ? 'Welcome aboard — you’re verified.' : 'Welcome aboard — your service is verified.',
+          paragraphs: [spouse ? 'Thank you for everything your family gives. Your Verified badge is now on your profile, and everything on LanceNest is unlocked: jobs, the Network, messaging, and freelance work.' : 'Thank you for your service. Your Verified badge is now on your profile, and everything on LanceNest is unlocked: jobs, the Network, messaging, and freelance work.',
+            'Your documents and photo ID have been permanently deleted, as promised.',
             'Next step: complete your profile — members with a résumé and military career filled in hear from employers far more often.'],
           cta: { label: 'Go to your dashboard', url: `${SITE}/dashboard` } } }
     : { type: 'verification', link: '/dashboard/verification', title: `We couldn’t verify your documents${note ? `: ${note}` : '.'} Please resubmit.`,
@@ -75,6 +78,9 @@ export async function decideVerification(requestId: string, decision: 'verified'
             'For your privacy, the files you sent have already been permanently deleted.',
             'You can resubmit anytime — it only takes a couple of minutes. Remember to black out your Social Security number and cover your ID number first.'],
           cta: { label: 'Resubmit verification', url: `${SITE}/dashboard/verification` } } });
+
+  // Leaving the service within a year? Free Pro for the transition (does nothing otherwise).
+  if (decision === 'verified') { const { grantTransitionPro } = await import('@/lib/transitionPro'); await grantTransitionPro(request.profile_id); }
 
   revalidatePath('/admin/verifications');
   revalidatePath('/admin');
@@ -91,6 +97,7 @@ export async function decideReport(reportId: string, decision: 'dismissed' | 're
     if (report.target_type === 'post') await admin.from('network_posts').delete().eq('id', report.target_id);
     if (report.target_type === 'comment') await admin.from('post_comments').delete().eq('id', report.target_id);
     if (report.target_type === 'job') await admin.from('jobs').update({ status: 'closed' }).eq('id', report.target_id);
+    if (report.target_type === 'rating') await admin.from('company_ratings').update({ status: 'hidden' }).eq('id', report.target_id);
   }
   if (decision !== 'removed') {
     // Not a violation: bring back anything the automatic 3-report rule hid.
@@ -136,6 +143,8 @@ export async function decideCompany(companyId: string, decision: 'verified' | 'r
   if (!company) return;
   const verified = decision === 'verified';
   await admin.from('companies').update({ is_verified: verified, verification_status: verified ? 'verified' : 'rejected', verification_note: note }).eq('id', companyId);
+  revalidatePath('/open-jobs');
+  revalidatePath('/open-jobs/[slug]', 'page');
   if (!verified) await admin.from('jobs').update({ status: 'paused' }).eq('company_id', companyId).eq('status', 'open');
   if (company.owner_id) {
     const name = company.name as string;

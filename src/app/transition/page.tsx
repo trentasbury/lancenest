@@ -20,7 +20,7 @@ const STEPS = [
   ['Start up to 180 days before separation', 'You keep full military pay, BAH, and benefits. The company does not pay you.'],
 ];
 
-export default async function TransitionPage(props: { searchParams: Promise<{ saved?: string }> }) {
+export default async function TransitionPage(props: { searchParams: Promise<{ saved?: string; pro?: string }> }) {
   const searchParams = await props.searchParams;
   const { user, profile } = await requireVerifiedMember('/transition');
   const supabase = await createClient();
@@ -83,7 +83,8 @@ export default async function TransitionPage(props: { searchParams: Promise<{ sa
           {profile.role === 'veteran' && (
             <form action={saveTransition} className="card space-y-4 p-6">
               <p className="eyebrow">Your transition</p>
-              {searchParams.saved && <FormMessage message="Saved." />}
+              {searchParams.saved && <FormMessage message={searchParams.pro ? 'Saved. Thank you for your service: you have 90 days of Pro, free, for your transition.' : 'Saved.'} />}
+              <p className="rounded-lg border border-brass/50 bg-brass/10 px-3 py-2 text-xs text-ink/85"><strong>Leaving within a year?</strong> Verified members separating in the next 12 months get 90 days of Pro free, once. Add your date to turn it on.</p>
               <div><label className="field-label" htmlFor="separation_date">Separation / retirement date</label><input id="separation_date" name="separation_date" type="date" defaultValue={(vet?.separation_date as string) ?? ''} className="field" /></div>
               <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="open_to_transition_hiring" defaultChecked={!!vet?.open_to_transition_hiring} className="mt-0.5 accent-navy" />Show me to verified employers hiring transitioning members</label>
               <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="skillbridge_interest" defaultChecked={!!vet?.skillbridge_interest} className="mt-0.5 accent-navy" />I’m interested in SkillBridge</label>

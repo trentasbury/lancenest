@@ -26,6 +26,7 @@ import AutoCloseDetails from '@/components/AutoCloseDetails';
 import Toaster from '@/components/Toaster';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import PwaRegister from '@/components/PwaRegister';
 
 
 const ORG_JSONLD = {
@@ -42,7 +43,8 @@ export const metadata: Metadata = {
   title: { default: 'LanceNest — Veteran Jobs. Built for What’s Next.', template: '%s — LanceNest' },
   description:
     'LanceNest is the verified career network for active duty, Guard, Reserve, transitioning, and veteran service members — translate your military experience into civilian roles, and hire verified military talent for federal-ready work.',
-  icons: { icon: '/icon.svg' },
+  icons: { icon: '/icon.svg', apple: '/icons/apple-touch-icon.png' },
+  appleWebApp: { capable: true, title: 'LanceNest', statusBarStyle: 'default' },
   openGraph: { siteName: 'LanceNest', type: 'website', locale: 'en_US' },
   twitter: { card: 'summary_large_image' },
 };
@@ -73,6 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PageViewBeacon />
         <AutoCloseDetails />
         <Toaster />
+        <PwaRegister />
       </body>
     </html>
   );

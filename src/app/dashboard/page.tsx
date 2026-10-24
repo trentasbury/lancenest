@@ -27,13 +27,13 @@ const TOOLS = [
 
 type AppRow = { id: string; status: string; applied_at: string; job: { title: string; slug: string } | null };
 
-export default async function VeteranDashboard(props: { searchParams: Promise<{ boost?: string }> }) {
+export default async function VeteranDashboard(props: { searchParams: Promise<{ boost?: string; spouse?: string }> }) {
   const searchParams = await props.searchParams;
   const { user, profile } = await requireRole(['veteran'], '/dashboard');
   const supabase = await createClient();
 
   const [{ data: vet }, { count: savedCount }, { data: apps }, latestJobs] = await Promise.all([
-    supabase.from('veteran_profiles').select('verification_status').eq('profile_id', user.id).maybeSingle(),
+    supabase.from('veteran_profiles').select('verification_status, member_type').eq('profile_id', user.id).maybeSingle(),
     supabase.from('saved_jobs').select('job_id', { count: 'exact', head: true }).eq('profile_id', user.id),
     supabase
       .from('applications')
@@ -46,6 +46,7 @@ export default async function VeteranDashboard(props: { searchParams: Promise<{ 
 
   const applications = (apps ?? []) as unknown as AppRow[];
   const firstName = profile.full_name.split(' ')[0] || 'there';
+  const spouse = vet?.member_type === 'spouse';
 
   return (
     <>
@@ -56,11 +57,12 @@ export default async function VeteranDashboard(props: { searchParams: Promise<{ 
             <h1 className="mt-3 font-serif text-5xl font-medium text-ivory">Welcome back, {firstName}.</h1>
             <p className="mt-2 font-serif text-xl italic text-cream/85">Your next mission is waiting.</p>
           </div>
-          <VerificationBadge status={vet?.verification_status ?? 'not_verified'} />
+          <VerificationBadge status={vet?.verification_status ?? 'not_verified'} spouse={spouse} />
         </div>
       </section>
 
       <div className="container-page space-y-10 py-10">
+        {searchParams.spouse && vet?.verification_status === 'verified' && <p className="rounded-xl border border-olive/40 bg-olive/10 px-4 py-3 text-sm text-olive">✓ You’re verified as a military spouse. Everything on LanceNest is unlocked.</p>}
         {vet?.verification_status === 'verified' && <MemberPerks userId={user.id} boost={searchParams.boost} />}
         {vet?.verification_status === 'verified' && <RecommendedJobs limit={4} title="Jobs for you" />}
         <ProfileStrength userId={user.id} />
@@ -68,8 +70,8 @@ export default async function VeteranDashboard(props: { searchParams: Promise<{ 
         {vet?.verification_status !== 'verified' && (
           <div className="card flex flex-col gap-3 border-brass p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="font-medium">{vet?.verification_status === 'pending' ? 'Your verification is being reviewed.' : 'Verify your service to unlock LanceNest.'}</p>
-              <p className="text-sm text-muted">{vet?.verification_status === 'pending' ? 'Jobs, the network, and messaging unlock the moment a reviewer approves your document.' : 'Jobs, the network, messaging, and employer visibility are for verified service members. It’s free and takes two minutes to submit.'}</p>
+              <p className="font-medium">{vet?.verification_status === 'pending' ? 'Your verification is being reviewed.' : spouse ? 'Verify as a military spouse to unlock LanceNest.' : 'Verify your service to unlock LanceNest.'}</p>
+              <p className="text-sm text-muted">{vet?.verification_status === 'pending' ? 'Jobs, the network, and messaging unlock the moment a reviewer approves your document.' : spouse ? 'Accept an invite from your verified service member, or send one document. It’s free.' : 'Jobs, the network, messaging, and employer visibility are for verified service members. It’s free and takes two minutes to submit.'}</p>
             </div>
             {vet?.verification_status !== 'pending' && <Link href="/dashboard/verification" className="btn btn-brass shrink-0">Verify now</Link>}
           </div>
@@ -84,7 +86,7 @@ export default async function VeteranDashboard(props: { searchParams: Promise<{ 
           <Link href="/dashboard/verification" className="card card-hover group p-5">
             <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Verification</p>
             <p className="mt-2 font-serif text-2xl text-navy">{vet?.verification_status === 'verified' ? 'Verified ✦' : 'Get verified'} →</p>
-            <p className="mt-1 text-xs text-muted">Earn the Verified Veteran badge</p>
+            <p className="mt-1 text-xs text-muted">{spouse ? 'Earn the Verified Military Spouse badge' : 'Earn the Verified Veteran badge'}</p>
           </Link>
           {profile.username && (
             <Link href={`/veterans/${profile.username}`} className="card card-hover group p-5">
@@ -92,10 +94,25 @@ export default async function VeteranDashboard(props: { searchParams: Promise<{ 
               <p className="mt-2 font-serif text-2xl text-navy">See what employers see →</p>
             </Link>
           )}
-          <Link href="/transition" className="card card-hover group p-5">
-            <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Transitioning?</p>
-            <p className="mt-2 font-serif text-2xl text-navy">Transition Hub & SkillBridge →</p>
-          </Link>
+          {spouse ? (
+            <Link href="/jobs?arrangement=remote" className="card card-hover group p-5">
+              <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Portable careers</p>
+              <p className="mt-2 font-serif text-2xl text-navy">Remote jobs that move with you →</p>
+            </Link>
+          ) : (
+            <Link href="/transition" className="card card-hover group p-5">
+              <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Transitioning?</p>
+              <p className="mt-2 font-serif text-2xl text-navy">Transition Hub & SkillBridge →</p>
+              <p className="mt-1 text-xs text-muted">Separating within a year? 90 days of Pro, free</p>
+            </Link>
+          )}
+          {!spouse && vet?.verification_status === 'verified' && (
+            <Link href="/dashboard/spouse" className="card card-hover group p-5">
+              <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Military family</p>
+              <p className="mt-2 font-serif text-2xl text-navy">Invite your spouse →</p>
+              <p className="mt-1 text-xs text-muted">They’re verified through you, free</p>
+            </Link>
+          )}
           <Link href="/settings/account" className="card card-hover group p-5">
             <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Account</p>
             <p className="mt-2 font-serif text-2xl text-navy">Settings & privacy →</p>

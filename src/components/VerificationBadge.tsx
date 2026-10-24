@@ -1,11 +1,11 @@
 import VerifiedMark from './VerifiedMark';
 
 /** Verification status pill. Verified members get the green check used across the site. */
-export default function VerificationBadge({ status }: { status: string }) {
+export default function VerificationBadge({ status, spouse = false }: { status: string; spouse?: boolean }) {
   if (status === 'verified') {
     return (
       <span className="inline-flex items-center rounded-full border border-[#2f7a3e]/40 bg-[#2f7a3e]/10 py-1 pl-0.5 pr-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2f7a3e]">
-        <VerifiedMark /> <span className="ml-1">Verified service member</span>
+        <VerifiedMark /> <span className="ml-1">{spouse ? 'Verified military spouse' : 'Verified service member'}</span>
       </span>
     );
   }

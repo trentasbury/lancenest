@@ -98,6 +98,9 @@ export async function sendMessage(conversationId: string, formData: FormData) {
     const admin = createAdminClient();
     const { data: others } = await admin.from('conversation_participants').select('profile_id, last_emailed_at, profile:profiles(last_active_at)').eq('conversation_id', conversationId).neq('profile_id', session.user.id);
     for (const o of (others ?? []) as unknown as { profile_id: string; last_emailed_at: string | null; profile: { last_active_at: string | null } | null }[]) {
+      // Phone / browser notification (no message text, for privacy); one per conversation stays on screen.
+      const { sendPush } = await import('@/lib/push');
+      await sendPush(o.profile_id, { title: 'New message', body: `${session.profile?.full_name ?? 'A member'} sent you a message.`, url: `/messages/${conversationId}`, tag: `msg-${conversationId}` });
       const away = !o.profile?.last_active_at || Date.now() - Date.parse(o.profile.last_active_at) > 15 * 60000;
       const quiet = !o.last_emailed_at || Date.now() - Date.parse(o.last_emailed_at) > 2 * 3600000;
       if (!away || !quiet) continue;

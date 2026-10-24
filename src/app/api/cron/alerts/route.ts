@@ -122,6 +122,20 @@ export async function GET(request: NextRequest) {
     for (const r of pendingRefs) if (!doneSet.has(r.id as string)) await rewardReferrer(r.id as string, 'member_active');
   }
 
+  // ---------- Free transition Pro for verified members leaving within a year (catches dates set before verification) ----------
+  {
+    const from = new Date(now - 90 * 24 * H).toISOString().slice(0, 10);
+    const to = new Date(now + 365 * 24 * H).toISOString().slice(0, 10);
+    const { data: leaving } = await admin.from('veteran_profiles').select('profile_id').eq('verification_status', 'verified').eq('member_type', 'service_member')
+      .gte('separation_date', from).lte('separation_date', to).limit(1000);
+    if (leaving?.length) {
+      const { data: had } = await admin.from('member_grants').select('profile_id').eq('kind', 'transition_pro').in('profile_id', leaving.map((l) => l.profile_id as string));
+      const hadSet = new Set((had ?? []).map((h) => h.profile_id as string));
+      const { grantTransitionPro } = await import('@/lib/transitionPro');
+      for (const l of leaving) if (!hadSet.has(l.profile_id as string)) await grantTransitionPro(l.profile_id as string);
+    }
+  }
+
   // ---------- Expire free Pro months earned through referrals ----------
   const { data: expired } = await admin.from('veteran_profiles').select('profile_id').not('granted_plan', 'is', null).lt('pro_granted_until', new Date().toISOString());
   if (expired?.length) {

@@ -10,7 +10,10 @@ const ACCEPT = '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png';
 const FILE_INPUT = 'field file:mr-3 file:rounded-lg file:border-0 file:bg-navy file:px-3 file:py-1.5 file:text-sm file:text-ivory';
 
 /** Uploads both files straight to private storage (no 4 MB request limit), then opens the review request. */
-export default function VerificationForm({ userId }: { userId: string }) {
+const SERVICE_DOCS = ['DD-214', 'VA benefit summary letter', 'LES', 'Orders', 'NGB-22'];
+const SPOUSE_DOCS = ['Orders listing me as a dependent', 'DD Form 1172-2 (ID card / DEERS application)', 'Marriage certificate + spouse’s DD-214 or LES (one file)', 'VA survivor benefits letter (DIC)'];
+
+export default function VerificationForm({ userId, spouse = false }: { userId: string; spouse?: boolean }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,27 +71,23 @@ export default function VerificationForm({ userId }: { userId: string }) {
     <form onSubmit={onSubmit} className="card space-y-6 p-7">
       <div>
         <h2 className="font-serif text-2xl font-semibold">Submit your documents</h2>
-        <p className="mt-1 text-sm text-muted">Two files: proof of service and a photo ID. A reviewer checks that they match, then deletes both.</p>
+        <p className="mt-1 text-sm text-muted">Two files: {spouse ? 'proof of your military family connection' : 'proof of service'} and a photo ID. A reviewer checks that they match, then deletes both.</p>
       </div>
 
       {error && <p role="alert" className="rounded-lg border border-signal/30 bg-signal/5 px-3.5 py-2.5 text-sm text-signal">{error}</p>}
 
       <fieldset className="space-y-4 rounded-xl border border-line p-4">
-        <legend className="px-1 text-sm font-semibold text-ink">1. Proof of service</legend>
+        <legend className="px-1 text-sm font-semibold text-ink">1. {spouse ? 'Proof you’re a military spouse' : 'Proof of service'}</legend>
         <div>
           <label htmlFor="doc_type" className="field-label">Document type</label>
-          <select id="doc_type" name="doc_type" className="field" defaultValue="DD-214">
-            <option>DD-214</option>
-            <option>VA benefit summary letter</option>
-            <option>LES</option>
-            <option>Orders</option>
-            <option>NGB-22</option>
+          <select id="doc_type" name="doc_type" className="field" defaultValue={spouse ? SPOUSE_DOCS[0] : 'DD-214'}>
+            {(spouse ? SPOUSE_DOCS : SERVICE_DOCS).map((d) => <option key={d}>{d}</option>)}
           </select>
         </div>
         <div>
           <label htmlFor="document" className="field-label">File (PDF, JPG, or PNG · up to 4 MB)</label>
           <input id="document" name="document" type="file" accept={ACCEPT} required className={FILE_INPUT} />
-          <p className="mt-1.5 text-xs text-muted">Black out your Social Security number. Keep your name, date of birth, branch, and dates of service visible.</p>
+          <p className="mt-1.5 text-xs text-muted">{spouse ? 'Black out every Social Security number. Keep your name, your spouse’s name and branch visible.' : 'Black out your Social Security number. Keep your name, date of birth, branch, and dates of service visible.'}</p>
         </div>
       </fieldset>
 

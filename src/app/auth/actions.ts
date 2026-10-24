@@ -73,7 +73,10 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
 }
 
 export async function signUp(_prev: FormState, formData: FormData): Promise<FormState> {
-  const role = field(formData, 'role');
+  const choice = field(formData, 'role');
+  // Military spouses are members too (same features), verified through their service member or documents.
+  const role = choice === 'spouse' ? 'veteran' : choice;
+  const memberType = choice === 'spouse' ? 'spouse' : 'service_member';
   const fullName = field(formData, 'full_name');
   const email = field(formData, 'email');
   const password = String(formData.get('password') ?? '');
@@ -90,7 +93,7 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
     email,
     password,
     options: {
-      data: { full_name: fullName, role },
+      data: { full_name: fullName, role, member_type: memberType },
       captchaToken: captcha(formData),
       emailRedirectTo: `${siteUrl()}/auth/callback?next=${encodeURIComponent(home)}`,
     },

@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { roleHome, safeNextPath } from '@/lib/auth';
 import { LAST_SEEN_COOKIE, NAV_COOKIE, SESSION_START_COOKIE, navCookieOptions, navRoleFor, sessionCookieOptions } from '@/lib/session';
 import { recordLogin } from '@/lib/devices';
-import { applyReferral, isFreshAccount, makeEmployerIfNew } from '@/lib/oauth';
+import { applyReferral, isFreshAccount, makeEmployerIfNew, makeSpouseIfNew } from '@/lib/oauth';
 import type { Role } from '@/lib/types';
 
 /** Handles email-confirmation and password-reset links, and the return from "Continue with Google" (PKCE code exchange). */
@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
           const chosen = searchParams.get('role');
           if (fresh) await applyReferral(user.id, searchParams.get('ref'));
           if (chosen === 'employer') await makeEmployerIfNew(user.id, user.created_at);
+          if (chosen === 'spouse') await makeSpouseIfNew(user.id, user.created_at);
           const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
           const role = (profile?.role as Role | undefined) ?? null;
           navRole = role;

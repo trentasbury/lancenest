@@ -51,7 +51,7 @@ const load = cache(async (username: string) => {
 
   const { data: vet } = await supabase
     .from('veteran_profiles')
-    .select('about, clearance_level, verification_status, willing_to_relocate, plan')
+    .select('about, clearance_level, verification_status, willing_to_relocate, plan, member_type')
     .eq('profile_id', profile.id)
     .maybeSingle();
 
@@ -296,7 +296,7 @@ export default async function VeteranProfilePage(
             <p className="mt-4 font-serif text-[28px] font-semibold leading-tight text-ink">{profile.full_name}</p>
             <p className="mt-1 text-sm text-muted">{[status, primary?.branch].filter(Boolean).join(' · ')}</p>
             <div className="mt-3 flex flex-wrap justify-center gap-1.5">
-              <VerificationBadge status={vet.verification_status} />
+              <VerificationBadge status={vet.verification_status} spouse={(vet as { member_type?: string }).member_type === 'spouse'} />
               <PlanBadge plan={vet.plan} />
               {mentorRow?.available && <span className="inline-block rounded-full border border-olive bg-olive/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-olive">Mentor</span>}
               {clearance && vet.clearance_level !== 'none' && (isOwner || viewer?.profile?.role === 'employer' || viewer?.profile?.role === 'admin') && (

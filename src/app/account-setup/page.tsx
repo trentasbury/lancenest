@@ -10,6 +10,7 @@ export const metadata: Metadata = { title: 'Account setup', robots: { index: fal
 
 const CHOICES = [
   ['veteran', 'I’m a service member or veteran', 'Active duty, National Guard, Reserve, transitioning, or veteran — build your profile and find your next role.'],
+  ['spouse', 'I’m a military spouse', 'Married to someone who serves or served — remote and portable jobs, freelance work, and a network that gets military life.'],
   ['employer', 'I’m hiring', 'Any company or recruiter — post roles and search verified military talent.'],
 ] as const;
 
@@ -28,7 +29,7 @@ export default async function AccountSetupPage(props: { searchParams: Promise<{ 
           <p className="eyebrow">Welcome{first ? `, ${first}` : ''}</p>
           <h1 className="mt-2 font-sans text-3xl font-bold tracking-tight text-ink">How will you use LanceNest?</h1>
           <p className="mt-2 text-muted">Your account is created. Pick one to finish — you won’t be asked again.</p>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {CHOICES.map(([value, title, body]) => (
               <form key={value} action={chooseAccountType.bind(null, value, searchParams.next ?? '')}>
                 <SubmitButton className="card card-hover block h-full w-full p-6 text-left" pendingText="Setting up…">

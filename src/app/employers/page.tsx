@@ -21,7 +21,7 @@ const PLANS = [
   { name: 'Professional', price: '$249', note: 'per month · or $2,490/year paid up front (2 months free)', cta: 'Start with Professional', featured: true,
     features: ['10 open job posts (extra slots $39/mo)', 'Search every verified member’s full profile', 'Transitioning talent search (separating in 12 months)', 'Hiring analytics: views, applicants, conversion', '5 featured jobs a month, included', 'Talent pools: save candidates to lists with private notes', 'Saved searches with daily new-match emails', '2 team seats', 'Branded company page: cover photo and “Why veterans work here”', 'Applicant export (CSV)'] },
   { name: 'Federal', price: '$999', note: 'per month · or $9,990/year paid up front (2 months free) · Founding Employers: $7,500 for the first year, paid up front', cta: 'Start with Federal',
-    features: ['Everything in Professional', 'Built for primes, subs, and GovCon small businesses', 'Search by self-reported clearance level (you confirm eligibility in official systems)', 'Cleared talent spotlight', '5 team seats', 'Unlimited featured jobs', 'Priority support from the founder'] },
+    features: ['Everything in Professional', 'Built for primes, subs, and GovCon small businesses', 'Search by self-reported clearance level (you confirm eligibility in official systems)', 'Cleared talent spotlight', 'One-click yearly veteran outreach report for VEVRAA records', '5 team seats', 'Unlimited featured jobs', 'Priority support from the founder'] },
   { name: 'Enterprise', price: 'Custom', note: 'from $15,000/year', cta: 'Talk to us',
     features: ['Everything in Federal', 'Volume pricing for multiple hiring teams', 'Invoice billing', 'Dedicated support'] },
 ];
@@ -114,7 +114,7 @@ export default async function EmployersPage() {
                 <tr><td className="p-3 font-medium">New conversations with any member</td><td className="p-3">—</td><td className="p-3">100/month</td><td className="p-3">500/month</td><td className="p-3">2,000/month</td></tr>
                 <tr><td className="p-3 font-medium">Saved searches, talent pools, notes</td><td className="p-3">—</td><td className="p-3">✓</td><td className="p-3">✓ (team-shared)</td><td className="p-3">✓</td></tr>
                 <tr><td className="p-3 font-medium">Featured jobs</td><td className="p-3">Add-on</td><td className="p-3">5/month</td><td className="p-3">Unlimited</td><td className="p-3">Unlimited</td></tr>
-                <tr><td className="p-3 font-medium">Reports and CSV export</td><td className="p-3">Basic</td><td className="p-3">✓</td><td className="p-3">✓ + compliance export</td><td className="p-3">Custom</td></tr>
+                <tr><td className="p-3 font-medium">Reports and CSV export</td><td className="p-3">Basic</td><td className="p-3">✓</td><td className="p-3">✓ + veteran outreach report</td><td className="p-3">Custom</td></tr>
                 <tr><td className="p-3 font-medium">Support</td><td className="p-3">Email</td><td className="p-3">Email</td><td className="p-3">Priority</td><td className="p-3">Dedicated contact</td></tr>
                 <tr><td className="p-3 font-medium">Invoicing, security review, custom terms</td><td className="p-3">—</td><td className="p-3">—</td><td className="p-3">—</td><td className="p-3">✓</td></tr>
               </tbody>

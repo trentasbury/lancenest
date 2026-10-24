@@ -50,7 +50,11 @@ const nextConfig = {
       { source: '/careers', has: [{ type: 'query', key: 'branch', value: '(?<branch>marine-corps|navy|air-force|space-force|coast-guard)' }], destination: '/careers/:branch', permanent: true }];
   },
   async headers() {
-    return [{ source: '/(.*)', headers: securityHeaders }];
+    return [
+      { source: '/(.*)', headers: securityHeaders },
+      // The app's service worker must always be fresh, and may control the whole site.
+      { source: '/sw.js', headers: [{ key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' }, { key: 'Service-Worker-Allowed', value: '/' }, { key: 'Content-Type', value: 'application/javascript; charset=utf-8' }] },
+    ];
   },
 };
 

@@ -55,7 +55,10 @@ export default async function AnalyticsPage() {
           <p className="mt-1 text-sm text-muted">Last 30 days · each member counts once per job per day</p>
         </div>
         {['federal', 'enterprise'].includes(company.plan) && (
-          <a href="/api/employer/compliance-export" className="btn btn-outline" data-track="employer_compliance_export">Download hiring records (CSV)</a>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/employer/compliance" className="btn btn-primary" data-track="employer_compliance_report">Veteran outreach report</Link>
+            <a href="/api/employer/compliance-export" className="btn btn-outline" data-track="employer_compliance_export">Download hiring records (CSV)</a>
+          </div>
         )}
       </div>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

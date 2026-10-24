@@ -5,6 +5,10 @@ import { createClient } from '@/lib/supabase/server';
 import VerificationBadge from '@/components/VerificationBadge';
 import FormMessage from '@/components/FormMessage';
 import VerificationForm from './VerificationForm';
+import { cookies } from 'next/headers';
+import SubmitButton from '@/components/SubmitButton';
+import { SPOUSE_INVITE_COOKIE, peekSpouseInvite } from '@/lib/spouse';
+import { acceptInvite } from '../spouse/actions';
 
 export const metadata: Metadata = { title: 'Verify your service' };
 
@@ -20,6 +24,18 @@ const ERRORS: Record<string, string> = {
   upload: 'The upload didn’t go through. Please try again.',
 };
 
+const INVITE_ERRORS: Record<string, string> = {
+  invalid: 'That invite link has expired or was already used. Ask your service member for a new one, or verify with documents below.',
+  not_spouse: 'Invite links are for military spouse accounts. Contact us through the Help page if you signed up as the wrong type.',
+  self: 'You can’t accept your own invite.',
+};
+
+const ACCEPTED_SPOUSE = [
+  ['Fastest', 'An invite link from your verified service member (they make it from their dashboard). No documents needed.'],
+  ['Or one document', 'Orders listing you as a dependent, a DD Form 1172-2, your marriage certificate with your spouse’s DD-214 or LES, or a VA survivor benefits letter.'],
+  ['Plus a photo ID', 'A driver’s license, state ID card, or U.S. passport (book or card). Never a military ID card.'],
+];
+
 const ACCEPTED = [
   ['Veterans', 'DD-214 (Member-4 copy preferred) or a VA benefit summary letter.'],
   ['Active duty & transitioning', 'A recent LES (Leave and Earnings Statement) or your separation / retirement orders.'],
@@ -28,26 +44,28 @@ const ACCEPTED = [
 ];
 
 export default async function VerificationPage(
-  props: { searchParams: Promise<{ error?: string; submitted?: string; required?: string }> }
+  props: { searchParams: Promise<{ error?: string; submitted?: string; required?: string; invite_error?: string }> }
 ) {
   const searchParams = await props.searchParams;
   const { user } = await requireRole(['veteran'], '/dashboard/verification');
   const supabase = await createClient();
   const [{ data: vet }, { data: latest }] = await Promise.all([
-    supabase.from('veteran_profiles').select('verification_status').eq('profile_id', user.id).maybeSingle(),
+    supabase.from('veteran_profiles').select('verification_status, member_type').eq('profile_id', user.id).maybeSingle(),
     supabase.from('verification_requests').select('status, created_at, reviewed_at, notes').eq('profile_id', user.id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
   ]);
   const status = vet?.verification_status ?? 'not_verified';
   const canSubmit = status === 'not_verified' || status === 'failed';
+  const spouse = vet?.member_type === 'spouse';
+  const invite = spouse && status !== 'verified' ? await peekSpouseInvite((await cookies()).get(SPOUSE_INVITE_COOKIE)?.value) : null;
 
   return (
     <>
       <section className="bg-navy-deep text-ivory">
         <div className="container-page py-10">
           <Link href="/dashboard" className="text-sm text-cream/70 hover:text-brass">← Dashboard</Link>
-          <h1 className="mt-3 font-serif text-4xl font-medium text-ivory">Verify your service</h1>
+          <h1 className="mt-3 font-serif text-4xl font-medium text-ivory">{spouse ? 'Verify your military family connection' : 'Verify your service'}</h1>
           <p className="mt-1 max-w-2xl text-cream/75">
-            A verified badge tells employers a real person reviewed your proof of service. It’s free, and every profile is checked by hand.
+            {spouse ? 'A verified badge tells employers and members you’re a military spouse. It’s free: accept your service member’s invite, or send documents for a person to review.' : 'A verified badge tells employers a real person reviewed your proof of service. It’s free, and every profile is checked by hand.'}
           </p>
         </div>
       </section>
@@ -56,13 +74,27 @@ export default async function VerificationPage(
         <div className="space-y-6">
           {searchParams.required && status !== 'verified' && (
             <div className="card border-brass p-5">
-              <p className="font-medium">LanceNest is for verified service members.</p>
+              <p className="font-medium">{spouse ? "LanceNest is for verified service members and military spouses." : "LanceNest is for verified service members."}</p>
               <p className="mt-1 text-sm text-muted">
                 Jobs, the network, messaging, and member profiles unlock as soon as your service is verified. Until then you can build your profile so it’s ready.
               </p>
             </div>
           )}
           {searchParams.error && <FormMessage error={ERRORS[searchParams.error] ?? ERRORS.upload} />}
+          {searchParams.invite_error && <FormMessage error={INVITE_ERRORS[searchParams.invite_error] ?? INVITE_ERRORS.invalid} />}
+          {invite && (
+            <form action={acceptInvite} className="card border-olive/50 bg-olive/5 p-6">
+              <p className="font-semibold text-ink">{invite.firstName} invited you to LanceNest as their spouse.</p>
+              <p className="mt-1 text-sm text-muted">Accept to be verified right away. Only accept if {invite.firstName} is your spouse.</p>
+              <SubmitButton className="btn btn-primary mt-4" pendingText="Verifying…">Accept and verify</SubmitButton>
+            </form>
+          )}
+          {spouse && !invite && canSubmit && (
+            <div className="card p-6 text-sm">
+              <p className="font-semibold text-ink">Fastest: get an invite from your service member</p>
+              <p className="mt-1 text-muted">If your spouse is a verified LanceNest member, they can send you a one-time link from their dashboard (Dashboard → Invite your spouse). Open it on this device and you’re verified, no documents needed.</p>
+            </div>
+          )}
           {searchParams.submitted && <FormMessage message="Received. We’ll review it and update your badge — usually within 48 hours." />}
 
           <div className="card p-7">
@@ -81,14 +113,14 @@ export default async function VerificationPage(
             )}
           </div>
 
-          {canSubmit && <VerificationForm userId={user.id} />}
+          {canSubmit && <VerificationForm userId={user.id} spouse={spouse} />}
         </div>
 
         <aside className="space-y-5">
           <div className="card p-6">
             <p className="eyebrow">What we accept</p>
             <ul className="mt-4 space-y-3 text-sm">
-              {ACCEPTED.map(([who, what]) => (
+              {(spouse ? ACCEPTED_SPOUSE : ACCEPTED).map(([who, what]) => (
                 <li key={who}><span className="font-semibold text-ink">{who}:</span> <span className="text-ink/80">{what}</span></li>
               ))}
             </ul>

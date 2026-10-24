@@ -9,6 +9,7 @@ import { sanitizeSearch } from '@/lib/format';
 import AvatarUpload from '@/components/AvatarUpload';
 import { createClient } from '@/lib/supabase/server';
 import { RESERVED_NAME_MESSAGE } from '@/lib/names';
+import PushToggle from '@/components/PushToggle';
 
 export const metadata: Metadata = { title: 'Account settings', robots: { index: false } };
 
@@ -90,6 +91,11 @@ export default async function AccountPage(
           <Link href="/forgot-password" className="btn btn-outline">Change password</Link>
           <Link href="/network/people?tab=blocked" className="btn btn-ghost border border-line">Blocked & muted</Link>
         </div>
+      </section>
+
+      <section id="notifications" className="card scroll-mt-24 p-7">
+        <h2 className="font-serif text-2xl font-semibold">App and notifications</h2>
+        <div className="mt-4"><PushToggle /></div>
       </section>
 
       <section className="card p-7">

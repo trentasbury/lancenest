@@ -14,9 +14,16 @@ export async function GET(request: NextRequest) {
   const company = await getMyCompany(session.user.id);
   if (!company || !['federal', 'enterprise'].includes(company.plan)) return NextResponse.redirect(`${site}/employers`);
   const admin = createAdminClient();
-  const { data: jobs } = await admin.from('jobs').select('id, title, status, location, salary_min, salary_max, employment_type, posted_at, created_at').eq('company_id', company.id).order('created_at');
+  // Optional ?year=2026: only jobs posted by the end of that year, and only applications made during it.
+  const y = Number.parseInt(request.nextUrl.searchParams.get('year') ?? '', 10);
+  const year = y >= 2020 && y <= new Date().getUTCFullYear() ? y : null;
+  let jobsQ = admin.from('jobs').select('id, title, status, location, salary_min, salary_max, employment_type, posted_at, created_at').eq('company_id', company.id).order('created_at');
+  if (year) jobsQ = jobsQ.lt('posted_at', `${year + 1}-01-01`);
+  const { data: jobs } = await jobsQ;
   const jobIds = (jobs ?? []).map((j) => j.id as string);
-  const { data: apps } = jobIds.length ? await admin.from('applications').select('id, job_id, status, source, applied_at, profile:profiles!applications_profile_id_fkey(full_name)').in('job_id', jobIds) : { data: [] };
+  let appsQ = admin.from('applications').select('id, job_id, status, source, applied_at, profile:profiles!applications_profile_id_fkey(full_name)').in('job_id', jobIds);
+  if (year) appsQ = appsQ.gte('applied_at', `${year}-01-01`).lt('applied_at', `${year + 1}-01-01`);
+  const { data: apps } = jobIds.length ? await appsQ : { data: [] };
   const appIds = (apps ?? []).map((a) => a.id as string);
   const { data: hist } = appIds.length ? await admin.from('application_status_history').select('application_id, status, changed_at').in('application_id', appIds).order('changed_at') : { data: [] };
   const byApp = new Map<string, string[]>();
@@ -28,5 +35,5 @@ export async function GET(request: NextRequest) {
     if (!jobApps.length) lines.push([...base, '', '', '', '', ''].map(csv).join(','));
     for (const a of jobApps) lines.push([...base, a.profile?.full_name, a.applied_at, a.source, a.status, (byApp.get(a.id) ?? []).join('; ')].map(csv).join(','));
   }
-  return new NextResponse(lines.join('\n'), { headers: { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="lancenest-hiring-records-${new Date().toISOString().slice(0, 10)}.csv"`, 'Cache-Control': 'no-store' } });
+  return new NextResponse(lines.join('\n'), { headers: { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="lancenest-hiring-records-${year ?? new Date().toISOString().slice(0, 10)}.csv"`, 'Cache-Control': 'no-store' } });
 }
