@@ -21,7 +21,7 @@ export default function MobileMenu({ signOutAction }: { signOutAction: () => Pro
   // The menu only renders once opened (after the page is interactive), so reading the page's hint is safe here.
   const hint = open && typeof document !== 'undefined' ? document.documentElement.getAttribute('data-nav') ?? 'out' : 'out';
   const signedIn = me ? me.signedIn : hint !== 'out';
-  const role: Role | null = me?.signedIn ? me.role : hint === 'veteran' || hint === 'employer' || hint === 'admin' ? hint : null;
+  const role: Role | null = me?.signedIn ? me.role : hint === 'veteran' || hint === 'employer' || hint === 'admin' || hint === 'client' ? hint : null;
   const unread = me?.signedIn ? me.unread : 0;
   const username = me?.signedIn ? me.username : null;
   const companySlug = me?.signedIn ? me.companySlug ?? null : null;

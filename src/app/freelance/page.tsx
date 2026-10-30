@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { requireVerifiedMember } from '@/lib/auth';
+import { requireFreelanceAccess } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { CATEGORIES, FREE_PROPOSALS_PER_MONTH, proposalCredits, proposalsUsedThisMonth } from '@/lib/freelance';
 import ProposalPackForm from '@/components/freelance/ProposalPackForm';
@@ -18,7 +18,7 @@ export default async function FreelancePage(
   props: { searchParams: Promise<{ q?: string; category?: string; cleared?: string; mine?: string }> }
 ) {
   const searchParams = await props.searchParams;
-  const { user, profile } = await requireVerifiedMember('/freelance');
+  const { user, profile } = await requireFreelanceAccess('/freelance');
   const supabase = await createClient();
   const isVet = profile.role === 'veteran';
   const [{ data: fp }, { data: vet }] = isVet
@@ -32,7 +32,9 @@ export default async function FreelancePage(
   const { data: contracts } = await supabase.from('contracts').select('id, title, status').or(`client_id.eq.${user.id},freelancer_id.eq.${user.id}`).order('created_at', { ascending: false }).limit(10);
 
   let q = supabase.from('freelance_projects').select('id, title, description, category, work_location, budget_type, budget_min, budget_max, clearance_required, status, created_at, company:companies(name, is_verified)');
-  const mine = !isVet && searchParams.mine !== '0';
+  const isClient = profile.role === 'client';
+  // Clients see only their own projects (other people's projects are for members).
+  const mine = isClient || (!isVet && searchParams.mine !== '0');
   if (mine) q = q.eq('client_id', user.id); else q = q.eq('status', 'open');
   const kw = sanitizeSearch(searchParams.q ?? '');
   if (kw) q = q.textSearch('search', kw, { type: 'websearch', config: 'english' });
@@ -108,7 +110,7 @@ export default async function FreelancePage(
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="cleared" value="1" defaultChecked={!!searchParams.cleared} className="accent-navy" />Cleared work only</label>
           {!isVet && <input type="hidden" name="mine" value={mine ? '1' : '0'} />}
           <div className="flex gap-2 sm:col-span-4"><button className="btn btn-primary">Search</button>
-            {!isVet && <Link href={mine ? '/freelance?mine=0' : '/freelance'} className="btn btn-ghost border border-line">{mine ? 'Browse all open projects' : 'Your projects'}</Link>}
+            {!isVet && !isClient && <Link href={mine ? '/freelance?mine=0' : '/freelance'} className="btn btn-ghost border border-line">{mine ? 'Browse all open projects' : 'Your projects'}</Link>}
           </div>
         </form>
 
@@ -125,7 +127,7 @@ export default async function FreelancePage(
                     <p className="font-medium">{budget(p)}</p>
                   </div>
                   <p className="mt-1 text-sm text-muted">
-                    {p.company?.name}{p.company?.is_verified && <span className="ml-1 text-olive">✓ verified company</span>} · {(p as unknown as { work_location?: string }).work_location ?? 'Remote'} · {p.category ?? 'General'} · {timeAgo(p.created_at)}{mine && ` · ${p.status.replace('_', ' ')}`}
+                    {p.company?.name ?? 'Private client'}{p.company?.is_verified && <span className="ml-1 text-olive">✓ verified company</span>} · {(p as unknown as { work_location?: string }).work_location ?? 'Remote'} · {p.category ?? 'General'} · {timeAgo(p.created_at)}{mine && ` · ${p.status.replace('_', ' ')}`}
                   </p>
                   <p className="mt-2 line-clamp-2 text-sm text-ink/80">{p.description}</p>
                   {p.clearance_required !== 'none' && <span className="mt-2 inline-block rounded-full border border-brass/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-brass-dark">{CLEARANCE_LABEL[p.clearance_required]} required</span>}

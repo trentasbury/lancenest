@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { requireVerifiedMember } from '@/lib/auth';
+import { requireFreelanceAccess } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import PrintButton from '@/components/PrintButton';
 
@@ -10,7 +10,7 @@ const day = (d: string) => new Date(d.length === 10 ? `${d}T00:00:00Z` : d).toLo
 
 export default async function InvoicePage(props: { params: Promise<{ id: string; invoiceId: string }> }) {
   const { id, invoiceId } = await props.params;
-  const { user } = await requireVerifiedMember(`/freelance/contracts/${id}`);
+  const { user } = await requireFreelanceAccess(`/freelance/contracts/${id}`);
   const admin = createAdminClient();
   const { data: inv } = await admin.from('contract_invoices').select('number, description, amount_cents, due_on, pay_instructions, status, created_at, paid_at, client_id, freelancer_id, contract:contracts(title), client:profiles!contract_invoices_client_id_fkey(full_name), freelancer:profiles!contract_invoices_freelancer_id_fkey(full_name)').eq('id', invoiceId).eq('contract_id', id).maybeSingle();
   const i = inv as unknown as { number: string; description: string; amount_cents: number; due_on: string | null; pay_instructions: string | null; status: string; created_at: string; paid_at: string | null; client_id: string; freelancer_id: string; contract: { title: string } | null; client: { full_name: string } | null; freelancer: { full_name: string } | null } | null;

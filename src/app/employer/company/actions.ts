@@ -70,6 +70,7 @@ export async function saveCompanyDetails(formData: FormData) {
   };
   if (!company.is_verified && name) fields.name = name;
   const { error } = await (await createClient()).from('companies').update(fields).eq('id', company.id).eq('owner_id', user.id);
+  if (error?.code === 'P0022') redirect('/employer/company?error=explicit');
   if (error) { console.error('saveCompanyDetails failed:', error.message); redirect('/employer/company?error=details'); }
   revalidatePath(`/companies/${company.slug}`);
   redirect('/employer/company?saved=details');

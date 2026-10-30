@@ -10,7 +10,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { siteHost } from '@/lib/applyLinks';
 
 export const metadata: Metadata = { title: 'Company page' };
-const ERR: Record<string, string> = { type: 'Upload a JPG, PNG, or WebP image.', size: 'Images must be under 2 MB.', upload: 'That upload didn’t go through — please try again.', plan: 'Cover photos are part of Professional and Federal plans.',
+const ERR: Record<string, string> = { explicit: 'That includes language LanceNest doesn’t allow, such as sexual content or slurs. Please edit it.', type: 'Upload a JPG, PNG, or WebP image.', size: 'Images must be under 2 MB.', upload: 'That upload didn’t go through — please try again.', plan: 'Cover photos are part of Professional and Federal plans.',
   website: 'Enter your full website address, like https://yourcompany.com.', details: 'Your company details didn’t save. Please try again.' };
 
 export default async function CompanyBrandingPage(props: { searchParams: Promise<{ error?: string; saved?: string }> }) {

@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: 'Payment complete', robots: { index: 
 
 export default async function BillingSuccess(props: { searchParams: Promise<{ session_id?: string }> }) {
   const searchParams = await props.searchParams;
-  const { profile } = await requireRole(['employer', 'veteran'], '/dashboard');
+  const { profile } = await requireRole(['employer', 'veteran', 'client'], '/dashboard');
   let result: Awaited<ReturnType<typeof applyCheckoutSession>> = { ok: false };
   try {
     if (searchParams.session_id?.startsWith('cs_')) result = await applyCheckoutSession(searchParams.session_id);
@@ -36,7 +36,7 @@ export default async function BillingSuccess(props: { searchParams: Promise<{ se
         ? <Link href={`/freelance/contracts/${result.contractId}`} className="btn btn-primary mx-auto mt-8">Open the contract</Link>
         : result.ok && result.kind === 'proposal_pack'
         ? <Link href="/freelance" className="btn btn-primary mx-auto mt-8">Back to freelance projects</Link>
-        : <Link href={profile.role === 'veteran' ? '/dashboard' : '/employer/dashboard'} className="btn btn-primary mx-auto mt-8">Go to your dashboard</Link>}
+        : <Link href={profile.role === 'veteran' ? '/dashboard' : profile.role === 'client' ? '/freelance' : '/employer/dashboard'} className="btn btn-primary mx-auto mt-8">Go to your dashboard</Link>}
     </div>
   );
 }

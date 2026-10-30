@@ -1,5 +1,6 @@
 'use server';
 
+import { EXPLICIT_BLOCKED } from '@/lib/contact';
 import { revalidatePath } from 'next/cache';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -35,6 +36,7 @@ export async function saveFullProfile(p: ProfilePayload): Promise<{ ok: boolean;
     availability: ['open_now', 'open_soon', 'not_looking'].includes(b.availability) ? b.availability : 'open_soon', target_pay: s(b.target_pay, 60) || null,
     desired_titles: s(b.desired_titles, 400).split(',').map((t) => t.trim()).filter(Boolean).slice(0, 8),
   }).eq('profile_id', user.id);
+  if (e1?.code === 'P0022' || e2?.code === 'P0022') return { ok: false, error: EXPLICIT_BLOCKED };
   if (e1 || e2) return { ok: false, error: 'Your basics didn’t save — please try again.' };
 
   // Military service (multiple branches and duty stations)

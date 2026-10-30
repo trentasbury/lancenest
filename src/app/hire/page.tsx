@@ -25,7 +25,7 @@ export default async function HirePage() {
           <h1 className="mt-3 max-w-3xl font-serif text-5xl font-medium leading-tight text-ivory">Verified veterans and military spouses, ready for your project.</h1>
           <p className="mt-4 max-w-2xl text-cream/80">From cybersecurity and web design to HVAC and moving help. Every provider’s military service is checked by a person, licensed trades need a verified license, and the pros you hire never pay lead fees.</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/signup?role=employer" className="btn btn-brass">Create a free client account</Link>
+            <Link href="/signup?role=client" className="btn btn-brass">Create a free client account</Link>
             <Link href="/freelance/projects/new" className="btn border border-cream/30 text-ivory hover:bg-white/10">Post a project</Link>
           </div>
         </div>
@@ -54,7 +54,7 @@ export default async function HirePage() {
         <section>
           <h2 className="font-serif text-3xl font-medium text-navy">Newest services</h2>
           {services.length === 0 ? (
-            <div className="card mt-5 p-8 text-center"><p className="font-semibold text-ink">Public services are on the way.</p><p className="mt-2 text-sm text-muted">Signed-in clients see every service now, and you can post a project for verified pros to answer.</p><Link href="/signup?role=employer" className="btn btn-primary mt-5">Create a free client account</Link></div>
+            <div className="card mt-5 p-8 text-center"><p className="font-semibold text-ink">Public services are on the way.</p><p className="mt-2 text-sm text-muted">Signed-in clients see every service now, and you can post a project for verified pros to answer.</p><Link href="/signup?role=client" className="btn btn-primary mt-5">Create a free client account</Link></div>
           ) : (
             <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{services.slice(0, 24).map((s) => <ServiceCard key={s.id} s={s} />)}</div>
           )}

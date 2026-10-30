@@ -36,6 +36,18 @@ export async function startConversation(otherId: string, formData?: FormData) {
     admin.from('profiles').select('role').eq('id', me).maybeSingle(),
     admin.from('profiles').select('role').eq('id', otherId).maybeSingle(),
   ]);
+  // Clients (anyone hiring a freelancer) can only reach members offering a service, who sent them a proposal, or
+  // they're under contract with. Members can only reach a client they're already working with.
+  if (meP?.role === 'client' || otherP?.role === 'client') {
+    const client = meP?.role === 'client' ? me : otherId;
+    const member = client === me ? otherId : me;
+    const [{ count: listing }, { count: proposal }, { count: contract }] = await Promise.all([
+      client === me ? admin.from('service_listings').select('id', { count: 'exact', head: true }).eq('profile_id', member).eq('status', 'active') : Promise.resolve({ count: 0 }),
+      admin.from('proposals').select('id, project:freelance_projects!inner(client_id)', { count: 'exact', head: true }).eq('freelancer_id', member).eq('project.client_id', client),
+      admin.from('contracts').select('id', { count: 'exact', head: true }).eq('client_id', client).eq('freelancer_id', member),
+    ]);
+    if (!((listing ?? 0) + (proposal ?? 0) + (contract ?? 0))) redirect('/messages?error=unavailable');
+  }
   if (meP?.role === 'employer' && otherP?.role === 'veteran') {
     const { data: owned } = await admin.from('companies').select('is_verified').eq('owner_id', me).maybeSingle();
     const { data: membership } = owned ? { data: null } : await admin.from('company_members').select('company:companies(is_verified)').eq('profile_id', me).maybeSingle();
@@ -88,7 +100,7 @@ export async function sendMessage(conversationId: string, formData: FormData) {
   // Row-level security confirms participation; a database trigger refuses blocked senders and sends the notification.
   const { error } = await (await createClient()).from('messages').insert({ conversation_id: conversationId, sender_id: session.user.id, body });
   if (error) {
-    const reason = error.code === 'P0015' ? 'pending' : error.code === 'P0016' ? 'declined' : error.code === 'P0009' ? 'pii' : error.code === 'P0017' ? 'contact' : error.code === 'P0002' ? 'rate' : error.message.includes("can't") ? 'blocked' : 'send';
+    const reason = error.code === 'P0015' ? 'pending' : error.code === 'P0016' ? 'declined' : error.code === 'P0009' ? 'pii' : error.code === 'P0022' ? 'explicit' : error.code === 'P0017' ? 'contact' : error.code === 'P0002' ? 'rate' : error.message.includes("can't") ? 'blocked' : 'send';
     redirect(`/messages/${conversationId}?error=${reason}&at=${Date.now()}`); // unique, so a repeat error never clears the box
   }
 

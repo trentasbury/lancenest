@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { requireRole } from '@/lib/auth';
+import { HIRER_ROLES, requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { AUTO_RELEASE_DAYS, releaseMilestone, vetRateFor } from '@/lib/payments';
@@ -32,7 +32,7 @@ async function goPayBooking(contractId: string, clientId: string, email: string 
  * applies (see lib/booking.ts), the job is booked, and the freelancer told, only once the client pays it.
  */
 export async function hireFreelancer(proposalId: string) {
-  const { user } = await requireRole(['employer'], '/freelance');
+  const { user } = await requireRole(HIRER_ROLES, '/freelance');
   const { data: p } = await (await createClient()).from('proposals').select('id, bid_amount, status, freelancer_id, project:freelance_projects(id, title, client_id, status, work_location, budget_min)').eq('id', proposalId).maybeSingle();
   const proposal = p as unknown as { id: string; bid_amount: number; status: string; freelancer_id: string; project: { id: string; title: string; client_id: string; status: string; work_location: string | null; budget_min: number | null } } | null;
   if (!proposal || proposal.project.client_id !== user.id) redirect('/freelance');
@@ -69,7 +69,7 @@ export async function hireFreelancer(proposalId: string) {
 
 /** While payments are off, the client confirms the booked job is done, so both sides can leave reviews. */
 export async function markContractComplete(contractId: string) {
-  const { user } = await requireRole(['employer'], `/freelance/contracts/${contractId}`);
+  const { user } = await requireRole(HIRER_ROLES, `/freelance/contracts/${contractId}`);
   if (FREELANCE_PAYMENTS_ENABLED) back(contractId);
   const admin = createAdminClient();
   const { data: k } = await admin.from('contracts').update({ status: 'completed' })
@@ -85,13 +85,13 @@ export async function markContractComplete(contractId: string) {
 
 /** Client pays the booking fee for a request they already started. */
 export async function payBooking(contractId: string) {
-  const { user } = await requireRole(['employer'], `/freelance/contracts/${contractId}`);
+  const { user } = await requireRole(HIRER_ROLES, `/freelance/contracts/${contractId}`);
   await goPayBooking(contractId, user.id, user.email);
 }
 
 /** Client withdraws a request they haven't paid the booking fee for. Nothing was charged. */
 export async function cancelBooking(contractId: string) {
-  const { user } = await requireRole(['employer'], `/freelance/contracts/${contractId}`);
+  const { user } = await requireRole(HIRER_ROLES, `/freelance/contracts/${contractId}`);
   const admin = createAdminClient();
   const { data: k } = await admin.from('contracts').update({ status: 'cancelled' })
     .eq('id', contractId).eq('client_id', user.id).eq('status', 'active').eq('booking_status', 'awaiting_payment').select('id').maybeSingle();
@@ -101,7 +101,7 @@ export async function cancelBooking(contractId: string) {
 }
 
 export async function addMilestone(contractId: string, formData: FormData) {
-  const { user } = await requireRole(['employer'], '/freelance');
+  const { user } = await requireRole(HIRER_ROLES, '/freelance');
   const { data: c } = await (await createClient()).from('contracts').select('id, client_id, status, booking_status').eq('id', contractId).maybeSingle();
   if (!c || c.client_id !== user.id || c.status !== 'active' || c.booking_status === 'awaiting_payment') back(contractId);
   const amount = Math.round(Number(t(formData, 'amount', 9).replace(/[$,\s]/g, '')) * 100);
@@ -113,7 +113,7 @@ export async function addMilestone(contractId: string, formData: FormData) {
 }
 
 export async function cancelMilestone(milestoneId: string) {
-  const { user } = await requireRole(['employer'], '/freelance');
+  const { user } = await requireRole(HIRER_ROLES, '/freelance');
   const m = await loadMilestone(milestoneId);
   if (!m || m.contract.client_id !== user.id || m.status !== 'pending') redirect('/freelance');
   await createAdminClient().from('milestones').update({ status: 'cancelled' }).eq('id', milestoneId).eq('status', 'pending');
@@ -138,7 +138,7 @@ export async function submitMilestone(milestoneId: string, formData: FormData) {
 }
 
 export async function requestChanges(milestoneId: string, formData: FormData) {
-  const { user } = await requireRole(['employer'], '/freelance');
+  const { user } = await requireRole(HIRER_ROLES, '/freelance');
   const m = await loadMilestone(milestoneId);
   if (!m || m.contract.client_id !== user.id || m.status !== 'submitted') redirect('/freelance');
   if (t(formData, 'changes', 2000).length < 10) redirect(`/freelance/contracts/${m.contract_id}?error=changes`);
@@ -148,7 +148,7 @@ export async function requestChanges(milestoneId: string, formData: FormData) {
 }
 
 export async function approveMilestone(milestoneId: string) {
-  const { user } = await requireRole(['employer'], '/freelance');
+  const { user } = await requireRole(HIRER_ROLES, '/freelance');
   const m = await loadMilestone(milestoneId);
   if (!m || m.contract.client_id !== user.id || !['funded', 'submitted'].includes(m.status)) redirect('/freelance');
   const r = await releaseMilestone(milestoneId, 'approved');
@@ -157,7 +157,7 @@ export async function approveMilestone(milestoneId: string) {
 }
 
 export async function openDispute(milestoneId: string, formData: FormData) {
-  const { user } = await requireRole(['employer', 'veteran'], '/freelance');
+  const { user } = await requireRole([...HIRER_ROLES, 'veteran'], '/freelance');
   const m = await loadMilestone(milestoneId);
   if (!m || ![m.contract.client_id, m.contract.freelancer_id].includes(user.id) || !['funded', 'submitted'].includes(m.status)) redirect('/freelance');
   const reason = t(formData, 'reason', 2000);
@@ -173,7 +173,7 @@ export async function openDispute(milestoneId: string, formData: FormData) {
 }
 
 export async function leaveReview(contractId: string, revieweeId: string, formData: FormData) {
-  const { user } = await requireRole(['employer', 'veteran'], '/freelance');
+  const { user } = await requireRole([...HIRER_ROLES, 'veteran'], '/freelance');
   const rating = Math.round(Number(formData.get('rating')));
   if (!(rating >= 1 && rating <= 5)) back(contractId, '?error=review');
   // Row-level security enforces: completed contract, you’re a party, and you’re reviewing the other party.

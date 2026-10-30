@@ -10,6 +10,7 @@ const MESSAGES: Record<string, string> = {
   apply_url_missing: 'Add your company’s application link — or choose Easy Apply on LanceNest.',
   apply_url: 'That application link isn’t allowed. Use a link on your verified company website or a standard applicant-tracking system (Workday, Greenhouse, Lever, iCIMS…). This protects veterans from phishing.',
   skillbridge: 'Only DoD-authorized SkillBridge organizations can publish SkillBridge programs. Request SkillBridge listing access from your dashboard — or choose another employment type.',
+  explicit: 'That includes language LanceNest doesn’t allow, such as sexual content or slurs. Please edit it.',
   pay: 'Add a salary range before publishing. Every LanceNest job shows pay, and several states require it.',
   salary_required: 'Saved as a draft. Add a salary range to publish — every LanceNest job shows pay, and several states require it.',
   scam: 'Saved as a draft. This post contains wording often used in job scams (for example fees, gift cards, check deposits, or moving to another chat app). Edit it and publish again, or tell us through the Help page (lancenest.com/help) if we got it wrong.',

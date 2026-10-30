@@ -22,6 +22,21 @@ export async function decideVerification(requestId: string, decision: 'verified'
     .eq('id', requestId)
     .maybeSingle();
   if (!request || request.status !== 'pending') return;
+  const { data: who } = await admin.from('veteran_profiles').select('member_type, verification_status').eq('profile_id', request.profile_id).maybeSingle();
+  const spouse = who?.member_type === 'spouse';
+  const renewal = spouse && who?.verification_status === 'verified';
+
+  // Discharge rule (service members): Honorable, General, uncharacterized, or still serving. Other Than Honorable is
+  // approved case by case with a reason; Bad Conduct and Dishonorable are rejected. Only the outcome is logged.
+  const discharge = String(formData.get('discharge') ?? '');
+  const othNote = String(formData.get('oth_note') ?? '').trim().slice(0, 300);
+  if (decision === 'verified' && !spouse && !renewal) {
+    if (discharge !== 'eligible' && discharge !== 'oth_approved') redirect(`/admin/verifications?req=${requestId}&flag=discharge`);
+    if (discharge === 'oth_approved' && othNote.length < 10) redirect(`/admin/verifications?req=${requestId}&flag=oth`);
+  }
+  // Separation or ETS date shown on the documents (optional). Free transition Pro only uses a date confirmed here.
+  const sepRaw = String(formData.get('sep_date') ?? '');
+  const sepDate = /^\d{4}-\d{2}-\d{2}$/.test(sepRaw) && !spouse ? sepRaw : null;
 
   // Identity check on approval: fingerprint the name + DOB typed from the document (nothing readable is stored).
   let fingerprint: string | null = null;
@@ -57,12 +72,32 @@ export async function decideVerification(requestId: string, decision: 'verified'
     action: decision === 'verified' ? 'verification_approved' : 'verification_rejected',
     target_type: 'profile',
     target_id: request.profile_id,
-    details: note ? { note } : {},
+    details: {
+      ...(note ? { note } : {}),
+      ...(decision === 'verified' && discharge === 'oth_approved' ? { discharge: 'oth_reviewed', reason: othNote } : {}),
+      ...(renewal ? { renewal: true } : {}),
+    },
   });
 
-  const { data: who } = await admin.from('veteran_profiles').select('member_type').eq('profile_id', request.profile_id).maybeSingle();
-  const spouse = who?.member_type === 'spouse';
-  if (decision === 'verified' && spouse) await admin.from('spouse_links').upsert({ spouse_id: request.profile_id, sponsor_id: null, method: 'documents' }, { onConflict: 'spouse_id', ignoreDuplicates: true });
+  if (decision === 'verified' && sepDate) {
+    await admin.from('veteran_profiles').update({ separation_verified_on: sepDate, separation_date: sepDate }).eq('profile_id', request.profile_id);
+  }
+  if (decision === 'verified' && spouse) {
+    // A spouse verified (or re-verified) by documents is good for another year; a surviving spouse never expires.
+    const year = new Date(Date.now() + 365 * 86400000).toISOString();
+    const surviving = formData.get('surviving') === 'on';
+    const { data: link } = await admin.from('spouse_links').select('spouse_id').eq('spouse_id', request.profile_id).maybeSingle();
+    if (link) await admin.from('spouse_links').update({ confirmed_until: year, grace_until: null, reminded_at: null, ...(surviving ? { surviving: true } : {}) }).eq('spouse_id', request.profile_id);
+    else await admin.from('spouse_links').insert({ spouse_id: request.profile_id, sponsor_id: null, method: 'documents', confirmed_until: year, surviving });
+  }
+  // A renewal that didn't pass leaves the member verified until their grace period ends; tell them, then stop.
+  if (renewal) {
+    await notifyMember(request.profile_id, decision === 'verified'
+      ? { type: 'verification', link: '/dashboard', title: 'Your military spouse status is renewed for another year. Thank you.' }
+      : { type: 'verification', link: '/dashboard/verification', title: `We couldn’t renew your spouse status with those documents${note ? `: ${note}` : '.'} Please try again before your grace period ends.` });
+    revalidatePath('/admin/verifications');
+    return;
+  }
   if (decision === 'verified') await rewardReferrer(request.profile_id, 'member_active');
   await notifyMember(request.profile_id, decision === 'verified'
     ? { type: 'verification', link: '/dashboard', title: 'You’re verified ✓ — jobs, the network, messaging, and freelance are unlocked.',
@@ -85,6 +120,38 @@ export async function decideVerification(requestId: string, decision: 'verified'
 
   revalidatePath('/admin/verifications');
   revalidatePath('/admin');
+}
+
+/**
+ * A verified member's separation date check (orders, LES or DD-214). Approving confirms the date, which is what free
+ * transition Pro uses; the document is deleted either way.
+ */
+export async function decideSeparationCheck(checkId: string, decision: 'approved' | 'rejected', formData: FormData) {
+  const { user } = await requireAdmin('/admin/verifications');
+  const admin = createAdminClient();
+  const { data: c } = await admin.from('separation_checks').select('id, profile_id, document_path, status, requested_date').eq('id', checkId).maybeSingle();
+  if (!c || c.status !== 'pending') return;
+  const dateRaw = String(formData.get('confirmed_date') ?? '');
+  const confirmed = /^\d{4}-\d{2}-\d{2}$/.test(dateRaw) ? dateRaw : null;
+  const note = String(formData.get('note') ?? '').trim().slice(0, 300) || null;
+  if (decision === 'approved' && !confirmed) redirect(`/admin/verifications?sep=${checkId}&flag=sep_date`);
+
+  await admin.from('separation_checks').update({
+    status: decision, confirmed_date: decision === 'approved' ? confirmed : null, note, reviewer_id: user.id, reviewed_at: new Date().toISOString(), document_path: null,
+  }).eq('id', checkId);
+  if (c.document_path) await admin.storage.from('verification-docs').remove([c.document_path as string]);
+  await admin.from('admin_actions').insert({ admin_id: user.id, action: `separation_check_${decision}`, target_type: 'profile', target_id: c.profile_id, details: note ? { note } : {} });
+
+  if (decision === 'approved') {
+    await admin.from('veteran_profiles').update({ separation_verified_on: confirmed, separation_date: confirmed }).eq('profile_id', c.profile_id);
+    const { grantTransitionPro } = await import('@/lib/transitionPro');
+    const granted = await grantTransitionPro(c.profile_id as string);
+    if (!granted) await notifyMember(c.profile_id as string, { type: 'verification', link: '/transition', title: 'Your separation date is confirmed. Your Transition Hub timeline now uses it.' });
+  } else {
+    await notifyMember(c.profile_id as string, { type: 'verification', link: '/transition',
+      title: `We couldn’t confirm your separation date${note ? `: ${note}` : '.'} The file was deleted; you can send another from the Transition Hub.` });
+  }
+  revalidatePath('/admin/verifications');
 }
 
 /** Moderation: resolve or dismiss a report, optionally removing the reported post/comment. */

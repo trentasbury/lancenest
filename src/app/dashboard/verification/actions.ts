@@ -33,6 +33,14 @@ export async function submitVerification(formData: FormData) {
   if (formData.get('redacted') !== 'on') await fail('redact');
   if (formData.get('id_consent') !== 'on') await fail('consent');
 
+  // Already verified? Only a military spouse renewing their yearly status sends documents again.
+  const { data: vet } = await supabase.from('veteran_profiles').select('verification_status, member_type').eq('profile_id', user.id).maybeSingle();
+  if (vet?.verification_status === 'verified') {
+    const { spouseLinkState } = await import('@/lib/spouse');
+    const link = vet.member_type === 'spouse' ? await spouseLinkState(user.id) : null;
+    if (!link || (link.state !== 'due' && link.state !== 'grace')) { await cleanup(); redirect(PAGE); }
+  }
+
   // Both uploads must actually exist in the member's folder.
   const { data: files } = await supabase.storage.from(BUCKET).list(user.id, { limit: 100 });
   const names = new Set((files ?? []).map((f) => `${user.id}/${f.name}`));

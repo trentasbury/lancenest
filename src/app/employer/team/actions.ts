@@ -14,8 +14,13 @@ export async function addTeamMember(formData: FormData) {
   const { data: company } = await (await createClient()).from('companies').select('id, name, is_verified').eq('owner_id', user.id).maybeSingle();
   if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
   const admin = createAdminClient();
-  const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 });
-  const target = list?.users.find((u) => u.email?.toLowerCase() === email);
+  // Look through every page of accounts (one page holds 1,000), so this keeps working as LanceNest grows.
+  let target: { id: string } | undefined;
+  for (let page = 1; page <= 100 && !target; page++) {
+    const { data: list } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+    target = list?.users.find((u) => u.email?.toLowerCase() === email);
+    if (!list || list.users.length < 1000) break;
+  }
   if (!target || target.id === user.id) redirect('/employer/team?error=notfound');
   const [{ data: prof }, { data: owns }] = await Promise.all([
     admin.from('profiles').select('role, full_name').eq('id', target.id).maybeSingle(),

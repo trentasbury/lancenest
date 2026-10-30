@@ -14,17 +14,17 @@ export function isFreshAccount(createdAt?: string | null) {
  * When someone chose "I'm hiring", switch their brand-new, untouched account to an employer account.
  * Never touches an account that is older than 30 minutes or has started verification or applied to jobs.
  */
-export async function makeEmployerIfNew(userId: string, createdAt: string | null | undefined): Promise<boolean> {
+export async function makeEmployerIfNew(userId: string, createdAt: string | null | undefined, as: 'employer' | 'client' = 'employer'): Promise<boolean> {
   const admin = createAdminClient();
   const { data: p } = await admin.from('profiles').select('role').eq('id', userId).maybeSingle();
-  if (p?.role === 'employer') return true;
+  if (p?.role === as) return true;
   if (p?.role !== 'veteran' || !isFreshAccount(createdAt)) return false;
   const [{ count: requests }, { count: applications }] = await Promise.all([
     admin.from('verification_requests').select('id', { count: 'exact', head: true }).eq('profile_id', userId),
     admin.from('applications').select('id', { count: 'exact', head: true }).eq('profile_id', userId),
   ]);
   if ((requests ?? 0) > 0 || (applications ?? 0) > 0) return false;
-  const { error } = await admin.from('profiles').update({ role: 'employer' }).eq('id', userId);
+  const { error } = await admin.from('profiles').update({ role: as }).eq('id', userId);
   if (error) return false;
   await admin.from('veteran_profiles').delete().eq('profile_id', userId);
   return true;

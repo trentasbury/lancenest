@@ -9,11 +9,11 @@ import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import { removePortfolioItem, saveFreelancerProfile } from '../actions';
 import PortfolioForm from './PortfolioForm';
-import { CONTACT_BLOCKED } from '@/lib/contact';
+import { CONTACT_BLOCKED, EXPLICIT_BLOCKED } from '@/lib/contact';
 import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
 
 export const metadata: Metadata = { title: 'Freelancer profile' };
-const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, title: 'Add a professional title.', save: 'That didn’t save — please try again.', portfolio: 'Portfolio items need a title (and a valid link if you add one).', profile_first: 'Save your freelancer profile first, then set up payouts.' };
+const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, explicit: EXPLICIT_BLOCKED, title: 'Add a professional title.', save: 'That didn’t save — please try again.', portfolio: 'Portfolio items need a title (and a valid link if you add one).', profile_first: 'Save your freelancer profile first, then set up payouts.' };
 
 export default async function FreelancerProfilePage(
   props: { searchParams: Promise<{ saved?: string; error?: string; payouts?: string }> }

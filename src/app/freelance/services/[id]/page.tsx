@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { requireVerifiedMember } from '@/lib/auth';
+import { requireFreelanceAccess } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { DELIVERY_LABEL, PRICE_LABEL } from '@/lib/freelance';
 import Avatar from '@/components/network/Avatar';
@@ -9,18 +9,19 @@ import VerifiedMark from '@/components/VerifiedMark';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import { requestService } from '../actions';
-import { CONTACT_BLOCKED } from '@/lib/contact';
+import { CONTACT_BLOCKED, EXPLICIT_BLOCKED } from '@/lib/contact';
 import { bookingFeeCents, bookingRequired, usd } from '@/lib/booking';
 
 export const metadata: Metadata = { title: 'Service' };
-const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, booking: 'We couldn’t open checkout. Please try again in a minute.', amount: 'Enter an amount of at least $25.', note: 'Describe what you need (at least a sentence).', payouts: 'This member hasn’t finished payout setup yet, so they can’t be hired through LanceNest yet. Message them to let them know.', save: 'That didn’t go through — please try again.' };
+const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, explicit: EXPLICIT_BLOCKED, booking: 'We couldn’t open checkout. Please try again in a minute.', amount: 'Enter an amount of at least $25.', note: 'Describe what you need (at least a sentence).', payouts: 'This member hasn’t finished payout setup yet, so they can’t be hired through LanceNest yet. Message them to let them know.', save: 'That didn’t go through — please try again.' };
 
 export default async function ServicePage(
   props: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; pkg?: string }> }
 ) {
   const searchParams = await props.searchParams;
   const params = await props.params;
-  const { user, profile } = await requireVerifiedMember(`/freelance/services/${params.id}`);
+  const { user, profile } = await requireFreelanceAccess(`/freelance/services/${params.id}`);
+  const hirer = profile.role === 'employer' || profile.role === 'client';
   const supabase = await createClient();
   const { data } = await supabase.from('service_listings').select('*, provider:profiles!service_listings_profile_id_fkey(id, full_name, username, headline, avatar_url, verified)').eq('id', params.id).maybeSingle();
   if (!data) notFound();
@@ -47,7 +48,7 @@ export default async function ServicePage(
                 <p className="mt-1 font-serif text-2xl text-navy">{usd(p.price_cents)}</p>
                 <p className="text-xs text-muted">Delivered in {p.days} day{p.days === 1 ? '' : 's'}</p>
                 <p className="mt-2 flex-1 text-sm text-ink/85">{p.includes}</p>
-                {!own && profile.role === 'employer' && <Link href={`/freelance/services/${s.id}?pkg=${i + 1}`} scroll={false} className="btn btn-outline mt-3 py-1.5 text-xs">{chosen === p ? 'Selected' : 'Choose'}</Link>}
+                {!own && hirer && <Link href={`/freelance/services/${s.id}?pkg=${i + 1}`} scroll={false} className="btn btn-outline mt-3 py-1.5 text-xs">{chosen === p ? 'Selected' : 'Choose'}</Link>}
               </div>
             ))}
           </div>
@@ -62,7 +63,7 @@ export default async function ServicePage(
       <aside>
         <div className="card sticky top-24 space-y-3 p-6">
           <p className="font-serif text-3xl text-navy">${(s.price_cents / 100).toLocaleString()}<span className="text-base text-muted">{PRICE_LABEL[s.price_type]}</span></p>
-          {own ? <Link href="/freelance/services/mine" className="btn btn-outline w-full">Manage your services</Link> : profile.role !== 'employer' ? <p className="text-sm text-muted">Verified employers can hire this service through LanceNest.</p> : (
+          {own ? <Link href="/freelance/services/mine" className="btn btn-outline w-full">Manage your services</Link> : !hirer ? <p className="text-sm text-muted">Employers and clients can hire this service through LanceNest. <a href="/signup?role=client" className="text-navy underline">Hiring for yourself? A client account is free.</a></p> : (
             <form action={requestService.bind(null, s.id)} className="space-y-3">
               {searchParams.error && <FormMessage error={ERR[searchParams.error] ?? ERR.save} />}
               <div><label className="field-label" htmlFor="amount">Agreed amount ($)</label><input key={chosen?.name ?? 'base'} id="amount" name="amount" required inputMode="decimal" defaultValue={((chosen?.price_cents ?? s.price_cents) / 100).toString()} className="field" /></div>

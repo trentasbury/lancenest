@@ -49,7 +49,7 @@ export function refreshMe(force = false) {
     .then((data) => {
       if (!data) return;
       current = data;
-      setHintAttr(data.signedIn ? (data.role === 'veteran' || data.role === 'employer' || data.role === 'admin' ? data.role : 'member') : 'out');
+      setHintAttr(data.signedIn ? (data.role === 'veteran' || data.role === 'employer' || data.role === 'admin' || data.role === 'client' ? data.role : 'member') : 'out');
       emit();
     })
     .catch(() => undefined)

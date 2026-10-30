@@ -40,14 +40,17 @@ export default function TermsPage() {
         <h2>Eligibility and accounts</h2>
         <ul>
           <li>You must be at least 18 years old.</li>
-          <li>Service member accounts are for active duty, Guard, Reserve, transitioning, and veteran members. Military spouse accounts are for the current or surviving spouse of a service member or veteran. Employer accounts are for organizations and recruiters hiring for real positions.</li>
+          <li>Service member accounts are for active duty, Guard, Reserve, transitioning, and veteran members. Veterans must have been discharged under Honorable, General (Under Honorable Conditions) or uncharacterized (entry-level) conditions. An Other Than Honorable discharge is reviewed case by case; Bad Conduct and Dishonorable discharges aren’t eligible unless upgraded.</li>
+          <li>Military spouse accounts are for the current or surviving spouse of a service member or veteran. Spouse status is confirmed once a year by the service member or with documents. If it isn’t renewed, or the service member removes the link (for example after a divorce), the status stays on for 90 days and then ends unless the spouse verifies with their own documents. Surviving spouses never need to renew.</li>
+          <li>Employer accounts are for organizations and recruiters hiring for real positions. Client accounts are free and are for anyone hiring a verified freelancer for a project; clients can’t browse the member network or post jobs.</li>
           <li>Inviting a spouse: an invite link from your account verifies whoever accepts it as your spouse. Send it only to your spouse. Inviting anyone else is a false statement and grounds for removing both accounts.</li>
           <li>Provide accurate information, keep your password secure, and tell us promptly if you believe your account was compromised. You are responsible for activity on your account.</li>
         </ul>
       </section>
       <section>
         <h2>Verification</h2>
-        <p>A Verified Veteran or Verified Military Spouse badge means our team reviewed a document you provided, or a verified member confirmed you. It is not a background check or a guarantee of anyone’s identity, character, or qualifications. Submitting false or altered documents will result in removal.</p>
+        <p>A Verified Veteran or Verified Military Spouse badge means our team reviewed a document you provided, or a verified member confirmed you. It is not a background check or a guarantee of anyone’s identity, character, or qualifications. Submitting false, altered or AI-generated documents will result in removal, and we may report document fraud to the appropriate authorities.</p>
+        <p><strong>Free transition Pro.</strong> The 90 days of free Pro for members leaving the service within a year turns on only after a reviewer confirms the separation, ETS or retirement date from orders, an LES, or a DD-214. Each person can receive it once.</p>
         <p><strong>Licenses and certificates.</strong> A verified license or certificate means a reviewer checked the document you sent (and, for trade licenses, the issuing board’s public lookup) on the day of review. You must keep any license current, hold the permits and insurance your work requires, and remove a license that lapses or is suspended. Offering licensed trade work without a valid license is prohibited.</p>
       </section>
       <section>

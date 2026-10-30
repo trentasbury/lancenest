@@ -14,6 +14,7 @@ import { postedAgo } from '@/lib/format';
 import { cookies } from 'next/headers';
 import PartnerCodeForm from '@/components/PartnerCodeForm';
 import ShareMoment from '@/components/ShareMoment';
+import { spouseLinkState } from '@/lib/spouse';
 
 export const metadata: Metadata = { title: 'Dashboard' };
 
@@ -55,6 +56,8 @@ export default async function VeteranDashboard(props: { searchParams: Promise<{ 
   const applications = (apps ?? []) as unknown as AppRow[];
   const firstName = profile.full_name.split(' ')[0] || 'there';
   const spouse = vet?.member_type === 'spouse';
+  const link = spouse && vet?.verification_status === 'verified' ? await spouseLinkState(user.id) : null;
+  const spouseEnds = link && (link.state === 'due' || link.state === 'grace') ? (link.graceUntil ?? link.confirmedUntil) : null;
 
   return (
     <>
@@ -70,6 +73,15 @@ export default async function VeteranDashboard(props: { searchParams: Promise<{ 
       </section>
 
       <div className="container-page space-y-10 py-10">
+        {spouseEnds && (
+          <div className="card flex flex-col gap-3 border-brass p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-medium">Your yearly military spouse check is {link?.state === 'grace' ? 'overdue' : 'coming up'}.</p>
+              <p className="text-sm text-muted">Your status {link?.state === 'grace' ? 'ends' : 'is due'} on {new Date(spouseEnds).toLocaleDateString('en-US', { dateStyle: 'long' })}. {link?.viaSponsor ? 'Your service member can confirm you from their dashboard, or you can send documents.' : 'Send current documents to renew for a year.'}</p>
+            </div>
+            <Link href="/dashboard/verification" className="btn btn-brass shrink-0">Renew</Link>
+          </div>
+        )}
         {searchParams.spouse && vet?.verification_status === 'verified' && <p className="rounded-xl border border-olive/40 bg-olive/10 px-4 py-3 text-sm text-olive">✓ You’re verified as a military spouse. Everything on LanceNest is unlocked.</p>}
         {vet?.verification_status === 'verified' && (partnerCode || searchParams.code) && <PartnerCodeForm back="/dashboard" result={searchParams.code} prefill={partnerCode} />}
         {vet?.verification_status === 'verified' && newlyVerified && <ShareMoment title="You’re verified." body="Let your network know you’re on LanceNest, the verified network for people who served." />}

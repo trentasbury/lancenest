@@ -9,16 +9,17 @@ const DAY = 86400000;
 /**
  * Gives a verified service member 90 days of Pro, once, when their separation date is within the next 12 months
  * (or in the last 90 days). Safe to call any time: it does nothing for anyone else or for anyone who already had it.
- * The separation date is self-reported, so the grant is one per verified account.
+ * Only a separation date a reviewer confirmed from orders, an LES or a DD-214 counts (separation_verified_on);
+ * the date members type in themselves never grants anything. One grant per verified account, ever.
  */
 export async function grantTransitionPro(profileId: string): Promise<boolean> {
   const admin = createAdminClient();
   const { data: v } = await admin.from('veteran_profiles')
-    .select('verification_status, separation_date, member_type, granted_plan, pro_granted_until')
+    .select('verification_status, separation_verified_on, member_type, granted_plan, pro_granted_until')
     .eq('profile_id', profileId).maybeSingle();
-  if (!v || v.verification_status !== 'verified' || !v.separation_date) return false;
+  if (!v || v.verification_status !== 'verified' || !v.separation_verified_on) return false;
   if ((v.member_type ?? 'service_member') !== 'service_member') return false;
-  const sep = Date.parse(`${v.separation_date as string}T00:00:00Z`);
+  const sep = Date.parse(`${v.separation_verified_on as string}T00:00:00Z`);
   const now = Date.now();
   if (!(sep >= now - 90 * DAY && sep <= now + 365 * DAY)) return false;
 

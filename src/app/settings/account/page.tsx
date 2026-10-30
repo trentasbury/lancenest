@@ -23,7 +23,7 @@ export default async function AccountPage(
   props: { searchParams: Promise<{ error?: string; photo?: string; profile?: string; hq?: string; hidden?: string }> }
 ) {
   const searchParams = await props.searchParams;
-  const { user, profile } = await requireRole(['veteran', 'employer', 'admin'], '/settings/account');
+  const { user, profile } = await requireRole(['veteran', 'employer', 'client', 'admin'], '/settings/account');
   const { data: strikes } = await (await createClient()).from('member_strikes').select('level, reason, created_at').eq('profile_id', user.id).order('created_at', { ascending: false });
   const { data: devices } = await (await createClient()).from('login_devices').select('label, first_seen, last_seen').eq('profile_id', user.id).order('last_seen', { ascending: false }).limit(10);
   return (

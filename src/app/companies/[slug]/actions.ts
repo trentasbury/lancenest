@@ -69,6 +69,7 @@ export async function rateCompany(slug: string, formData: FormData) {
     company_id: company.id, profile_id: user.id, overall, veteran_support: support, recommend: recommend === 'yes',
     pros, cons, was_current: work.is_current, updated_at: new Date().toISOString(),
   }, { onConflict: 'company_id,profile_id' });
+  if (error?.code === 'P0022') redirect(back(slug, '?rate=explicit#ratings'));
   if (error) { console.error('rateCompany failed:', error.message); redirect(back(slug, '?rate=error#ratings')); }
   if (company.owner_id) await notifyMember(company.owner_id, { type: 'rating', link: back(slug, '#ratings'), title: `A verified veteran rated ${company.name} on LanceNest. You can read it and respond on your company page.` });
   revalidatePath(back(slug));

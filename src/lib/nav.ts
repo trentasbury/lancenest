@@ -6,6 +6,7 @@ export type NavLink = { href: string; label: string };
 export function roleHome(role?: Role | null): string {
   if (role === 'admin') return '/admin';
   if (role === 'employer') return '/employer/dashboard';
+  if (role === 'client') return '/freelance';
   return '/dashboard';
 }
 
@@ -27,6 +28,8 @@ export const PUBLIC_LINKS: NavLink[] = [
 
 /** Top menu for signed-in members (the third link depends on the role). */
 export function memberLinks(role?: Role | null): NavLink[] {
+  // Clients hire freelancers only: no member network, people or jobs.
+  if (role === 'client') return [{ href: '/freelance', label: 'Your projects' }, { href: '/freelance/services', label: 'Find freelancers' }, { href: '/messages', label: 'Messages' }];
   return [
     { href: '/network', label: 'Network' },
     { href: '/people', label: 'People' },
@@ -37,7 +40,7 @@ export function memberLinks(role?: Role | null): NavLink[] {
 }
 
 export function dashboardLink(role?: Role | null): NavLink {
-  return { href: roleHome(role), label: role === 'admin' ? 'Admin' : role === 'employer' ? 'Employer dashboard' : 'Dashboard' };
+  return { href: roleHome(role), label: role === 'admin' ? 'Admin' : role === 'employer' ? 'Employer dashboard' : role === 'client' ? 'Your projects' : 'Dashboard' };
 }
 
 /**
@@ -45,6 +48,7 @@ export function dashboardLink(role?: Role | null): NavLink {
  * like LinkedIn's "View profile". Editing happens from that page, not from the menu.
  */
 export function profileLink(role: Role | null | undefined, username: string | null | undefined, companySlug?: string | null): NavLink {
+  if (role === 'client') return { href: '/freelance', label: 'Your projects' };
   if (role === 'employer') return companySlug ? { href: `/companies/${companySlug}`, label: 'View company page' } : { href: '/employer/dashboard', label: 'Set up your company page' };
   return username ? { href: `/veterans/${username}`, label: 'View profile' } : { href: '/dashboard/profile', label: 'Set up your profile' };
 }
@@ -66,6 +70,9 @@ export function accountLinks(role: Role | null | undefined): NavLink[] {
       { href: '/settings/account', label: 'Settings & privacy' },
       HELP,
     ];
+  }
+  if (role === 'client') {
+    return [dashboardLink(role), { href: '/freelance/projects/new', label: 'Post a project' }, { href: '/freelance/services', label: 'Find freelancers' }, { href: '/settings/account', label: 'Settings & privacy' }, HELP];
   }
   if (role === 'admin') {
     return [dashboardLink(role), { href: '/admin/feedback', label: 'Help & feedback queue' }, { href: '/network?view=saved', label: 'Saved posts' }, { href: '/settings/account', label: 'Settings & privacy' }];

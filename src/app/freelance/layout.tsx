@@ -1,6 +1,6 @@
-import { requireVerifiedMember } from '@/lib/auth';
+import { requireFreelanceAccess } from '@/lib/auth';
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
-  await requireVerifiedMember('/freelance');
+  await requireFreelanceAccess('/freelance');
   return <>{children}</>;
 }

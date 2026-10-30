@@ -9,11 +9,12 @@ import { makeEmployerIfNew, makeSpouseIfNew } from '@/lib/oauth';
 import type { Role } from '@/lib/types';
 
 /** One-time choice for a brand-new Google account: stay a service member account, or switch to an employer account. */
-export async function chooseAccountType(choice: 'veteran' | 'spouse' | 'employer', nextRaw: string) {
+export async function chooseAccountType(choice: 'veteran' | 'spouse' | 'employer' | 'client', nextRaw: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
   if (choice === 'employer') await makeEmployerIfNew(user.id, user.created_at);
+  if (choice === 'client') await makeEmployerIfNew(user.id, user.created_at, 'client');
   if (choice === 'spouse') await makeSpouseIfNew(user.id, user.created_at);
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
   const role = (profile?.role as Role | undefined) ?? null;

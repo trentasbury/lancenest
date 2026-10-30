@@ -101,11 +101,27 @@ export async function GET(request: NextRequest) {
     await admin.from('verification_requests').update({ document_path: null, id_document_path: null, status: 'failed', notes: 'Expired after 30 days without review — please upload again.', reviewed_at: new Date().toISOString() }).eq('id', v.id);
     await admin.from('admin_actions').insert({ admin_id: null, action: 'document_auto_deleted', target_type: 'verification_request', target_id: v.id, details: { reason: '30-day retention limit' } });
   }
+  // Separation-date proof follows the same 30-day limit.
+  const { data: staleSeps } = await admin.from('separation_checks').select('id, profile_id, document_path').eq('status', 'pending').lt('created_at', new Date(now - 30 * 24 * H).toISOString()).limit(200);
+  for (const c of staleSeps ?? []) {
+    if (c.document_path) await admin.storage.from('verification-docs').remove([c.document_path as string]);
+    await admin.from('separation_checks').update({ document_path: null, status: 'rejected', note: 'Expired after 30 days without review — please upload again.', reviewed_at: new Date().toISOString() }).eq('id', c.id);
+    await admin.from('admin_actions').insert({ admin_id: null, action: 'document_auto_deleted', target_type: 'separation_check', target_id: c.id, details: { reason: '30-day retention limit' } });
+  }
 
   // ---------- Uploads that never became a request (browser closed mid-submit): older than 1 day are deleted ----------
   // This job runs once a day, so the published promise is "within 48 hours". A real submission turns into a request within seconds.
-  const { data: openReqs } = await admin.from('verification_requests').select('document_path, id_document_path').eq('status', 'pending');
-  const keep = new Set((openReqs ?? []).flatMap((r) => [r.document_path, r.id_document_path]).filter(Boolean) as string[]);
+  // Keep every file a reviewer still has to look at: identity requests, licenses and certificates, and separation-date proof.
+  const [{ data: openReqs }, { data: openCreds }, { data: openSeps }] = await Promise.all([
+    admin.from('verification_requests').select('document_path, id_document_path').eq('status', 'pending'),
+    admin.from('credentials').select('document_path').eq('status', 'pending'),
+    admin.from('separation_checks').select('document_path').eq('status', 'pending'),
+  ]);
+  const keep = new Set([
+    ...(openReqs ?? []).flatMap((r) => [r.document_path, r.id_document_path]),
+    ...(openCreds ?? []).map((r) => r.document_path),
+    ...(openSeps ?? []).map((r) => r.document_path),
+  ].filter(Boolean) as string[]);
   const { data: folders } = await admin.storage.from('verification-docs').list('', { limit: 1000 });
   for (const folder of (folders ?? []).filter((f) => !f.id)) {
     const { data: files } = await admin.storage.from('verification-docs').list(folder.name, { limit: 100 });
@@ -123,12 +139,12 @@ export async function GET(request: NextRequest) {
     for (const r of pendingRefs) if (!doneSet.has(r.id as string)) await rewardReferrer(r.id as string, 'member_active');
   }
 
-  // ---------- Free transition Pro for verified members leaving within a year (catches dates set before verification) ----------
+  // ---------- Free transition Pro for verified members leaving within a year (a reviewer confirmed the date from documents) ----------
   {
     const from = new Date(now - 90 * 24 * H).toISOString().slice(0, 10);
     const to = new Date(now + 365 * 24 * H).toISOString().slice(0, 10);
     const { data: leaving } = await admin.from('veteran_profiles').select('profile_id').eq('verification_status', 'verified').eq('member_type', 'service_member')
-      .gte('separation_date', from).lte('separation_date', to).limit(1000);
+      .gte('separation_verified_on', from).lte('separation_verified_on', to).limit(1000);
     if (leaving?.length) {
       const { data: had } = await admin.from('member_grants').select('profile_id').eq('kind', 'transition_pro').in('profile_id', leaving.map((l) => l.profile_id as string));
       const hadSet = new Set((had ?? []).map((h) => h.profile_id as string));
@@ -136,6 +152,14 @@ export async function GET(request: NextRequest) {
       for (const l of leaving) if (!hadSet.has(l.profile_id as string)) await grantTransitionPro(l.profile_id as string);
     }
   }
+
+  // ---------- Admin announcements: the day's batch of emails ----------
+  const { sendAnnouncementEmails } = await import('@/lib/announcements');
+  const announcementEmails = await sendAnnouncementEmails().catch((err) => { console.error('announcement emails failed:', err); return 0; });
+
+  // ---------- Military spouses: yearly check, 90-day grace, then the verified status ends ----------
+  const { runSpouseChecks } = await import('@/lib/spouse');
+  const spouseChecks = await runSpouseChecks();
 
   // ---------- Expired licenses: mark them, and pause trade services that no longer have a valid license ----------
   {
@@ -248,5 +272,5 @@ export async function GET(request: NextRequest) {
   // ---------- The founder's personal welcome, the morning after verification ----------
   const founderWelcomes = await sendFounderWelcomes(now).catch((err) => { console.error('founder welcomes failed:', err); return 0; });
 
-  return NextResponse.json({ memberEmails, employerEmails, digests, founderWelcomes, staleNotices, employerNudges });
+  return NextResponse.json({ memberEmails, employerEmails, digests, founderWelcomes, staleNotices, employerNudges, spouseChecks, announcementEmails });
 }

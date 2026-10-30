@@ -81,13 +81,13 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   const email = field(formData, 'email');
   const password = String(formData.get('password') ?? '');
 
-  if (role !== 'veteran' && role !== 'employer') return { error: 'Choose how you’ll use LanceNest.' };
+  if (role !== 'veteran' && role !== 'employer' && role !== 'client') return { error: 'Choose how you’ll use LanceNest.' };
   if (!fullName) return { error: 'Enter your full name.' };
   if (isReservedName(fullName)) return { error: RESERVED_NAME_MESSAGE };
   if (!email) return { error: 'Enter your email address.' };
   if (password.length < 8) return { error: 'Use a password of at least 8 characters.' };
 
-  const home = role === 'employer' ? '/employer/dashboard' : '/dashboard';
+  const home = role === 'employer' ? '/employer/dashboard' : role === 'client' ? '/freelance' : '/dashboard';
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,

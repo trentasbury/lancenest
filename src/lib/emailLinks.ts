@@ -5,7 +5,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
  * Signed unsubscribe links: anyone holding the link can unsubscribe that one member from that one
  * list, nothing else. Signed with a server-only secret, so links can't be forged for other members.
  */
-export const EMAIL_LISTS = { digest: 'weekly updates', newsletter: 'the weekly jobs newsletter' } as const;
+export const EMAIL_LISTS = { digest: 'weekly updates and announcements', newsletter: 'the weekly jobs newsletter' } as const;
 export type EmailList = keyof typeof EMAIL_LISTS;
 
 const key = () => `lancenest-unsubscribe:${process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''}`;

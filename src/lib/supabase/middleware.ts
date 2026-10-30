@@ -88,7 +88,7 @@ export async function updateSession(request: NextRequest) {
     // Already signed in: the log-in and sign-up pages send you home instead.
     if (path === '/login' || path === '/signup') {
       const url = request.nextUrl.clone();
-      url.pathname = roleHome(knownHint === 'employer' || knownHint === 'admin' ? knownHint : 'veteran');
+      url.pathname = roleHome(knownHint === 'employer' || knownHint === 'admin' || knownHint === 'client' ? knownHint : 'veteran');
       url.search = '';
       const out = NextResponse.redirect(url);
       // Keep any session cookies refreshed above (tokens rotate; dropping them would sign the member out).

@@ -2,12 +2,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireVerifiedMember } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { OFFICIAL, transitionTimeline } from '@/lib/transition';
 import JobCard from '@/components/JobCard';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import type { JobWithCompany } from '@/lib/types';
 import { saveTransition } from './actions';
+import SeparationProof from './SeparationProof';
 
 export const metadata: Metadata = { title: 'Transition Hub' };
 const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
@@ -20,16 +22,32 @@ const STEPS = [
   ['Start up to 180 days before separation', 'You keep full military pay, BAH, and benefits. The company does not pay you.'],
 ];
 
-export default async function TransitionPage(props: { searchParams: Promise<{ saved?: string; pro?: string }> }) {
+const SEP_MSG: Record<string, string> = {
+  sent: 'Sent. A reviewer will check the date, usually within two business days.',
+  pending: 'You already have a date waiting for review.',
+  date: 'That date doesn’t look right. Use the separation, ETS or retirement date on your orders.',
+  file: 'The file didn’t come through. Please choose it again.',
+  save: 'That didn’t send. Please try again.',
+  not_eligible: 'Date checks are for verified service members.',
+};
+const day = (d: string) => new Date(`${d.slice(0, 10)}T12:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+
+export default async function TransitionPage(props: { searchParams: Promise<{ saved?: string; pro?: string; sep?: string }> }) {
   const searchParams = await props.searchParams;
   const { user, profile } = await requireVerifiedMember('/transition');
   const supabase = await createClient();
   const [{ data: vet }, { data: sb }, { data: partners }] = await Promise.all([
-    profile.role === 'veteran' ? supabase.from('veteran_profiles').select('separation_date, open_to_transition_hiring, skillbridge_interest').eq('profile_id', user.id).maybeSingle() : Promise.resolve({ data: null }),
+    profile.role === 'veteran' ? supabase.from('veteran_profiles').select('separation_date, separation_verified_on, member_type, open_to_transition_hiring, skillbridge_interest').eq('profile_id', user.id).maybeSingle() : Promise.resolve({ data: null }),
     supabase.from('jobs').select('*, company:companies(name, slug, logo_url, is_verified, industry)').eq('status', 'open').eq('employment_type', 'skillbridge').order('posted_at', { ascending: false }).limit(20),
     supabase.from('companies').select('name, slug').eq('skillbridge_status', 'authorized').order('name').limit(40),
   ]);
   const tl = transitionTimeline((vet?.separation_date as string) ?? null);
+  const serviceMember = profile.role === 'veteran' && (vet?.member_type ?? 'service_member') === 'service_member';
+  // The member's latest date check (the table is server-only, so read it with the service client, scoped to them).
+  const { data: lastCheck } = serviceMember
+    ? await createAdminClient().from('separation_checks').select('status, requested_date, note, created_at').eq('profile_id', user.id).order('created_at', { ascending: false }).limit(1).maybeSingle()
+    : { data: null };
+  const confirmed = (vet?.separation_verified_on as string | null) ?? null;
 
   return (
     <>
@@ -84,13 +102,33 @@ export default async function TransitionPage(props: { searchParams: Promise<{ sa
             <form action={saveTransition} className="card space-y-4 p-6">
               <p className="eyebrow">Your transition</p>
               {searchParams.saved && <FormMessage message={searchParams.pro ? 'Saved. Thank you for your service: you have 90 days of Pro, free, for your transition.' : 'Saved.'} />}
-              <p className="rounded-lg border border-brass/50 bg-brass/10 px-3 py-2 text-xs text-ink/85"><strong>Leaving within a year?</strong> Verified members separating in the next 12 months get 90 days of Pro free, once. Add your date to turn it on.</p>
+              <p className="rounded-lg border border-brass/50 bg-brass/10 px-3 py-2 text-xs text-ink/85"><strong>Leaving within a year?</strong> Verified members separating in the next 12 months get 90 days of Pro free, once. Add your date, then confirm it below with your orders, LES or DD-214.</p>
               <div><label className="field-label" htmlFor="separation_date">Separation / retirement date</label><input id="separation_date" name="separation_date" type="date" defaultValue={(vet?.separation_date as string) ?? ''} className="field" /></div>
               <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="open_to_transition_hiring" defaultChecked={!!vet?.open_to_transition_hiring} className="mt-0.5 accent-navy" />Show me to verified employers hiring transitioning members</label>
               <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="skillbridge_interest" defaultChecked={!!vet?.skillbridge_interest} className="mt-0.5 accent-navy" />I’m interested in SkillBridge</label>
               <p className="text-xs text-muted">Employers see only your separation month — never your exact date.</p>
               <SubmitButton className="btn btn-primary w-full" pendingText="Saving…">Save</SubmitButton>
             </form>
+          )}
+          {serviceMember && (
+            <div className="card space-y-3 p-6" id="confirm-date">
+              <p className="eyebrow">Confirm your date</p>
+              {searchParams.sep && SEP_MSG[searchParams.sep] && (searchParams.sep === 'sent' ? <FormMessage message={SEP_MSG.sent} /> : <FormMessage error={SEP_MSG[searchParams.sep]} />)}
+              {confirmed && <p className="text-sm"><span className="font-semibold text-olive">Confirmed ✓</span> {day(confirmed)}. Free transition Pro and your timeline use this date.</p>}
+              {lastCheck?.status === 'pending' ? (
+                <p className="text-sm text-muted">Waiting for review: {day(lastCheck.requested_date as string)}, sent {day(lastCheck.created_at as string)}. The file is deleted once it’s checked.</p>
+              ) : (
+                <>
+                  {lastCheck?.status === 'rejected' && !confirmed && (
+                    <p className="rounded-lg border border-signal/30 bg-signal/5 px-3 py-2 text-xs text-signal">We couldn’t confirm your last date{lastCheck.note ? `: ${lastCheck.note as string}` : '.'}</p>
+                  )}
+                  <p className="text-xs text-muted">
+                    {confirmed ? 'Date changed or extended? Send your new orders.' : 'Free transition Pro turns on only after a reviewer matches your date to your separation or retirement orders, an LES showing your ETS, or your DD-214. The date you type above is never enough on its own.'}
+                  </p>
+                  <SeparationProof userId={user.id} defaultDate={(vet?.separation_date as string) ?? null} />
+                </>
+              )}
+            </div>
           )}
           {(partners ?? []).length > 0 && (
             <div className="card p-6">

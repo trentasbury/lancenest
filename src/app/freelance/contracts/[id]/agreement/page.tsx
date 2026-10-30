@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { requireVerifiedMember } from '@/lib/auth';
+import { requireFreelanceAccess } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import PrintButton from '@/components/PrintButton';
 
@@ -10,7 +10,7 @@ const day = (d: string) => new Date(d).toLocaleDateString('en-US', { dateStyle: 
 /** A printable summary of what the two sides agreed to on LanceNest. */
 export default async function AgreementPage(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params;
-  const { user } = await requireVerifiedMember(`/freelance/contracts/${id}`);
+  const { user } = await requireFreelanceAccess(`/freelance/contracts/${id}`);
   const admin = createAdminClient();
   const { data } = await admin.from('contracts').select('title, status, created_at, booking_paid_at, on_site, request_note, client_id, freelancer_id, client:profiles!contracts_client_id_fkey(full_name), freelancer:profiles!contracts_freelancer_id_fkey(full_name), project:freelance_projects(description, work_location), proposal:proposals(bid_amount, timeline), service:service_listings(description, price_cents, price_type)').eq('id', id).maybeSingle();
   const k = data as unknown as { title: string; status: string; created_at: string; booking_paid_at: string | null; on_site: boolean; request_note: string | null; client_id: string; freelancer_id: string; client: { full_name: string } | null; freelancer: { full_name: string } | null; project: { description: string; work_location: string | null } | null; proposal: { bid_amount: number; timeline: string | null } | null; service: { description: string; price_cents: number; price_type: string } | null } | null;

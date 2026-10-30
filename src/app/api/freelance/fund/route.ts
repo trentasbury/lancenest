@@ -12,7 +12,7 @@ import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
 export async function POST(request: NextRequest) {
   const site = (process.env.NEXT_PUBLIC_SITE_URL ?? request.nextUrl.origin).replace(/\/$/, '');
   const session = await getSessionProfile();
-  if (!session || session.profile?.role !== 'employer') return NextResponse.redirect(`${site}/login?next=/freelance`, 303);
+  if (!session || (session.profile?.role !== 'employer' && session.profile?.role !== 'client')) return NextResponse.redirect(`${site}/login?next=/freelance`, 303);
   const form = await request.formData();
   const milestoneId = String(form.get('milestone_id') ?? '');
   // Switched off until payments counsel clears the fund flow (see lib/flags.ts).

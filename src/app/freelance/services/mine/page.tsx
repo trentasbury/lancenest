@@ -6,11 +6,11 @@ import { OPEN_CATEGORIES } from '@/lib/freelance';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import { deleteService, saveService, setServicePublic, setServiceStatus } from '../actions';
-import { CONTACT_BLOCKED } from '@/lib/contact';
+import { CONTACT_BLOCKED, EXPLICIT_BLOCKED } from '@/lib/contact';
 import { FREELANCE_PAYMENTS_ENABLED, LICENSED_TRADES } from '@/lib/flags';
 
 export const metadata: Metadata = { title: 'My services' };
-const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, licensed: 'That trade needs your verified license first. Add it under Licenses & certificates; once it’s verified you can list the service.', ack: 'Please confirm both acknowledgments.', required: 'Add a title, a description of at least 20 characters, and a price of at least $25.', scam: 'That listing contains wording we don’t allow.', package: 'Each package needs a name, a price of at least $25, a delivery time of 1–90 days, and what’s included.', save: 'That didn’t save — please try again.' };
+const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, explicit: EXPLICIT_BLOCKED, licensed: 'That trade needs your verified license first. Add it under Licenses & certificates; once it’s verified you can list the service.', ack: 'Please confirm both acknowledgments.', required: 'Add a title, a description of at least 20 characters, and a price of at least $25.', scam: 'That listing contains wording we don’t allow.', package: 'Each package needs a name, a price of at least $25, a delivery time of 1–90 days, and what’s included.', save: 'That didn’t save — please try again.' };
 
 export default async function MyServicesPage(props: { searchParams: Promise<{ error?: string; saved?: string }> }) {
   const searchParams = await props.searchParams;

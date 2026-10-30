@@ -83,6 +83,12 @@ export default async function AdminPage(props: { searchParams: Promise<{ deleted
           <Link href="/admin/insights" className="transition-opacity hover:opacity-80">
             <StatCard label="Insights →" value="Money & traffic" hint="Revenue, payouts, visitors, active members" />
           </Link>
+          <Link href="/admin/spouses" className="transition-opacity hover:opacity-80">
+            <StatCard label="Military spouses →" value="Yearly checks" hint="Grace periods, renewals, surviving spouses" />
+          </Link>
+          <Link href="/admin/announcements" className="transition-opacity hover:opacity-80">
+            <StatCard label="Announcements →" value="Send" hint="Events and news to members, employers, clients" />
+          </Link>
           <Link href="/admin/members" className="transition-opacity hover:opacity-80">
             <StatCard label="Members & conduct →" value="Search" hint="Warnings, suspensions, removals" />
           </Link>

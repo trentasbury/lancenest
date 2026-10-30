@@ -105,6 +105,7 @@ export async function saveJob(jobId: string | null, _prev: JobFormState, formDat
     if (error.code === 'P0007') return problem('skillbridge');
     if (error.code === 'P0008') return problem('apply_url');
     if (error.code === 'P0020') return problem('pay');
+    if (error.code === 'P0022') return problem('explicit');
     console.error('saveJob failed:', error.message);
     return problem('save');
   }

@@ -11,7 +11,8 @@ export const metadata: Metadata = { title: 'Account setup', robots: { index: fal
 const CHOICES = [
   ['veteran', 'I’m a service member or veteran', 'Active duty, National Guard, Reserve, transitioning, or veteran — build your profile and find your next role.'],
   ['spouse', 'I’m a military spouse', 'Married to someone who serves or served — remote and portable jobs, freelance work, and a network that gets military life.'],
-  ['employer', 'I’m hiring', 'Any company or recruiter — post roles and search verified military talent.'],
+  ['employer', 'I’m hiring for a company', 'Any company or recruiter — post roles and search verified military talent.'],
+  ['client', 'I want to hire a freelancer', 'Free for anyone — book a verified veteran for a project.'],
 ] as const;
 
 export default async function AccountSetupPage(props: { searchParams: Promise<{ choose?: string; next?: string }> }) {
@@ -42,7 +43,7 @@ export default async function AccountSetupPage(props: { searchParams: Promise<{ 
         </div>
       );
     }
-    redirect(profile?.role === 'employer' ? '/employer/dashboard' : profile?.role === 'admin' ? '/admin' : '/dashboard');
+    redirect(profile?.role === 'employer' ? '/employer/dashboard' : profile?.role === 'admin' ? '/admin' : profile?.role === 'client' ? '/freelance' : '/dashboard');
   }
 
   // Reached when a signed-in account has no profile. Anyone else is sent where they belong.

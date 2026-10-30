@@ -15,12 +15,12 @@ export const sessionCookieOptions = {
 };
 
 /**
- * Menu hint for pre-built pages: 'veteran' | 'employer' | 'admin' | 'member' while signed in, absent when
+ * Menu hint for pre-built pages: 'veteran' | 'employer' | 'admin' | 'client' | 'member' while signed in, absent when
  * signed out. The page's own script reads it so the right menu shows before first paint. It only changes
  * what the menu looks like; every protected page and action still checks the real session on the server.
  */
 export const NAV_COOKIE = 'ln_nav';
-export const NAV_ROLES = ['veteran', 'employer', 'admin', 'member'] as const;
+export const NAV_ROLES = ['veteran', 'employer', 'admin', 'client', 'member'] as const;
 export type NavRole = (typeof NAV_ROLES)[number];
 
 export const navCookieOptions = {
@@ -32,5 +32,5 @@ export const navCookieOptions = {
 };
 
 export function navRoleFor(role: string | null | undefined): NavRole {
-  return role === 'veteran' || role === 'employer' || role === 'admin' ? role : 'member';
+  return role === 'veteran' || role === 'employer' || role === 'admin' || role === 'client' ? role : 'member';
 }

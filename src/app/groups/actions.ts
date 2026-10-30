@@ -22,7 +22,7 @@ export async function postInGroup(groupId: string, slug: string, formData: FormD
   const body = String(formData.get('body') ?? '').trim().slice(0, 3000);
   if (body.length < 2) redirect(`/groups/${slug}?error=empty`);
   const { error } = await (await createClient()).from('network_posts').insert({ author_id: user.id, body, group_id: groupId, post_type: 'general', visibility: 'network' });
-  if (error) redirect(`/groups/${slug}?error=${error.code === 'P0017' ? 'join' : error.code === 'P0009' ? 'pii' : 'post'}`);
+  if (error) redirect(`/groups/${slug}?error=${error.code === 'P0017' ? 'join' : error.code === 'P0009' ? 'pii' : error.code === 'P0022' ? 'explicit' : 'post'}`);
   revalidatePath(`/groups/${slug}`);
   redirect(`/groups/${slug}`);
 }

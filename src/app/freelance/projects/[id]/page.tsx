@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { requireVerifiedMember } from '@/lib/auth';
+import { requireFreelanceAccess } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { CLEARANCE_LABEL } from '@/lib/employer';
 import { FREE_PROPOSALS_PER_MONTH, keepPercent, proposalCredits, proposalsUsedThisMonth } from '@/lib/freelance';
@@ -15,11 +15,11 @@ import Avatar from '@/components/network/Avatar';
 import { startConversation } from '@/app/messages/actions';
 import { setProjectStatus, setProposalStatus, submitProposal, withdrawProposal } from '../../actions';
 import { hireFreelancer } from '../../contracts/actions';
-import { CONTACT_BLOCKED } from '@/lib/contact';
+import { CONTACT_BLOCKED, EXPLICIT_BLOCKED } from '@/lib/contact';
 import { bookingFeeCents, bookingRequired, isOnSite, usd } from '@/lib/booking';
 
 export const metadata: Metadata = { title: 'Project' };
-const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, minimum: 'Jobs on LanceNest start at $25.', proposal: 'Add your price (at least $25) and a cover letter of at least 30 characters.', limit: `You’ve used your ${FREE_PROPOSALS_PER_MONTH} free proposals this month. Get 5 more for $5, or go Pro for unlimited proposals.`, closed: 'This project is no longer accepting proposals.', licensed: 'This is a licensed-trade project. Add your trade license under Dashboard → Licenses & certificates; once it’s verified you can send a proposal.', duplicate: 'You’ve already sent a proposal for this project.', save: 'Your proposal didn’t send — please try again.', pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' };
+const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, explicit: EXPLICIT_BLOCKED, minimum: 'Jobs on LanceNest start at $25.', proposal: 'Add your price (at least $25) and a cover letter of at least 30 characters.', limit: `You’ve used your ${FREE_PROPOSALS_PER_MONTH} free proposals this month. Get 5 more for $5, or go Pro for unlimited proposals.`, closed: 'This project is no longer accepting proposals.', licensed: 'This is a licensed-trade project. Add your trade license under Dashboard → Licenses & certificates; once it’s verified you can send a proposal.', duplicate: 'You’ve already sent a proposal for this project.', save: 'Your proposal didn’t send — please try again.', pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' };
 
 type Proposal = { id: string; freelancer_id: string; cover_letter: string; bid_amount: number; timeline: string | null; status: string; created_at: string;
   freelancer: { full_name: string; username: string | null; headline: string | null; verified: boolean; service_summary: string | null } | null };
@@ -29,7 +29,7 @@ export default async function ProjectPage(
 ) {
   const searchParams = await props.searchParams;
   const params = await props.params;
-  const { user, profile } = await requireVerifiedMember(`/freelance/projects/${params.id}`);
+  const { user, profile } = await requireFreelanceAccess(`/freelance/projects/${params.id}`);
   const supabase = await createClient();
   const { data: project } = await supabase.from('freelance_projects').select('*, company:companies(name, slug, is_verified)').eq('id', params.id).maybeSingle();
   if (!project) notFound();
@@ -75,9 +75,10 @@ export default async function ProjectPage(
         <div>
           <h1 className="font-serif text-4xl font-medium">{project.title}</h1>
           <p className="mt-2 text-sm text-muted">
-            {company && <Link href={`/companies/${company.slug}`} className="text-navy underline">{company.name}</Link>}
+            {company ? <Link href={`/companies/${company.slug}`} className="text-navy underline">{company.name}</Link> : <span>Private client</span>}
             {company?.is_verified && <span className="ml-1 text-olive">✓ verified company</span>} · {(project as unknown as { work_location?: string }).work_location ?? 'Remote'} · {project.category ?? 'General'} · posted {timeAgo(project.created_at)} · <span className="capitalize">{String(project.status).replace('_', ' ')}</span>
           </p>
+          {!company && isVet && <p className="mt-3 rounded-lg border border-brass/50 bg-brass/10 px-3 py-2 text-xs text-ink/85">Posted by a private client, not a verified company. Keep messages and payment on LanceNest, and never pay anything to apply.</p>}
           {project.clearance_required !== 'none' && <p className="mt-2 inline-block rounded-full border border-brass/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-brass-dark">{CLEARANCE_LABEL[project.clearance_required as string]} clearance required</p>}
         </div>
         <section className="card p-7"><h2 className="eyebrow">Scope of work</h2><p className="mt-3 whitespace-pre-line leading-relaxed">{project.description}</p></section>

@@ -1,5 +1,6 @@
 'use server';
 
+import { EXPLICIT_BLOCKED } from '@/lib/contact';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getSessionProfile } from '@/lib/auth';
@@ -54,6 +55,7 @@ export async function createPost(formData: FormData): Promise<PostState> {
     .single();
   if (error || !data) {
     if (error?.code === 'P0002') return { error: 'You’re posting a lot right now. Please wait a bit and try again.' };
+    if (error?.code === 'P0022') return { error: EXPLICIT_BLOCKED };
     if (error?.code === 'P0009') return { error: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' };
     console.error('createPost failed:', error?.message);
     return { error: 'Your post couldn’t be published. Please try again.' };
@@ -123,7 +125,7 @@ export async function addComment(postId: string, formData: FormData) {
   const { error } = await (await createClient()).from('post_comments').insert({ post_id: postId, author_id: uid, body, parent_id: parent || null });
   if (error) {
     // Show why on the post (the comment box keeps what was typed).
-    const reason = error.code === 'P0009' ? 'pii' : error.code === 'P0002' ? 'rate' : 'comment';
+    const reason = error.code === 'P0009' ? 'pii' : error.code === 'P0022' ? 'explicit' : error.code === 'P0002' ? 'rate' : 'comment';
     if (reason === 'comment') console.error('addComment failed:', error.message);
     redirect(`/network/${postId}?error=${reason}&at=${Date.now()}#comments`); // unique, so a repeat error never clears the box
   }

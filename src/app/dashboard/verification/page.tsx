@@ -7,7 +7,7 @@ import FormMessage from '@/components/FormMessage';
 import VerificationForm from './VerificationForm';
 import { cookies } from 'next/headers';
 import SubmitButton from '@/components/SubmitButton';
-import { SPOUSE_INVITE_COOKIE, peekSpouseInvite } from '@/lib/spouse';
+import { SPOUSE_INVITE_COOKIE, peekSpouseInvite, spouseLinkState } from '@/lib/spouse';
 import { acceptInvite } from '../spouse/actions';
 
 export const metadata: Metadata = { title: 'Verify your service' };
@@ -54,9 +54,14 @@ export default async function VerificationPage(
     supabase.from('verification_requests').select('status, created_at, reviewed_at, notes').eq('profile_id', user.id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
   ]);
   const status = vet?.verification_status ?? 'not_verified';
-  const canSubmit = status === 'not_verified' || status === 'failed';
   const spouse = vet?.member_type === 'spouse';
-  const invite = spouse && status !== 'verified' ? await peekSpouseInvite((await cookies()).get(SPOUSE_INVITE_COOKIE)?.value) : null;
+  // A verified spouse whose yearly check is due, or who is in the grace period, renews with documents (or a new invite).
+  const link = spouse && status === 'verified' ? await spouseLinkState(user.id) : null;
+  const renewing = !!link && (link.state === 'due' || link.state === 'grace');
+  const renewalPending = renewing && latest?.status === 'pending';
+  const canSubmit = status === 'not_verified' || status === 'failed' || (renewing && !renewalPending);
+  const invite = spouse && (status !== 'verified' || link?.state === 'grace') ? await peekSpouseInvite((await cookies()).get(SPOUSE_INVITE_COOKIE)?.value) : null;
+  const endsOn = link?.graceUntil ?? link?.confirmedUntil ?? null;
 
   return (
     <>
@@ -102,7 +107,14 @@ export default async function VerificationPage(
               <h2 className="font-serif text-2xl font-semibold">Your status</h2>
               <VerificationBadge status={status} />
             </div>
-            {status === 'verified' && <p className="mt-4 text-sm text-muted">You’re verified. Both of your files were deleted as soon as the reviewer approved them — we don’t keep them.</p>}
+            {status === 'verified' && !renewing && <p className="mt-4 text-sm text-muted">You’re verified. Both of your files were deleted as soon as the reviewer approved them — we don’t keep them.</p>}
+            {renewing && (
+              <p className="mt-4 rounded-lg border border-brass/50 bg-brass/10 px-3 py-2 text-sm text-ink/85">
+                {renewalPending
+                  ? 'Your renewal documents are in review. You stay verified while we check them.'
+                  : <>Military spouse status is checked once a year. Yours {link?.state === 'grace' ? 'ends' : 'is due'} on <strong>{endsOn ? new Date(endsOn).toLocaleDateString('en-US', { dateStyle: 'long' }) : 'soon'}</strong>. {link?.viaSponsor ? 'Ask your service member to confirm you from their dashboard, or send documents below.' : 'Send current documents below to renew for a year.'} Surviving spouses: send a VA survivor benefits letter and we’ll make your status permanent.</>}
+              </p>
+            )}
             {status === 'pending' && latest && (
               <>
                 <p className="mt-4 text-sm text-muted">Submitted {new Date(latest.created_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}. A reviewer will check your documents by hand, usually within 48 hours.</p>

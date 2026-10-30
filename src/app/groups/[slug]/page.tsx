@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { EXPLICIT_BLOCKED } from '@/lib/contact';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireVerifiedMember } from '@/lib/auth';
@@ -10,7 +11,7 @@ import FormMessage from '@/components/FormMessage';
 import { joinGroup, leaveGroup, postInGroup } from '../actions';
 
 export const metadata: Metadata = { title: 'Group' };
-const ERR: Record<string, string> = { join: 'Join the group to post.', pii: 'Posts can’t include Social Security numbers.', empty: 'Write something first.', post: 'That didn’t post — please try again.' };
+const ERR: Record<string, string> = { explicit: EXPLICIT_BLOCKED, join: 'Join the group to post.', pii: 'Posts can’t include Social Security numbers.', empty: 'Write something first.', post: 'That didn’t post — please try again.' };
 
 export default async function GroupPage(
   props: { params: Promise<{ slug: string }>; searchParams: Promise<{ error?: string }> }

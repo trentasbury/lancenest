@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Invoices from '../Invoices';
 import { notFound } from 'next/navigation';
-import { requireVerifiedMember } from '@/lib/auth';
+import { requireFreelanceAccess } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
@@ -28,7 +28,7 @@ export default async function ContractPage(
 ) {
   const searchParams = await props.searchParams;
   const params = await props.params;
-  const { user } = await requireVerifiedMember(`/freelance/contracts/${params.id}`);
+  const { user, profile } = await requireFreelanceAccess(`/freelance/contracts/${params.id}`);
   const supabase = await createClient();
   const { data: c } = await supabase.from('contracts')
     .select('id, title, status, veteran_fee_rate, client_id, freelancer_id, project_id, request_note, booking_status, booking_fee_cents, booking_paid_at, on_site, client:profiles!contracts_client_id_fkey(full_name), freelancer:profiles!contracts_freelancer_id_fkey(full_name, username)')
@@ -165,7 +165,7 @@ export default async function ContractPage(
       )}
       {(isClient || isFreelancer) && contract.status !== 'cancelled' && <p className="text-sm"><Link href={`/freelance/contracts/${contract.id}/agreement`} className="text-navy underline">Print the job agreement</Link></p>}
       {searchParams.converted && <FormMessage message="Thanks — we’ll confirm the conversion and send any invoice by email." />}
-      {CONVERSION_FEES_ENABLED && isClient && ['active', 'completed'].includes(contract.status) && (
+      {CONVERSION_FEES_ENABLED && isClient && profile.role === 'employer' && ['active', 'completed'].includes(contract.status) && (
         <details className="card p-5 text-sm"><summary className="cursor-pointer font-medium text-navy">Hire this freelancer full-time</summary>
           <p className="mt-2 text-muted">Converting a LanceNest contractor to a full-time employee within 12 months of your first contract carries a one-time fee of {Math.round(FREELANCE_FEES.conversionFee.firstYearPayRate * 100)}% of first-year base salary (minimum ${(FREELANCE_FEES.conversionFee.minimumCents / 100).toLocaleString()}). After 12 months, it’s free.</p>
           <form action={requestConversion.bind(null, contract.id)} className="mt-3 flex flex-col gap-2 sm:flex-row"><input name="salary" required inputMode="decimal" placeholder="First-year base salary ($)" className="field" /><SubmitButton className="btn btn-primary shrink-0" pendingText="…">Request conversion</SubmitButton></form>

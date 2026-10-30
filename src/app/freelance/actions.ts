@@ -3,7 +3,7 @@
 import { getMyCompany } from '@/lib/employer';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { requireRole } from '@/lib/auth';
+import { HIRER_ROLES, requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { OPEN_CATEGORIES, CATEGORIES } from '@/lib/freelance';
 import { scamSignals } from '@/lib/scam';
@@ -30,6 +30,7 @@ export async function saveFreelancerProfile(formData: FormData) {
     : await supabase.from('freelancer_profiles').insert({ profile_id: user.id, ...fields });
   if (error) {
     if (error.code === 'P0017') redirect('/freelance/profile?error=contact');
+    if (error.code === 'P0022') redirect('/freelance/profile?error=explicit');
     console.error('saveFreelancerProfile:', error.message); redirect('/freelance/profile?error=save');
   }
   revalidatePath('/freelance', 'layout');
@@ -45,7 +46,7 @@ export async function addPortfolioItem(formData: FormData) {
     // Pictures must be in the member's own folder in LanceNest storage (the database checks this too).
     image_url: /^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/public\/post-media\//.test(t(formData, 'image_url', 400)) ? t(formData, 'image_url', 400) : null,
   });
-  if (error) redirect(`/freelance/profile?error=${error.code === 'P0017' ? 'contact' : 'portfolio'}`);
+  if (error) redirect(`/freelance/profile?error=${error.code === 'P0017' ? 'contact' : error.code === 'P0022' ? 'explicit' : 'portfolio'}`);
   revalidatePath('/freelance/profile');
   redirect('/freelance/profile?saved=1#portfolio');
 }
@@ -57,10 +58,11 @@ export async function removePortfolioItem(id: string) {
 }
 
 export async function createProject(formData: FormData) {
-  const { user } = await requireRole(['employer'], '/freelance/projects/new');
+  const { user, profile } = await requireRole(HIRER_ROLES, '/freelance/projects/new');
   const supabase = await createClient();
-  const company = await getMyCompany(user.id);
-  if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
+  // Employers post as their verified company; clients post as themselves (labeled "Private client").
+  const company = profile.role === 'employer' ? await getMyCompany(user.id) : null;
+  if (profile.role === 'employer' && !company?.is_verified) redirect('/employer/dashboard?verify=required');
   const title = t(formData, 'title', 140);
   const description = t(formData, 'description', 8000);
   if (title.length < 4 || description.length < 20) redirect('/freelance/projects/new?error=required');
@@ -73,19 +75,19 @@ export async function createProject(formData: FormData) {
   const category = t(formData, 'category', 60);
   const clearance = t(formData, 'clearance_required', 14);
   const { data, error } = await supabase.from('freelance_projects').insert({
-    client_id: user.id, company_id: company.id, title, description,
+    client_id: user.id, company_id: company?.id ?? null, title, description,
     category: CATEGORIES.includes(category) ? category : null,
     work_location: t(formData, 'work_location', 120) || 'Remote',
     budget_type: t(formData, 'budget_type', 6) === 'hourly' ? 'hourly' : 'fixed', budget_min: min, budget_max: max,
     clearance_required: CLEARANCES.includes(clearance) ? clearance : 'none',
   }).select('id').single();
-  if (error || !data) { console.error('createProject:', error?.message); redirect(`/freelance/projects/new?error=${error?.code === 'P0009' ? 'pii' : error?.code === 'P0017' ? 'contact' : 'save'}`); }
+  if (error || !data) { console.error('createProject:', error?.message); redirect(`/freelance/projects/new?error=${error?.code === 'P0009' ? 'pii' : error?.code === 'P0017' ? 'contact' : error?.code === 'P0022' ? 'explicit' : error?.code === 'P0023' ? 'limit' : 'save'}`); }
   revalidatePath('/freelance');
   redirect(`/freelance/projects/${data.id}`);
 }
 
 export async function setProjectStatus(projectId: string, status: 'open' | 'closed') {
-  const { user } = await requireRole(['employer'], '/freelance');
+  const { user } = await requireRole(HIRER_ROLES, '/freelance');
   await (await createClient()).from('freelance_projects').update({ status }).eq('id', projectId).eq('client_id', user.id);
   revalidatePath(`/freelance/projects/${projectId}`);
 }
@@ -99,7 +101,7 @@ export async function submitProposal(projectId: string, formData: FormData) {
     project_id: projectId, freelancer_id: user.id, cover_letter: cover, bid_amount: bid, timeline: t(formData, 'timeline', 120) || null,
   });
   if (error) {
-    const code = error.code === 'P0009' ? 'pii' : error.code === 'P0017' ? 'contact' : error.code === 'P0018' ? 'licensed' : error.code === 'P0006' ? 'limit' : error.code === 'P0005' ? 'closed' : error.code === '23505' ? 'duplicate' : 'save';
+    const code = error.code === 'P0009' ? 'pii' : error.code === 'P0017' ? 'contact' : error.code === 'P0022' ? 'explicit' : error.code === 'P0018' ? 'licensed' : error.code === 'P0006' ? 'limit' : error.code === 'P0005' ? 'closed' : error.code === '23505' ? 'duplicate' : 'save';
     redirect(`/freelance/projects/${projectId}?error=${code}`);
   }
   revalidatePath(`/freelance/projects/${projectId}`);
@@ -113,7 +115,7 @@ export async function withdrawProposal(proposalId: string, projectId: string) {
 }
 
 export async function setProposalStatus(proposalId: string, projectId: string, status: 'shortlisted' | 'declined') {
-  await requireRole(['employer'], '/freelance');
+  await requireRole(HIRER_ROLES, '/freelance');
   // Row-level security + a database trigger ensure only this project's client can do this.
   await (await createClient()).from('proposals').update({ status }).eq('id', proposalId).eq('project_id', projectId);
   revalidatePath(`/freelance/projects/${projectId}`);

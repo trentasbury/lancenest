@@ -2,7 +2,7 @@
 
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { requireVerifiedMember } from '@/lib/auth';
+import { requireFreelanceAccess, requireVerifiedMember } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { CATEGORIES, OPEN_CATEGORIES } from '@/lib/freelance';
@@ -40,7 +40,7 @@ export async function saveService(formData: FormData) {
   revalidatePath('/freelance/services/mine');
   revalidateTag('public-services', 'max');
   revalidatePath('/hire', 'layout');
-  redirect(`/freelance/services/mine?${error ? `error=${error.code === 'P0017' ? 'contact' : error.code === 'P0018' ? 'licensed' : error.code === 'P0021' ? 'package' : 'save'}` : 'saved=1'}`);
+  redirect(`/freelance/services/mine?${error ? `error=${error.code === 'P0017' ? 'contact' : error.code === 'P0022' ? 'explicit' : error.code === 'P0018' ? 'licensed' : error.code === 'P0021' ? 'package' : 'save'}` : 'saved=1'}`);
 }
 
 export type ServicePackage = { name: string; price_cents: number; days: number; includes: string };
@@ -85,14 +85,16 @@ export async function deleteService(id: string) {
 }
 
 /**
- * A verified employer hires a service. When a booking fee applies (see lib/booking.ts) the request is booked, and the
+ * An employer or client hires a service. When a booking fee applies (see lib/booking.ts) the request is booked, and the
  * member told, once the employer pays it; the fee can't be skipped by paying in cash.
  */
 export async function requestService(serviceId: string, formData: FormData) {
-  const { user, profile } = await requireVerifiedMember(`/freelance/services/${serviceId}`);
-  if (profile.role !== 'employer') redirect(`/freelance/services/${serviceId}`);
-  const company = await getMyCompany(user.id);
-  if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
+  const { user, profile } = await requireFreelanceAccess(`/freelance/services/${serviceId}`);
+  if (profile.role !== 'employer' && profile.role !== 'client') redirect(`/freelance/services/${serviceId}`);
+  if (profile.role === 'employer') {
+    const company = await getMyCompany(user.id);
+    if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
+  }
   const { data: s } = await (await createClient()).from('service_listings').select('id, profile_id, title, price_cents, status, delivery, packages').eq('id', serviceId).eq('status', 'active').maybeSingle();
   if (!s || s.profile_id === user.id) redirect('/freelance/services');
   const amount = dollars(t(formData, 'amount', 12));
@@ -117,7 +119,7 @@ export async function requestService(serviceId: string, formData: FormData) {
     veteran_fee_rate: vetRateFor((vet?.plan as string) ?? 'free'),
     on_site: onSite, booking_status: fee ? 'awaiting_payment' : 'not_required', booking_fee_cents: fee || null,
   }).select('id, title, client_id, freelancer_id, project_id, proposal_id, service_id').single();
-  if (error || !contract) redirect(`/freelance/services/${serviceId}?error=${error?.code === 'P0017' ? 'contact' : 'save'}`);
+  if (error || !contract) redirect(`/freelance/services/${serviceId}?error=${error?.code === 'P0017' ? 'contact' : error?.code === 'P0022' ? 'explicit' : 'save'}`);
   await admin.from('milestones').insert({ contract_id: contract.id, title: s.title as string, amount_cents: amount });
   if (fee) {
     let url: string | null = null;

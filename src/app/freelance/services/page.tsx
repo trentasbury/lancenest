@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { requireVerifiedMember } from '@/lib/auth';
+import { requireFreelanceAccess } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { CATEGORIES, DELIVERY_LABEL, PRICE_LABEL } from '@/lib/freelance';
 import { sanitizeSearch } from '@/lib/format';
@@ -15,7 +15,7 @@ export default async function ServicesPage(
   props: { searchParams: Promise<{ category?: string; q?: string; where?: string }> }
 ) {
   const searchParams = await props.searchParams;
-  await requireVerifiedMember('/freelance/services');
+  await requireFreelanceAccess('/freelance/services');
   const supabase = await createClient();
   let query = supabase.from('service_listings').select('id, title, category, description, price_cents, price_type, delivery, service_area, provider:profiles!service_listings_profile_id_fkey(full_name, username, avatar_url, verified)').eq('status', 'active');
   if (searchParams.category && CATEGORIES.includes(searchParams.category)) query = query.eq('category', searchParams.category);

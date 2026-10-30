@@ -6,11 +6,15 @@ export type Req = {
   id: string; profile_id: string; document_path: string | null; id_document_path: string | null; id_type: string | null;
   member_note: string | null; notes: string | null; created_at: string;
   profile: { full_name: string; username: string | null; avatar_url: string | null } | null;
+  /** Filled in by the queue page: spouse or service member, and whether this is a spouse's yearly renewal. */
+  member_type?: string | null; renewal?: boolean;
 };
 
 const FLAGS: Record<string, string> = {
   missing: 'Enter the legal first name, last name, and date of birth exactly as shown on the documents.',
   duplicate: '⚠ This person is already verified on another LanceNest account. Possible duplicate or ban evasion — check before approving.',
+  discharge: 'Choose the discharge outcome before approving. Reject Bad Conduct and Dishonorable discharges.',
+  oth: 'An Other Than Honorable approval needs a short reason (at least 10 characters).',
 };
 
 const CHECKS = [
@@ -19,6 +23,9 @@ const CHECKS = [
   'The photo ID is a driver’s license, state ID, or passport — never a military, VA, or other federal ID card — and isn’t expired.',
   'The ID photo looks like the profile photo, if they added one.',
   'Nothing looks edited: fonts, spacing, and the photo sit naturally on both documents.',
+  'DD-214 box 24 (character of service): Honorable, General (Under Honorable Conditions) or Uncharacterized is fine. Other Than Honorable needs a closer look and a reason. Reject Bad Conduct and Dishonorable.',
+  'Codes agree with each other: separation date (box 12b), character of service (box 24), and the separation and reentry codes (boxes 26 and 27). AI-made fakes often get these wrong.',
+  'In doubt? Ask for a VA benefit summary letter (members download it from VA.gov, so it can’t be made up) or reject with “couldn’t confirm the document is genuine.”',
 ];
 
 const isImage = (p: string | null) => !!p && /\.(jpg|png)$/i.test(p);
@@ -71,7 +78,7 @@ export default function VerificationCard({ r, docUrl, idUrl, flag, reject, appro
             <span className="flex h-14 w-14 items-center justify-center rounded-full border border-line bg-paper text-[10px] text-muted">No photo</span>
           )}
           <div>
-            <p className="font-serif text-xl font-semibold">{r.profile?.full_name ?? 'Member'}</p>
+            <p className="font-serif text-xl font-semibold">{r.profile?.full_name ?? 'Member'}{r.renewal && <span className="ml-2 align-middle rounded-full border border-brass px-2 py-0.5 font-sans text-xs font-semibold text-brass-dark">Spouse yearly renewal</span>}</p>
             <p className="text-sm text-muted">
               Profile name · submitted {new Date(r.created_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
             </p>
@@ -119,6 +126,22 @@ export default function VerificationCard({ r, docUrl, idUrl, flag, reject, appro
             <input name="last" required placeholder="Last name" aria-label="Last name" className="field py-2 text-sm" />
             <input name="dob" type="date" required aria-label="Date of birth" className="field py-2 text-sm" />
           </div>
+          {r.member_type !== 'spouse' && !r.renewal && (
+            <fieldset className="space-y-1.5 rounded-lg border border-line bg-ivory p-2.5 text-xs">
+              <legend className="px-1 font-semibold text-ink">Discharge</legend>
+              <label className="flex items-start gap-2"><input type="radio" name="discharge" value="eligible" required className="mt-0.5 accent-navy" />Still serving, or Honorable, General (Under Honorable Conditions) or Uncharacterized</label>
+              <label className="flex items-start gap-2"><input type="radio" name="discharge" value="oth_approved" className="mt-0.5 accent-navy" />Other Than Honorable: I reviewed it and approve</label>
+              <input name="oth_note" maxLength={300} placeholder="Reason, if Other Than Honorable (kept in the admin log only)" aria-label="Reason for approving an Other Than Honorable discharge" className="field py-1.5 text-xs" />
+            </fieldset>
+          )}
+          {r.member_type === 'spouse' && (
+            <label className="flex items-start gap-2 text-xs text-ink"><input type="checkbox" name="surviving" className="mt-0.5 accent-navy" />Surviving spouse (VA survivor benefits letter or a death certificate with the service record): status never expires</label>
+          )}
+          {r.member_type !== 'spouse' && (
+            <label className="block text-xs text-ink">Separation, ETS or retirement date on the documents (optional; turns on free transition Pro if it’s within a year)
+              <input name="sep_date" type="date" className="field mt-1 py-1.5 text-sm" />
+            </label>
+          )}
           {(flag?.flag === 'removed' || flag?.flag === 'duplicate') && (
             <label className="flex items-center gap-2 text-xs"><input type="checkbox" name="override" className="accent-signal" />I’ve reviewed this flag and approve anyway</label>
           )}
@@ -143,6 +166,8 @@ export function RejectReasons() {
       <option value="A document is unreadable — please upload a clearer copy" />
       <option value="Not an accepted service document (DD-214, VA benefit summary letter, LES, orders, or NGB-22)" />
       <option value="Name on the documents doesn’t match your profile" />
+      <option value="Your discharge type isn’t eligible. LanceNest accepts Honorable, General and Uncharacterized discharges. If yours was upgraded, send the updated DD-214 or DD-215." />
+      <option value="We couldn’t confirm the document is genuine. Please upload a clear copy of the original, or a VA benefit summary letter from VA.gov." />
     </datalist>
   );
 }

@@ -46,6 +46,7 @@ html[data-nav='out'] .nav-in { display: none !important; }
 html[data-nav]:not([data-nav='out']) .nav-out { display: none !important; }
 html:not([data-nav='employer']) .nav-employer { display: none !important; }
 html[data-nav='employer'] .nav-not-employer { display: none !important; }
+html[data-nav='client'] .nav-not-client { display: none !important; }
 
 @keyframes page-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { requireVerifiedMember } from '@/lib/auth';
+import { requireFreelanceAccess } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { notifyMember } from '@/lib/email';
 import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
@@ -16,7 +16,7 @@ async function bookedContract(contractId: string) {
 
 /** The freelancer bills the client for a booked job (paid directly while LanceNest payments are off, or for on-site work). */
 export async function createInvoice(contractId: string, formData: FormData) {
-  const { user } = await requireVerifiedMember(page(contractId));
+  const { user } = await requireFreelanceAccess(page(contractId));
   const k = await bookedContract(contractId);
   if (!k || k.freelancer_id !== user.id || !['active', 'completed'].includes(k.status) || k.booking_status !== 'paid') redirect(page(contractId));
   if (FREELANCE_PAYMENTS_ENABLED && !k.on_site) redirect(page(contractId, '?error=invoice_payments'));
@@ -37,7 +37,7 @@ export async function createInvoice(contractId: string, formData: FormData) {
 }
 
 export async function setInvoiceStatus(contractId: string, invoiceId: string, status: 'paid' | 'void') {
-  const { user } = await requireVerifiedMember(page(contractId));
+  const { user } = await requireFreelanceAccess(page(contractId));
   const admin = createAdminClient();
   const { data: inv } = await admin.from('contract_invoices').select('id, number, client_id, freelancer_id, status, amount_cents').eq('id', invoiceId).eq('contract_id', contractId).maybeSingle();
   if (!inv || inv.status !== 'sent') redirect(page(contractId, '#invoices'));

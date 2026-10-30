@@ -10,7 +10,7 @@ type Viewer = { id: string; role: string; verifiedMember: boolean; ownsCompany: 
 const NOTICES: Record<string, string> = {
   saved: 'Saved. You’re listed as someone who works here.', limit: 'You can list up to 5 workplaces.', contact: 'Please leave out phone numbers, emails and links.',
   workplace: 'Add this company as a current or past workplace first, then rate it.', missing: 'Pick a score for both questions and whether you’d recommend it.',
-  honest: 'Please confirm the rating is your own honest experience.', error: 'That didn’t save. Please try again.', responded: 'Your reply is posted.',
+  honest: 'Please confirm the rating is your own honest experience.', explicit: 'That includes language LanceNest doesn’t allow, such as sexual content or slurs. Please edit it.', error: 'That didn’t save. Please try again.', responded: 'Your reply is posted.',
 };
 
 function Stars({ n }: { n: number }) {

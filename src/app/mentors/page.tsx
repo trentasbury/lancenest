@@ -12,7 +12,7 @@ import { saveMentorProfile } from './actions';
 export const metadata: Metadata = { title: 'Mentors' };
 type Mentor = { profile_id: string; fields: string[]; bio: string | null; profile: { full_name: string; username: string | null; headline: string | null; avatar_url: string | null; verified: boolean } | null };
 
-export default async function MentorsPage(props: { searchParams: Promise<{ field?: string; saved?: string }> }) {
+export default async function MentorsPage(props: { searchParams: Promise<{ field?: string; saved?: string; error?: string }> }) {
   const searchParams = await props.searchParams;
   const { user, profile } = await requireVerifiedMember('/mentors');
   const supabase = await createClient();
@@ -54,6 +54,7 @@ export default async function MentorsPage(props: { searchParams: Promise<{ field
           <form action={saveMentorProfile} className="card sticky top-24 space-y-3 p-5">
             <p className="eyebrow">{mine ? 'Your mentor profile' : 'Become a mentor'}</p>
             {searchParams.saved && <p className="text-sm text-olive">Saved.</p>}
+            {searchParams.error && <p role="alert" className="text-sm text-signal">{searchParams.error === 'explicit' ? 'That includes language LanceNest doesn’t allow, such as sexual content or slurs. Please edit it.' : 'That didn’t save. Please try again.'}</p>}
             <p className="text-xs text-muted">Pick what you can help with. Requests arrive as messages — reply when you have time.</p>
             <div className="grid gap-1.5">{MENTOR_FIELDS.map((f) => <label key={f} className="flex items-center gap-2 text-sm"><input type="checkbox" name="fields" value={f} defaultChecked={((mine?.fields as string[] | undefined) ?? []).includes(f)} className="accent-navy" />{f}</label>)}</div>
             <textarea name="bio" rows={3} maxLength={1000} defaultValue={(mine?.bio as string) ?? ''} placeholder="Your path and how you can help" className="field text-sm" />

@@ -12,17 +12,19 @@ import GoogleButton from './GoogleButton';
 const OPTIONS = [
   { value: 'veteran', title: 'I’m a service member or veteran', body: 'Active duty, Guard, Reserve, transitioning, or veteran.' },
   { value: 'spouse', title: 'I’m a military spouse', body: 'Remote and portable jobs, freelance work, and a network that gets PCS moves.' },
-  { value: 'employer', title: 'I’m hiring', body: 'Any company or recruiter. Post roles and search verified military talent.' },
+  { value: 'employer', title: 'I’m hiring for a company', body: 'Any company or recruiter. Post roles and search verified military talent.' },
+  { value: 'client', title: 'I want to hire a freelancer', body: 'Free for anyone. Book a verified veteran for a project, from web design to home repairs.' },
 ] as const;
 
 /** The page is pre-built; ?role=employer and ?ref=… (referral links) are read here, in the browser. */
 export default function SignupForm() {
-  const [role, setRole] = useState<'veteran' | 'spouse' | 'employer'>('veteran');
+  const [role, setRole] = useState<'veteran' | 'spouse' | 'employer' | 'client'>('veteran');
   const [referral, setReferral] = useState<string | undefined>();
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     if (p.get('role') === 'employer') setRole('employer');
     if (p.get('role') === 'spouse') setRole('spouse');
+    if (p.get('role') === 'client') setRole('client');
     const ref = p.get('ref');
     if (ref) setReferral(ref.slice(0, 80));
   }, []);

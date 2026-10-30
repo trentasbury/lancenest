@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
           const chosen = searchParams.get('role');
           if (fresh) await applyReferral(user.id, searchParams.get('ref'));
           if (chosen === 'employer') await makeEmployerIfNew(user.id, user.created_at);
+          if (chosen === 'client') await makeEmployerIfNew(user.id, user.created_at, 'client');
           if (chosen === 'spouse') await makeSpouseIfNew(user.id, user.created_at);
           const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
           const role = (profile?.role as Role | undefined) ?? null;

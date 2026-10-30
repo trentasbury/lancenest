@@ -14,5 +14,5 @@ export async function saveMentorProfile(formData: FormData) {
     profile_id: user.id, fields, bio: String(formData.get('bio') ?? '').trim().slice(0, 1000) || null, available: formData.get('available') === 'on', updated_at: new Date().toISOString(),
   });
   revalidatePath('/mentors');
-  redirect(`/mentors?${error ? 'error=1' : 'saved=1'}`);
+  redirect(`/mentors?${error ? `error=${error.code === 'P0022' ? 'explicit' : '1'}` : 'saved=1'}`);
 }

@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   const site = (process.env.NEXT_PUBLIC_SITE_URL ?? request.nextUrl.origin).replace(/\/$/, '');
   if (!GOOGLE_SIGNIN) return NextResponse.redirect(`${site}/login`, 303);
   const p = request.nextUrl.searchParams;
-  const role = ['employer', 'veteran', 'spouse'].includes(p.get('role') ?? '') ? (p.get('role') as string) : '';
+  const role = ['employer', 'veteran', 'spouse', 'client'].includes(p.get('role') ?? '') ? (p.get('role') as string) : '';
   const next = safeNextPath(p.get('next'));
   const ref = (p.get('ref') ?? '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 60);
   const back = new URLSearchParams({ via: 'google' });

@@ -65,6 +65,21 @@ export async function requireAdmin(nextPath = '/admin') {
 }
 
 /**
+ * Freelance hiring and messaging about it: verified members, employers, admins, and free client accounts
+ * (anyone hiring a verified freelancer). The database limits clients to the freelancers they work with.
+ */
+export async function requireFreelanceAccess(nextPath: string) {
+  const session = await requireRole(['veteran', 'employer', 'client', 'admin'], nextPath);
+  if (session.profile.role === 'veteran') {
+    if ((await getVerificationStatus(session.user.id)) !== 'verified') redirect(`/dashboard/verification?required=1`);
+  }
+  return session;
+}
+
+/** Roles that hire freelancers (they're the client on a contract). */
+export const HIRER_ROLES: Role[] = ['employer', 'client'];
+
+/**
  * Jobs, the network, messaging, and member profiles are for verified service members.
  * Employers and admins pass; unverified veteran accounts are sent to verification.
  * (The database enforces the same rule.)

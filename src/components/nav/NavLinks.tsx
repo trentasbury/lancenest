@@ -15,9 +15,9 @@ const ICONS: Record<string, React.ReactNode> = {
 };
 
 const MEMBER = [
-  { href: '/network', label: 'Network', icon: 'network', cls: '' },
-  { href: '/people', label: 'People', icon: 'people', cls: '' },
-  { href: '/jobs', label: 'Jobs', icon: 'jobs', cls: 'nav-not-employer' },
+  { href: '/network', label: 'Network', icon: 'network', cls: 'nav-not-client' },
+  { href: '/people', label: 'People', icon: 'people', cls: 'nav-not-client' },
+  { href: '/jobs', label: 'Jobs', icon: 'jobs', cls: 'nav-not-employer nav-not-client' },
   { href: '/employer/candidates', label: 'Candidates', icon: 'candidates', cls: 'nav-employer' },
   { href: '/freelance', label: 'Freelance', icon: 'freelance', cls: '' },
   { href: '/messages', label: 'Messages', icon: 'messages', cls: '' },

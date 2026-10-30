@@ -1,25 +1,27 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireVerifiedMember } from '@/lib/auth';
+import { requireFreelanceAccess } from '@/lib/auth';
 import { getMyCompany } from '@/lib/employer';
 import { CATEGORIES } from '@/lib/freelance';
 import { LICENSED_TRADES } from '@/lib/flags';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import { createProject } from '../../actions';
-import { CONTACT_BLOCKED } from '@/lib/contact';
+import { CONTACT_BLOCKED, EXPLICIT_BLOCKED } from '@/lib/contact';
 import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
 
 export const metadata: Metadata = { title: 'Post a project' };
-const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, classification: 'You checked a box that suggests employee-style control. Confirm the acknowledgment, or consider posting this as a job instead.', required: 'Add a title and a description of at least 20 characters.', budget: 'The maximum budget can’t be lower than the minimum.', scam: 'This description contains wording often used in scams (fees, gift cards, off-platform chat apps). Please revise it.', save: 'That didn’t post — please try again.', pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' };
+const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, explicit: EXPLICIT_BLOCKED, classification: 'You checked a box that suggests employee-style control. Confirm the acknowledgment, or consider posting this as a job instead.', required: 'Add a title and a description of at least 20 characters.', budget: 'The maximum budget can’t be lower than the minimum.', scam: 'This description contains wording often used in scams (fees, gift cards, off-platform chat apps). Please revise it.', save: 'That didn’t post — please try again.', limit: 'You can have 3 open projects at a time. Close one to post another.', pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' };
 
 export default async function NewProjectPage(props: { searchParams: Promise<{ error?: string }> }) {
   const searchParams = await props.searchParams;
-  const { user, profile } = await requireVerifiedMember('/freelance/projects/new');
-  if (profile.role !== 'employer') redirect('/freelance');
-  const company = await getMyCompany(user.id);
-  if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
+  const { user, profile } = await requireFreelanceAccess('/freelance/projects/new');
+  if (profile.role !== 'employer' && profile.role !== 'client') redirect('/freelance');
+  if (profile.role === 'employer') {
+    const company = await getMyCompany(user.id);
+    if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
+  }
   return (
     <div className="container-page max-w-3xl space-y-6 py-10">
       <Link href="/freelance" className="text-sm text-muted hover:text-navy">← Freelance</Link>

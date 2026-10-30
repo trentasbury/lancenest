@@ -1,5 +1,6 @@
 import VerifiedMark from '@/components/VerifiedMark';
 import type { Metadata } from 'next';
+import { EXPLICIT_BLOCKED } from '@/lib/contact';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getSessionProfile } from '@/lib/auth';
@@ -90,6 +91,7 @@ function CommentItem({ c, me, postAuthorId, postId, replies }: { c: Comment; me:
 
 const COMMENT_ERRORS: Record<string, string> = {
   pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.',
+  explicit: EXPLICIT_BLOCKED,
   rate: 'You’re commenting very quickly. Please wait a few minutes and try again.',
   comment: 'Your comment didn’t post. Please try again.',
 };
