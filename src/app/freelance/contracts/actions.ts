@@ -195,9 +195,10 @@ export async function leaveReview(contractId: string, revieweeId: string, formDa
   const rating = Math.round(Number(formData.get('rating')));
   if (!(rating >= 1 && rating <= 5)) back(contractId, '?error=review');
   // Row-level security enforces: completed contract, you’re a party, and you’re reviewing the other party.
-  await (await createClient()).from('reviews').insert({ contract_id: contractId, reviewer_id: user.id, reviewee_id: revieweeId, rating, body: t(formData, 'body', 2000) || null });
+  const { data: saved } = await (await createClient()).from('reviews').insert({ contract_id: contractId, reviewer_id: user.id, reviewee_id: revieweeId, rating, body: t(formData, 'body', 2000) || null }).select('held').maybeSingle();
   revalidatePath(`/freelance/contracts/${contractId}`);
-  back(contractId, '?reviewed=1');
+  // New client accounts' reviews are checked by LanceNest before they show (see migration 0089).
+  back(contractId, saved?.held ? '?reviewed=held' : '?reviewed=1');
 }
 
 /** The freelancer can decline a request before any money is funded. */

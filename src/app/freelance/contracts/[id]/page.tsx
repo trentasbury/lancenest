@@ -59,6 +59,8 @@ export default async function ContractPage(
         <form action={startConversation.bind(null, other)}><SubmitButton className="btn btn-outline" pendingText="…">Message</SubmitButton></form>
       </div>
       {searchParams.error && <FormMessage error={ERR[searchParams.error] ?? 'Something went wrong — please try again.'} />}
+      {searchParams.reviewed === 'held' && <FormMessage message="Thanks for your review. Because your account is new, LanceNest takes a quick look before it appears on the freelancer’s profile, usually within a day." />}
+      {searchParams.reviewed === '1' && <FormMessage message="Thanks for your review." />}
       {searchParams.requested && <FormMessage message="Request sent. Your freelancer covers the booking fee, so there’s nothing for you to pay. You’ll be notified when they confirm." />}
       {searchParams.hired && <FormMessage message={FREELANCE_PAYMENTS_ENABLED ? 'Contract created. Fund the first milestone so work can begin — the payment is held until you approve.' : 'Booked. You can now share contact details in messages and arrange the work and payment directly with each other.'} />}
       {contract.status === 'cancelled' && <p className="rounded-xl border border-line bg-paper p-4 text-sm text-muted">This request was cancelled.</p>}

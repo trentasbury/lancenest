@@ -71,6 +71,8 @@ export async function submitCompanyVerification(formData: FormData) {
   const emailDomain = (user.email ?? '').split('@')[1]?.toLowerCase() ?? '';
   let site = '';
   try { site = new URL(website).hostname.replace(/^www\./, '').toLowerCase(); } catch { site = ''; }
+  // Only plain host characters go into the database search below.
+  if (!/^[a-z0-9.-]+$/.test(site)) site = '';
   const { data: sameDomain } = site
     ? await admin.from('companies').select('id').neq('id', company.id).or(`website.ilike.%//${site}%,website.ilike.%.${site}%`).limit(1)
     : { data: [] };

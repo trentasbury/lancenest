@@ -49,7 +49,8 @@ export async function bookingCheckoutUrl(contractId: string, payerId: string, em
     } } }],
     metadata: meta, payment_intent_data: { metadata: meta },
     ...(company?.stripe_customer_id ? { customer: company.stripe_customer_id } : email ? { customer_email: email } : {}),
-    allow_promotion_codes: true,
+    // Booking fees never take promo codes (a code made for plans must not zero out a booking fee).
+    allow_promotion_codes: false,
     success_url: `${SITE}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${SITE}/freelance/contracts/${k.id}`,
   });
@@ -85,6 +86,13 @@ export async function markHired(k: Booked) {
 /** Called from the Stripe webhook and the success page. Runs once per booking (only an unpaid booking can become paid). */
 export async function confirmBookingFromSession(sessionId: string, contractId: string, amountPaid: number) {
   const admin = createAdminClient();
+  // Only the full fee confirms a booking. Anything less (it shouldn't happen) goes to an admin instead.
+  const { data: due } = await admin.from('contracts').select('title, booking_fee_cents, booking_status').eq('id', contractId).maybeSingle();
+  if (due?.booking_status === 'awaiting_payment' && amountPaid < ((due.booking_fee_cents as number | null) ?? 0)) {
+    const { data: admins } = await admin.from('profiles').select('id').eq('role', 'admin');
+    if (admins?.length) await admin.from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'dispute', title: `A booking fee for “${due.title}” was paid short (${usd(amountPaid)} of ${usd(due.booking_fee_cents as number)}). The booking wasn’t confirmed.`, link: `/freelance/contracts/${contractId}` })));
+    return { ok: false as const };
+  }
   const { data: k } = await admin.from('contracts')
     .update({ booking_status: 'paid', booking_paid_at: new Date().toISOString(), booking_checkout_session_id: sessionId, booking_fee_cents: amountPaid })
     .eq('id', contractId).eq('booking_status', 'awaiting_payment')

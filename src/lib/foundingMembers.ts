@@ -27,11 +27,19 @@ export async function grantFoundingMember(profileId: string): Promise<boolean> {
   const { data: v } = await admin.from('veteran_profiles').select('verification_status, granted_plan, pro_granted_until').eq('profile_id', profileId).maybeSingle();
   if (!v || v.verification_status !== 'verified') return false;
   if (await isFoundingMember(profileId)) return false;
-  const { count } = await admin.from('founding_members').select('profile_id', { count: 'exact', head: true });
-  const seat = (count ?? 0) + 1;
-  if (seat > FOUNDING_MEMBER.spots) return false;
-  const { error } = await admin.from('founding_members').insert({ profile_id: profileId, seat });
-  if (error) return false;
+  // The first open seat number (a seat frees up if its member deletes their account). If two approvals land at
+  // once and pick the same seat, the database refuses the second and it tries the next open seat.
+  let seat = 0;
+  for (let attempt = 0; attempt < 3 && !seat; attempt++) {
+    const { data: taken } = await admin.from('founding_members').select('seat');
+    const used = new Set((taken ?? []).map((r) => r.seat as number));
+    const open = Array.from({ length: FOUNDING_MEMBER.spots }, (_, i) => i + 1).find((n) => !used.has(n));
+    if (!open) return false;
+    const { error } = await admin.from('founding_members').insert({ profile_id: profileId, seat: open });
+    if (!error) seat = open;
+    else if (error.code !== '23505' || (await isFoundingMember(profileId))) return false;
+  }
+  if (!seat) return false;
 
   // 6 months of Pro from today. It doesn't stack with another free Pro period (e.g. Transition Pro): whichever
   // ends later wins.
