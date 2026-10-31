@@ -10,7 +10,7 @@ import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import { startConversation } from '@/app/messages/actions';
 import { CONTACT_BLOCKED, EXPLICIT_BLOCKED } from '@/lib/contact';
-import { addMilestone, approveMilestone, cancelBooking, markContractComplete, cancelMilestone, declineContract, payBooking, requestConversion, leaveReview, openDispute, requestChanges, submitMilestone } from '../actions';
+import { addMilestone, approveMilestone, cancelBooking, markContractComplete, cancelMilestone, declineContract, payBooking, payBookingAsFreelancer, requestConversion, leaveReview, openDispute, requestChanges, submitMilestone } from '../actions';
 
 export const metadata: Metadata = { title: 'Contract' };
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -31,10 +31,10 @@ export default async function ContractPage(
   const { user, profile } = await requireFreelanceAccess(`/freelance/contracts/${params.id}`);
   const supabase = await createClient();
   const { data: c } = await supabase.from('contracts')
-    .select('id, title, status, veteran_fee_rate, client_id, freelancer_id, project_id, request_note, booking_status, booking_fee_cents, booking_paid_at, on_site, client:profiles!contracts_client_id_fkey(full_name), freelancer:profiles!contracts_freelancer_id_fkey(full_name, username)')
+    .select('id, title, status, veteran_fee_rate, client_id, freelancer_id, project_id, request_note, booking_status, booking_fee_cents, booking_paid_at, booking_fee_payer, on_site, client:profiles!contracts_client_id_fkey(full_name), freelancer:profiles!contracts_freelancer_id_fkey(full_name, username)')
     .eq('id', params.id).maybeSingle();
   if (!c) notFound();
-  const contract = c as unknown as { booking_status: string; booking_fee_cents: number | null; booking_paid_at: string | null; on_site: boolean; request_note?: string | null; id: string; title: string; status: string; veteran_fee_rate: number; client_id: string; freelancer_id: string; project_id: string | null; client: { full_name: string } | null; freelancer: { full_name: string; username: string | null } | null };
+  const contract = c as unknown as { booking_status: string; booking_fee_payer: 'client' | 'freelancer'; booking_fee_cents: number | null; booking_paid_at: string | null; on_site: boolean; request_note?: string | null; id: string; title: string; status: string; veteran_fee_rate: number; client_id: string; freelancer_id: string; project_id: string | null; client: { full_name: string } | null; freelancer: { full_name: string; username: string | null } | null };
   const isClient = user.id === contract.client_id;
   const isFreelancer = user.id === contract.freelancer_id;
   const [{ data: mRows }, { data: myReview }] = await Promise.all([
@@ -59,9 +59,28 @@ export default async function ContractPage(
         <form action={startConversation.bind(null, other)}><SubmitButton className="btn btn-outline" pendingText="…">Message</SubmitButton></form>
       </div>
       {searchParams.error && <FormMessage error={ERR[searchParams.error] ?? 'Something went wrong — please try again.'} />}
+      {searchParams.requested && <FormMessage message="Request sent. Your freelancer covers the booking fee, so there’s nothing for you to pay. You’ll be notified when they confirm." />}
       {searchParams.hired && <FormMessage message={FREELANCE_PAYMENTS_ENABLED ? 'Contract created. Fund the first milestone so work can begin — the payment is held until you approve.' : 'Booked. You can now share contact details in messages and arrange the work and payment directly with each other.'} />}
       {contract.status === 'cancelled' && <p className="rounded-xl border border-line bg-paper p-4 text-sm text-muted">This request was cancelled.</p>}
-      {awaitingBooking && isClient && (
+      {awaitingBooking && isClient && contract.booking_fee_payer === 'freelancer' && (
+        <div className="card space-y-3 border-brass p-6">
+          <p className="eyebrow">Request sent · no booking fee for you</p>
+          <p className="text-sm text-ink/85">{contract.freelancer?.full_name ?? 'Your freelancer'} covers the booking fee on this job. They confirm the booking by paying it, and you’re notified as soon as they do. Then you can share contact details and set the schedule in messages.</p>
+          <form action={cancelBooking.bind(null, contract.id)}><SubmitButton className="btn btn-ghost border border-line" pendingText="…">Cancel request</SubmitButton></form>
+        </div>
+      )}
+      {awaitingBooking && isFreelancer && contract.booking_fee_payer === 'freelancer' && (
+        <div className="card space-y-3 border-brass p-6">
+          <p className="eyebrow">Confirm this booking</p>
+          <p className="font-serif text-2xl text-navy">{contract.booking_fee_cents ? usd(contract.booking_fee_cents) : ''} booking fee</p>
+          <p className="text-sm text-ink/85">You chose to cover the booking fee, so {contract.client?.full_name ?? 'the client'} pays none. Pay it to confirm the job; contact details open right away. Refunded if you decline within 48 hours, before you two message.</p>
+          <div className="flex flex-wrap gap-2">
+            <form action={payBookingAsFreelancer.bind(null, contract.id)}><SubmitButton className="btn btn-primary" pendingText="Opening checkout…">Pay and confirm</SubmitButton></form>
+            <form action={declineContract.bind(null, contract.id)}><SubmitButton className="btn btn-ghost border border-line" pendingText="…">Decline</SubmitButton></form>
+          </div>
+        </div>
+      )}
+      {awaitingBooking && isClient && contract.booking_fee_payer !== 'freelancer' && (
         <div className="card space-y-3 border-brass p-6">
           <p className="eyebrow">Confirm your booking</p>
           <p className="font-serif text-2xl text-navy">{contract.booking_fee_cents ? usd(contract.booking_fee_cents) : ''} booking fee</p>
@@ -72,8 +91,9 @@ export default async function ContractPage(
           </div>
         </div>
       )}
-      {awaitingBooking && isFreelancer && <p className="rounded-xl border border-line bg-paper p-4 text-sm">This request isn’t booked yet. You’ll be notified as soon as the client confirms it.</p>}
-      {contract.booking_status === 'paid' && isClient && contract.booking_paid_at && <p className="text-xs text-muted">Booked {new Date(contract.booking_paid_at).toLocaleDateString('en-US', { dateStyle: 'medium' })} · booking fee {contract.booking_fee_cents ? usd(contract.booking_fee_cents) : ''} paid</p>}
+      {awaitingBooking && isFreelancer && contract.booking_fee_payer !== 'freelancer' && <p className="rounded-xl border border-line bg-paper p-4 text-sm">This request isn’t booked yet. You’ll be notified as soon as the client confirms it.</p>}
+      {contract.booking_status === 'paid' && contract.booking_paid_at && (contract.booking_fee_payer === 'freelancer' ? isFreelancer : isClient) && <p className="text-xs text-muted">Booked {new Date(contract.booking_paid_at).toLocaleDateString('en-US', { dateStyle: 'medium' })} · booking fee {contract.booking_fee_cents ? usd(contract.booking_fee_cents) : ''} paid</p>}
+      {contract.booking_status === 'paid' && contract.booking_paid_at && contract.booking_fee_payer === 'freelancer' && isClient && <p className="text-xs text-muted">Booked {new Date(contract.booking_paid_at).toLocaleDateString('en-US', { dateStyle: 'medium' })} · no booking fee for you (your freelancer covered it)</p>}
       {searchParams.released && <FormMessage message="Payment released to the freelancer. Thank you!" />}
       {searchParams.completed && <FormMessage message="Marked complete. Leave a review below. It helps other members hire with confidence." />}
       {!FREELANCE_PAYMENTS_ENABLED && isClient && live && contract.booking_status === 'paid' && (

@@ -27,18 +27,25 @@ export function isOnSite(location: string | null | undefined) {
 
 export const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-/** Stripe Checkout for an unpaid booking. Only the contract's client can open it. Returns the checkout URL, or null. */
-export async function bookingCheckoutUrl(contractId: string, clientId: string, email: string | undefined) {
+/**
+ * Stripe Checkout for an unpaid booking. Only whoever pays the fee can open it: the client, or the freelancer when they
+ * chose to cover the booking fee. Returns the checkout URL, or null.
+ */
+export async function bookingCheckoutUrl(contractId: string, payerId: string, email: string | undefined) {
   const admin = createAdminClient();
-  const { data: k } = await admin.from('contracts').select('id, title, client_id, status, booking_status, booking_fee_cents').eq('id', contractId).maybeSingle();
-  if (!k || k.client_id !== clientId || k.status !== 'active' || k.booking_status !== 'awaiting_payment' || !k.booking_fee_cents) return null;
-  const company = await getMyCompany(clientId);
-  const meta = { kind: 'booking', contract_id: k.id as string, ...(company ? { company_id: company.id } : {}) };
+  const { data: k } = await admin.from('contracts').select('id, title, client_id, freelancer_id, status, booking_status, booking_fee_cents, booking_fee_payer').eq('id', contractId).maybeSingle();
+  if (!k || k.status !== 'active' || k.booking_status !== 'awaiting_payment' || !k.booking_fee_cents) return null;
+  const byFreelancer = k.booking_fee_payer === 'freelancer';
+  if ((byFreelancer ? k.freelancer_id : k.client_id) !== payerId) return null;
+  const company = byFreelancer ? null : await getMyCompany(payerId);
+  const meta = { kind: 'booking', contract_id: k.id as string, payer: byFreelancer ? 'freelancer' : 'client', ...(company ? { company_id: company.id } : {}) };
   const session = await stripe().checkout.sessions.create({
     mode: 'payment',
     line_items: [{ quantity: 1, price_data: { currency: 'usd', unit_amount: k.booking_fee_cents as number, product_data: {
       name: `LanceNest booking fee: ${k.title as string}`.slice(0, 250),
-      description: 'Confirms the booking with your verified freelancer. Refunded if the freelancer declines within 48 hours.',
+      description: byFreelancer
+        ? 'You chose to cover the booking fee, so your client pays none. Confirms the booking and opens contact details. Refunded if you decline within 48 hours, before you and the client message.'
+        : 'Confirms the booking with your verified freelancer. Refunded if the freelancer declines within 48 hours.',
     } } }],
     metadata: meta, payment_intent_data: { metadata: meta },
     ...(company?.stripe_customer_id ? { customer: company.stripe_customer_id } : email ? { customer_email: email } : {}),
@@ -47,6 +54,16 @@ export async function bookingCheckoutUrl(contractId: string, clientId: string, e
     cancel_url: `${SITE}/freelance/contracts/${k.id}`,
   });
   return session.url;
+}
+
+/** The freelancer covers the booking fee: tell them a client booked them and the fee is theirs to pay to confirm it. */
+export async function askFreelancerToPayBooking(k: { id: string; title: string; freelancer_id: string; booking_fee_cents: number }) {
+  await notifyMember(k.freelancer_id, { type: 'contract', link: `/freelance/contracts/${k.id}`, title: `A client wants to book you for “${k.title}”. Pay the ${usd(k.booking_fee_cents)} booking fee to confirm.`,
+    email: { subject: `Confirm your booking: ${k.title}`, preheader: 'You chose to cover the booking fee on this job.', tone: 'notice', badge: 'Booking request',
+      heading: 'A client wants to book you.',
+      paragraphs: [`A client asked to book you for “${k.title}”. You chose to cover the booking fee, so the client pays none.`,
+        `Pay the ${usd(k.booking_fee_cents)} booking fee to confirm the job. Contact details open as soon as it’s paid.`],
+      cta: { label: 'Confirm the booking', url: `${SITE}/freelance/contracts/${k.id}` } } });
 }
 
 type Booked = { id: string; title: string; client_id: string; freelancer_id: string; project_id: string | null; proposal_id: string | null; service_id: string | null };
@@ -71,8 +88,17 @@ export async function confirmBookingFromSession(sessionId: string, contractId: s
   const { data: k } = await admin.from('contracts')
     .update({ booking_status: 'paid', booking_paid_at: new Date().toISOString(), booking_checkout_session_id: sessionId, booking_fee_cents: amountPaid })
     .eq('id', contractId).eq('booking_status', 'awaiting_payment')
-    .select('id, title, client_id, freelancer_id, project_id, proposal_id, service_id').maybeSingle();
-  if (k) await markHired(k as Booked);
+    .select('id, title, client_id, freelancer_id, project_id, proposal_id, service_id, booking_fee_payer').maybeSingle();
+  if (k) {
+    await markHired(k as Booked);
+    // The freelancer paid the fee, so the client hasn't heard yet: tell them the job is booked.
+    if (k.booking_fee_payer === 'freelancer') {
+      await notifyMember(k.client_id as string, { type: 'contract', link: `/freelance/contracts/${k.id}`, title: `“${k.title}” is booked. Your freelancer confirmed it, and contact details are open.`,
+        email: { subject: `Booked: ${k.title}`, preheader: 'Your verified freelancer confirmed the job.', tone: 'success', badge: 'Booked',
+          heading: 'Your job is booked.', paragraphs: [`Your freelancer confirmed “${k.title}” and covered the booking fee. You can now share contact details in messages and agree on the schedule.`],
+          cta: { label: 'Open the contract', url: `${SITE}/freelance/contracts/${k.id}` } } });
+    }
+  }
   return { ok: true as const, kind: 'booking', contractId };
 }
 

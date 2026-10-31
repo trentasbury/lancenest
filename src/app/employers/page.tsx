@@ -11,6 +11,13 @@ const spotsLeftForDisplay = unstable_cache(() => foundingSpotsLeft().catch(() =>
 // Pre-built and served from the location nearest each visitor; refreshed every 5 minutes.
 export const revalidate = 300;
 
+// Founding Employer prices (first 50 companies, once each; see FOUNDING_* in lib/stripe.ts).
+const FOUNDING_NOTE: Record<string, string> = {
+  Starter: '$69/mo for your first 12 months ($690 first year on annual)',
+  Professional: '$149/mo for your first 12 months ($1,490 first year on annual)',
+  Federal: '$7,500 for your first year, paid up front',
+};
+
 export const metadata: Metadata = { alternates: { canonical: '/employers' },
   title: 'Hire Veterans',
   description: 'Recruit verified service members and veterans. Plans for every size of hiring team.',
@@ -23,7 +30,7 @@ const PLANS = [
     features: ['10 open job posts (extra slots $39/mo)', 'Company recruiting page', 'Applicant pipeline with résumés and verified work', 'Message applicants to your jobs', 'Import and daily sync from Greenhouse, Lever or Ashby', '2 team seats', 'Talent search is on Professional'] },
   { name: 'Professional', price: '$249', note: 'per month · or $2,490/year paid up front (2 months free)', cta: 'Start with Professional', featured: true,
     features: ['25 open job posts (extra slots $39/mo)', 'Search every verified member’s full profile', 'Transitioning talent search (separating in 12 months)', 'Hiring analytics: views, applicants, conversion', '5 featured jobs a month, included', 'Talent pools: save candidates to lists with private notes', 'Saved searches with daily new-match emails', '3 team seats', '100 new conversations a month with any verified member (10 more for $59)', 'Branded company page: cover photo and “Why veterans work here”', 'Applicant export (CSV)'] },
-  { name: 'Federal', price: '$999', note: 'per month · or $9,990/year paid up front (2 months free) · Founding Employers: $7,500 for the first year, paid up front', cta: 'Start with Federal',
+  { name: 'Federal', price: '$999', note: 'per month · or $9,990/year paid up front (2 months free)', cta: 'Start with Federal',
     features: ['Everything in Professional', 'Built for primes, subs, and GovCon small businesses', 'Search by self-reported clearance level (you confirm eligibility in official systems)', 'Cleared talent spotlight', 'One-click yearly veteran outreach report for VEVRAA records', '5 team seats', 'Unlimited featured jobs', 'Virtual career fair booths included', 'Priority support from the founder'] },
   { name: 'Enterprise', price: 'Custom', note: 'from $15,000/year', cta: 'Talk to us',
     features: ['Everything in Federal', 'Volume pricing for multiple hiring teams', 'Invoice billing', 'Dedicated support'] },
@@ -71,9 +78,9 @@ export default async function EmployersPage() {
               <h2 className="font-serif text-2xl font-semibold">{plan.name}</h2>
               <p className="mt-4 font-serif text-[2.75rem] font-medium leading-none text-navy">{plan.price}</p>
               <p className="text-sm text-muted">{plan.note}</p>
-              {plan.name === 'Professional' && founding > 0 && (
+              {founding > 0 && FOUNDING_NOTE[plan.name] && (
                 <p className="mt-3 rounded-lg border border-brass bg-brass/10 px-3 py-2 text-xs font-semibold text-brass-dark">
-                  Founding Employer: $149/mo for your first 12 months ($1,490 first year on annual) · {founding} of 50 spots left
+                  Founding Employer: {FOUNDING_NOTE[plan.name]} · {founding} of 50 spots left
                 </p>
               )}
               <ul className="mt-6 flex-1 space-y-2.5 text-sm text-ink/85">

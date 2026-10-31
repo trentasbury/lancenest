@@ -9,7 +9,7 @@ import { AUTO_RELEASE_DAYS, releaseMilestone, vetRateFor } from '@/lib/payments'
 import { SITE, notifyMember } from '@/lib/email';
 import { FREELANCE_FEES } from '@/lib/fees';
 import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
-import { bookingCheckoutUrl, bookingFeeCents, bookingRequired, isOnSite, markHired, refundBooking } from '@/lib/booking';
+import { askFreelancerToPayBooking, bookingCheckoutUrl, bookingFeeCents, bookingRequired, isOnSite, markHired, refundBooking } from '@/lib/booking';
 
 const t = (fd: FormData, k: string, max: number) => String(fd.get(k) ?? '').trim().slice(0, max);
 const back = (id: string, q = '') => redirect(`/freelance/contracts/${id}${q}`);
@@ -33,14 +33,14 @@ async function goPayBooking(contractId: string, clientId: string, email: string 
  */
 export async function hireFreelancer(proposalId: string) {
   const { user } = await requireRole(HIRER_ROLES, '/freelance');
-  const { data: p } = await (await createClient()).from('proposals').select('id, bid_amount, status, freelancer_id, project:freelance_projects(id, title, client_id, status, work_location, budget_min)').eq('id', proposalId).maybeSingle();
-  const proposal = p as unknown as { id: string; bid_amount: number; status: string; freelancer_id: string; project: { id: string; title: string; client_id: string; status: string; work_location: string | null; budget_min: number | null } } | null;
+  const { data: p } = await (await createClient()).from('proposals').select('id, bid_amount, status, freelancer_id, covers_booking_fee, project:freelance_projects(id, title, client_id, status, work_location, budget_min)').eq('id', proposalId).maybeSingle();
+  const proposal = p as unknown as { id: string; bid_amount: number; status: string; freelancer_id: string; covers_booking_fee: boolean; project: { id: string; title: string; client_id: string; status: string; work_location: string | null; budget_min: number | null } } | null;
   if (!proposal || proposal.project.client_id !== user.id) redirect('/freelance');
   const admin = createAdminClient();
   // A booking already started for this proposal: finish paying for it instead of starting another.
-  const { data: existing } = await admin.from('contracts').select('id, status, booking_status').eq('proposal_id', proposal.id).maybeSingle();
+  const { data: existing } = await admin.from('contracts').select('id, status, booking_status, booking_fee_payer').eq('proposal_id', proposal.id).maybeSingle();
   if (existing) {
-    if (existing.status === 'active' && existing.booking_status === 'awaiting_payment') await goPayBooking(existing.id as string, user.id, user.email);
+    if (existing.status === 'active' && existing.booking_status === 'awaiting_payment' && existing.booking_fee_payer === 'client') await goPayBooking(existing.id as string, user.id, user.email);
     redirect(`/freelance/contracts/${existing.id}`);
   }
   if (!['submitted', 'shortlisted'].includes(proposal.status) || proposal.project.status !== 'open') redirect(`/freelance/projects/${proposal.project.id}`);
@@ -59,9 +59,15 @@ export async function hireFreelancer(proposalId: string) {
     project_id: proposal.project.id, proposal_id: proposal.id, client_id: user.id, freelancer_id: proposal.freelancer_id,
     title: proposal.project.title, veteran_fee_rate: vetRateFor((vet?.plan as string) ?? 'free'),
     on_site: onSite, booking_status: fee ? 'awaiting_payment' : 'not_required', booking_fee_cents: fee || null,
+    booking_fee_payer: fee && proposal.covers_booking_fee ? 'freelancer' : 'client',
   }).select('id, title, client_id, freelancer_id, project_id, proposal_id, service_id').single();
   if (error || !contract) redirect(`/freelance/projects/${proposal.project.id}?error=save`);
   await admin.from('milestones').insert({ contract_id: contract.id, title: 'Full project', amount_cents: price });
+  // The freelancer offered to cover the booking fee: they pay it to confirm, and the client waits (pays nothing).
+  if (fee && proposal.covers_booking_fee) {
+    await askFreelancerToPayBooking({ id: contract.id as string, title: contract.title as string, freelancer_id: contract.freelancer_id as string, booking_fee_cents: fee });
+    redirect(`/freelance/contracts/${contract.id}?requested=1`);
+  }
   if (fee) await goPayBooking(contract.id as string, user.id, user.email);
   await markHired(contract as Parameters<typeof markHired>[0]);
   redirect(`/freelance/contracts/${contract.id}?hired=1`);
@@ -87,6 +93,14 @@ export async function markContractComplete(contractId: string) {
 export async function payBooking(contractId: string) {
   const { user } = await requireRole(HIRER_ROLES, `/freelance/contracts/${contractId}`);
   await goPayBooking(contractId, user.id, user.email);
+}
+
+/** The freelancer covers the booking fee on this job: they pay it to confirm the booking. */
+export async function payBookingAsFreelancer(contractId: string) {
+  const { user } = await requireRole(['veteran'], `/freelance/contracts/${contractId}`);
+  let url: string | null = null;
+  try { url = await bookingCheckoutUrl(contractId, user.id, user.email); } catch (err) { console.error('booking checkout failed:', err); }
+  redirect(url ?? `/freelance/contracts/${contractId}?error=booking`);
 }
 
 /** Client withdraws a request they haven't paid the booking fee for. Nothing was charged. */

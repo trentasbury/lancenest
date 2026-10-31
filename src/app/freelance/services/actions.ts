@@ -10,7 +10,7 @@ import { vetRateFor } from '@/lib/payments';
 import { scamSignals } from '@/lib/scam';
 import { getMyCompany } from '@/lib/employer';
 import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
-import { bookingCheckoutUrl, bookingFeeCents, bookingRequired, markHired } from '@/lib/booking';
+import { askFreelancerToPayBooking, bookingCheckoutUrl, bookingFeeCents, bookingRequired, markHired } from '@/lib/booking';
 
 const t = (fd: FormData, k: string, max: number) => String(fd.get(k) ?? '').trim().slice(0, max);
 const dollars = (v: string) => Math.round(Number(v.replace(/[$,\s]/g, '')) * 100);
@@ -32,7 +32,7 @@ export async function saveService(formData: FormData) {
   if (packages === null) redirect('/freelance/services/mine?error=package');
   if (scamSignals(packages.map((p) => `${p.name}\n${p.includes}`).join('\n'), 'block').length) redirect('/freelance/services/mine?error=scam');
   const { error } = await (await createClient()).from('service_listings').insert({
-    packages, public_listing: formData.get('public_listing') === 'on',
+    packages, public_listing: formData.get('public_listing') === 'on', covers_booking_fee: formData.get('covers_booking_fee') === 'on',
     profile_id: user.id, title, description, category: allowed ? category : 'Other', price_cents: price,
     price_type: ['fixed', 'hourly', 'starting_at'].includes(priceType) ? priceType : 'fixed', delivery: ['remote', 'on_site', 'both'].includes(delivery) ? delivery : 'remote',
     service_area: t(formData, 'service_area', 120) || null,
@@ -70,6 +70,15 @@ export async function setServicePublic(id: string, on: boolean) {
   revalidatePath('/hire', 'layout');
 }
 
+/** The member pays the booking fee for this service themselves, so clients see "No booking fee". */
+export async function setServiceCoversFee(id: string, on: boolean) {
+  const { user } = await requireVerifiedMember('/freelance/services/mine');
+  await (await createClient()).from('service_listings').update({ covers_booking_fee: on, updated_at: new Date().toISOString() }).eq('id', id).eq('profile_id', user.id);
+  revalidatePath('/freelance/services/mine');
+  revalidateTag('public-services', 'max');
+  revalidatePath('/hire', 'layout');
+}
+
 export async function setServiceStatus(id: string, status: 'active' | 'paused') {
   const { user } = await requireVerifiedMember('/freelance/services/mine');
   await (await createClient()).from('service_listings').update({ status, updated_at: new Date().toISOString() }).eq('id', id).eq('profile_id', user.id);
@@ -95,7 +104,7 @@ export async function requestService(serviceId: string, formData: FormData) {
     const company = await getMyCompany(user.id);
     if (!company?.is_verified) redirect('/employer/dashboard?verify=required');
   }
-  const { data: s } = await (await createClient()).from('service_listings').select('id, profile_id, title, price_cents, status, delivery, packages').eq('id', serviceId).eq('status', 'active').maybeSingle();
+  const { data: s } = await (await createClient()).from('service_listings').select('id, profile_id, title, price_cents, status, delivery, packages, covers_booking_fee').eq('id', serviceId).eq('status', 'active').maybeSingle();
   if (!s || s.profile_id === user.id) redirect('/freelance/services');
   const amount = dollars(t(formData, 'amount', 12));
   const note = t(formData, 'note', 2000);
@@ -118,9 +127,15 @@ export async function requestService(serviceId: string, formData: FormData) {
     client_id: user.id, freelancer_id: s.profile_id, service_id: s.id, title: s.title as string, request_note: note,
     veteran_fee_rate: vetRateFor((vet?.plan as string) ?? 'free'),
     on_site: onSite, booking_status: fee ? 'awaiting_payment' : 'not_required', booking_fee_cents: fee || null,
+    booking_fee_payer: fee && s.covers_booking_fee ? 'freelancer' : 'client',
   }).select('id, title, client_id, freelancer_id, project_id, proposal_id, service_id').single();
   if (error || !contract) redirect(`/freelance/services/${serviceId}?error=${error?.code === 'P0017' ? 'contact' : error?.code === 'P0022' ? 'explicit' : 'save'}`);
   await admin.from('milestones').insert({ contract_id: contract.id, title: s.title as string, amount_cents: amount });
+  // The member covers the booking fee on this service: they pay it to confirm, and the client pays none.
+  if (fee && s.covers_booking_fee) {
+    await askFreelancerToPayBooking({ id: contract.id as string, title: contract.title as string, freelancer_id: contract.freelancer_id as string, booking_fee_cents: fee });
+    redirect(`/freelance/contracts/${contract.id}?requested=1`);
+  }
   if (fee) {
     let url: string | null = null;
     try { url = await bookingCheckoutUrl(contract.id as string, user.id, user.email); } catch (err) { console.error('booking checkout failed:', err); }

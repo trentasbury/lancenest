@@ -69,7 +69,9 @@ export default async function ServicePage(
               <div><label className="field-label" htmlFor="amount">Agreed amount ($)</label><input key={chosen?.name ?? 'base'} id="amount" name="amount" required inputMode="decimal" defaultValue={((chosen?.price_cents ?? s.price_cents) / 100).toString()} className="field" /></div>
               <div><label className="field-label" htmlFor="note">What you need</label><textarea key={chosen?.name ?? 'base-note'} id="note" name="note" required rows={4} maxLength={2000} defaultValue={chosen ? `Package: ${chosen.name}. ` : undefined} placeholder={s.delivery === 'remote' ? 'Describe the work and your timeline' : 'Describe the work, the location, and when works for you'} className="field" /></div>
               <SubmitButton className="btn btn-primary w-full" pendingText="Sending…">Hire through LanceNest</SubmitButton>
-              <p className="text-xs text-muted">{bookingRequired(s.delivery !== 'remote')
+              <p className="text-xs text-muted">{bookingRequired(s.delivery !== 'remote') && (s as { covers_booking_fee?: boolean }).covers_booking_fee
+                ? 'No booking fee: this member covers it. They confirm the booking by paying it, and contact details open once they do. You pay only what you agree with them.'
+                : bookingRequired(s.delivery !== 'remote')
                 ? `You’ll pay LanceNest a booking fee next, based on the amount (${usd(bookingFeeCents(s.price_cents))} at this price: 5% of the amount, from $4.99 to $249). It’s refunded if the member declines within 48 hours. Contact details can be shared once you’re booked.`
                 : 'You’ll fund the payment next. LanceNest holds it until you approve the work — or it releases 14 days after the work is submitted. Client fee: 5% card or 3% bank, plus $9.99.'}</p>
             </form>

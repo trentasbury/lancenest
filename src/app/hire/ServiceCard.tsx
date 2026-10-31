@@ -16,6 +16,7 @@ export default function ServiceCard({ s }: { s: PublicService }) {
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
         <span className="pill">{DELIVERY_LABEL[s.delivery] ?? 'Remote'}</span>
         {s.packages.length > 0 && <span className="pill">{s.packages.length} package{s.packages.length === 1 ? '' : 's'}</span>}
+        {s.noBookingFee && <span className="pill border-olive/40 text-olive">No booking fee</span>}
         <span className="ml-auto font-semibold text-navy">{s.packages.length ? 'From ' : ''}${(from(s) / 100).toLocaleString()}{s.packages.length ? '' : PRICE_LABEL[s.price_type]}</span>
       </div>
     </Link>

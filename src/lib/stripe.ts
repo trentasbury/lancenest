@@ -98,9 +98,32 @@ export const BOOST_DAYS = 30;
 
 export const CONTACT_PACK_SIZE = 10;
 
-/** Founding Employers: first 50 Professional subscribers pay $149/mo (or $1,490/yr) for their first 12 months. */
+/**
+ * Founding Employers (first 50 companies, once each): Starter $69/mo or $690/yr, Professional $149/mo or $1,490/yr,
+ * for the first 12 months; Federal $7,500 for the first year (annual). Then the standard price.
+ */
 export const FOUNDING = { spots: 50, months: 12, monthlyOffCents: 10000, annualOffCents: 100000 };
 export const FOUNDING_FEDERAL = { monthlyOffCents: 0, annualOffCents: 249000 };   // $9,990 - $2,490 = $7,500 first year, paid up front
+export const FOUNDING_STARTER = { monthlyOffCents: 3000, annualOffCents: 30000 }; // $99 -> $69/mo; $990 -> $690/yr
+
+/** Founding Members (first 100 verified members): 6 months of Pro free, then $99 for their first year of Pro (annual). */
+export const FOUNDING_MEMBER = { spots: 100, freeDays: 180, annualOffCents: 10000 };     // $199 -> $99 first year
+
+export async function foundingStarterCoupon(interval: 'month' | 'year') {
+  const id = interval === 'year' ? 'lancenest-founding-starter-annual' : 'lancenest-founding-starter-monthly';
+  try { return (await stripe().coupons.retrieve(id)).id; } catch {
+    return (await stripe().coupons.create(interval === 'year'
+      ? { id, name: 'Founding Employer — Starter first year', amount_off: FOUNDING_STARTER.annualOffCents, currency: 'usd', duration: 'once' }
+      : { id, name: 'Founding Employer — Starter first 12 months', amount_off: FOUNDING_STARTER.monthlyOffCents, currency: 'usd', duration: 'repeating', duration_in_months: FOUNDING.months })).id;
+  }
+}
+
+export async function foundingMemberCoupon() {
+  const id = 'lancenest-founding-member-pro-year';
+  try { return (await stripe().coupons.retrieve(id)).id; } catch {
+    return (await stripe().coupons.create({ id, name: 'Founding Member — Pro first year $99', amount_off: FOUNDING_MEMBER.annualOffCents, currency: 'usd', duration: 'once' })).id;
+  }
+}
 
 /** Stripe coupons for the founding discount, created once and reused. */
 export async function foundingFederalCoupon(interval: 'month' | 'year') {

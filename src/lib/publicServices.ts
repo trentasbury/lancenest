@@ -14,7 +14,7 @@ import { stateOf } from '@/lib/place';
 export type PublicService = {
   id: string; title: string; category: string; description: string; price_cents: number; price_type: string; delivery: string;
   service_area: string | null; packages: { name: string; price_cents: number; days: number; includes: string }[];
-  provider: string; memberType: 'service_member' | 'spouse'; city: string | null; state: string | null; updated_at: string;
+  provider: string; memberType: 'service_member' | 'spouse'; city: string | null; state: string | null; updated_at: string; noBookingFee: boolean;
 };
 
 export const categorySlug = (c: string) => c.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -29,10 +29,10 @@ const shortName = (full: string | null) => {
 export const allPublicServices = unstable_cache(async (): Promise<PublicService[]> => {
   const admin = createAdminClient();
   const { data, error } = await admin.from('service_listings')
-    .select('id, title, category, description, price_cents, price_type, delivery, service_area, packages, updated_at, profile_id, provider:profiles!service_listings_profile_id_fkey(full_name, banned, suspended_until)')
+    .select('id, title, category, description, price_cents, price_type, delivery, service_area, packages, updated_at, profile_id, covers_booking_fee, provider:profiles!service_listings_profile_id_fkey(full_name, banned, suspended_until)')
     .eq('status', 'active').eq('public_listing', true).order('updated_at', { ascending: false }).limit(2000);
   if (error) { console.error('allPublicServices failed:', error.message); return []; }
-  const rows = (data ?? []) as unknown as (Omit<PublicService, 'provider' | 'memberType' | 'city' | 'state'> & { profile_id: string; provider: { full_name: string | null; banned: boolean; suspended_until: string | null } | null })[];
+  const rows = (data ?? []) as unknown as (Omit<PublicService, 'provider' | 'memberType' | 'city' | 'state' | 'noBookingFee'> & { profile_id: string; covers_booking_fee: boolean | null; provider: { full_name: string | null; banned: boolean; suspended_until: string | null } | null })[];
   const ids = [...new Set(rows.map((r) => r.profile_id))];
   const { data: vets } = ids.length ? await admin.from('veteran_profiles').select('profile_id, verification_status, member_type, city, state').in('profile_id', ids) : { data: [] };
   const vetOf = new Map((vets ?? []).map((v) => [v.profile_id as string, v]));
@@ -46,10 +46,10 @@ export const allPublicServices = unstable_cache(async (): Promise<PublicService[
       id: r.id, title: r.title, category: r.category, description: r.description, price_cents: r.price_cents, price_type: r.price_type, delivery: r.delivery,
       service_area: r.service_area, packages: Array.isArray(r.packages) ? r.packages : [], updated_at: r.updated_at,
       provider: shortName(r.provider.full_name), memberType: (v.member_type as 'service_member' | 'spouse') ?? 'service_member',
-      city: (v.city as string | null) ?? null, state: st ? st[0] : null,
+      city: (v.city as string | null) ?? null, state: st ? st[0] : null, noBookingFee: Boolean(r.covers_booking_fee),
     }];
   });
-}, ['public-services-v1'], { revalidate: 600, tags: ['public-services'] });
+}, ['public-services-v2'], { revalidate: 600, tags: ['public-services'] });
 
 export async function getPublicService(id: string) {
   if (!/^[0-9a-f-]{36}$/.test(id)) return null;

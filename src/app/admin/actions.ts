@@ -117,6 +117,8 @@ export async function decideVerification(requestId: string, decision: 'verified'
 
   // Leaving the service within a year? Free Pro for the transition (does nothing otherwise).
   if (decision === 'verified') { const { grantTransitionPro } = await import('@/lib/transitionPro'); await grantTransitionPro(request.profile_id); }
+  // One of the first 100 verified members? Founding Member: 6 months of Pro free, then $99 for the first year.
+  if (decision === 'verified') { const { grantFoundingMember } = await import('@/lib/foundingMembers'); await grantFoundingMember(request.profile_id); }
 
   revalidatePath('/admin/verifications');
   revalidatePath('/admin');
