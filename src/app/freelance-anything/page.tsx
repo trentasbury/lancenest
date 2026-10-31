@@ -32,7 +32,7 @@ export default function FreelanceAnythingPage() {
   const bestFee = Math.round(FREELANCE_FEES.veteranRate.federal_pro * 100);
   const steps: [string, string][] = [
     ['Get verified', 'A person checks your service once. It’s why clients come here to hire, and why you don’t compete with the whole internet.'],
-    ['Offer a service or answer a project', 'List what you do with packages and prices, on-site or remote. Free members send 5 proposals a month; paid plans send as many as they like.'],
+    ['Answer projects, or offer a service', 'Anyone can post a job here; only verified members can answer. Send proposals (5 a month free, unlimited on paid plans), or list a service clients can book.'],
     ['Get booked', FREELANCE_PAYMENTS_ENABLED
       ? `The client funds the work before you start. You keep ${100 - freeFee}% on the Free plan, up to ${100 - bestFee}% on paid plans.`
       : 'The client pays LanceNest a small booking fee when they hire you, and contact details open up. You keep 100% of what the client pays you.'],
@@ -52,7 +52,8 @@ export default function FreelanceAnythingPage() {
             {EXAMPLES.map((e) => <li key={e} className="rounded-full border border-brass/50 px-3 py-1 text-sm text-cream/90">{e}</li>)}
           </ul>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/freelance/services/mine" className="btn btn-brass">Offer a service</Link>
+            <Link href="/freelance" className="btn btn-brass">Find freelance work</Link>
+            <Link href="/freelance/services/mine" className="btn border border-cream/30 text-ivory hover:bg-white/10">Offer a service</Link>
             <Link href="/signup?role=veteran" className="btn border border-cream/30 text-ivory hover:bg-white/10">Join free and get verified</Link>
           </div>
         </div>
@@ -100,7 +101,7 @@ export default function FreelanceAnythingPage() {
           </div>
           <div className="card p-6">
             <p className="eyebrow">Who can hire you</p>
-            <p className="mt-2 text-sm text-ink/85">Anyone. Homeowners, small businesses and companies hire with a free client account. They see your service and your verified badge, then book you on LanceNest.</p>
+            <p className="mt-2 text-sm text-ink/85">Anyone. Homeowners, small businesses and companies post jobs free (no account needed to start) or book your service. Only verified members can answer.</p>
           </div>
         </section>
 
@@ -108,8 +109,8 @@ export default function FreelanceAnythingPage() {
           <h2 className="font-serif text-3xl font-medium">Built by veterans, for veterans.</h2>
           <p className="mx-auto mt-2 max-w-xl text-cream/80">Whatever you learned in uniform or after it, there’s someone who needs it done.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Link href="/freelance/services/mine" className="btn btn-brass">Offer a service</Link>
-            <Link href="/hire" className="btn border border-cream/30 text-ivory hover:bg-white/10">Hiring? Browse services</Link>
+            <Link href="/freelance" className="btn btn-brass">Find freelance work</Link>
+            <Link href="/hire/post" className="btn border border-cream/30 text-ivory hover:bg-white/10">Hiring? Post a project</Link>
           </div>
         </section>
       </div>

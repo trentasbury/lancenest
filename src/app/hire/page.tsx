@@ -25,8 +25,8 @@ export default async function HirePage() {
           <h1 className="mt-3 max-w-3xl font-serif text-5xl font-medium leading-tight text-ivory">Verified veterans and military spouses, ready for your project.</h1>
           <p className="mt-4 max-w-2xl text-cream/80">From cybersecurity and web design to HVAC and moving help. Every provider’s military service is checked by a person, licensed trades need a verified license, and the pros you hire never pay lead fees.</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/signup?role=client" className="btn btn-brass">Create a free client account</Link>
-            <Link href="/freelance/projects/new" className="btn border border-cream/30 text-ivory hover:bg-white/10">Post a project</Link>
+            <Link href="/hire/post" className="btn btn-brass">Post a project free</Link>
+            <Link href="/signup?role=client" className="btn border border-cream/30 text-ivory hover:bg-white/10">Create a free client account</Link>
           </div>
         </div>
       </section>

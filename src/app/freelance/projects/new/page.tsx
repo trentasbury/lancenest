@@ -12,7 +12,7 @@ import { CONTACT_BLOCKED, EXPLICIT_BLOCKED } from '@/lib/contact';
 import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
 
 export const metadata: Metadata = { title: 'Post a project' };
-const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, explicit: EXPLICIT_BLOCKED, classification: 'You checked a box that suggests employee-style control. Confirm the acknowledgment, or consider posting this as a job instead.', required: 'Add a title and a description of at least 20 characters.', budget: 'The maximum budget can’t be lower than the minimum.', scam: 'This description contains wording often used in scams (fees, gift cards, off-platform chat apps). Please revise it.', save: 'That didn’t post — please try again.', limit: 'You can have 3 open projects at a time. Close one to post another.', pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' };
+const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, explicit: EXPLICIT_BLOCKED, classification: 'You checked a box that suggests employee-style control. Confirm the acknowledgment, or consider posting this as a job instead.', required: 'Add a title and a description of at least 20 characters.', budget: 'The maximum budget can’t be lower than the minimum.', scam: 'This description contains wording often used in scams (fees, gift cards, off-platform chat apps). Please revise it.', save: 'That didn’t post — please try again.', limit: 'You can have 3 open projects at a time. Close one to post another.', pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.', expired: 'That saved project was more than 14 days old, so it wasn’t posted. Please post it again here.' };
 
 export default async function NewProjectPage(props: { searchParams: Promise<{ error?: string }> }) {
   const searchParams = await props.searchParams;
@@ -26,7 +26,7 @@ export default async function NewProjectPage(props: { searchParams: Promise<{ er
     <div className="container-page max-w-3xl space-y-6 py-10">
       <Link href="/freelance" className="text-sm text-muted hover:text-navy">← Freelance</Link>
       <h1 className="font-serif text-4xl font-medium">Post a freelance project</h1>
-      <p className="text-muted">Only verified service members can send proposals. You’ll fund each milestone before work starts, and the money is released when you approve it.</p>
+      <p className="text-muted">Only verified service members, veterans and military spouses can send proposals. {FREELANCE_PAYMENTS_ENABLED ? 'You’ll fund each milestone before work starts, and the money is released when you approve it.' : 'Posting is free; you pay a small booking fee only when you hire.'}</p>
       {searchParams.error && <FormMessage error={ERR[searchParams.error] ?? ERR.save} />}
       <form action={createProject} className="card grid gap-5 p-7 sm:grid-cols-2">
         <div className="sm:col-span-2"><label className="field-label" htmlFor="title">Project title</label><input id="title" name="title" required maxLength={140} placeholder="e.g. enterprise software ITSM configuration for a federal program" className="field" /></div>

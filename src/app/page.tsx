@@ -220,7 +220,7 @@ export default async function HomePage() {
           </div>
           <div className="flex shrink-0 flex-wrap gap-3">
             <Link href="/freelance-anything" className="btn btn-brass">See what you can offer</Link>
-            <Link href="/hire" className="btn border border-cream/30 text-ivory hover:bg-white/10">Hire a veteran</Link>
+            <Link href="/hire/post" className="btn border border-cream/30 text-ivory hover:bg-white/10">Hire a veteran: post a project</Link>
           </div>
         </div>
       </section>

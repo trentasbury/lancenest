@@ -13,7 +13,7 @@ import FormMessage from '@/components/FormMessage';
 import VerifiedMark from '@/components/VerifiedMark';
 import Avatar from '@/components/network/Avatar';
 import { startConversation } from '@/app/messages/actions';
-import { setProjectStatus, setProposalStatus, submitProposal, withdrawProposal } from '../../actions';
+import { adminCloseProject, setProjectStatus, setProposalStatus, submitProposal, withdrawProposal } from '../../actions';
 import { hireFreelancer } from '../../contracts/actions';
 import { CONTACT_BLOCKED, EXPLICIT_BLOCKED } from '@/lib/contact';
 import { bookingFeeCents, bookingRequired, isOnSite, usd } from '@/lib/booking';
@@ -25,7 +25,7 @@ type Proposal = { id: string; freelancer_id: string; cover_letter: string; bid_a
   freelancer: { full_name: string; username: string | null; headline: string | null; verified: boolean; service_summary: string | null } | null };
 
 export default async function ProjectPage(
-  props: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; sent?: string }> }
+  props: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; sent?: string; posted?: string }> }
 ) {
   const searchParams = await props.searchParams;
   const params = await props.params;
@@ -81,6 +81,13 @@ export default async function ProjectPage(
           {!company && isVet && <p className="mt-3 rounded-lg border border-brass/50 bg-brass/10 px-3 py-2 text-xs text-ink/85">Posted by a private client, not a verified company. Keep messages and payment on LanceNest, and never pay anything to apply.</p>}
           {project.clearance_required !== 'none' && <p className="mt-2 inline-block rounded-full border border-brass/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-brass-dark">{CLEARANCE_LABEL[project.clearance_required as string]} clearance required</p>}
         </div>
+        {isOwner && searchParams.posted && <p className="rounded-lg border border-olive/40 bg-olive/10 px-3 py-2 text-sm text-olive">Your project is live. Verified veterans and military spouses can now send proposals, and you’ll get an email when they do.</p>}
+        {profile.role === 'admin' && project.status === 'open' && (
+          <form action={adminCloseProject.bind(null, project.id)} className="rounded-lg border border-signal/30 bg-signal/5 px-3 py-2 text-sm">
+            <span className="text-ink/80">Admin: if this project breaks the rules, close it to new proposals. </span>
+            <SubmitButton className="text-signal underline" pendingText="Closing…">Close project</SubmitButton>
+          </form>
+        )}
         <section className="card p-7"><h2 className="eyebrow">Scope of work</h2><p className="mt-3 whitespace-pre-line leading-relaxed">{project.description}</p></section>
 
         {isOwner && (

@@ -3,7 +3,7 @@
 import { getMyCompany } from '@/lib/employer';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { HIRER_ROLES, requireRole } from '@/lib/auth';
+import { HIRER_ROLES, requireAdmin, requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { OPEN_CATEGORIES, CATEGORIES } from '@/lib/freelance';
 import { scamSignals } from '@/lib/scam';
@@ -84,6 +84,17 @@ export async function createProject(formData: FormData) {
   if (error || !data) { console.error('createProject:', error?.message); redirect(`/freelance/projects/new?error=${error?.code === 'P0009' ? 'pii' : error?.code === 'P0017' ? 'contact' : error?.code === 'P0022' ? 'explicit' : error?.code === 'P0023' ? 'limit' : 'save'}`); }
   revalidatePath('/freelance');
   redirect(`/freelance/projects/${data.id}`);
+}
+
+/** Admins close a project that breaks the rules (it stops taking proposals; nothing is deleted). Logged. */
+export async function adminCloseProject(projectId: string) {
+  const { user } = await requireAdmin();
+  const { createAdminClient } = await import('@/lib/supabase/admin');
+  const admin = createAdminClient();
+  await admin.from('freelance_projects').update({ status: 'closed' }).eq('id', projectId);
+  await admin.from('admin_actions').insert({ admin_id: user.id, action: 'project_closed', target_type: 'freelance_project', target_id: projectId, details: {} });
+  revalidatePath(`/freelance/projects/${projectId}`);
+  revalidatePath('/freelance');
 }
 
 export async function setProjectStatus(projectId: string, status: 'open' | 'closed') {

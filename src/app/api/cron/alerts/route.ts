@@ -130,6 +130,9 @@ export async function GET(request: NextRequest) {
     if (orphans.length) await admin.storage.from('verification-docs').remove(orphans);
   }
 
+  // ---------- Projects posted before sign-up that were never confirmed: deleted after 14 days ----------
+  await admin.from('project_drafts').delete().is('published_at', null).lt('created_at', new Date(now - 14 * 24 * H).toISOString());
+
   // ---------- Referral credit for referred members who have since completed their profiles ----------
   const { data: pendingRefs } = await admin.from('profiles').select('id').not('referred_by', 'is', null).in('role', ['veteran', 'admin']).gte('created_at', new Date(now - 180 * 24 * H).toISOString()).limit(500);
   if (pendingRefs?.length) {

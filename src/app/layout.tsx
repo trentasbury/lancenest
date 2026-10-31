@@ -32,7 +32,7 @@ import PwaRegister from '@/components/PwaRegister';
 const ORG_JSONLD = {
   '@context': 'https://schema.org',
   '@graph': [
-    { '@type': 'Organization', '@id': `${CANONICAL_ORIGIN}/#org`, name: 'LanceNest', url: CANONICAL_ORIGIN, logo: `${CANONICAL_ORIGIN}/icon.svg`,
+    { '@type': 'Organization', '@id': `${CANONICAL_ORIGIN}/#org`, name: 'LanceNest', url: CANONICAL_ORIGIN, logo: `${CANONICAL_ORIGIN}/brand/lancenest-logo-512.png`,
       description: 'Verified career network and hiring platform for U.S. service members, veterans, and employers hiring military talent for federal-ready professional work.', email: 'support@lancenest.com' },
     { '@type': 'WebSite', '@id': `${CANONICAL_ORIGIN}/#website`, name: 'LanceNest', url: CANONICAL_ORIGIN, publisher: { '@id': `${CANONICAL_ORIGIN}/#org` } },
   ],

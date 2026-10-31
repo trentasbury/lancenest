@@ -32,6 +32,7 @@ export default function Footer() {
             <li><Link href="/employers" className="hover:text-brass">Plans</Link></li>
             <li><Link href="/signup?role=employer" className="hover:text-brass">Create a company account</Link></li>
             <li><Link href="/hire" className="hover:text-brass">Hire a veteran freelancer</Link></li>
+            <li><Link href="/hire/post" className="hover:text-brass">Post a freelance project</Link></li>
             <li><Link href="/about" className="hover:text-brass">About LanceNest</Link></li>
             <li><Link href="/help" className="hover:text-brass">Help & feedback</Link></li>
           </ul>

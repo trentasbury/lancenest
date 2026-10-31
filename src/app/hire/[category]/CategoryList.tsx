@@ -22,7 +22,7 @@ export default function CategoryList({ category, services, state }: { category: 
         <div className="card mt-8 p-8 text-center">
           <p className="font-semibold text-ink">No public {category.toLowerCase()} listings{stateName ? ` in ${stateName}` : ''} yet.</p>
           <p className="mt-2 text-sm text-muted">Post your project and verified pros will send proposals.</p>
-          <Link href="/freelance/projects/new" className="btn btn-primary mt-5">Post a project</Link>
+          <Link href="/hire/post" className="btn btn-primary mt-5">Post a project</Link>
         </div>
       ) : (
         <div className="mt-8 grid gap-4 sm:grid-cols-2">{shown.map((s) => <ServiceCard key={s.id} s={s} />)}</div>
