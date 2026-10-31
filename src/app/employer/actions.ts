@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { slugify } from '@/lib/format';
 import { SITE, notifyMember } from '@/lib/email';
-import { MIN_DOMAIN_AGE_DAYS, baseDomain, domainAgeDays, websiteMentions } from '@/lib/companyChecks';
+import { MIN_DOMAIN_AGE_DAYS, baseDomain, domainAgeDays, emailCanProveCompany, websiteMentions } from '@/lib/companyChecks';
 import type { FormState } from '@/app/auth/actions';
 
 export async function createCompany(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -65,12 +65,16 @@ export async function submitCompanyVerification(formData: FormData) {
   const pageSite = company.website ? {} : { website };
 
   // Automatic approval: the account email was confirmed at signup, so a match between its domain and the
-  // company website proves control of the company's email. Personal email providers never qualify.
-  const FREE_MAIL = /^(gmail|googlemail|yahoo|ymail|outlook|hotmail|live|msn|icloud|me|mac|aol|proton|protonmail|pm|gmx|mail|yandex|hey|fastmail)\./i;
+  // company website proves control of the company's email. Free mail, internet-provider mail, schools and
+  // government never qualify, and a domain another company already uses goes to a person (no look-alike second
+  // "verified" company on someone else's domain).
   const emailDomain = (user.email ?? '').split('@')[1]?.toLowerCase() ?? '';
   let site = '';
   try { site = new URL(website).hostname.replace(/^www\./, '').toLowerCase(); } catch { site = ''; }
-  const domainMatch = !!user.email_confirmed_at && !!site && !!emailDomain && !FREE_MAIL.test(emailDomain)
+  const { data: sameDomain } = site
+    ? await admin.from('companies').select('id').neq('id', company.id).or(`website.ilike.%//${site}%,website.ilike.%.${site}%`).limit(1)
+    : { data: [] };
+  const domainMatch = !!user.email_confirmed_at && !!site && emailCanProveCompany(emailDomain) && !(sameDomain ?? []).length
     && (emailDomain === site || emailDomain.endsWith(`.${site}`));
   // Scammers can register a fresh domain and throw up a site; they can't fake a domain's age.
   const [ageDays, siteOk] = domainMatch
