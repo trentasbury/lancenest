@@ -21,6 +21,13 @@ export async function fundMilestoneFromSession(sessionId: string) {
   if (s.metadata?.kind !== 'milestone' || s.payment_status !== 'paid') return { ok: false as const };
   const pi = s.payment_intent && typeof s.payment_intent !== 'string' ? s.payment_intent : null;
   const admin = createAdminClient();
+  // Only fund what was actually paid for: a checkout opened before the milestone amount changed can't fund the new amount.
+  const { data: due } = await admin.from('milestones').select('amount_cents, title').eq('id', s.metadata.milestone_id).maybeSingle();
+  if (!due || (s.amount_total ?? 0) < (due.amount_cents as number)) {
+    const { data: admins } = await admin.from('profiles').select('id').eq('role', 'admin');
+    if (due && admins?.length) await admin.from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'dispute', title: `A payment for “${due.title as string}” didn’t cover the milestone amount. Review it before refunding or funding.`, link: `/freelance/contracts/${s.metadata!.contract_id}` })));
+    return { ok: false as const };
+  }
   const { data: updated } = await admin.from('milestones').update({
     status: 'funded', funded_at: new Date().toISOString(), stripe_payment_intent_id: pi?.id ?? null,
     stripe_charge_id: pi && typeof pi.latest_charge === 'string' ? pi.latest_charge : (pi?.latest_charge as { id?: string } | null)?.id ?? null,

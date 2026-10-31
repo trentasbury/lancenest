@@ -18,13 +18,13 @@ export const metadata: Metadata = { alternates: { canonical: '/employers' },
 
 const PLANS = [
   { name: 'Free', price: '$0', note: 'To get started', cta: 'Create a free account',
-    features: ['No placement fees on job-post hires', 'Company recruiting page', '2 open job posts', 'Applicant pipeline with résumés and verified work', 'Message applicants to your jobs'] },
+    features: ['No placement fees on job-post hires', 'Company recruiting page', '3 open job posts', 'Applicant pipeline with résumés and verified work', 'Message applicants to your jobs'] },
   { name: 'Starter', price: '$99', note: 'per month · or $990/year paid up front (2 months free)', cta: 'Start with Starter',
-    features: ['5 open job posts (extra slots $39/mo)', 'Company recruiting page', 'Applicant pipeline with résumés and verified work', 'Message applicants to your jobs', 'Import and daily sync from Greenhouse, Lever or Ashby', '1 team seat', 'Talent search is on Professional'] },
+    features: ['10 open job posts (extra slots $39/mo)', 'Company recruiting page', 'Applicant pipeline with résumés and verified work', 'Message applicants to your jobs', 'Import and daily sync from Greenhouse, Lever or Ashby', '2 team seats', 'Talent search is on Professional'] },
   { name: 'Professional', price: '$249', note: 'per month · or $2,490/year paid up front (2 months free)', cta: 'Start with Professional', featured: true,
-    features: ['10 open job posts (extra slots $39/mo)', 'Search every verified member’s full profile', 'Transitioning talent search (separating in 12 months)', 'Hiring analytics: views, applicants, conversion', '5 featured jobs a month, included', 'Talent pools: save candidates to lists with private notes', 'Saved searches with daily new-match emails', '2 team seats', 'Branded company page: cover photo and “Why veterans work here”', 'Applicant export (CSV)'] },
+    features: ['25 open job posts (extra slots $39/mo)', 'Search every verified member’s full profile', 'Transitioning talent search (separating in 12 months)', 'Hiring analytics: views, applicants, conversion', '5 featured jobs a month, included', 'Talent pools: save candidates to lists with private notes', 'Saved searches with daily new-match emails', '3 team seats', '100 new conversations a month with any verified member (10 more for $59)', 'Branded company page: cover photo and “Why veterans work here”', 'Applicant export (CSV)'] },
   { name: 'Federal', price: '$999', note: 'per month · or $9,990/year paid up front (2 months free) · Founding Employers: $7,500 for the first year, paid up front', cta: 'Start with Federal',
-    features: ['Everything in Professional', 'Built for primes, subs, and GovCon small businesses', 'Search by self-reported clearance level (you confirm eligibility in official systems)', 'Cleared talent spotlight', 'One-click yearly veteran outreach report for VEVRAA records', '5 team seats', 'Unlimited featured jobs', 'Priority support from the founder'] },
+    features: ['Everything in Professional', 'Built for primes, subs, and GovCon small businesses', 'Search by self-reported clearance level (you confirm eligibility in official systems)', 'Cleared talent spotlight', 'One-click yearly veteran outreach report for VEVRAA records', '5 team seats', 'Unlimited featured jobs', 'Virtual career fair booths included', 'Priority support from the founder'] },
   { name: 'Enterprise', price: 'Custom', note: 'from $15,000/year', cta: 'Talk to us',
     features: ['Everything in Federal', 'Volume pricing for multiple hiring teams', 'Invoice billing', 'Dedicated support'] },
 ];
@@ -49,7 +49,7 @@ export default async function EmployersPage() {
           <p className="mx-auto mt-6 inline-block rounded-full border border-brass bg-brass/15 px-5 py-2 text-sm font-semibold text-brass">No placement fees on hires you make through job posts — ever.</p>
           {spotsLeft > 0 && (
             <div className="mx-auto mt-5 max-w-2xl rounded-2xl border border-brass/60 bg-navy/60 p-4 text-sm text-cream">
-              <strong className="text-brass">Founding Employer offer · {spotsLeft} of 50 spots left.</strong> Professional for <strong>$1,490 your first year</strong> (save $1,000), or Federal for <strong>$7,500 your first year</strong> (regularly $11,988). Paid up front. Your launch price covers your first year; after that the plan renews at its regular price unless you cancel.
+              <strong className="text-brass">Founding Employer offer · {spotsLeft} of 50 spots left.</strong> Professional for <strong>$1,490 your first year</strong> (save $1,000), or Federal for <strong>$7,500 your first year</strong> (regularly $11,988). Paid up front. Your launch price covers your first year; after that the plan renews at its regular price, locked for as long as you stay subscribed.
             </div>
           )}
           <div className="mt-6 flex flex-wrap justify-center gap-3">
@@ -109,8 +109,8 @@ export default async function EmployersPage() {
               <thead className="border-b border-line bg-paper text-xs uppercase tracking-[0.12em] text-muted"><tr><th className="p-3">Compare plans</th><th className="p-3">Free</th><th className="p-3">Starter</th><th className="p-3">Professional</th><th className="p-3">Federal</th><th className="p-3">Enterprise</th></tr></thead>
               <tbody className="divide-y divide-line">
                 <tr><td className="p-3 font-medium">Verified company page</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
-                <tr><td className="p-3 font-medium">Team seats</td><td className="p-3">1</td><td className="p-3">1</td><td className="p-3">2</td><td className="p-3">5</td><td className="p-3">Custom</td></tr>
-                <tr><td className="p-3 font-medium">Open jobs</td><td className="p-3">2</td><td className="p-3">5</td><td className="p-3">10</td><td className="p-3">Unlimited</td><td className="p-3">Unlimited</td></tr>
+                <tr><td className="p-3 font-medium">Team seats</td><td className="p-3">1</td><td className="p-3">2</td><td className="p-3">3</td><td className="p-3">5</td><td className="p-3">Custom</td></tr>
+                <tr><td className="p-3 font-medium">Open jobs</td><td className="p-3">3</td><td className="p-3">10</td><td className="p-3">25</td><td className="p-3">Unlimited</td><td className="p-3">Unlimited</td></tr>
                 <tr><td className="p-3 font-medium">Screening questions and applicant pipeline</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
                 <tr><td className="p-3 font-medium">Message applicants</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
                 <tr><td className="p-3 font-medium">Search all verified members</td><td className="p-3">—</td><td className="p-3">—</td><td className="p-3">✓</td><td className="p-3">✓ + clearance filters</td><td className="p-3">✓</td></tr>
@@ -124,7 +124,7 @@ export default async function EmployersPage() {
             </table>
           </div>
         <p className="mt-8 text-center text-sm text-muted">
-          Every employer account starts free, and no plan charges a fee when you hire through a job post. Paid plans renew automatically until you cancel; upgrade, downgrade, or cancel anytime in Billing. Add-ons: featured job boost $49 · extra job slot $39/month. <strong>DoD SkillBridge programs</strong> are free to post on every plan and don’t count toward your job limit. <strong>Public Safety rate:</strong> government police, sheriff, corrections, fire, and EMS agencies get 30% off Professional and Federal — annual invoicing available. <strong>Virtual career fair booths:</strong> $499, or $399 on Professional and Federal. <strong>Training providers:</strong> list programs for $149/month (featured +$99/month; sponsored info sessions $500).
+          Every employer account starts free, and no plan charges a fee when you hire through a job post. Paid plans renew automatically until you cancel, and your price is locked: it won’t go up while you stay subscribed. Upgrade, downgrade, or cancel anytime; when you switch, unused time on the old plan is credited. Add-ons: featured job boost $49 · extra job slot $39/month. <strong>DoD SkillBridge programs</strong> are free to post on every plan and don’t count toward your job limit. <strong>Public Safety rate:</strong> government police, sheriff, corrections, fire, and EMS agencies get 30% off Professional and Federal — annual invoicing available. <strong>Virtual career fair booths:</strong> $499, $399 on Professional, included on Federal. <strong>Training providers:</strong> list programs for $149/month (featured +$99/month; sponsored info sessions $500).
         </p>
       </div>
       <CostComparison />

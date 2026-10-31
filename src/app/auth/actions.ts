@@ -180,6 +180,8 @@ export async function updatePassword(_prev: FormState, formData: FormData): Prom
 
   const { error } = await supabase.auth.updateUser({ password });
   if (error) return { error: 'We couldn’t update your password. Try requesting a new reset link.' };
+  // A new password signs out every other device, so anyone who had the old one (or a stolen session) is locked out.
+  await supabase.auth.signOut({ scope: 'others' }).catch(() => undefined);
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
   await setMenuHint(profile?.role as string | undefined);

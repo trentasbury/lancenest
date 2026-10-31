@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: 'Career fair' };
 type Booth = { id: string; pitch: string | null; video_url: string | null; company: { id: string; name: string; slug: string; logo_url: string | null; owner_id: string } | null };
 
 export default async function FairPage(
-  props: { params: Promise<{ slug: string }>; searchParams: Promise<{ saved?: string }> }
+  props: { params: Promise<{ slug: string }>; searchParams: Promise<{ saved?: string; booth?: string }> }
 ) {
   const searchParams = await props.searchParams;
   const params = await props.params;
@@ -32,7 +32,8 @@ export default async function FairPage(
   const company = profile.role === 'employer' ? await getMyCompany(user.id) : null;
   const myBooth = company ? booths.find((b) => b.company?.id === company.id) : undefined;
   const { data: regs } = myBooth ? await supabase.from('fair_registrations').select('profile:profiles(id, full_name, username, headline, verified)').eq('fair_id', f.id) : { data: [] };
-  const price = company && PAID.includes(company.plan) ? 399 : 499;
+  const included = !!company && ['federal', 'enterprise'].includes(company.plan);
+  const price = included ? 0 : company && PAID.includes(company.plan) ? 399 : 499;
   return (
     <div className="container-page grid max-w-6xl gap-8 py-10 lg:grid-cols-[1fr_340px]">
       <div className="min-w-0 space-y-5">
@@ -68,12 +69,13 @@ export default async function FairPage(
         )}
         {company && !myBooth && !ended && Date.parse(f.starts_at as string) > now && (
           <form action="/api/billing/checkout" method="post" className="card space-y-3 p-6">
-            <p className="eyebrow">Book a booth · ${price}</p>
-            <p className="text-xs text-muted">Featured booth, your open jobs, a live video link, and the full attendee list. {price === 399 ? 'Plan member price.' : 'Professional and Federal plans pay $399.'}</p>
+            <p className="eyebrow">Book a booth · {included ? 'Included with your plan' : `$${price}`}</p>
+            {searchParams.booth === 'error' && <p className="text-sm text-signal">That booth couldn’t be booked. Check that the pitch follows the Code of Conduct, then try again.</p>}
+            <p className="text-xs text-muted">Featured booth, your open jobs, a live video link, and the full attendee list. {included ? 'Booths are included on Federal and Enterprise.' : price === 399 ? 'Professional price. Booths are included on Federal.' : 'Professional pays $399; booths are included on Federal.'}</p>
             <input type="hidden" name="product" value="fair_booth" /><input type="hidden" name="fair_id" value={f.id as string} />
             <textarea name="pitch" rows={3} maxLength={450} placeholder="Who you’re hiring (e.g. 20 cleared field technicians, Virginia)" className="field text-sm" />
             <input name="video_url" placeholder="https:// Zoom, Teams, or Meet link (optional)" className="field text-sm" />
-            <button className="btn btn-primary w-full" disabled={!company.is_verified}>Book and pay ${price}</button>
+            <button className="btn btn-primary w-full" disabled={!company.is_verified}>{included ? 'Book my booth' : `Book and pay $${price}`}</button>
           </form>
         )}
         {myBooth && (

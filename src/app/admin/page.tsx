@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: 'Admin', robots: { index: false } };
 
 type Recent = { id: string; full_name: string; role: string; created_at: string };
 
-const DELETE_MSG: Record<string, string> = { ok: 'Member deleted.', notfound: 'No account with that email.', confirm: 'Type DELETE to confirm.', self: 'You can’t delete your own admin account here.' };
+const DELETE_MSG: Record<string, string> = { ok: 'Member deleted.', notfound: 'No account with that email.', confirm: 'Type DELETE to confirm.', self: 'You can’t delete your own admin account here.', contracts_open: 'This member has open freelance contracts. Resolve them first.', contracts_history: 'This member has freelance contracts on file, which are kept for the other person. Suspend the account instead, or remove their profile details by hand.' };
 
 export default async function AdminPage(props: { searchParams: Promise<{ deleted?: string }> }) {
   const searchParams = await props.searchParams;

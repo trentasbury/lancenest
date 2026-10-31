@@ -26,6 +26,9 @@ export async function makeEmployerIfNew(userId: string, createdAt: string | null
   if ((requests ?? 0) > 0 || (applications ?? 0) > 0) return false;
   const { error } = await admin.from('profiles').update({ role: as }).eq('id', userId);
   if (error) return false;
+  // Anything added in those first minutes as a member (service record, jobs, schools, skills) goes too, so a hiring
+  // account never shows a military career.
+  await Promise.all(['military_service', 'experience', 'education', 'certifications', 'profile_skills'].map((t) => admin.from(t).delete().eq('profile_id', userId)));
   await admin.from('veteran_profiles').delete().eq('profile_id', userId);
   return true;
 }

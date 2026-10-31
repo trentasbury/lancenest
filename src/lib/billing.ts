@@ -29,7 +29,7 @@ export async function recomputeCompany(companyId: string) {
 
   // After any downgrade, apply the new plan's limits. Jobs over the limit are paused (newest stay open; nothing is
   // deleted). Teammates over the seat limit lose access (earliest added stay); the owner can add them back after upgrading.
-  const jobCap = plan === 'free' ? 2 : plan === 'starter' ? 5 : plan === 'professional' ? 10 : null;
+  const jobCap = plan === 'free' ? 3 : plan === 'starter' ? 10 : plan === 'professional' ? 25 : null;
   if (jobCap !== null) {
     const { data: open } = await admin.from('jobs').select('id').eq('company_id', companyId).eq('status', 'open').neq('employment_type', 'skillbridge').order('posted_at', { ascending: false });
     const extra = (open ?? []).slice(jobCap + slots).map((j) => j.id as string);
@@ -65,8 +65,38 @@ export async function syncSubscription(sub: Stripe.Subscription) {
     },
     { onConflict: 'stripe_subscription_id' },
   );
+  if (kind === 'plan' && ACTIVE.has(sub.status)) await endReplacedPlans(sub, companyId ?? null, profileId ?? null);
   if (companyId) await recomputeCompany(companyId);
   else if (profileId) await recomputeVeteran(profileId);
+}
+
+const EMPLOYER_PLANS = ['starter', 'professional', 'federal', 'enterprise'];
+const MEMBER_PLANS = ['veteran_pro', 'veteran_pro_plus', 'veteran_federal_pro'];
+
+/**
+ * Switching plans (Starter → Professional, monthly → annual, Pro → Career Accelerator) starts a new subscription.
+ * The older plan stops right away and its unused time is credited to the account, so nobody pays for two plans.
+ * Add-ons (training listings, extra job slots) are separate and never touched.
+ */
+async function endReplacedPlans(sub: Stripe.Subscription, companyId: string | null, profileId: string | null) {
+  const plan = sub.metadata?.plan ?? '';
+  const group = EMPLOYER_PLANS.includes(plan) ? EMPLOYER_PLANS : MEMBER_PLANS.includes(plan) ? MEMBER_PLANS : null;
+  if (!group) return;
+  const admin = createAdminClient();
+  let q = admin.from('subscriptions').select('stripe_subscription_id').eq('kind', 'plan').in('plan', group).in('status', [...ACTIVE]).neq('stripe_subscription_id', sub.id);
+  q = companyId ? q.eq('company_id', companyId) : q.eq('profile_id', profileId!);
+  const { data: others } = await q;
+  for (const o of others ?? []) {
+    try {
+      const old = await stripe().subscriptions.retrieve(o.stripe_subscription_id as string);
+      // The newest plan wins; an older event arriving late never cancels the plan that replaced it.
+      if (old.created >= sub.created || !ACTIVE.has(old.status)) continue;
+      await stripe().subscriptions.cancel(old.id, { prorate: true, invoice_now: true }, { idempotencyKey: `replaced-${old.id}` });
+      await admin.from('subscriptions').update({ status: 'canceled' }).eq('stripe_subscription_id', old.id);
+    } catch (err) {
+      console.error('could not end the replaced plan:', err);
+    }
+  }
 }
 
 const VET_RANK: Record<string, [number, string]> = { veteran_federal_pro: [3, 'federal_pro'], veteran_pro_plus: [2, 'pro_plus'], veteran_pro: [1, 'pro'] };

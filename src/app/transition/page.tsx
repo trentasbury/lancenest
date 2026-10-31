@@ -102,8 +102,8 @@ export default async function TransitionPage(props: { searchParams: Promise<{ sa
           {profile.role === 'veteran' && (
             <form action={saveTransition} className="card space-y-4 p-6">
               <p className="eyebrow">Your transition</p>
-              {searchParams.saved && <FormMessage message={searchParams.pro ? 'Saved. Thank you for your service: you have 90 days of Pro, free, for your transition.' : 'Saved.'} />}
-              <p className="rounded-lg border border-brass/50 bg-brass/10 px-3 py-2 text-xs text-ink/85"><strong>Leaving within a year?</strong> Verified members separating in the next 12 months get 90 days of Pro free, once. Add your date, then confirm it below with your orders, LES or DD-214.</p>
+              {searchParams.saved && <FormMessage message={searchParams.pro ? 'Saved. Thank you for your service: you have 6 months of Pro, free, for your transition.' : 'Saved.'} />}
+              <p className="rounded-lg border border-brass/50 bg-brass/10 px-3 py-2 text-xs text-ink/85"><strong>Leaving within a year?</strong> Verified members separating in the next 12 months get 6 months of Pro free, once. Add your date, then confirm it below with your orders, LES or DD-214.</p>
               <div><label className="field-label" htmlFor="separation_date">Separation / retirement date</label><input id="separation_date" name="separation_date" type="date" defaultValue={(vet?.separation_date as string) ?? ''} className="field" /></div>
               <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="open_to_transition_hiring" defaultChecked={!!vet?.open_to_transition_hiring} className="mt-0.5 accent-navy" />Show me to verified employers hiring transitioning members</label>
               <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="skillbridge_interest" defaultChecked={!!vet?.skillbridge_interest} className="mt-0.5 accent-navy" />I’m interested in SkillBridge</label>

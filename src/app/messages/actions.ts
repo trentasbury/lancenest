@@ -71,7 +71,15 @@ export async function startConversation(otherId: string, formData?: FormData) {
         const ids = [co.owner_id, ...(team ?? []).map((t) => t.profile_id as string)];
         const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
         const { count: used } = await admin.from('conversations').select('id', { count: 'exact', head: true }).in('requested_by', ids).gte('created_at', monthStart);
-        if ((used ?? 0) >= (CAP[co.plan] ?? 100)) redirect('/messages?error=limit');
+        if ((used ?? 0) >= (CAP[co.plan] ?? 100)) {
+          // Past the monthly allowance, extra conversations the company bought are used one at a time (they don't expire).
+          const { data: credits } = await admin.from('companies').select('contact_credits').eq('id', co.id).maybeSingle();
+          const left = Number(credits?.contact_credits ?? 0);
+          const { data: spent } = left > 0
+            ? await admin.from('companies').update({ contact_credits: left - 1 }).eq('id', co.id).eq('contact_credits', left).select('id').maybeSingle()
+            : { data: null };
+          if (!spent) redirect('/messages?error=limit');
+        }
       }
     }
   }

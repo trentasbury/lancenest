@@ -17,7 +17,7 @@ export default async function BillingSuccess(props: { searchParams: Promise<{ se
   const message =
     result.ok && result.kind === 'job_boost' ? 'Your job is now featured for 30 days.'
     : result.ok && result.kind === 'job_slot' ? 'Your extra job slot is active.'
-    : result.ok && result.kind === 'contact_pack' ? '5 contact credits were added to your account.'
+    : result.ok && result.kind === 'contact_pack' ? '10 extra new conversations were added. They’re used after your monthly allowance and don’t expire.'
     : result.ok && result.kind === 'proposal_pack' ? '5 extra proposals were added to your account. They never expire.'
     : result.ok && result.kind === 'shortlist' ? 'Your Search Sprint is booked. You’ll receive up to 5 screened introductions within 15 business days.'
     : result.ok && result.kind === 'fair_booth' ? 'Your career fair booth is booked. Add your pitch and video link from the fair page.'

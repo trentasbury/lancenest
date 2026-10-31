@@ -27,7 +27,7 @@ export default async function FlyerPage() {
             <li>✓ Jobs from employers that hire veterans</li>
             <li>✓ Your MOS, rating or AFSC translated into civilian jobs</li>
             <li>✓ Free for service members, veterans and spouses</li>
-            <li>✓ 90 days of Pro free if you separate within a year</li>
+            <li>✓ 6 months of Pro free if you separate within a year</li>
           </ul>
         </div>
         <div className="flex flex-col items-center">

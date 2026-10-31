@@ -5,7 +5,7 @@ import { requireAdmin } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { rewardReferrer } from '@/lib/referrals';
-import { deleteMemberCompletely } from '@/lib/account';
+import { deleteMemberCompletely, deletionBlocker } from '@/lib/account';
 import { identityHash } from '@/lib/identity';
 import { SITE, notifyMember } from '@/lib/email';
 import { refreshPublicJobs } from '@/lib/publicRefresh';
@@ -192,10 +192,17 @@ export async function adminDeleteMember(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim().toLowerCase();
   if (String(formData.get('confirm') ?? '').trim() !== 'DELETE' || !email) redirect('/admin?deleted=confirm');
   const admin = createAdminClient();
-  const { data } = await admin.auth.admin.listUsers({ perPage: 1000 });
-  const target = data?.users.find((u) => u.email?.toLowerCase() === email);
+  // Look through every page of accounts (one page holds 1,000).
+  let target: { id: string } | undefined;
+  for (let page = 1; page <= 100 && !target; page++) {
+    const { data } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+    target = data?.users.find((u) => u.email?.toLowerCase() === email);
+    if (!data || data.users.length < 1000) break;
+  }
   if (!target) redirect('/admin?deleted=notfound');
   if (target.id === user.id) redirect('/admin?deleted=self');
+  const blocked = await deletionBlocker(target.id, false);
+  if (blocked) redirect(`/admin?deleted=${blocked}`);
   await deleteMemberCompletely(target.id);
   await admin.from('admin_actions').insert({ admin_id: user.id, action: 'member_deleted', target_type: 'profile', target_id: target.id, details: {} });
   revalidatePath('/admin');

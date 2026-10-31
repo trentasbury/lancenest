@@ -133,6 +133,12 @@ export async function POST(request: NextRequest) {
     if (owned) return NextResponse.redirect(`${site}/fairs/${fair.slug}`, 303);
     const video = String(form.get('video_url') ?? '').trim().slice(0, 300);
     Object.assign(metadata, { fair_id: fairId, fair_slug: fair.slug as string, pitch: String(form.get('pitch') ?? '').trim().slice(0, 450), video_url: /^https:\/\//i.test(video) ? video : '' });
+    // Federal and Enterprise include fair booths: book it now, no checkout.
+    const { data: planNow } = await createAdminClient().from('companies').select('plan').eq('id', company.id).maybeSingle();
+    if (['federal', 'enterprise'].includes(planNow?.plan as string)) {
+      const { error } = await createAdminClient().from('fair_booths').insert({ fair_id: fairId, company_id: company.id, pitch: metadata.pitch || null, video_url: metadata.video_url || null });
+      return NextResponse.redirect(`${site}/fairs/${fair.slug}${error ? '?booth=error' : '?saved=1'}`, 303);
+    }
   }
   if (item.kind === 'training_webinar') {
     const title = String(form.get('event_title') ?? '').trim().slice(0, 140);
@@ -151,7 +157,9 @@ export async function POST(request: NextRequest) {
   if ((item.plan === 'professional' || item.plan === 'federal') && company.public_safety_status === 'approved') {
     coupon = await publicSafetyCoupon();
     metadata.public_safety = 'true';
-  } else if ((item.plan === 'professional' || (item.plan === 'federal' && item.interval === 'year')) && item.interval && (await foundingSpotsLeft()) > 0) {
+  } else if ((item.plan === 'professional' || (item.plan === 'federal' && item.interval === 'year')) && item.interval && (await foundingSpotsLeft()) > 0
+    // The Founding rate is once per company: cancelling and re-subscribing doesn't start another discounted year.
+    && !(await createAdminClient().from('subscriptions').select('id', { count: 'exact', head: true }).eq('company_id', company.id).eq('founding', true)).count) {
     coupon = item.plan === 'federal' ? await foundingFederalCoupon(item.interval) : await foundingCoupon(item.interval);
     metadata.founding = 'true';
   }

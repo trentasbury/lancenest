@@ -125,7 +125,7 @@ export default async function VeteranDashboard(props: { searchParams: Promise<{ 
             <Link href="/transition" className="card card-hover group p-5">
               <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Transitioning?</p>
               <p className="mt-2 font-serif text-2xl text-navy">Transition Hub & SkillBridge →</p>
-              <p className="mt-1 text-xs text-muted">Separating within a year? 90 days of Pro, free</p>
+              <p className="mt-1 text-xs text-muted">Separating within a year? 6 months of Pro, free</p>
             </Link>
           )}
           {!spouse && vet?.verification_status === 'verified' && (

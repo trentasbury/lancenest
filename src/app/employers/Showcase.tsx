@@ -6,12 +6,13 @@ import { ExampleMemberCard } from '@/components/ExampleCards';
  */
 const AS_OF = 'October 2026';
 const ROWS: { option: string; price: string; buys: string; source?: string }[] = [
-  { option: 'LanceNest Starter', price: '$99/month', buys: '5 open jobs, 1 seat, every applicant verified' },
-  { option: 'LanceNest Professional', price: '$249/month', buys: '10 open jobs, 2 seats, search every verified member' },
-  { option: 'LinkedIn Recruiter Lite', price: 'About $170/month', buys: '1 seat, searching all of LinkedIn', source: 'https://salesbread.com/how-much-does-linkedin-premium-cost/' },
-  { option: 'Indeed sponsored job', price: 'Per click; often $15–$50 per application', buys: 'Paid placement for one job', source: 'https://www.hiretruffle.com/blog/indeed-pricing' },
-  { option: 'Indeed résumé search', price: 'About $120–$300/month', buys: '30–100 candidate contacts a month', source: 'https://www.hiretruffle.com/blog/indeed-pricing' },
-  { option: 'RecruitMilitary career fair', price: '$1,495 per event', buys: 'One booth at one event', source: 'https://recruitmilitary.com/employers/career-fairs/' },
+  { option: 'LanceNest Starter', price: '$99/month', buys: '10 open jobs, 2 seats, every applicant verified' },
+  { option: 'LanceNest Professional', price: '$249/month', buys: '25 open jobs, 3 seats, search every verified member, 100 new conversations a month' },
+  { option: 'LinkedIn Recruiter Lite', price: 'About $170/month', buys: '1 seat and 30 InMails a month, searching all of LinkedIn', source: 'https://www.dover.com/blog/linkedin-recruiter-lite-vs-professional' },
+  { option: 'Indeed résumé search (Smart Sourcing)', price: '$520/month, or $416/month yearly', buys: '100 candidate contacts a month, then $5.20 each', source: 'https://100hires.com/indeed-job-posting-cost.html' },
+  { option: 'RecruitMilitary job post', price: '$399 per job', buys: 'One job for 30 days', source: 'https://shop.recruitmilitary.com/products/job-posting-credits' },
+  { option: 'RecruitMilitary career fair', price: '$1,495 per event', buys: 'One booth and two representatives at one event', source: 'https://shop.recruitmilitary.com/collections/upcoming-job-fairs/products/job-fair-at-fort-benning-november-4-2026' },
+  { option: 'ClearanceJobs', price: 'Quote only; about $26,420 a year on average', buys: 'Average yearly spend per recruiting customer in 2025', source: 'https://www.businesswire.com/news/home/20260204054729/en/DHI-Group-Reports-Fourth-Quarter-and-Full-Year-Financial-Results' },
 ];
 
 export function CostComparison() {
@@ -19,7 +20,7 @@ export function CostComparison() {
     <section className="bg-ivory">
       <div className="container-page py-14">
         <p className="eyebrow">What it costs elsewhere</p>
-        <h2 className="mt-2 max-w-3xl font-serif text-3xl font-medium text-navy">A month of Professional costs about what 5 to 17 sponsored Indeed applicants do.</h2>
+        <h2 className="mt-2 max-w-3xl font-serif text-3xl font-medium text-navy">Professional costs less than half of Indeed’s résumé search, with three seats instead of one.</h2>
         <div className="mt-6 overflow-x-auto rounded-2xl border border-line" tabIndex={0} role="region" aria-label="Cost comparison">
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead className="border-b border-line bg-paper text-xs uppercase tracking-[0.12em] text-muted"><tr><th className="p-3">Option</th><th className="p-3">Price</th><th className="p-3">What it buys</th></tr></thead>

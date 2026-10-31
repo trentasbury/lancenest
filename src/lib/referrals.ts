@@ -4,7 +4,7 @@ import { stripe } from '@/lib/stripe';
 import { notifyMember } from '@/lib/email';
 
 // A free month of the referrer's CURRENT plan. Free plans earn nothing.
-const MEMBER_MONTH: Record<string, number> = { pro: 2500, pro_plus: 4500, federal_pro: 6500 };
+const MEMBER_MONTH: Record<string, number> = { pro: 2500, pro_plus: 3500, federal_pro: 6500 };
 const COMPANY_MONTH: Record<string, number> = { professional: 24900, federal: 99900, enterprise: 125000 };
 const LABEL: Record<string, string> = { pro: 'Pro', pro_plus: 'Career Accelerator', federal_pro: 'Federal', professional: 'Professional', federal: 'Federal', enterprise: 'Enterprise' };
 export const REFERRAL_CAP_PER_YEAR = 3;
@@ -53,10 +53,18 @@ export async function rewardReferrer(referredProfileId: string, event: 'member_a
     const { data: c } = await admin.from('companies').select('plan, stripe_customer_id').eq('owner_id', ref.id).maybeSingle();
     plan = (c?.plan as string) ?? 'free'; cents = COMPANY_MONTH[plan] ?? 0; customer = (c?.stripe_customer_id as string) ?? null;
   }
+  // A company referral never earns more than the new company actually paid. Otherwise a Federal account could earn a
+  // $999 credit by referring a $99 Starter company (or a company made just for the credit).
+  let referredPaid = Infinity;
+  if (event === 'company_paid') {
+    referredPaid = await firstPaymentCents(referredProfileId);
+    if (referredPaid <= 0) return;   // not paid yet: this runs again on the next billing update
+  }
   const { count: recent } = await admin.from('referral_rewards').select('referred_id', { count: 'exact', head: true })
     .eq('referrer_id', ref.id).gt('cents', 0).gte('created_at', new Date(Date.now() - 365 * 86400000).toISOString());
   // A service member who brings a paying company earns 2 months, outside the yearly cap (every one is a new paying customer).
-  if (vetBringsCompany) return rewardVeteranForCompany(ref.id as string, referredProfileId, who(referred.full_name), plan, cents, customer);
+  if (vetBringsCompany) return rewardVeteranForCompany(ref.id as string, referredProfileId, who(referred.full_name), plan, cents, customer, referredPaid);
+  if (event === 'company_paid') cents = Math.min(cents, referredPaid);
   // Base ambassadors: every verified member they bring earns a free month (no yearly cap; Pro time if they're on Free).
   const { isActiveAmbassador, grantAmbassadorMonth } = await import('@/lib/ambassadors');
   const ambassador = event === 'member_active' && refIsMember && (await isActiveAmbassador(ref.id as string));
@@ -78,24 +86,33 @@ export async function rewardReferrer(referredProfileId: string, event: 'member_a
       title: capped ? `${whoName} joined on your referral — thank you. You’ve earned the maximum of ${REFERRAL_CAP_PER_YEAR} free months this year.` : `${whoName} joined on your referral — thank you. On a paid plan, each referral like this earns a free month of your plan.` });
     return;
   }
-  await stripe().customers.createBalanceTransaction(customer!, { amount: -cents, currency: 'usd', description: `Referral credit: one month of ${LABEL[plan]}` }, { idempotencyKey: `referral-${referredProfileId}` });
-  await notifyMember(ref.id as string, { type: 'referral', link: refIsMember ? '/dashboard' : '/employer/dashboard', title: `${whoName} joined on your referral — a free month of ${LABEL[plan]} ($${(cents / 100).toFixed(0)}) is credited to your next bill.` });
+  await stripe().customers.createBalanceTransaction(customer!, { amount: -cents, currency: 'usd', description: `Referral credit toward ${LABEL[plan]}` }, { idempotencyKey: `referral-${referredProfileId}` });
+  await notifyMember(ref.id as string, { type: 'referral', link: refIsMember ? '/dashboard' : '/employer/dashboard', title: `${whoName} joined on your referral — a $${(cents / 100).toFixed(0)} credit toward your ${LABEL[plan]} plan is on your next bill.` });
 }
 
 const who = (name: string | null | undefined) => name ?? 'Someone you invited';
+
+/** What the referred company actually paid on its first paid invoice, in cents (0 if nothing yet). */
+async function firstPaymentCents(companyOwnerId: string) {
+  const { data: c } = await createAdminClient().from('companies').select('stripe_customer_id').eq('owner_id', companyOwnerId).maybeSingle();
+  if (!c?.stripe_customer_id) return 0;
+  const invoices = await stripe().invoices.list({ customer: c.stripe_customer_id as string, status: 'paid', limit: 20 });
+  const first = invoices.data.filter((i) => i.amount_paid > 0).sort((a, b) => a.created - b.created)[0];
+  return first?.amount_paid ?? 0;
+}
 
 /**
  * A service member brought in a company that is verified and has paid:
  * Federal members get 2 months of Federal free; everyone else gets 2 months of Career Accelerator.
  */
-async function rewardVeteranForCompany(vetId: string, companyOwnerId: string, name: string, plan: string, monthCents: number, customer: string | null) {
+async function rewardVeteranForCompany(vetId: string, companyOwnerId: string, name: string, plan: string, monthCents: number, customer: string | null, companyPaid: number) {
   const admin = createAdminClient();
   const { data: co } = await admin.from('companies').select('is_verified').eq('owner_id', companyOwnerId).maybeSingle();
   if (!co?.is_verified) return;   // verified AND paid
   const MONTHS = 2;
   const federal = plan === 'federal_pro';
-  // Credit what they already pay for MONTHS months (covers Federal, Career Accelerator, or Pro bills).
-  const credit = monthCents > 0 && customer ? monthCents * MONTHS : 0;
+  // Credit what they already pay for MONTHS months (covers Federal, Career Accelerator, or Pro bills), never more than the company paid.
+  const credit = monthCents > 0 && customer ? Math.min(monthCents * MONTHS, companyPaid) : 0;
   // Non-Federal members also get Career Accelerator access for MONTHS months (Free and Pro are upgraded; Career Accelerator is simply credited).
   const grant = !federal && plan !== 'pro_plus';
   const { error } = await admin.from('referral_rewards').insert({ referred_id: companyOwnerId, referrer_id: vetId, cents: credit,

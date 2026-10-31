@@ -16,9 +16,9 @@ const PLANS = [
   { id: null, key: 'free', name: 'Free', price: '$0', note: 'Always, for every verified service member',
     features: ['Verified profile with military & professional career', 'Apply to every job with up to 3 résumés', 'Network, messaging, and People search',
       'Transition Hub & SkillBridge', 'See how many people viewed your profile', '5 freelance proposals a month, plus 5 more for $5 anytime', ...(AI_ENABLED ? ['3 AI résumé and job-fit drafts a month'] : []), 'Freelance fee: 10% (you keep 90%)'] },
-  { id: 'veteran_pro' as const, key: 'pro', name: 'Pro', price: '$25', note: 'per month · or $229/year paid up front (save 24%)', month: 'veteran_pro_month', year: 'veteran_pro_year',
+  { id: 'veteran_pro' as const, key: 'pro', name: 'Pro', price: '$25', note: 'per month · or $199/year paid up front (save 34%)', month: 'veteran_pro_month', year: 'veteran_pro_year',
     features: ['Everything in Free', 'See exactly who viewed your profile', 'Applicant insights: how you compare on every job', 'Daily job alerts by email (3)', 'Unlimited freelance proposals', 'Pro badge on your profile', ...(AI_ENABLED ? ['40 AI résumé and job-fit drafts a month'] : []), 'Freelance fee: 7%'] },
-  { id: 'veteran_pro_plus' as const, key: 'pro_plus', name: 'Career Accelerator', price: '$45', note: 'per month · or $399/year paid up front (save 26%)', month: 'veteran_pro_plus_month', year: 'veteran_pro_plus_year', featured: true,
+  { id: 'veteran_pro_plus' as const, key: 'pro_plus', name: 'Career Accelerator', price: '$35', note: 'per month · or $299/year paid up front (save 29%)', month: 'veteran_pro_plus_month', year: 'veteran_pro_plus_year', featured: true,
     features: ['Everything in Pro', 'Military résumé builder: a civilian-ready résumé draft in one click — then edit and tailor it', 'Applicant insights and 10 job alerts, including cleared-only', '48-hour early access to jobs that list a clearance requirement (your clearance is self-reported)', 'Priority applicant: listed first on jobs and freelance proposals, labeled for employers', 'Featured profile boost twice a month — clearly labeled for employers', 'Priority messages in employer inboxes', ...(AI_ENABLED ? ['60 AI résumé and job-fit drafts a month'] : []), 'Freelance: unlimited proposals · 5% fee'] },
 ];
 
@@ -42,7 +42,7 @@ export default async function PlansPage(props: { searchParams: Promise<{ code?: 
           <p className="mx-auto mt-5 max-w-2xl text-cream/80">
             Your profile, verification, and every job on LanceNest cost nothing. Upgrade anytime; cancel anytime from your billing page.
           </p>
-          <p className="mx-auto mt-4 inline-block rounded-full border border-brass/60 px-4 py-1.5 text-sm text-brass-light">Separating within a year? Verified members get 90 days of Pro free. <a href="/transition#confirm-date" className="underline">Confirm your date</a></p>
+          <p className="mx-auto mt-4 inline-block rounded-full border border-brass/60 px-4 py-1.5 text-sm text-brass-light">Separating within a year? Verified members get 6 months of Pro free. <a href="/transition#confirm-date" className="underline">Confirm your date</a></p>
         </div>
       </section>
 
@@ -83,7 +83,7 @@ export default async function PlansPage(props: { searchParams: Promise<{ code?: 
           })}
         </div>
         {isVeteran && <div className="mx-auto mt-8 max-w-3xl"><PartnerCodeForm back="/plans" result={codeResult} prefill={partnerCookie} /></div>}
-        <p className="mt-8 text-center text-sm text-muted">Cancel anytime from Manage billing. Paying yearly saves $71 on Pro ($229 vs. $300) and $141 on Career Accelerator ($399 vs. $540). Freelancing? At about $850 a month in LanceNest project earnings, Pro pays for itself through its 3-point lower fee. Clearances on LanceNest are self-reported; employers confirm eligibility through official channels.</p>
+        <p className="mt-8 text-center text-sm text-muted">Cancel anytime from Manage billing. Paying yearly saves $101 on Pro ($199 vs. $300) and $121 on Career Accelerator ($299 vs. $420). Your price never goes up while you stay subscribed. Freelancing? At about $850 a month in LanceNest project earnings, Pro pays for itself through its 3-point lower fee. Clearances on LanceNest are self-reported; employers confirm eligibility through official channels.</p>
       </div>
     </>
   );

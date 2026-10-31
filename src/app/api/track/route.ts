@@ -28,6 +28,9 @@ export async function POST(request: NextRequest) {
 
     const { data: { user } } = await (await createClient()).auth.getUser();
     const admin = createAdminClient();
+    // One anonymous visitor can't fill the database: past 400 views in a day, extra hits aren't stored.
+    const { count: today } = await admin.from('page_views').select('id', { count: 'exact', head: true }).eq('visitor', visitor).gte('created_at', `${day}T00:00:00Z`);
+    if ((today ?? 0) >= 400) return new NextResponse(null, { status: 204 });
     await admin.from('page_views').insert({ path: path.split('?')[0].slice(0, 300), visitor, profile_id: user?.id ?? null, referrer_host: ev ? null : referrerHost, event: ev });
     if (ev) return new NextResponse(null, { status: 204 });
     if (user) {

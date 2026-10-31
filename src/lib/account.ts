@@ -4,6 +4,24 @@ import { stripe } from '@/lib/stripe';
 
 const BUCKETS = ['verification-docs', 'post-media', 'avatars', 'resumes', 'company-logos'];
 
+export type DeletionBlock = 'suspended' | 'contracts_open' | 'contracts_history';
+
+/**
+ * Why an account can't be deleted right now (null when it can). Freelance contracts are kept for the other person's
+ * protection (payments, reviews, disputes), and a suspended member can't delete and re-register to wipe a suspension.
+ */
+export async function deletionBlocker(userId: string, bySelf: boolean): Promise<DeletionBlock | null> {
+  const admin = createAdminClient();
+  if (bySelf) {
+    const { data: p } = await admin.from('profiles').select('banned, suspended_until').eq('id', userId).maybeSingle();
+    if (p?.banned || (p?.suspended_until && Date.parse(p.suspended_until as string) > Date.now())) return 'suspended';
+  }
+  const { data: k } = await admin.from('contracts').select('status').or(`client_id.eq.${userId},freelancer_id.eq.${userId}`).limit(500);
+  if ((k ?? []).some((x) => x.status === 'active' || x.status === 'disputed')) return 'contracts_open';
+  if ((k ?? []).length) return 'contracts_history';
+  return null;
+}
+
 /**
  * Permanently deletes a member: cancels any paid subscriptions, deletes their uploaded files,
  * removes companies they own, then deletes the account (every related row cascades).
@@ -11,6 +29,9 @@ const BUCKETS = ['verification-docs', 'post-media', 'avatars', 'resumes', 'compa
  */
 export async function deleteMemberCompletely(userId: string) {
   const admin = createAdminClient();
+  // Check before touching anything, so a blocked deletion never leaves a half-deleted account (billing stopped, files gone).
+  const blocked = await deletionBlocker(userId, false);
+  if (blocked) throw new Error(blocked);
 
   const { data: companies } = await admin.from('companies').select('id').eq('owner_id', userId);
   const companyIds = (companies ?? []).map((c) => c.id as string);

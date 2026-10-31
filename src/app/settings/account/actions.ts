@@ -5,7 +5,7 @@ import { stripImageMetadata } from '@/lib/imageMeta';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getSessionProfile } from '@/lib/auth';
-import { deleteMemberCompletely } from '@/lib/account';
+import { deleteMemberCompletely, deletionBlocker } from '@/lib/account';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
@@ -19,6 +19,8 @@ export async function deleteMyAccount(formData: FormData) {
   if (String(formData.get('confirm') ?? '').trim() !== 'DELETE' || formData.get('understand') !== 'on') {
     redirect('/settings/account?error=confirm');
   }
+  const blocked = await deletionBlocker(session.user.id, true);
+  if (blocked) redirect(`/settings/account?error=${blocked}`);
   try {
     await deleteMemberCompletely(session.user.id);
   } catch (err) {

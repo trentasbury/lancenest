@@ -17,6 +17,9 @@ const ERRORS: Record<string, string> = {
   confirm: 'Type DELETE and check the box to confirm.',
   failed: 'Your account couldn’t be deleted. Please try again, or tell us through the Help page (lancenest.com/help) and we’ll do it for you.',
   admin: 'Admin accounts can’t be deleted from here. Remove the admin role first.',
+  suspended: 'Accounts can’t be deleted while they’re suspended. If you think the suspension is a mistake, tell us through the Help page (lancenest.com/help).',
+  contracts_open: 'Finish, cancel or resolve your open freelance contracts first. The other person is counting on that record for payments and reviews.',
+  contracts_history: 'You’ve worked freelance contracts here, and we keep those records for the other person’s protection. Tell us through the Help page (lancenest.com/help) and we’ll close your account and remove everything else.',
 };
 
 export default async function AccountPage(

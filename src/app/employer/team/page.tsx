@@ -40,7 +40,7 @@ export default async function TeamPage(props: { searchParams: Promise<{ error?: 
           <div className="flex-1"><label className="field-label" htmlFor="email">Add a recruiter by their LanceNest email</label><input id="email" name="email" type="email" required className="field" /></div>
           <SubmitButton className="btn btn-primary shrink-0" pendingText="Adding…">Add to team</SubmitButton>
         </form>
-      ) : <p className="card p-5 text-sm">All seats are in use. <Link href="/employers" className="text-navy underline">Professional includes 2 seats; Federal includes 5.</Link></p>)}
+      ) : <p className="card p-5 text-sm">All seats are in use. <Link href="/employers" className="text-navy underline">Starter includes 2 seats, Professional 3, Federal 5.</Link></p>)}
     </div>
   );
 }
