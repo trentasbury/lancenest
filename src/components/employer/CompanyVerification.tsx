@@ -7,7 +7,7 @@ export default function CompanyVerification({ status, note, flash }: { status: s
     return (
       <section className="card border-brass p-6">
         <p className="eyebrow">Company verification · in review</p>
-        <p className="mt-2 text-sm text-muted">We’re reviewing your company, usually within one business day. You can write draft jobs now — they publish as soon as you’re approved.</p>
+        <p className="mt-2 text-sm text-muted">We’re reviewing your company, usually within one business day. You can write draft jobs now — they publish as soon as you’re approved. Member profiles, the network and messaging open then too.</p>
       </section>
     );
   }
@@ -15,10 +15,11 @@ export default function CompanyVerification({ status, note, flash }: { status: s
     <section className="card border-brass p-6">
       <p className="eyebrow">Verify your company</p>
       <p className="mt-2 text-sm text-muted">
-        Every kind of company is welcome — you don’t need to be veteran-owned. To protect veterans from fake recruiters, we just confirm your company is real before it can publish jobs, search candidates, message veterans, or buy a plan.
+        Every kind of company is welcome — you don’t need to be veteran-owned. To protect veterans from fake recruiters, we just confirm your company is real before it can see member profiles and the network, publish jobs, search candidates, message veterans, or buy a plan.
         {status === 'rejected' && note && <span className="mt-2 block text-signal">Last review: {note}</span>}
       </p>
-      {flash === 'invalid' && <p className="mt-2 text-sm text-signal">Add your company website (starting with https://), your role, and confirm the statement.</p>}
+      {flash === 'required' && <p className="mt-2 text-sm font-medium text-signal">Verify your company first. Member profiles, the network, jobs and messaging open once LanceNest confirms your company is real.</p>}
+      {flash === 'invalid' &&<p className="mt-2 text-sm text-signal">Add your company website (starting with https://), your role, and confirm the statement.</p>}
       <form action={submitCompanyVerification} className="mt-5 grid gap-4 sm:grid-cols-2">
         <div><label className="field-label" htmlFor="website">Company website</label><input id="website" name="website" type="url" required placeholder="https://yourcompany.com" className="field" /></div>
         <div><label className="field-label" htmlFor="role">Your title</label><input id="role" name="role" required placeholder="e.g. Talent Acquisition Manager" className="field" /></div>

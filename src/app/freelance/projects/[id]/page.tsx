@@ -48,8 +48,13 @@ export default async function ProjectPage(
     await createAdminClient().from('proposals').update({ viewed_at: new Date().toISOString() }).eq('project_id', project.id).is('viewed_at', null);
   }
   const fIds = rawProposals.map((p) => p.freelancer_id);
+  // Plans of the members who proposed on the owner's own project (priority ordering only). Read with the server
+  // key because clients can't read member profiles; only the plan of these proposers is fetched.
   const [{ data: fPlans }, { data: track }] = isOwner && fIds.length
-    ? await Promise.all([supabase.from('veteran_profiles').select('profile_id, plan').in('profile_id', fIds), supabase.rpc('verified_work_summary', { ids: fIds })])
+    ? await Promise.all([
+        (await import('@/lib/supabase/admin')).createAdminClient().from('veteran_profiles').select('profile_id, plan').in('profile_id', fIds),
+        supabase.rpc('verified_work_summary', { ids: fIds }),
+      ])
     : [{ data: [] }, { data: [] }];
   const planOf = new Map((fPlans ?? []).map((r) => [r.profile_id as string, r.plan as string]));
   const trackOf = new Map(((track ?? []) as { profile_id: string; completed: number; avg_rating: number | null }[]).map((t) => [t.profile_id, t]));

@@ -28,7 +28,7 @@ export const REACTIONS = [
 ] as const;
 
 export const VISIBILITY = [
-  ['network', 'Network', 'All LanceNest members'],
+  ['network', 'Network', 'Verified members and verified employers'],
   ['connections', 'Connections', 'People you follow who follow you back'],
   ['public', 'Public', 'Anyone, including people without an account'],
   ['private', 'Private', 'Only you'],

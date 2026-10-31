@@ -112,7 +112,7 @@ export default async function VeteranDashboard(props: { searchParams: Promise<{ 
           </Link>
           {profile.username && (
             <Link href={`/veterans/${profile.username}`} className="card card-hover group p-5">
-              <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Public profile</p>
+              <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Profile page</p>
               <p className="mt-2 font-serif text-2xl text-navy">See what employers see →</p>
             </Link>
           )}

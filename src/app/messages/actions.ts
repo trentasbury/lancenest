@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { getSessionProfile } from '@/lib/auth';
+import { canStartConversations, getSessionProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -14,6 +14,10 @@ export async function startConversation(otherId: string, formData?: FormData) {
   if (!session) redirect('/login?next=/messages');
   const me = session.user.id;
   if (me === otherId) redirect('/messages');
+  // Unverified, suspended and removed accounts can't open conversations (their messages would be refused anyway).
+  if (!(await canStartConversations(session))) {
+    redirect(session.profile?.role === 'employer' ? '/employer/dashboard?verify=required' : session.profile?.role === 'veteran' ? '/dashboard/verification?required=1' : '/messages?error=unavailable');
+  }
 
   const admin = createAdminClient();
   const [{ data: other }, { data: blocked }] = await Promise.all([

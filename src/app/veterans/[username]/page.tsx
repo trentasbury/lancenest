@@ -40,7 +40,8 @@ type Education = { id: string; school: string; degree: string | null; field: str
 // Shared by the page title and the page itself: one lookup per request.
 const load = cache(async (username: string) => {
   const supabase = await createClient();
-  // Row-level security decides visibility: the owner, employers, admins, or anyone if the profile is public.
+  // Row-level security decides visibility: the owner, verified members, verified employers (all of a member's
+  // profile when they chose "Visible to verified employers", or applicants and contacts), and admins.
   const { data: profile } = await supabase
     .from('profiles')
     .select('id, full_name, username, headline, location, avatar_url')
@@ -75,10 +76,11 @@ export default async function VeteranProfilePage(
 ) {
   const searchParams = await props.searchParams;
   const params = await props.params;
-  const data = await load(params.username);
+  const [data, viewer] = await Promise.all([load(params.username), getSessionProfile()]);
+  // Member profiles are for members and verified employers only. Signed-out visitors are asked to log in.
+  if (!viewer) redirect(`/login?next=${encodeURIComponent(`/veterans/${params.username}`)}`);
   if (!data) notFound();
   const { supabase, profile } = data;
-  const viewer = await getSessionProfile();
   // Access checks first (both at once): employers this member hid from, and unverified members.
   const [{ data: hiding }, { data: me }] = await Promise.all([
     viewer?.profile?.role === 'employer' ? supabase.rpc('members_hiding_me') : Promise.resolve({ data: [] }),

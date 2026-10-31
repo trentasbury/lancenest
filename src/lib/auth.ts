@@ -79,9 +79,16 @@ export async function requireFreelanceAccess(nextPath: string) {
 /** Roles that hire freelancers (they're the client on a contract). */
 export const HIRER_ROLES: Role[] = ['employer', 'client'];
 
+/** Whether this employer account belongs to a company LanceNest has verified (owner or team seat). */
+const employerIsVerified = cache(async (profileId: string) => {
+  const { getMyCompany } = await import('@/lib/employer');
+  return Boolean((await getMyCompany(profileId))?.is_verified);
+});
+
 /**
- * Jobs, the network, messaging, and member profiles are for verified service members.
- * Employers and admins pass; unverified veteran accounts are sent to verification.
+ * Jobs, the network, groups, mentors, fairs and member profiles are for members: verified service members and
+ * spouses, verified companies, and admins. Unverified veteran accounts are sent to verification; employer
+ * accounts whose company isn't verified yet are sent to finish company verification. Client accounts never pass.
  * (The database enforces the same rule.)
  */
 export async function requireVerifiedMember(nextPath: string) {
@@ -89,5 +96,21 @@ export async function requireVerifiedMember(nextPath: string) {
   if (session.profile.role === 'veteran') {
     if ((await getVerificationStatus(session.user.id)) !== 'verified') redirect(`/dashboard/verification?required=1`);
   }
+  if (session.profile.role === 'employer') {
+    if (!(await employerIsVerified(session.user.id))) redirect('/employer/dashboard?verify=required');
+  }
   return session;
+}
+
+/**
+ * Who may start a conversation: verified members, verified companies, admins, and client accounts in good standing.
+ * (Sending a message is also checked by the database.)
+ */
+export async function canStartConversations(session: { user: { id: string }; profile: Profile | null }) {
+  const p = session.profile;
+  if (!p || p.banned || (p.suspended_until && new Date(p.suspended_until) > new Date())) return false;
+  if (p.role === 'admin' || p.role === 'client') return true;
+  if (p.role === 'veteran') return (await getVerificationStatus(session.user.id)) === 'verified';
+  if (p.role === 'employer') return employerIsVerified(session.user.id);
+  return false;
 }

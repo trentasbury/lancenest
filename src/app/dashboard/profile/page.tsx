@@ -92,7 +92,7 @@ export default async function EditProfilePage(
             <p className="mt-1 text-cream/75">This is what employers see. Your service is the headline — tell them what you did.</p>
           </div>
           {profile.username && (
-            <Link href={`/veterans/${profile.username}`} className="btn btn-brass shrink-0">View public profile →</Link>
+            <Link href={`/veterans/${profile.username}`} className="btn btn-brass shrink-0">View your profile →</Link>
           )}
         </div>
       </section>
