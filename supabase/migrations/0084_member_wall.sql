@@ -9,8 +9,7 @@
 --    clients and unverified accounts (and to companies the member hid from).
 -- 3) Jobs show to members only while their company is verified.
 -- 4) Follow lists, company followers and reviews are no longer readable by civilian accounts.
--- 5) A booth's Stripe checkout id is server-only.
--- 6) Completed-work history shows an individual client as "First L.", not their full name.
+-- 5) Completed-work history shows an individual client as "First L.", not their full name.
 -- =====================================================================
 
 -- 1) Members: verified service members and spouses, verified companies (owner or team seat), and admins.
@@ -42,8 +41,7 @@ language sql stable security definer set search_path = 'public' as $$
 $$;
 
 -- 3) Jobs: members see open jobs only from verified companies; the company's own team always sees its jobs.
-drop policy if exists jobs_read on public.jobs;
-create policy jobs_read on public.jobs for select to authenticated using (
+alter policy jobs_read on public.jobs using (
   (status = 'open'
    and private.is_verified_member()
    and exists (select 1 from public.companies c where c.id = jobs.company_id and c.is_verified)
@@ -56,29 +54,22 @@ create policy jobs_read on public.jobs for select to authenticated using (
 );
 
 -- 4) Follow graph: your own follows, or members.
-drop policy if exists follows_read on public.user_follows;
-create policy follows_read on public.user_follows for select to authenticated using (
+alter policy follows_read on public.user_follows using (
   follower_id = (select auth.uid()) or following_id = (select auth.uid()) or private.is_verified_member()
 );
 
 -- Company followers: your own follows, the company's team, or admins.
-drop policy if exists company_followers_read on public.company_followers;
-create policy company_followers_read on public.company_followers for select to authenticated using (
+alter policy company_followers_read on public.company_followers using (
   profile_id = (select auth.uid()) or private.owns_company(company_id) or private.is_admin()
 );
 
 -- Reviews: a client sees reviews of the freelancers they can see, and reviews they wrote or received.
-drop policy if exists reviews_read_clients on public.reviews;
-create policy reviews_read_clients on public.reviews for select to authenticated using (
+alter policy reviews_read_clients on public.reviews using (
   private.is_active_client()
   and (reviewer_id = (select auth.uid()) or reviewee_id = (select auth.uid()) or private.client_can_see(reviewee_id))
 );
 
--- 5) Booths: every column except the Stripe checkout id.
-revoke select on public.fair_booths from anon, authenticated;
-grant select (id, fair_id, company_id, pitch, video_url, created_at) on public.fair_booths to authenticated;
-
--- 6) Completed work on a member's profile: a company's name, or an individual client as "First L.".
+-- 5) Completed work on a member's profile: a company's name, or an individual client as "First L.".
 create or replace function public.verified_work(p uuid)
 returns table (title text, completed_at timestamptz, client_name text, rating integer, review text)
 language sql stable security definer set search_path = 'public' as $$
@@ -97,5 +88,3 @@ language sql stable security definer set search_path = 'public' as $$
    order by k.updated_at desc
    limit 20;
 $$;
-revoke execute on function public.verified_work(uuid) from public, anon;
-grant execute on function public.verified_work(uuid) to authenticated;
