@@ -210,6 +210,21 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Freelancing: any skill, on-site or remote. */}
+      <section className="bg-navy text-ivory">
+        <div className="container-page flex flex-col gap-6 py-12 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-2xl">
+            <p className="eyebrow text-brass">Freelance anything</p>
+            <h2 className="mt-2 font-serif text-3xl font-medium text-ivory">From mechanic work to web design, and everything in between.</h2>
+            <p className="mt-2 text-cream/80">Sell the skills you already have: diesel repair, HVAC, roofing, fitness coaching, photography, cyber, grant writing. Anyone can hire you, and you never pay for leads.</p>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-3">
+            <Link href="/freelance-anything" className="btn btn-brass">See what you can offer</Link>
+            <Link href="/hire" className="btn border border-cream/30 text-ivory hover:bg-white/10">Hire a veteran</Link>
+          </div>
+        </div>
+      </section>
+
       {/* A look at the product before signing up: made-up examples, clearly labeled. */}
       <section className="bg-ivory">
         <div className="container-page grid items-center gap-10 py-16 lg:grid-cols-[1fr_1.2fr]">

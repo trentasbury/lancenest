@@ -27,7 +27,7 @@ export default function LicensesPage() {
         <h2>Images</h2>
         <ul>
           <li>The homepage photograph of our founder was taken by a U.S. Marine Corps photographer in the course of official duties. As a work of the U.S. government, it is in the public domain; its use does not imply endorsement by the Department of Defense or the Marine Corps.</li>
-          <li>Other illustrations and the LanceNest crest were created for LanceNest.</li>
+          <li>Other illustrations and the LanceNest logo were created for LanceNest.</li>
         </ul>
       </section>
       <section>

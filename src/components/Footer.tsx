@@ -22,6 +22,7 @@ export default function Footer() {
             <li><Link href="/careers" className="hover:text-brass">Military careers, translated</Link></li>
             <li><Link href="/guides" className="hover:text-brass">Transition guides</Link></li>
             <li><Link href="/signup?role=veteran" className="hover:text-brass">Create a profile</Link></li>
+            <li><Link href="/freelance-anything" className="hover:text-brass">Freelance anything</Link></li>
             <li><Link href="/plans" className="hover:text-brass">Veteran plans</Link></li>
           </ul>
         </div>

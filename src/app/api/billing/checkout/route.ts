@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getSessionProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { CATALOG, foundingCoupon, foundingFederalCoupon, keepProCoupon, publicSafetyCoupon, stripe, type ProductKey } from '@/lib/stripe';
+import { CATALOG, catalogLine, createCheckout, foundingCoupon, foundingFederalCoupon, keepProCoupon, publicSafetyCoupon, stripe, type ProductKey } from '@/lib/stripe';
 import { foundingSpotsLeft } from '@/lib/billing';
 import { RENEWAL_CHECKOUT_MESSAGE } from '@/components/RenewalNote';
 
@@ -34,9 +34,9 @@ export async function POST(request: NextRequest) {
       const back = String(form.get('back') ?? '');
       const cancel = /^\/freelance(\/[\w-]+)*$/.test(back) ? back : '/freelance';
       const meta = { profile_id: session.user.id, kind: 'proposal_pack', product };
-      const checkout = await stripe().checkout.sessions.create({
+      const checkout = await createCheckout({
         mode: 'payment', customer, allow_promotion_codes: true,
-        line_items: [{ quantity: 1, price_data: { currency: 'usd', unit_amount: item.amount, product_data: { name: item.name } } }],
+        line_items: [catalogLine(product)],
         metadata: meta, payment_intent_data: { metadata: meta },
         success_url: `${site}/billing/success?session_id={CHECKOUT_SESSION_ID}`, cancel_url: `${site}${cancel}`,
       });
@@ -55,9 +55,9 @@ export async function POST(request: NextRequest) {
       ]);
       if (((grants ?? 0) + (partner ?? 0)) > 0 && !(paidBefore ?? 0) && until > Date.now() - 60 * 86400000 && until < Date.now() + 14 * 86400000) keepPro = await keepProCoupon();
     }
-    const checkout = await stripe().checkout.sessions.create({
+    const checkout = await createCheckout({
       mode: 'subscription', customer, ...(keepPro ? { discounts: [{ coupon: keepPro }] } : { allow_promotion_codes: true }),
-      line_items: [{ quantity: 1, price_data: { currency: 'usd', unit_amount: item.amount, recurring: { interval: item.interval! }, product_data: { name: item.name } } }],
+      line_items: [catalogLine(product)],
       subscription_data: { metadata: meta }, metadata: meta,
       custom_text: { submit: { message: RENEWAL_CHECKOUT_MESSAGE } },
       success_url: `${site}/billing/success?session_id={CHECKOUT_SESSION_ID}`, cancel_url: `${site}/plans`,
@@ -164,18 +164,10 @@ export async function POST(request: NextRequest) {
     metadata.founding = 'true';
   }
 
-  const checkout = await stripe().checkout.sessions.create({
+  const checkout = await createCheckout({
     mode: item.interval ? 'subscription' : 'payment',
     customer: customerId,
-    line_items: [{
-      quantity: 1,
-      price_data: {
-        currency: 'usd',
-        unit_amount: item.amount,
-        product_data: { name: item.name },
-        ...(item.interval ? { recurring: { interval: item.interval } } : {}),
-      },
-    }],
+    line_items: [catalogLine(product)],
     metadata,
     ...(item.interval ? { subscription_data: { metadata }, custom_text: { submit: { message: RENEWAL_CHECKOUT_MESSAGE } } } : {}),
     // Stripe allows either a pre-applied discount or customer-entered promo codes, not both.

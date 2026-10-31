@@ -45,6 +45,52 @@ export const CATALOG: Record<ProductKey, { name: string; amount: number; interva
   proposal_pack: { name: '5 extra freelance proposals', amount: 500, audience: 'veteran', kind: 'proposal_pack' },
 };
 
+/**
+ * The named Stripe product each item is billed under (created in the live LanceNest account on October 31, 2026), so
+ * Stripe's reports and receipts show plan names. Prices stay inline: the price a customer starts at is what renews.
+ */
+const STRIPE_PRODUCT: Record<ProductKey, string> = {
+  employer_starter_month: 'ln_employer_starter', employer_starter_year: 'ln_employer_starter',
+  employer_professional_month: 'ln_employer_professional', employer_professional_year: 'ln_employer_professional',
+  employer_federal_month: 'ln_employer_federal', employer_federal_year: 'ln_employer_federal',
+  veteran_pro_month: 'ln_member_pro', veteran_pro_year: 'ln_member_pro',
+  veteran_pro_plus_month: 'ln_member_career_accelerator', veteran_pro_plus_year: 'ln_member_career_accelerator',
+  veteran_federal_month: 'ln_member_federal', veteran_federal_year: 'ln_member_federal',
+  training_listing_month: 'ln_training_listing', training_listing_year: 'ln_training_listing',
+  training_featured: 'ln_training_featured', training_webinar: 'ln_training_webinar',
+  fair_booth: 'ln_fair_booth', fair_booth_member: 'ln_fair_booth',
+  shortlist: 'ln_search_sprint', shortlist_member: 'ln_search_sprint', shortlist_federal: 'ln_search_sprint', shortlist_federal_credit: 'ln_search_sprint',
+  job_slot: 'ln_job_slot', job_boost: 'ln_job_boost', contact_pack: 'ln_extra_conversations', proposal_pack: 'ln_proposal_pack',
+};
+
+/** One checkout line for a catalog item, billed under its named Stripe product. */
+export function catalogLine(key: ProductKey): Stripe.Checkout.SessionCreateParams.LineItem {
+  const item = CATALOG[key];
+  return { quantity: 1, price_data: { currency: 'usd', unit_amount: item.amount, product: STRIPE_PRODUCT[key], ...(item.interval ? { recurring: { interval: item.interval } } : {}) } };
+}
+
+/**
+ * Starts a Checkout Session. If the Stripe account in use doesn't have LanceNest's named products (a test or older
+ * account), it retries with the item described inline, so checkout never breaks over a missing product.
+ */
+export async function createCheckout(params: Stripe.Checkout.SessionCreateParams) {
+  try {
+    return await stripe().checkout.sessions.create(params);
+  } catch (err) {
+    const e = err as { code?: string; param?: string };
+    if (e.code !== 'resource_missing' || !String(e.param ?? '').includes('product')) throw err;
+    const names = new Map(Object.entries(STRIPE_PRODUCT).map(([k, id]) => [id, CATALOG[k as ProductKey].name]));
+    return stripe().checkout.sessions.create({
+      ...params,
+      line_items: params.line_items?.map((li) => {
+        if (!li.price_data?.product) return li;
+        const { product, ...rest } = li.price_data;
+        return { ...li, price_data: { ...rest, product_data: { name: names.get(product) ?? 'LanceNest' } } };
+      }),
+    });
+  }
+}
+
 /** Free freelancers: proposals added per pack (they never expire). */
 export const PROPOSAL_PACK_SIZE = 5;
 

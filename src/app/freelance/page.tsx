@@ -50,7 +50,7 @@ export default async function FreelancePage(
           <div>
             <p className="eyebrow text-brass">LanceNest Freelance</p>
             <h1 className="mt-2 font-serif text-4xl font-medium text-ivory sm:text-5xl">{isVet ? 'Contract work for verified service members' : 'Hire verified service members'}</h1>
-            <p className="mt-2 max-w-2xl text-cream/80">Every freelancer here is a verified service member. Cleared work, federal projects, and real skills{FREELANCE_PAYMENTS_ENABLED ? ' — with payments protected until work is approved.' : '. Protected milestone payments are coming soon.'}</p>
+            <p className="mt-2 max-w-2xl text-cream/80">Every freelancer here is a verified service member, veteran or military spouse. Mechanic work, coaching, the trades, web design, cleared and federal projects{FREELANCE_PAYMENTS_ENABLED ? ' — with payments protected until work is approved.' : '. Protected milestone payments are coming soon.'}</p>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
             {!isVet && <Link href="/freelance/services" className="btn btn-brass">Browse services</Link>}
@@ -63,6 +63,18 @@ export default async function FreelancePage(
       </section>
 
       <div className="container-page py-8">
+        {isVet && (
+          <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-brass/50 bg-brass/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-serif text-xl text-navy">Freelance anything, from mechanic work to web design.</p>
+              <p className="mt-1 text-sm text-ink/80">Diesel repair, personal training, HVAC, roofing, photography, grant writing: if clients need it done, you can offer it here, on-site or remote.</p>
+            </div>
+            <div className="flex shrink-0 flex-wrap gap-2">
+              <Link href="/freelance/services/mine" className="btn btn-primary">Offer a service</Link>
+              <Link href="/freelance-anything" className="btn btn-outline">See every category</Link>
+            </div>
+          </div>
+        )}
         {isVet && (
           <div className="mb-6 grid gap-3 sm:grid-cols-3">
             <div className="card p-5">
