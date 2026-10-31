@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { OPEN_CATEGORIES } from '@/lib/freelance';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
+import CoverFeeBox from './CoverFeeBox';
 import { deleteService, saveService, setServiceCoversFee, setServicePublic, setServiceStatus } from '../actions';
 import { CONTACT_BLOCKED, EXPLICIT_BLOCKED } from '@/lib/contact';
 import { FREELANCE_PAYMENTS_ENABLED, LICENSED_TRADES } from '@/lib/flags';
@@ -71,7 +72,7 @@ export default async function MyServicesPage(props: { searchParams: Promise<{ er
           ))}
         </fieldset>
         <label className="flex items-start gap-2 text-sm sm:col-span-2"><input type="checkbox" name="public_listing" className="mt-1 accent-navy" /><span>Show this service on the public Hire page. It shows your first name and last initial, your city, and the service, never your photo or contact details. Clients sign in to book.</span></label>
-        <label className="flex items-start gap-2 text-sm sm:col-span-2"><input type="checkbox" name="covers_booking_fee" className="mt-1 accent-navy" /><span>I’ll cover the booking fee. Clients see “No booking fee” on this service, and you pay LanceNest’s booking fee (5% of the job, $4.99 to $249) when a client books you, before contact details open. Homeowners compare this to Thumbtack and Angi, where customers pay nothing; unlike those sites, you never pay for leads, only for jobs you’re booked for.</span></label>
+        <CoverFeeBox />
         <label className="flex items-start gap-2 text-sm sm:col-span-2"><input type="checkbox" name="license_ack" required className="mt-1 accent-navy" />I hold any license, certification, or insurance this work legally requires where I perform it.</label>
         <label className="flex items-start gap-2 text-sm sm:col-span-2"><input type="checkbox" name="duty_ack" required className="mt-1 accent-navy" />If I’m currently serving, I have my command’s approval for off-duty employment where required, and I won’t use government time, equipment, or my rank or uniform to promote this work.</label>
         <div className="sm:col-span-2"><SubmitButton className="btn btn-primary" pendingText="Saving…">List service</SubmitButton></div>

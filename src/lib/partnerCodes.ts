@@ -21,16 +21,19 @@ export async function redeemPartnerCode(profileId: string, raw: string): Promise
   if (error) return error.code === '23505' ? 'already' : 'error';
   const months = Number(data);
   if (!(months > 0)) return REASONS[months] ?? 'error';
+  // The code's months run from today. They don't stack on another free Pro period (Founding, Transition Pro):
+  // whichever ends later wins (approved October 31, 2026).
   const now = Date.now();
   const active = v.granted_plan && v.pro_granted_until && Date.parse(v.pro_granted_until as string) > now;
-  const base = active ? Date.parse(v.pro_granted_until as string) : now;
+  const until = Math.max(active ? Date.parse(v.pro_granted_until as string) : 0, now + Number(months) * 30 * DAY);
   await admin.from('veteran_profiles').update({
     granted_plan: active ? v.granted_plan : 'pro',
-    pro_granted_until: new Date(base + Number(months) * 30 * DAY).toISOString(),
+    pro_granted_until: new Date(until).toISOString(),
   }).eq('profile_id', profileId);
   const { recomputeVeteran } = await import('@/lib/billing');
   await recomputeVeteran(profileId);
-  await notifyMember(profileId, { type: 'plan', link: '/plans', title: `Your partner code added ${months} months of LanceNest Pro. No card needed.` });
+  const ends = new Date(until).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  await notifyMember(profileId, { type: 'plan', link: '/plans', title: `Your partner code is applied: LanceNest Pro is free through ${ends}. No card needed.` });
   return 'ok';
 }
 

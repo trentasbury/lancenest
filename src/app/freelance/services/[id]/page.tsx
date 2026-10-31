@@ -73,7 +73,7 @@ export default async function ServicePage(
                 ? 'No booking fee: this member covers it. They confirm the booking by paying it, and contact details open once they do. You pay only what you agree with them.'
                 : bookingRequired(s.delivery !== 'remote')
                 ? `You’ll pay LanceNest a booking fee next, based on the amount (${usd(bookingFeeCents(s.price_cents))} at this price: 5% of the amount, from $4.99 to $249). It’s refunded if the member declines within 48 hours. Contact details can be shared once you’re booked.`
-                : 'You’ll fund the payment next. LanceNest holds it until you approve the work — or it releases 14 days after the work is submitted. Client fee: 5% card or 3% bank, plus $9.99.'}</p>
+                : 'You’ll fund the payment next. LanceNest holds it until you approve the work — or it releases 14 days after the work is submitted. Client fee: 5% card or 3% bank, plus a one-time contract fee of $0 to $9.99 depending on size.'}</p>
             </form>
           )}
           <p className="text-xs text-muted">Providers confirm they hold any license the work requires and, if serving, have approval for off-duty employment. Check licensing for regulated trades.</p>

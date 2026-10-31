@@ -39,7 +39,7 @@ export default async function NewProjectPage(props: { searchParams: Promise<{ er
         <div><label className="field-label" htmlFor="budget_type">Budget type</label><select id="budget_type" name="budget_type" className="field"><option value="fixed">Fixed price</option><option value="hourly">Hourly</option></select></div>
         <div className="grid grid-cols-2 gap-3"><div><label className="field-label" htmlFor="budget_min">Min ($)</label><input id="budget_min" name="budget_min" inputMode="numeric" className="field" /></div><div><label className="field-label" htmlFor="budget_max">Max ($)</label><input id="budget_max" name="budget_max" inputMode="numeric" className="field" /></div></div>
         <p className="text-xs text-muted sm:col-span-2">{FREELANCE_PAYMENTS_ENABLED
-          ? 'Client fees: 5% by card or 3% by bank transfer, plus a $9.99 contract-start fee. On-site jobs pay a booking fee instead of the contract-start fee. Shown again before you pay.'
+          ? 'Client fees: 5% by card or 3% by bank transfer, plus a one-time contract fee ($0 under $100, $4.99 under $1,000, $9.99 from $1,000). On-site jobs pay a booking fee instead of the contract-start fee. Shown again before you pay.'
           : 'Posting is free. When you hire, you pay LanceNest a small booking fee based on the job price (5% of the job price, from $4.99 to $249). It’s shown before you pay, and refunded if the freelancer declines within 48 hours.'}</p>
         <fieldset className="space-y-1 rounded-xl border border-line bg-paper p-4 text-sm sm:col-span-2">
           <legend className="px-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted">Is this really a freelance project?</legend>

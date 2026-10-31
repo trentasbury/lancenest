@@ -18,13 +18,13 @@ export default async function PartnerCodes(props: { searchParams: Promise<{ erro
     <div className="container-page max-w-4xl py-10">
       <Link href="/admin" className="text-sm text-muted hover:text-navy">← Admin</Link>
       <h1 className="mt-3 font-serif text-4xl font-medium">Partner Pro codes</h1>
-      <p className="mt-2 text-muted">Give a transition office, veterans’ group or nonprofit a code for free months of Pro. Each verified member can use one partner code, ever. Share the link so members don’t have to type it.</p>
+      <p className="mt-2 text-muted">Give a base, transition office, veterans’ group or nonprofit its own code for a free year of Pro (members without a code get the smaller offers: Founding, Transition Pro, or 25% off their first year). A code’s months start the day it’s used and don’t stack on other free months. Each verified member can use one partner code, ever. Share the link so members don’t have to type it.</p>
       {sp.error && <p role="alert" className="mt-4 text-sm text-signal">{ERRORS[sp.error] ?? ERRORS.input}</p>}
       {sp.saved && <p className="mt-4 text-sm text-olive">Code created.</p>}
       <form action={createPartnerCode} className="card mt-6 grid gap-3 p-5 sm:grid-cols-2">
         <div><label htmlFor="pc-code" className="field-label">Code</label><input id="pc-code" name="code" required maxLength={32} placeholder="TAP-LEJEUNE" className="field uppercase" /></div>
         <div><label htmlFor="pc-partner" className="field-label">Partner</label><input id="pc-partner" name="partner" required maxLength={120} placeholder="Camp Lejeune Transition Readiness" className="field" /></div>
-        <div><label htmlFor="pc-months" className="field-label">Months of Pro</label><input id="pc-months" name="months" type="number" min={1} max={12} defaultValue={6} className="field" /></div>
+        <div><label htmlFor="pc-months" className="field-label">Months of Pro</label><input id="pc-months" name="months" type="number" min={1} max={12} defaultValue={12} className="field" /></div>
         <div><label htmlFor="pc-max" className="field-label">Use limit <span className="font-normal text-muted">(optional)</span></label><input id="pc-max" name="max_uses" type="number" min={1} placeholder="500" className="field" /></div>
         <div><label htmlFor="pc-exp" className="field-label">Expires <span className="font-normal text-muted">(optional)</span></label><input id="pc-exp" name="expires" type="date" className="field" /></div>
         <div className="flex items-end"><SubmitButton className="btn btn-primary w-full" pendingText="Creating…">Create code</SubmitButton></div>
@@ -38,7 +38,10 @@ export default async function PartnerCodes(props: { searchParams: Promise<{ erro
               <p className="text-xs text-muted">{c.months as number} months · used {c.uses as number}{c.max_uses ? ` of ${c.max_uses}` : ''}{c.expires_at ? ` · expires ${new Date(c.expires_at as string).toLocaleDateString('en-US', { dateStyle: 'medium' })}` : ''} · {c.active ? 'active' : 'off'}</p>
               <p className="mt-1 break-all text-xs text-muted">{SITE}/partner/{c.code as string}</p>
             </div>
-            <form action={setPartnerCodeActive.bind(null, c.id as string, !c.active)}><SubmitButton className="btn btn-outline py-1.5 text-xs" pendingText="…">{c.active ? 'Turn off' : 'Turn on'}</SubmitButton></form>
+            <div className="flex gap-2">
+              <Link href={`/admin/partners/flyer/${encodeURIComponent(c.code as string)}`} className="btn btn-ghost border border-line py-1.5 text-xs">Print flyer</Link>
+              <form action={setPartnerCodeActive.bind(null, c.id as string, !c.active)}><SubmitButton className="btn btn-outline py-1.5 text-xs" pendingText="…">{c.active ? 'Turn off' : 'Turn on'}</SubmitButton></form>
+            </div>
           </li>
         ))}
       </ul>

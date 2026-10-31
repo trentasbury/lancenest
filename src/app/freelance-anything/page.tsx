@@ -35,7 +35,7 @@ export default function FreelanceAnythingPage() {
     ['Answer projects, or offer a service', 'Anyone can post a job here; only verified members can answer. Send proposals (5 a month free, unlimited on paid plans), or list a service clients can book.'],
     ['Get booked', FREELANCE_PAYMENTS_ENABLED
       ? `The client funds the work before you start. You keep ${100 - freeFee}% on the Free plan, up to ${100 - bestFee}% on paid plans.`
-      : 'The client pays LanceNest a small booking fee when they hire you, and contact details open up. You keep 100% of what the client pays you.'],
+      : 'No lead fees, ever. A small booking fee is paid only when you’re booked (by the client, or by you if you choose to cover it so clients see “No booking fee”). You keep 100% of what the client pays you.'],
   ];
 
   return (
