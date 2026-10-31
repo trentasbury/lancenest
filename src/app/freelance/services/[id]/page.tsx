@@ -70,7 +70,7 @@ export default async function ServicePage(
               <div><label className="field-label" htmlFor="note">What you need</label><textarea key={chosen?.name ?? 'base-note'} id="note" name="note" required rows={4} maxLength={2000} defaultValue={chosen ? `Package: ${chosen.name}. ` : undefined} placeholder={s.delivery === 'remote' ? 'Describe the work and your timeline' : 'Describe the work, the location, and when works for you'} className="field" /></div>
               <SubmitButton className="btn btn-primary w-full" pendingText="Sending…">Hire through LanceNest</SubmitButton>
               <p className="text-xs text-muted">{bookingRequired(s.delivery !== 'remote')
-                ? `You’ll pay LanceNest a booking fee next, based on the amount (${usd(bookingFeeCents(s.price_cents))} at this price; from $4.99, never more than $99.99). It’s refunded if the member declines within 48 hours. Contact details can be shared once you’re booked.`
+                ? `You’ll pay LanceNest a booking fee next, based on the amount (${usd(bookingFeeCents(s.price_cents))} at this price: 5% of the amount, from $4.99 to $249). It’s refunded if the member declines within 48 hours. Contact details can be shared once you’re booked.`
                 : 'You’ll fund the payment next. LanceNest holds it until you approve the work — or it releases 14 days after the work is submitted. Client fee: 5% card or 3% bank, plus $9.99.'}</p>
             </form>
           )}

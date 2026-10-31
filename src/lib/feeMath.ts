@@ -11,19 +11,14 @@ export function feeBreakdown(amountCents: number, method: 'card' | 'bank', first
   return { clientFee, platformFee: contractFee + smallFee, total: amountCents + clientFee + contractFee + smallFee };
 }
 
-/** The client's booking fee for a job of this price (tiers in lib/fees.ts). */
+/** The client's booking fee for a job of this price: 5% of it, at least $4.99 and at most $249. */
 export function bookingFeeCents(priceCents: number) {
-  const tier = FREELANCE_FEES.bookingTiers.find((t) => priceCents < t.underCents) ?? FREELANCE_FEES.bookingTiers[FREELANCE_FEES.bookingTiers.length - 1];
-  return tier.feeCents;
+  const { bookingRate, bookingMinCents, bookingMaxCents } = FREELANCE_FEES;
+  return Math.min(Math.max(Math.round(Math.max(priceCents, 0) * bookingRate), bookingMinCents), bookingMaxCents);
 }
 
-/** Plain-English fee table for pages: [job price, fee]. */
+/** Plain-English examples for pages: [job price, fee]. */
 export function bookingFeeTable(): [string, string][] {
   const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: c % 100 ? 2 : 0 })}`;
-  let from = 0;
-  return FREELANCE_FEES.bookingTiers.map((t) => {
-    const row: [string, string] = [t.underCents === Infinity ? `${usd(from)} and up` : from === 0 ? `Under ${usd(t.underCents)}` : `${usd(from)}–${usd(t.underCents - 100)}`, usd(t.feeCents)];
-    from = t.underCents;
-    return row;
-  });
+  return [5000, 40000, 150000, 300000, 600000, 1500000].map((c) => [usd(c), usd(bookingFeeCents(c))]);
 }
