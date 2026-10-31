@@ -29,6 +29,7 @@ const SEP_MSG: Record<string, string> = {
   file: 'The file didn’t come through. Please choose it again.',
   save: 'That didn’t send. Please try again.',
   not_eligible: 'Date checks are for verified service members.',
+  limit: 'You’ve sent 3 date checks in the last 30 days. Please wait, or reach us through the Help page.',
 };
 const day = (d: string) => new Date(`${d.slice(0, 10)}T12:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 

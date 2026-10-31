@@ -52,7 +52,7 @@ export default function Footer() {
           </span>
         </div>
       </div>
-        <p className="container-page pb-8 pt-2 text-[11px] leading-relaxed text-cream/50">
+        <p className="container-page pb-8 pt-2 text-xs leading-relaxed text-cream/60">
           LanceNest is an independent company. It is not affiliated with, endorsed by, or sponsored by the U.S. Department of Defense,
           the Department of Veterans Affairs, the U.S. Armed Forces, or any branch of service. Military occupation codes are used for descriptive purposes only.
         </p>

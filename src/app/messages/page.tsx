@@ -53,7 +53,7 @@ export default async function MessagesPage(props: { searchParams: Promise<{ erro
           <h1 className="font-serif text-4xl font-medium">Messages</h1>
           <p className="mt-1 text-muted">Private conversations between you and other members.</p>
         </div>
-        <Link href="/messages/new" className="btn btn-primary">+ New message</Link>
+        {me.role !== 'client' && <Link href="/messages/new" className="btn btn-primary">+ New message</Link>}
       </div>
       <div className="mt-5 flex gap-2">
         <Link href="/messages" className={`rounded-full border px-4 py-1.5 text-sm ${tab === 'messages' ? 'border-navy bg-navy text-ivory' : 'border-line hover:border-brass'}`}>Messages</Link>
@@ -65,7 +65,7 @@ export default async function MessagesPage(props: { searchParams: Promise<{ erro
       )}
       <div className="mt-6">
         {list.length === 0 ? (
-          <EmptyState title="No messages." body="When an employer or another member reaches out, you’ll see it here. You can start a conversation from anyone’s profile." action={{ href: '/network', label: 'Go to your network' }} />
+          <EmptyState title="No messages." body={me.role === 'client' ? 'Message a freelancer from their service or from a proposal on your project. Conversations show up here.' : 'When an employer or another member reaches out, you’ll see it here. You can start a conversation from anyone’s profile.'} action={me.role === 'client' ? { href: '/freelance/services', label: 'Find a freelancer' } : { href: '/network', label: 'Go to your network' }} />
         ) : (
           <ul className="card divide-y divide-line">
             {list.map((c) => {

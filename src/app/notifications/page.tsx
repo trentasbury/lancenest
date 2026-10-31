@@ -12,7 +12,8 @@ const ICON: Record<string, string> = {
 };
 
 export default async function NotificationsPage() {
-  const { user } = await requireRole(['veteran', 'employer', 'client', 'admin'], '/notifications');
+  const { user, profile } = await requireRole(['veteran', 'employer', 'client', 'admin'], '/notifications');
+  const client = profile.role === 'client';
   const supabase = await createClient();
   const { data } = await supabase.from('notifications').select('id, type, title, body, link, read_at, created_at').eq('profile_id', user.id).order('created_at', { ascending: false }).limit(60);
   // Opening the page marks everything as read.
@@ -23,7 +24,7 @@ export default async function NotificationsPage() {
       <h1 className="font-serif text-4xl font-medium">Notifications</h1>
       <div className="mt-6">
         {(data ?? []).length === 0 ? (
-          <EmptyState title="Nothing new." body="Reactions, comments, follows, mentions, and messages will show up here." action={{ href: '/network', label: 'Go to your network' }} />
+          <EmptyState title="Nothing new." body={client ? 'Proposals, booking updates, messages and LanceNest news will show up here.' : 'Reactions, comments, follows, mentions, and messages will show up here.'} action={client ? { href: '/freelance/services', label: 'Find a freelancer' } : { href: '/network', label: 'Go to your network' }} />
         ) : (
           <ul className="card divide-y divide-line">
             {(data ?? []).map((n) => (

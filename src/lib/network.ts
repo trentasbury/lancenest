@@ -193,7 +193,7 @@ export async function getSuggestions(viewerId: string, limit = 5): Promise<Sugge
     supabase.from('user_follows').select('following_id').eq('follower_id', viewerId),
     supabase.from('user_blocks').select('blocked_id').eq('blocker_id', viewerId),
     supabase.from('profile_skills').select('skill_id').eq('profile_id', viewerId),
-    supabase.from('profiles').select('id, full_name, username, headline, service_summary, location, role').neq('role', 'admin').order('created_at', { ascending: false }).limit(80),
+    supabase.from('profiles').select('id, full_name, username, headline, service_summary, location, role').in('role', ['veteran', 'employer']).order('created_at', { ascending: false }).limit(80),
   ]);
   const exclude = new Set([viewerId, ...(following ?? []).map((r) => r.following_id as string), ...(blocks ?? []).map((r) => r.blocked_id as string)]);
   const candidates = (pool ?? []).filter((p) => !exclude.has(p.id as string)) as Omit<Suggestion, 'reason'>[];

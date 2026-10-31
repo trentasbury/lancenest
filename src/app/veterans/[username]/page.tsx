@@ -505,8 +505,8 @@ export default async function VeteranProfilePage(
                     {freelance.hourly_rate && <p className="font-serif text-2xl">${freelance.hourly_rate as number}/hr</p>}
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                    {freelance.sdvosb && <span className="rounded-full border border-brass px-3 py-1 font-semibold text-brass-dark">SDVOSB</span>}
-                    {freelance.vosb && !freelance.sdvosb && <span className="rounded-full border border-brass px-3 py-1 font-semibold text-brass-dark">VOSB</span>}
+                    {freelance.sdvosb && <span title="Self-reported by the member. Check SAM.gov before relying on it for a set-aside." className="rounded-full border border-brass px-3 py-1 font-semibold text-brass-dark">SDVOSB <span className="font-normal text-muted">· self-reported</span></span>}
+                    {freelance.vosb && !freelance.sdvosb && <span title="Self-reported by the member. Check SAM.gov before relying on it for a set-aside." className="rounded-full border border-brass px-3 py-1 font-semibold text-brass-dark">VOSB <span className="font-normal text-muted">· self-reported</span></span>}
                     {freelance.clearance_work && <span className="rounded-full border border-line px-3 py-1">Open to cleared work</span>}
                     {!freelance.available && <span className="rounded-full border border-line px-3 py-1 text-muted">Not taking new work</span>}
                   </div>

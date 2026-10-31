@@ -43,6 +43,9 @@ export async function submitSeparationCheck(formData: FormData) {
   const { data: files } = await supabase.storage.from('verification-docs').list(user.id, { limit: 200 });
   if (!(files ?? []).some((f) => `${user.id}/${f.name}` === path)) redirect('/transition?sep=file');
 
+  // Three tries a month is plenty for a real date change; more is someone shopping for an approval.
+  const { count: recent } = await admin.from('separation_checks').select('id', { count: 'exact', head: true }).eq('profile_id', user.id).gte('created_at', new Date(Date.now() - 30 * DAY).toISOString());
+  if ((recent ?? 0) >= 3) { await drop(); redirect('/transition?sep=limit'); }
   const { error } = await admin.from('separation_checks').insert({ profile_id: user.id, requested_date: date, document_path: path });
   if (error) { await drop(); redirect(error.code === '23505' ? '/transition?sep=pending' : '/transition?sep=save'); }
   // Keep the self-reported date in step so the timeline matches what they sent.

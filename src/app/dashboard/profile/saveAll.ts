@@ -54,6 +54,7 @@ export async function saveFullProfile(p: ProfilePayload): Promise<{ ok: boolean;
       occupation_id: occ?.id ?? null, start_date: yearToDate(x.start_year), end_date: yearToDate(x.end_year), deployments: Math.max(0, Math.min(50, Number(x.deployments) || 0)) };
     const res = x.id ? await supabase.from('military_service').update(row).eq('id', x.id).eq('profile_id', user.id).select('id').single()
                      : await supabase.from('military_service').insert(row).select('id').single();
+    if (res.error?.code === 'P0022') return { ok: false, error: EXPLICIT_BLOCKED };
     if (res.error) { console.error('service save failed:', res.error.message); return { ok: false, error: `Couldn’t save your ${branch} entry — check the years and try again.` }; }
     keepSvc.push(res.data.id as string);
   }
@@ -68,6 +69,7 @@ export async function saveFullProfile(p: ProfilePayload): Promise<{ ok: boolean;
     const row = { profile_id: user.id, company, position, start_date: yearToDate(x.start_year), end_date: yearToDate(x.end_year), description: s(x.description, 2000) || null };
     const res = x.id ? await supabase.from('experience').update(row).eq('id', x.id).eq('profile_id', user.id).select('id').single()
                      : await supabase.from('experience').insert(row).select('id').single();
+    if (res.error?.code === 'P0022') return { ok: false, error: EXPLICIT_BLOCKED };
     if (res.error) return { ok: false, error: `Couldn’t save “${position}” — check the years and try again.` };
     keepExp.push(res.data.id as string);
   }
@@ -82,6 +84,7 @@ export async function saveFullProfile(p: ProfilePayload): Promise<{ ok: boolean;
     const row = { profile_id: user.id, school, degree: s(x.degree, 120) || null, field: s(x.field, 120) || null, graduation_year: Number.isInteger(year) && year >= 1950 && year <= 2100 ? year : null };
     const res = x.id ? await supabase.from('education').update(row).eq('id', x.id).eq('profile_id', user.id).select('id').single()
                      : await supabase.from('education').insert(row).select('id').single();
+    if (res.error?.code === 'P0022') return { ok: false, error: EXPLICIT_BLOCKED };
     if (res.error) return { ok: false, error: `Couldn’t save ${school}.` };
     keepEdu.push(res.data.id as string);
   }
@@ -92,7 +95,11 @@ export async function saveFullProfile(p: ProfilePayload): Promise<{ ok: boolean;
   const skillIds: string[] = [];
   for (const name of names) {
     let { data: skill } = await supabase.from('skills').select('id').ilike('name', name).maybeSingle();
-    if (!skill) { await supabase.from('skills').insert({ name, category: 'civilian' }); ({ data: skill } = await supabase.from('skills').select('id').ilike('name', name).maybeSingle()); }
+    if (!skill) {
+      const { error: added } = await supabase.from('skills').insert({ name, category: 'civilian' });
+      if (added?.code === 'P0022') return { ok: false, error: EXPLICIT_BLOCKED };
+      ({ data: skill } = await supabase.from('skills').select('id').ilike('name', name).maybeSingle());
+    }
     if (skill) skillIds.push(skill.id as string);
   }
   const { data: current } = await supabase.from('profile_skills').select('skill_id').eq('profile_id', user.id);

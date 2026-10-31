@@ -104,7 +104,7 @@ export default async function FreelancePage(
           </section>
         )}
 
-        <form method="get" className="card mb-6 grid gap-3 p-5 sm:grid-cols-4">
+        {!isClient && <form method="get" className="card mb-6 grid gap-3 p-5 sm:grid-cols-4">
           <input name="q" defaultValue={searchParams.q} placeholder="Search projects (e.g. enterprise software, logistics, cyber)" className="field sm:col-span-2" />
           <select name="category" defaultValue={searchParams.category ?? ''} className="field"><option value="">All categories</option>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="cleared" value="1" defaultChecked={!!searchParams.cleared} className="accent-navy" />Cleared work only</label>
@@ -112,11 +112,20 @@ export default async function FreelancePage(
           <div className="flex gap-2 sm:col-span-4"><button className="btn btn-primary">Search</button>
             {!isVet && !isClient && <Link href={mine ? '/freelance?mine=0' : '/freelance'} className="btn btn-ghost border border-line">{mine ? 'Browse all open projects' : 'Your projects'}</Link>}
           </div>
-        </form>
+        </form>}
 
         <p className="eyebrow">{mine ? 'Your projects' : `${projects.length} open project${projects.length === 1 ? '' : 's'}`}</p>
         {projects.length === 0 ? (
-          <div className="card mt-3 p-8 text-center text-muted">{mine ? 'You haven’t posted a project yet.' : 'No open projects match that search yet — check back soon.'}</div>
+          <div className="card mt-3 p-8 text-center text-muted">
+            {mine ? 'You haven’t posted a project yet.' : 'No open projects match that search yet — check back soon.'}
+            {isClient && (
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                <Link href="/freelance/projects/new" className="btn btn-primary">Post a project</Link>
+                <Link href="/freelance/services" className="btn btn-outline">Browse services</Link>
+              </div>
+            )}
+            {isClient && <p className="mx-auto mt-4 max-w-md text-xs">Every freelancer is a verified service member or military spouse. Pay only through LanceNest, and contact details open once a job is booked.</p>}
+          </div>
         ) : (
           <ul className="mt-3 space-y-3">
             {projects.map((p) => (

@@ -107,7 +107,8 @@ export async function addMilestone(contractId: string, formData: FormData) {
   const amount = Math.round(Number(t(formData, 'amount', 9).replace(/[$,\s]/g, '')) * 100);
   const title = t(formData, 'title', 140);
   if (!Number.isFinite(amount) || amount < 2500 || title.length < 2) back(contractId, '?error=milestone');
-  await createAdminClient().from('milestones').insert({ contract_id: contractId, title, amount_cents: amount });
+  const { error } = await createAdminClient().from('milestones').insert({ contract_id: contractId, title, amount_cents: amount });
+  if (error?.code === 'P0022') back(contractId, '?error=explicit');
   revalidatePath(`/freelance/contracts/${contractId}`);
   back(contractId);
 }
@@ -126,10 +127,11 @@ export async function submitMilestone(milestoneId: string, formData: FormData) {
   const m = await loadMilestone(milestoneId);
   if (!m || m.contract.freelancer_id !== user.id || m.status !== 'funded') redirect('/freelance');
   if (t(formData, 'note', 2000).length < 10) redirect(`/freelance/contracts/${m.contract_id}?error=delivery`);
-  await createAdminClient().from('milestones').update({
+  const { error } = await createAdminClient().from('milestones').update({
     status: 'submitted', submitted_at: new Date().toISOString(), submission_note: t(formData, 'note', 2000) || null, change_request: null,
     auto_release_at: new Date(Date.now() + AUTO_RELEASE_DAYS * 86400000).toISOString(),
   }).eq('id', milestoneId).eq('status', 'funded');
+  if (error?.code === 'P0022') back(m.contract_id, '?error=explicit');
   await notifyMember(m.contract.client_id, { type: 'milestone', link: `/freelance/contracts/${m.contract_id}`, title: `Work submitted for “${m.title}”. Review it — it releases automatically in ${AUTO_RELEASE_DAYS} days.`,
     email: { subject: `Work submitted: ${m.title}`, preheader: `Please review within ${AUTO_RELEASE_DAYS} days.`, tone: 'notice', badge: 'Review needed',
       heading: 'Work is ready for your review.', paragraphs: [`Your freelancer submitted “${m.title}” on ${m.contract.title}.`, `Approve it to release payment, or request changes. If there’s no response in ${AUTO_RELEASE_DAYS} days, payment releases automatically.`],
@@ -142,7 +144,8 @@ export async function requestChanges(milestoneId: string, formData: FormData) {
   const m = await loadMilestone(milestoneId);
   if (!m || m.contract.client_id !== user.id || m.status !== 'submitted') redirect('/freelance');
   if (t(formData, 'changes', 2000).length < 10) redirect(`/freelance/contracts/${m.contract_id}?error=changes`);
-  await createAdminClient().from('milestones').update({ status: 'funded', auto_release_at: null, change_request: t(formData, 'changes', 2000) || 'Changes requested.' }).eq('id', milestoneId).eq('status', 'submitted');
+  const { error } = await createAdminClient().from('milestones').update({ status: 'funded', auto_release_at: null, change_request: t(formData, 'changes', 2000) || 'Changes requested.' }).eq('id', milestoneId).eq('status', 'submitted');
+  if (error?.code === 'P0022') back(m.contract_id, '?error=explicit');
   await notifyMember(m.contract.freelancer_id, { type: 'milestone', link: `/freelance/contracts/${m.contract_id}`, title: `Changes requested on “${m.title}”.` });
   back(m.contract_id);
 }
@@ -163,7 +166,8 @@ export async function openDispute(milestoneId: string, formData: FormData) {
   const reason = t(formData, 'reason', 2000);
   if (reason.length < 10) back(m.contract_id, '?error=dispute');
   const admin = createAdminClient();
-  await admin.from('milestones').update({ status: 'disputed', auto_release_at: null, dispute_reason: reason }).eq('id', milestoneId).in('status', ['funded', 'submitted']);
+  const { error } = await admin.from('milestones').update({ status: 'disputed', auto_release_at: null, dispute_reason: reason }).eq('id', milestoneId).in('status', ['funded', 'submitted']);
+  if (error?.code === 'P0022') back(m.contract_id, '?error=explicit');
   await admin.from('contracts').update({ status: 'disputed' }).eq('id', m.contract_id);
   const other = user.id === m.contract.client_id ? m.contract.freelancer_id : m.contract.client_id;
   await notifyMember(other, { type: 'milestone', link: `/freelance/contracts/${m.contract_id}`, title: `A dispute was opened on “${m.title}”. LanceNest will review it — the payment stays protected meanwhile.` });

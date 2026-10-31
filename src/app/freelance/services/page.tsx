@@ -15,7 +15,7 @@ export default async function ServicesPage(
   props: { searchParams: Promise<{ category?: string; q?: string; where?: string }> }
 ) {
   const searchParams = await props.searchParams;
-  await requireFreelanceAccess('/freelance/services');
+  const { profile } = await requireFreelanceAccess('/freelance/services');
   const supabase = await createClient();
   let query = supabase.from('service_listings').select('id, title, category, description, price_cents, price_type, delivery, service_area, provider:profiles!service_listings_profile_id_fkey(full_name, username, avatar_url, verified)').eq('status', 'active');
   if (searchParams.category && CATEGORIES.includes(searchParams.category)) query = query.eq('category', searchParams.category);
@@ -27,8 +27,8 @@ export default async function ServicesPage(
   return (
     <div className="container-page max-w-6xl space-y-6 py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div><h1 className="font-serif text-4xl font-medium">Services</h1><p className="mt-1 text-muted">Services offered by verified service members — auto repair, HVAC, web design, and more. Verified employers hire with payment protected until the work is done.</p></div>
-        <Link href="/freelance/services/mine" className="btn btn-outline">Offer a service</Link>
+        <div><h1 className="font-serif text-4xl font-medium">Services</h1><p className="mt-1 text-muted">Services offered by verified service members — auto repair, HVAC, web design, and more. Book one through LanceNest; contact details open once the job is booked.</p></div>
+        {profile.role === 'veteran' ? <Link href="/freelance/services/mine" className="btn btn-outline">Offer a service</Link> : <Link href="/freelance/projects/new" className="btn btn-outline">Post a project instead</Link>}
       </div>
       <form method="get" className="card grid gap-3 p-4 sm:grid-cols-4">
         <input name="q" defaultValue={searchParams.q} placeholder="What do you need done?" className="field sm:col-span-2" />
