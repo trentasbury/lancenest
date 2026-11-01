@@ -1,6 +1,6 @@
 'use server';
 
-import { EXPLICIT_BLOCKED } from '@/lib/contact';
+import { EXPLICIT_BLOCKED, PROFILE_CONTACT_BLOCKED } from '@/lib/contact';
 import { revalidatePath } from 'next/cache';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -37,6 +37,8 @@ export async function saveFullProfile(p: ProfilePayload): Promise<{ ok: boolean;
     desired_titles: s(b.desired_titles, 400).split(',').map((t) => t.trim()).filter(Boolean).slice(0, 8),
   }).eq('profile_id', user.id);
   if (e1?.code === 'P0022' || e2?.code === 'P0022') return { ok: false, error: EXPLICIT_BLOCKED };
+  if (e1?.code === 'P0017') return { ok: false, error: PROFILE_CONTACT_BLOCKED };
+  if (e1?.code === 'P0019') return { ok: false, error: RESERVED_NAME_MESSAGE };
   if (e1 || e2) return { ok: false, error: 'Your basics didn’t save — please try again.' };
 
   // Military service (multiple branches and duty stations)
@@ -98,6 +100,7 @@ export async function saveFullProfile(p: ProfilePayload): Promise<{ ok: boolean;
     if (!skill) {
       const { error: added } = await supabase.from('skills').insert({ name, category: 'civilian' });
       if (added?.code === 'P0022') return { ok: false, error: EXPLICIT_BLOCKED };
+      if (added?.code === 'P0017') return { ok: false, error: `“${name}”: ${PROFILE_CONTACT_BLOCKED}` };
       ({ data: skill } = await supabase.from('skills').select('id').ilike('name', name).maybeSingle());
     }
     if (skill) skillIds.push(skill.id as string);

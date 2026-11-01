@@ -35,8 +35,21 @@ export const getMyCompany = cache(async (userId: string) => {
   ]);
   if (own) return { ...own, isOwner: true } as MyCompany;
   const company = (m as unknown as { company: Record<string, unknown> | null } | null)?.company;
-  return company ? ({ ...company, isOwner: false } as MyCompany) : null;
+  if (!company) return null;
+  // Team seats follow the plan: after a downgrade or a lapsed payment, recruiters beyond the plan's seats (newest
+  // first) are paused until the plan covers them again. The database applies the same rule.
+  if (!(await withinSeats(company.id as string, company.plan as string, userId))) return null;
+  return { ...company, isOwner: false } as MyCompany;
 });
+
+/** Is this recruiter inside the plan's seats? The owner always is; team members count in the order they joined. */
+export async function withinSeats(companyId: string, plan: string, userId: string) {
+  const memberSeats = (SEATS[plan] ?? 1) - 1;
+  if (memberSeats <= 0) return false;
+  const { data } = await createAdminClient().from('company_members').select('profile_id')
+    .eq('company_id', companyId).order('created_at').order('profile_id').limit(memberSeats);
+  return (data ?? []).some((r) => r.profile_id === userId);
+}
 
 type MyCompany = { id: string; name: string; slug: string; plan: Plan; is_verified: boolean; verification_status: string; contact_credits: number; extra_job_slots: number; stripe_customer_id: string | null; isOwner: boolean } & Record<string, unknown>;
 export const SEATS: Record<string, number> = { free: 1, starter: 2, professional: 3, federal: 5, enterprise: 20 };

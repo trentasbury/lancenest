@@ -5,6 +5,12 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { CATALOG, catalogLine, createCheckout, foundingCoupon, foundingFederalCoupon, foundingMemberCoupon, foundingStarterCoupon, keepProCoupon, publicSafetyCoupon, stripe, type ProductKey } from '@/lib/stripe';
 import { foundingSpotsLeft } from '@/lib/billing';
+import { alreadyClaimed, domainKey } from '@/lib/identityClaims';
+
+async function foundingClaimedByDomain(website: string | null) {
+  const key = domainKey(website);
+  return key ? alreadyClaimed(key, 'founding_employer') : false;
+}
 import { RENEWAL_CHECKOUT_MESSAGE } from '@/components/RenewalNote';
 
 /** Starts a Stripe Checkout for an employer plan, an extra job slot, or a job boost. */
@@ -74,7 +80,7 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createClient();
   // Billing IDs are server-only (not readable by members), so this owner-scoped read uses the server key.
-  const { data: company } = await createAdminClient().from('companies').select('id, name, stripe_customer_id, is_verified, public_safety_status, training_listing_active').eq('owner_id', session.user.id).maybeSingle();
+  const { data: company } = await createAdminClient().from('companies').select('id, name, website, stripe_customer_id, is_verified, public_safety_status, training_listing_active').eq('owner_id', session.user.id).maybeSingle();
   if (!company) return NextResponse.redirect(`${site}/employer/dashboard?error=company`, 303);
   if (!company.is_verified) return NextResponse.redirect(`${site}/employer/dashboard?error=verify`, 303);
 
@@ -165,7 +171,9 @@ export async function POST(request: NextRequest) {
     metadata.public_safety = 'true';
   } else if ((item.plan === 'starter' || item.plan === 'professional' || (item.plan === 'federal' && item.interval === 'year')) && item.interval && (await foundingSpotsLeft()) > 0
     // The Founding rate is once per company: cancelling and re-subscribing doesn't start another discounted year.
-    && !(await createAdminClient().from('subscriptions').select('id', { count: 'exact', head: true }).eq('company_id', company.id).eq('founding', true)).count) {
+    && !(await createAdminClient().from('subscriptions').select('id', { count: 'exact', head: true }).eq('company_id', company.id).eq('founding', true)).count
+    // ...and once per business: a new account for the same company website doesn't get it again.
+    && !(await foundingClaimedByDomain(company.website as string | null))) {
     coupon = item.plan === 'federal' ? await foundingFederalCoupon(item.interval)
       : item.plan === 'starter' ? await foundingStarterCoupon(item.interval) : await foundingCoupon(item.interval);
     metadata.founding = 'true';

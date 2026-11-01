@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import type Stripe from 'stripe';
 import { stripe } from '@/lib/stripe';
-import { applyCheckoutSession, syncSubscription } from '@/lib/billing';
+import { applyCheckoutSession, handleDispute, syncSubscription } from '@/lib/billing';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 /** Stripe → LanceNest. Signature-verified; each event is processed once. */
@@ -26,6 +26,8 @@ export async function POST(request: NextRequest) {
       await applyCheckoutSession((event.data.object as Stripe.Checkout.Session).id);
     } else if (event.type.startsWith('customer.subscription.')) {
       await syncSubscription(event.data.object as Stripe.Subscription);
+    } else if (event.type === 'charge.dispute.created') {
+      await handleDispute(event.data.object as Stripe.Dispute);
     }
   } catch (err) {
     // Let Stripe retry: forget this event so the retry is processed.

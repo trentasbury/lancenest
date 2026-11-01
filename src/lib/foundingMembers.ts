@@ -2,6 +2,7 @@ import 'server-only';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { SITE, notifyMember } from '@/lib/email';
 import { FOUNDING_MEMBER } from '@/lib/stripe';
+import { claimPerk, identityKey, releasePerk } from '@/lib/identityClaims';
 
 const DAY = 86400000;
 
@@ -27,6 +28,10 @@ export async function grantFoundingMember(profileId: string): Promise<boolean> {
   const { data: v } = await admin.from('veteran_profiles').select('verification_status, granted_plan, pro_granted_until').eq('profile_id', profileId).maybeSingle();
   if (!v || v.verification_status !== 'verified') return false;
   if (await isFoundingMember(profileId)) return false;
+  if ((await foundingMemberSeatsLeft()) <= 0) return false;
+  // Once per person: someone who deletes their account and joins again doesn't get a second seat.
+  const key = await identityKey(profileId);
+  if (!(await claimPerk(key, 'founding_member', profileId))) return false;
   // The first open seat number (a seat frees up if its member deletes their account). If two approvals land at
   // once and pick the same seat, the database refuses the second and it tries the next open seat.
   let seat = 0;
@@ -34,12 +39,15 @@ export async function grantFoundingMember(profileId: string): Promise<boolean> {
     const { data: taken } = await admin.from('founding_members').select('seat');
     const used = new Set((taken ?? []).map((r) => r.seat as number));
     const open = Array.from({ length: FOUNDING_MEMBER.spots }, (_, i) => i + 1).find((n) => !used.has(n));
-    if (!open) return false;
+    if (!open) break;
     const { error } = await admin.from('founding_members').insert({ profile_id: profileId, seat: open });
     if (!error) seat = open;
-    else if (error.code !== '23505' || (await isFoundingMember(profileId))) return false;
+    else if (error.code !== '23505' || (await isFoundingMember(profileId))) break;
   }
-  if (!seat) return false;
+  if (!seat) {
+    if (!(await isFoundingMember(profileId))) await releasePerk(key, 'founding_member');
+    return false;
+  }
 
   // 6 months of Pro from today. It doesn't stack with another free Pro period (e.g. Transition Pro): whichever
   // ends later wins.

@@ -54,6 +54,8 @@ export async function saveBasics(formData: FormData) {
     })
     .eq('profile_id', user.id);
 
+  if (e1?.code === 'P0017') done('basics', 'contact');
+  if (e1?.code === 'P0019') done('basics', 'reserved');
   if (e1 || e2) {
     console.error('saveBasics failed:', e1?.message ?? e2?.message);
     done('basics', 'save');
@@ -70,6 +72,7 @@ export async function addSkill(formData: FormData) {
   let { data: skill } = await supabase.from('skills').select('id').ilike('name', name).maybeSingle();
   if (!skill) {
     const inserted = await supabase.from('skills').insert({ name, category: 'civilian' }).select('id').single();
+    if (inserted.error?.code === 'P0017') done('skills', 'contact');
     skill = inserted.data;
     if (!skill) {
       // Someone added the same skill at the same moment — fetch theirs.

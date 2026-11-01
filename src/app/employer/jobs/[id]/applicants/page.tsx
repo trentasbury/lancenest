@@ -27,7 +27,9 @@ async function moveApplicant(applicationId: string, jobId: string, formData: For
   const status = String(formData.get('status') ?? '');
   if (!STAGES.some(([s]) => s === status)) return;
   // Row-level security: only the hiring company can update; the applicant is notified by a database trigger.
-  await (await createClient()).from('applications').update({ status }).eq('id', applicationId).eq('job_id', jobId);
+  const { data: moved } = await (await createClient()).from('applications').update({ status }).eq('id', applicationId).eq('job_id', jobId).select('id');
+  // Nothing changed (not this company's applicant): send nothing.
+  if (!moved?.length) return;
   // Email the applicant about meaningful stage changes (the in-app notification already fires from the database).
   if (['interview', 'offer', 'rejected'].includes(status)) {
     const { createAdminClient } = await import('@/lib/supabase/admin');

@@ -1,6 +1,7 @@
 import 'server-only';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { SITE, notifyMember } from '@/lib/email';
+import { alreadyClaimed, claimPerk, identityKey } from '@/lib/identityClaims';
 
 /**
  * Partner Pro codes: transition offices, veterans' groups and nonprofits hand these out, the way LinkedIn gives its
@@ -29,10 +30,14 @@ export async function redeemPartnerCode(profileId: string, raw: string): Promise
   const { data: pc } = await admin.from('partner_codes').select('transition_only, batch:partner_batches(voided_at)').eq('code', code).maybeSingle();
   if ((pc?.batch as unknown as { voided_at: string | null } | null)?.voided_at) return 'invalid';
   if (pc?.transition_only && !isTransitioning(v.separation_verified_on as string | null)) return 'not_transitioning';
+  // One partner card per person, ever (a new account for the same verified person can't use a second card).
+  const key = await identityKey(profileId);
+  if (await alreadyClaimed(key, 'partner_code')) return 'already';
   const { data, error } = await admin.rpc('redeem_partner_code', { p_profile: profileId, p_code: code });
   if (error) return error.code === '23505' ? 'already' : 'error';
   const months = Number(data);
   if (!(months > 0)) return REASONS[months] ?? 'error';
+  await claimPerk(key, 'partner_code', profileId);
   // The code's months run from today. They don't stack on another free Pro period (Founding, Transition Pro):
   // whichever ends later wins (approved October 31, 2026).
   const now = Date.now();

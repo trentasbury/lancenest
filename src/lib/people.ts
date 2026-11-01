@@ -20,13 +20,29 @@ export const PERSON_COLS = 'id, full_name, username, headline, service_summary, 
 export const branchOf = (summary: string | null) => summary?.match(/^U\.S\. ([^·]+)/)?.[1]?.trim() ?? null;
 export const stateFrom = (location: string | null) => stateOf(location?.split(',').pop()?.trim() ?? null);
 
+/**
+ * Members who hid their profile from any company this employer belongs to. Server-only: the list is used to leave
+ * people out and is never sent to the employer (who must not learn which members hid from them).
+ */
+export async function membersHidingFrom(viewerId: string): Promise<string[]> {
+  const admin = createAdminClient();
+  const [{ data: owned }, { data: member }] = await Promise.all([
+    admin.from('companies').select('id').eq('owner_id', viewerId),
+    admin.from('company_members').select('company_id').eq('profile_id', viewerId),
+  ]);
+  const ids = [...(owned ?? []).map((r) => r.id as string), ...(member ?? []).map((r) => r.company_id as string)];
+  if (!ids.length) return [];
+  const { data } = await admin.from('hidden_companies').select('profile_id').in('company_id', ids).limit(5000);
+  return (data ?? []).map((r) => r.profile_id as string);
+}
+
 /** Who the viewer follows and has blocked, and (for employers) members to leave out. */
 export async function viewerContext(viewerId: string, role: string) {
   const supabase = await createClient();
   const [{ data: following }, { data: blocks }, hiding, hidden] = await Promise.all([
     supabase.from('user_follows').select('following_id').eq('follower_id', viewerId),
     supabase.from('user_blocks').select('blocked_id').eq('blocker_id', viewerId),
-    role === 'employer' ? supabase.rpc('members_hiding_me') : Promise.resolve({ data: [] }),
+    role === 'employer' ? membersHidingFrom(viewerId).then((data) => ({ data })) : Promise.resolve({ data: [] as string[] }),
     // Members who turned off "Visible to verified employers" never appear to employers here either.
     role === 'employer' ? createAdminClient().from('veteran_profiles').select('profile_id').eq('is_public', false).limit(5000) : Promise.resolve({ data: [] }),
   ]);

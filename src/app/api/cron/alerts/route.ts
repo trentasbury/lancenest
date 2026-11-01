@@ -21,14 +21,18 @@ export async function GET(request: NextRequest) {
   const { data: jobsData } = await admin.from('jobs').select('id, slug, title, description, location, work_arrangement, clearance_required, posted_at, company:companies(name)')
     .eq('status', 'open').gte('posted_at', new Date(now - 72 * H).toISOString());
   const jobs = (jobsData ?? []) as unknown as Job[];
-  const { data: alerts } = await admin.from('job_alerts').select('id, profile_id, keywords, state, arrangement, cleared_only');
+  const { data: alerts } = await admin.from('job_alerts').select('id, profile_id, keywords, state, arrangement, cleared_only').order('created_at');
   const byProfile = new Map<string, NonNullable<typeof alerts>>();
   (alerts ?? []).forEach((a) => byProfile.set(a.profile_id as string, [...(byProfile.get(a.profile_id as string) ?? []), a]));
   const { data: plans } = byProfile.size ? await admin.from('veteran_profiles').select('profile_id, plan').in('profile_id', Array.from(byProfile.keys())).neq('plan', 'free') : { data: [] };
   for (const { profile_id, plan } of plans ?? []) {
     const federal = ['pro_plus', 'federal_pro'].includes(plan as string);   // early cleared window: Career Accelerator and above
     const matches = new Map<string, Job>();
-    for (const a of byProfile.get(profile_id as string) ?? []) {
+    // Only as many alerts as the current plan includes (Pro 3, Career Accelerator and Federal 10), oldest first,
+    // and cleared-only alerts only on Career Accelerator and above, so a downgrade takes effect here too.
+    const cap = federal ? 10 : plan === 'pro' ? 3 : 0;
+    for (const raw of (byProfile.get(profile_id as string) ?? []).slice(0, cap)) {
+      const a = { ...raw, cleared_only: federal ? raw.cleared_only : false };
       for (const j of jobs) {
         const age = now - Date.parse(j.posted_at);
         const cleared = (j.clearance_required ?? 'none') !== 'none';
@@ -178,6 +182,10 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // ---------- Re-check paid plans with Stripe (lost notices, ended payment grace) ----------
+  let rechecked = 0;
+  try { const { reconcileSubscriptions } = await import('@/lib/billing'); rechecked = await reconcileSubscriptions(); } catch (err) { console.error('subscription re-check failed:', err); }
+
   // ---------- Expire free Pro months earned through referrals ----------
   const { data: expired } = await admin.from('veteran_profiles').select('profile_id').not('granted_plan', 'is', null).lt('pro_granted_until', new Date().toISOString());
   if (expired?.length) {
@@ -275,5 +283,5 @@ export async function GET(request: NextRequest) {
   // ---------- The founder's personal welcome, the morning after verification ----------
   const founderWelcomes = await sendFounderWelcomes(now).catch((err) => { console.error('founder welcomes failed:', err); return 0; });
 
-  return NextResponse.json({ memberEmails, employerEmails, digests, founderWelcomes, staleNotices, employerNudges, spouseChecks, announcementEmails });
+  return NextResponse.json({ memberEmails, employerEmails, digests, founderWelcomes, staleNotices, employerNudges, spouseChecks, announcementEmails, rechecked });
 }

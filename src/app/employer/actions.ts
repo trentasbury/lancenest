@@ -21,11 +21,12 @@ export async function createCompany(_prev: FormState, formData: FormData): Promi
   const name = String(formData.get('name') ?? '').trim();
   const website = String(formData.get('website') ?? '').trim();
   if (!name) return { error: 'Enter your company name.' };
-  if (/\blancenest\b/i.test(name)) return { error: 'Company names can’t include LanceNest.' };
+  if (/\blancenest|\blance[\s._-]+nest\b/i.test(name)) return { error: 'Company names can’t include LanceNest.' };
   if (website && !/^https?:\/\//i.test(website)) return { error: 'Website should start with https://' };
 
   const base = slugify(name) || 'company';
-  const { data: taken } = await supabase.from('companies').select('id').eq('slug', base).maybeSingle();
+  // Unverified companies aren't visible to other accounts, so the slug check reads every company (server-side).
+  const { data: taken } = await createAdminClient().from('companies').select('id').eq('slug', base).maybeSingle();
   const slug = taken ? `${base}-${Math.random().toString(36).slice(2, 6)}` : base;
 
   const { error } = await supabase.from('companies').insert({

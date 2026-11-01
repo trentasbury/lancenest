@@ -60,6 +60,19 @@ export async function rewardReferrer(referredProfileId: string, event: 'member_a
     referredPaid = await firstPaymentCents(referredProfileId);
     if (referredPaid <= 0) return;   // not paid yet: this runs again on the next billing update
   }
+  // Once per verified person (or company website), not per account: deleting and re-joining on the same link
+  // doesn't pay the referrer again.
+  {
+    const { identityKey, domainKey } = await import('@/lib/identityClaims');
+    let key: string | null;
+    if (event === 'member_active') key = await identityKey(referredProfileId);
+    else {
+      const { data: co } = await admin.from('companies').select('website').eq('owner_id', referredProfileId).maybeSingle();
+      key = domainKey(co?.website as string | null) ?? `profile:${referredProfileId}`;
+    }
+    const { error: dup } = await admin.from('referral_claims').insert({ identity_hash: key, referrer_id: ref.id });
+    if (dup) return;
+  }
   const { count: recent } = await admin.from('referral_rewards').select('referred_id', { count: 'exact', head: true })
     .eq('referrer_id', ref.id).gt('cents', 0).gte('created_at', new Date(Date.now() - 365 * 86400000).toISOString());
   // A service member who brings a paying company earns 2 months, outside the yearly cap (every one is a new paying customer).

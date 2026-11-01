@@ -1,6 +1,7 @@
 import 'server-only';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { SITE, notifyMember } from '@/lib/email';
+import { claimPerk, identityKey } from '@/lib/identityClaims';
 
 /** Free Pro for people leaving the service: LanceNest's answer to LinkedIn's free year of Premium for veterans. */
 export const TRANSITION_PRO_DAYS = 180;
@@ -11,7 +12,7 @@ const DAY = 86400000;
  * Gives a verified service member 6 months of Pro, once, when their separation date is within the next 12 months
  * (or in the last 90 days). Safe to call any time: it does nothing for anyone else or for anyone who already had it.
  * Only a separation date a reviewer confirmed from orders, an LES or a DD-214 counts (separation_verified_on);
- * the date members type in themselves never grants anything. One grant per verified account, ever.
+ * the date members type in themselves never grants anything. One grant per verified person, ever.
  */
 export async function grantTransitionPro(profileId: string): Promise<boolean> {
   const admin = createAdminClient();
@@ -27,6 +28,8 @@ export async function grantTransitionPro(profileId: string): Promise<boolean> {
   // Claim it first (one row per member), so two calls at once, or a second separation date, can't grant it again.
   const { error: claimed } = await admin.from('member_grants').insert({ profile_id: profileId, kind: 'transition_pro' });
   if (claimed) return false;
+  // Once per person, not per account: deleting the account and joining again doesn't start another free period.
+  if (!(await claimPerk(await identityKey(profileId), 'transition_pro', profileId))) return false;
 
   const active = v.granted_plan && v.pro_granted_until && Date.parse(v.pro_granted_until as string) > now;
   const base = active ? Date.parse(v.pro_granted_until as string) : now;

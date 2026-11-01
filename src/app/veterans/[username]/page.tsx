@@ -5,6 +5,7 @@ import { notFound, redirect } from 'next/navigation';
 import { cache } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth';
+import { membersHidingFrom } from '@/lib/people';
 import VerificationBadge from '@/components/VerificationBadge';
 import VerifiedNote from '@/components/VerifiedNote';
 import { CLEARANCES, COMPONENTS, yearOf } from '@/lib/military';
@@ -83,7 +84,7 @@ export default async function VeteranProfilePage(
   const { supabase, profile } = data;
   // Access checks first (both at once): employers this member hid from, and unverified members.
   const [{ data: hiding }, { data: me }] = await Promise.all([
-    viewer?.profile?.role === 'employer' ? supabase.rpc('members_hiding_me') : Promise.resolve({ data: [] }),
+    viewer?.profile?.role === 'employer' ? membersHidingFrom(viewer.user.id).then((data) => ({ data })) : Promise.resolve({ data: [] as string[] }),
     viewer?.profile?.role === 'veteran' && viewer.user.id !== profile.id
       ? supabase.from('veteran_profiles').select('verification_status').eq('profile_id', viewer.user.id).maybeSingle()
       : Promise.resolve({ data: null }),

@@ -3,3 +3,5 @@ export const CONTACT_BLOCKED = 'To keep both sides protected, phone numbers, ema
 /** Shown when sexual content, sex-work solicitation or a slur is blocked (database code P0022). */
 export const EXPLICIT_BLOCKED = 'That includes language LanceNest doesn’t allow, such as sexual content or slurs. Please edit it and try again (see lancenest.com/conduct).';
 export const CONTACT_BLOCKED_MESSAGE = 'Phone numbers, emails, links, and payment apps can be shared once the job is booked on LanceNest (or after they apply to one of your jobs). Please remove them and send again.';
+/** Shown when a freelancer's name, headline, location or a skill holds a phone number, email or @handle (P0017 on profiles). */
+export const PROFILE_CONTACT_BLOCKED = 'Phone numbers, emails, @handles and payment apps can’t go in your name, headline, location or skills — clients and employers reach you through LanceNest messages. (Tip: write “Engineer at Acme” instead of “@Acme”.)';

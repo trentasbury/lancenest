@@ -84,7 +84,8 @@ export async function saveAccountProfile(formData: FormData) {
   const fullName = t('full_name', 120);
   if (fullName.length < 2) redirect('/settings/account?profile=name');
   if (isReservedName(fullName)) redirect('/settings/account?profile=reserved');
-  await (await createClient()).from('profiles').update({ full_name: fullName, headline: t('headline', 140) || null, location: t('location', 120) || null }).eq('id', session.user.id);
+  const { error } = await (await createClient()).from('profiles').update({ full_name: fullName, headline: t('headline', 140) || null, location: t('location', 120) || null }).eq('id', session.user.id);
+  if (error) redirect(`/settings/account?profile=${error.code === 'P0017' ? 'contact' : error.code === 'P0019' ? 'reserved' : error.code === 'P0022' ? 'explicit' : 'failed'}`);
   revalidatePath('/', 'layout');
   redirect('/settings/account?profile=saved');
 }

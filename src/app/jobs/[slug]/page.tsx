@@ -204,6 +204,7 @@ export default async function JobDetailPage(
 
           {searchParams?.apply === 'done' && <p className="rounded-lg bg-olive/10 px-4 py-3 text-sm text-olive">✓ Application sent. Track it under My applications.</p>}
           {searchParams?.apply === 'answers' && <p className="rounded-lg bg-signal/10 px-4 py-3 text-sm text-signal">Please answer every question to apply.</p>}
+          {searchParams?.apply === 'closed' && <p className="rounded-lg bg-signal/10 px-4 py-3 text-sm text-signal">This job isn’t taking applications right now.</p>}
           {searchParams?.apply === 'error' && <p className="rounded-lg bg-signal/10 px-4 py-3 text-sm text-signal">Your application didn’t go through. Make sure your profile is verified, then try again.</p>}
           {isVeteran && canApply && AI_ENABLED && <FitExplainer slug={job.slug} />}
           {isVeteran && (

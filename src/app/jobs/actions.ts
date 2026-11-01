@@ -56,6 +56,7 @@ export async function applyToJob(jobId: string, slug: string, formData: FormData
     // turn the record into a real LanceNest application (résumé and answers included) and tell the employer.
     error = await reapply(existing.id as string, userId, jobId, resumeId, answers);
   }
+  if (error && (error as { code?: string }).code === 'P0025') redirect(`/jobs/${slug}?apply=closed`);
   if (error) { console.error('apply failed:', error.message); redirect(`/jobs/${slug}?apply=error`); }
   revalidatePath(`/jobs/${slug}`);
   revalidatePath('/dashboard');
@@ -72,6 +73,9 @@ async function reapply(id: string, userId: string, jobId: string, resumeId: stri
     resumeId ? admin.from('resumes').select('id').eq('id', resumeId).eq('profile_id', userId).maybeSingle() : Promise.resolve({ data: null }),
   ]);
   if (who?.role !== 'admin' && vet?.verification_status !== 'verified') return { message: 'not verified' };
+  // Only jobs still taking applications (and not ones that take applications on the company's own site only).
+  const { data: open } = await admin.from('jobs').select('status, apply_mode').eq('id', jobId).maybeSingle();
+  if (open?.status !== 'open' || open.apply_mode === 'external') return { message: 'job closed', code: 'P0025' };
   const { error } = await admin.from('applications')
     .update({ source: 'lancenest', status: 'applied', resume_id: resume ? resumeId : null, answers, applied_at: new Date().toISOString() })
     .eq('id', id).eq('profile_id', userId);

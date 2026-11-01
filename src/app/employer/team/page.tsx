@@ -16,7 +16,7 @@ export default async function TeamPage(props: { searchParams: Promise<{ error?: 
   const { user } = await requireRole(['employer'], '/employer/team');
   const company = await getMyCompany(user.id);
   if (!company) redirect('/employer/dashboard');
-  const { data: members } = await createAdminClient().from('company_members').select('profile_id, created_at, profile:profiles(full_name, headline)').eq('company_id', company.id);
+  const { data: members } = await createAdminClient().from('company_members').select('profile_id, created_at, profile:profiles(full_name, headline)').eq('company_id', company.id).order('created_at').order('profile_id');
   const seats = SEATS[company.plan] ?? 1;
   const used = 1 + (members ?? []).length;
   return (
@@ -28,9 +28,10 @@ export default async function TeamPage(props: { searchParams: Promise<{ error?: 
       {searchParams.added && <FormMessage message="Added. They’ve been notified." />}
       <ul className="card divide-y divide-line">
         <li className="flex justify-between p-4"><span className="font-medium">You</span><span className="text-xs text-muted">Owner</span></li>
-        {((members ?? []) as unknown as { profile_id: string; profile: { full_name: string; headline: string | null } | null }[]).map((m) => (
+        {((members ?? []) as unknown as { profile_id: string; profile: { full_name: string; headline: string | null } | null }[]).map((m, i) => (
           <li key={m.profile_id} className="flex items-center justify-between gap-3 p-4">
-            <span><span className="font-medium">{m.profile?.full_name}</span><span className="block text-xs text-muted">{m.profile?.headline}</span></span>
+            <span><span className="font-medium">{m.profile?.full_name}</span><span className="block text-xs text-muted">{m.profile?.headline}</span>
+              {i + 1 >= seats && <span className="mt-1 block text-xs font-semibold text-signal">Paused: your plan doesn’t include this seat. Upgrade or remove someone to turn it back on.</span>}</span>
             {company.isOwner && <form action={removeTeamMember.bind(null, m.profile_id)}><button className="text-xs text-muted hover:text-signal">Remove</button></form>}
           </li>
         ))}

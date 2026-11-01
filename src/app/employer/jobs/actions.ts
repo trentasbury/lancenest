@@ -142,14 +142,20 @@ export async function featureWithPlan(jobId: string) {
 
   const admin = createAdminClient();
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+  // Take one of this month's included boosts first, then check the count, so several clicks at once can't go past
+  // the allowance (the extra claim is handed back).
+  const { data: claim } = await admin.from('purchases').insert({ company_id: company.id, kind: 'job_boost', job_id: jobId, amount_cents: 0, stripe_checkout_session_id: `included:${crypto.randomUUID()}` }).select('id').single();
+  if (!claim) redirect(`/employer/jobs/${jobId}?error=save`);
   const { count } = await admin.from('purchases').select('id', { count: 'exact', head: true })
     .eq('company_id', company.id).eq('kind', 'job_boost').eq('amount_cents', 0).gte('created_at', monthStart);
-  if ((count ?? 0) >= allowance) redirect(`/employer/jobs/${jobId}?error=allowance`);
+  if ((count ?? 0) > allowance) {
+    await admin.from('purchases').delete().eq('id', claim.id);
+    redirect(`/employer/jobs/${jobId}?error=allowance`);
+  }
 
   const base = job.featured_until && new Date(job.featured_until) > new Date() ? new Date(job.featured_until) : new Date();
   base.setDate(base.getDate() + BOOST_DAYS);
   await admin.from('jobs').update({ featured_until: base.toISOString() }).eq('id', jobId);
-  await admin.from('purchases').insert({ company_id: company.id, kind: 'job_boost', job_id: jobId, amount_cents: 0, stripe_checkout_session_id: `included:${crypto.randomUUID()}` });
   revalidatePath('/jobs');
   redirect(`/employer/jobs/${jobId}?saved=1`);
 }

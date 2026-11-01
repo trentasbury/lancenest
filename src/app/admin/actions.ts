@@ -62,6 +62,19 @@ export async function decideVerification(requestId: string, decision: 'verified'
     .eq('id', requestId);
 
   if (fingerprint) await admin.from('verified_identities').upsert({ profile_id: request.profile_id, identity_hash: fingerprint });
+  // Same person as a deleted account with warnings or suspensions? The record comes back with them.
+  if (fingerprint && decision === 'verified') {
+    const { data: hist } = await admin.from('identity_history').select('strikes').eq('identity_hash', fingerprint).maybeSingle();
+    const past = ((hist?.strikes as { level: string; reason: string; created_at: string }[] | null) ?? []).filter((x) => x.level === 'warning' || x.level === 'suspension');
+    if (past.length) {
+      const { count } = await admin.from('member_strikes').select('id', { count: 'exact', head: true }).eq('profile_id', request.profile_id).like('reason', 'From an earlier account%');
+      if (!count) {
+        await admin.from('member_strikes').insert(past.map((x) => ({ profile_id: request.profile_id, level: x.level, issued_by: null,
+          reason: `From an earlier account (${String(x.created_at).slice(0, 10)}): ${x.reason}`.slice(0, 500) })));
+        await admin.from('admin_actions').insert({ admin_id: user.id, action: 'strikes_carried_over', target_type: 'profile', target_id: request.profile_id, details: { count: past.length } });
+      }
+    }
+  }
 
   // Data minimization: neither file is needed once a decision is made.
   const files = [request.document_path, request.id_document_path].filter((p): p is string => typeof p === 'string' && p.length > 0);

@@ -9,6 +9,7 @@ import { sanitizeSearch } from '@/lib/format';
 import AvatarUpload from '@/components/AvatarUpload';
 import { createClient } from '@/lib/supabase/server';
 import { RESERVED_NAME_MESSAGE } from '@/lib/names';
+import { EXPLICIT_BLOCKED, PROFILE_CONTACT_BLOCKED } from '@/lib/contact';
 import PushToggle from '@/components/PushToggle';
 
 export const metadata: Metadata = { title: 'Account settings', robots: { index: false } };
@@ -38,7 +39,7 @@ export default async function AccountPage(
       <section className="card p-7">
         <h2 className="font-serif text-2xl font-semibold">Your profile</h2>
         {searchParams.photo && <p className={`mt-2 text-sm ${['saved', 'removed'].includes(searchParams.photo) ? 'text-olive' : 'text-signal'}`}>{{ saved: 'Photo updated.', removed: 'Photo removed.', type: 'Upload a JPG, PNG, or WebP image.', size: 'Photos must be under 2 MB.', failed: 'That upload didn’t go through — please try again.' }[searchParams.photo]}</p>}
-        {searchParams.profile && <p className={`mt-2 text-sm ${searchParams.profile === 'saved' ? 'text-olive' : 'text-signal'}`}>{searchParams.profile === 'saved' ? 'Profile saved.' : searchParams.profile === 'reserved' ? RESERVED_NAME_MESSAGE : 'Please enter your full name.'}</p>}
+        {searchParams.profile && <p className={`mt-2 text-sm ${searchParams.profile === 'saved' ? 'text-olive' : 'text-signal'}`}>{{ saved: 'Profile saved.', reserved: RESERVED_NAME_MESSAGE, contact: PROFILE_CONTACT_BLOCKED, explicit: EXPLICIT_BLOCKED, failed: 'That didn’t save — please try again.' }[searchParams.profile] ?? 'Please enter your full name.'}</p>}
         <div className="mt-4 flex flex-wrap items-center gap-4">
           {profile.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element

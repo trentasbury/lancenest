@@ -16,11 +16,14 @@ import {
   removeResume, removeService, removeSkill, saveBasics, setDefaultResume, uploadResume,
 } from './actions';
 
+import { PROFILE_CONTACT_BLOCKED } from '@/lib/contact';
+
 export const metadata: Metadata = { title: 'Edit profile' };
 
 const ERRORS: Record<string, string> = {
   name: 'Your name can’t be empty.',
   reserved: RESERVED_NAME_MESSAGE,
+  contact: PROFILE_CONTACT_BLOCKED,
   skill: 'Type a skill before adding it.',
   branch: 'Choose a branch of service.',
   years: 'The end year can’t be before the start year.',

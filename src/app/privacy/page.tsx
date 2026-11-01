@@ -88,7 +88,7 @@ export default function PrivacyPage() {
       </section>
       <section>
         <h2>Retention</h2>
-        <p>We keep account information while your account is active and delete it when you ask us to, except where we must keep limited records for legal, security, or fraud-prevention reasons.</p>
+        <p>We keep account information while your account is active and delete it when you ask us to, except where we must keep limited records for legal, security, or fraud-prevention reasons. For example, when a verified member deletes their account we keep a one-way fingerprint of their identity (it can’t be turned back into a name or birth date) together with any one-time offers they used and any conduct warnings, so offers can’t be claimed twice and a record can’t be erased by re-joining.</p>
       </section>
       <section>
         <h2>Age requirement</h2>

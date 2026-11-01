@@ -58,7 +58,19 @@ export async function deleteMemberCompletely(userId: string) {
   // 3. Companies they own (their jobs and applications go with them).
   if (companyIds.length) await admin.from('companies').delete().in('id', companyIds);
 
-  // 4. The account itself — profile, posts, messages, and everything else cascade.
+  // 4. Warnings and suspensions stay with the verified person (a one-way fingerprint, nothing readable), so deleting
+  //    and re-joining doesn't wipe the record. Carried over only if the same person verifies a new account.
+  const { data: ident } = await admin.from('verified_identities').select('identity_hash').eq('profile_id', userId).maybeSingle();
+  if (ident?.identity_hash) {
+    const { data: strikes } = await admin.from('member_strikes').select('level, reason, created_at').eq('profile_id', userId).order('created_at');
+    if (strikes?.length) {
+      const { data: prior } = await admin.from('identity_history').select('strikes').eq('identity_hash', ident.identity_hash).maybeSingle();
+      const all = [...((prior?.strikes as unknown[]) ?? []), ...strikes].slice(-50);
+      await admin.from('identity_history').upsert({ identity_hash: ident.identity_hash, strikes: all, deleted_at: new Date().toISOString() });
+    }
+  }
+
+  // 5. The account itself — profile, posts, messages, and everything else cascade.
   const { error } = await admin.auth.admin.deleteUser(userId);
   if (error) throw error;
 }

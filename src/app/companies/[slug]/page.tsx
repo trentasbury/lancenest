@@ -18,7 +18,7 @@ import CompanyCommunity from './CompanyCommunity';
 const getCompany = cache(async (slug: string) => {
   const supabase = await createClient();
   // Public columns only (verification details, notes and billing IDs are never sent to the browser).
-  const { data } = await supabase.from('companies').select('id, slug, name, logo_url, cover_url, industry, headquarters, website, about, mission, benefits, veteran_commitment, is_verified, owner_id, msep_status, guard_reserve_pledge').eq('slug', slug).maybeSingle();
+  const { data } = await supabase.from('companies').select('id, slug, name, logo_url, cover_url, plan, industry, headquarters, website, about, mission, benefits, veteran_commitment, is_verified, owner_id, msep_status, guard_reserve_pledge').eq('slug', slug).maybeSingle();
   return (data as Company | null) ?? null;
 });
 
@@ -57,7 +57,7 @@ export default async function CompanyPage(props: { params: Promise<{ slug: strin
 
   return (
     <>
-      {(company as unknown as { cover_url?: string | null }).cover_url && <div className="h-48 w-full bg-navy sm:h-64"><img src={(company as unknown as { cover_url: string }).cover_url} alt="" className="h-full w-full object-cover" /></div>}
+      {(company as unknown as { cover_url?: string | null }).cover_url && ['professional', 'federal', 'enterprise'].includes((company as unknown as { plan?: string }).plan ?? '') && <div className="h-48 w-full bg-navy sm:h-64"><img src={(company as unknown as { cover_url: string }).cover_url} alt="" className="h-full w-full object-cover" /></div>}
       <section className="bg-navy-deep text-ivory">
         <div className="container-page flex flex-col gap-6 py-14 sm:flex-row sm:items-center">
           <CompanyMark name={company.name} logoUrl={company.logo_url} size="lg" />
