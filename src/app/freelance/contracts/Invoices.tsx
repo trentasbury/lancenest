@@ -1,33 +1,43 @@
 import Link from 'next/link';
 import { createAdminClient } from '@/lib/supabase/admin';
 import SubmitButton from '@/components/SubmitButton';
-import { createInvoice, setInvoiceStatus } from './invoiceActions';
+import { createInvoice, payInvoiceFee, setInvoiceStatus } from './invoiceActions';
 
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-type Inv = { id: string; number: string; description: string; amount_cents: number; due_on: string | null; status: string; created_at: string };
+type Inv = { id: string; number: string; description: string; amount_cents: number; due_on: string | null; status: string; created_at: string; held: boolean; fee_due_cents: number };
 
 /** Invoices on a booked job: the freelancer sends them, either side marks them paid. */
 export default async function Invoices({ contractId, isFreelancer, isClient }: { contractId: string; isFreelancer: boolean; isClient: boolean }) {
-  const { data } = await createAdminClient().from('contract_invoices').select('id, number, description, amount_cents, due_on, status, created_at').eq('contract_id', contractId).order('created_at', { ascending: false });
+  const admin = createAdminClient();
+  const [{ data }, { data: k }] = await Promise.all([
+    admin.from('contract_invoices').select('id, number, description, amount_cents, due_on, status, created_at, held, fee_due_cents').eq('contract_id', contractId).order('created_at', { ascending: false }),
+    admin.from('contracts').select('booking_fee_payer').eq('id', contractId).maybeSingle(),
+  ]);
   const invoices = (data ?? []) as Inv[];
+  // Whoever pays this job's booking fee also pays any update to it.
+  const iPayFee = k?.booking_fee_payer === 'freelancer' ? isFreelancer : isClient;
   return (
     <section id="invoices" className="card scroll-mt-24 space-y-4 p-6">
       <div>
         <h2 className="font-serif text-2xl font-semibold">Invoices</h2>
         <p className="mt-1 text-sm text-muted">{isFreelancer ? 'Bill your client for this job. They pay you directly, the way you agreed.' : 'Invoices from your freelancer. Pay them directly, the way you agreed, then mark them paid.'}</p>
+        <p className="mt-1 text-xs text-muted">LanceNest’s booking fee is 5% of the job, at most $249 in all. If invoices add up to more than the booked price, the difference in the fee is paid before the invoice is sent{k?.booking_fee_payer === 'freelancer' ? ' (by the freelancer, who covers this job’s fee)' : ' (by the client)'}.</p>
       </div>
       {invoices.length > 0 && (
         <ul className="divide-y divide-line rounded-xl border border-line">
           {invoices.map((i) => (
             <li key={i.id} className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
               <div>
-                <Link href={`/freelance/contracts/${contractId}/invoices/${i.id}`} className="font-medium text-navy hover:underline">{i.number}</Link>
+                {i.held && isClient ? <span className="font-medium">{i.number}</span> : <Link href={`/freelance/contracts/${contractId}/invoices/${i.id}`} className="font-medium text-navy hover:underline">{i.number}</Link>}
                 <span className="text-muted"> · {usd(i.amount_cents)}{i.due_on ? ` · due ${new Date(`${i.due_on}T00:00:00Z`).toLocaleDateString('en-US', { dateStyle: 'medium', timeZone: 'UTC' })}` : ''}</span>
-                <p className="text-xs text-muted">{i.description.slice(0, 120)}</p>
+                {!(i.held && isClient) && <p className="text-xs text-muted">{i.description.slice(0, 120)}</p>}
               </div>
               <div className="flex items-center gap-2">
-                <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${i.status === 'paid' ? 'bg-olive/10 text-olive' : i.status === 'void' ? 'bg-line text-muted' : 'bg-brass/10 text-brass-dark'}`}>{i.status === 'sent' ? 'Unpaid' : i.status === 'paid' ? 'Paid' : 'Cancelled'}</span>
-                {i.status === 'sent' && (isClient || isFreelancer) && <form action={setInvoiceStatus.bind(null, contractId, i.id, 'paid')}><SubmitButton className="btn btn-outline py-1 text-xs" pendingText="…">Mark paid</SubmitButton></form>}
+                {i.status === 'sent' && i.held
+                  ? <span className="rounded-full bg-signal/10 px-2.5 py-0.5 text-xs font-semibold text-signal">Waiting on {usd(i.fee_due_cents)} booking fee update</span>
+                  : <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${i.status === 'paid' ? 'bg-olive/10 text-olive' : i.status === 'void' ? 'bg-line text-muted' : 'bg-brass/10 text-brass-dark'}`}>{i.status === 'sent' ? 'Unpaid' : i.status === 'paid' ? 'Paid' : 'Cancelled'}</span>}
+                {i.status === 'sent' && i.held && iPayFee && <form action={payInvoiceFee.bind(null, contractId, i.id)}><SubmitButton className="btn btn-primary py-1 text-xs" pendingText="…">Pay {usd(i.fee_due_cents)} to {isClient ? 'receive it' : 'send it'}</SubmitButton></form>}
+                {i.status === 'sent' && !i.held && (isClient || isFreelancer) && <form action={setInvoiceStatus.bind(null, contractId, i.id, 'paid')}><SubmitButton className="btn btn-outline py-1 text-xs" pendingText="…">Mark paid</SubmitButton></form>}
                 {i.status === 'sent' && isFreelancer && <form action={setInvoiceStatus.bind(null, contractId, i.id, 'void')}><SubmitButton className="text-xs text-muted underline" pendingText="…">Cancel</SubmitButton></form>}
               </div>
             </li>

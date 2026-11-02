@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireVerifiedMember } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { stripe } from '@/lib/stripe';
 import SubmitButton from '@/components/SubmitButton';
@@ -21,10 +20,10 @@ export default async function FreelancerProfilePage(
   const searchParams = await props.searchParams;
   const { user, profile } = await requireVerifiedMember('/freelance/profile');
   if (profile.role !== 'veteran') redirect('/freelance');
-  const supabase = await createClient();
   const [{ data: fp }, { data: items }] = await Promise.all([
     createAdminClient().from('freelancer_profiles').select('profile_id, title, bio, hourly_rate, available, clearance_work, vosb, sdvosb, sam_uei, payouts_enabled, stripe_account_id').eq('profile_id', user.id).maybeSingle(),
-    supabase.from('portfolio_items').select('*').eq('profile_id', user.id).order('created_at', { ascending: false }),
+    // Your own items, links included (links are closed to the public API; see migration 0095).
+    createAdminClient().from('portfolio_items').select('id, title, description, url, image_url, created_at').eq('profile_id', user.id).order('created_at', { ascending: false }),
   ]);
 
   // Refresh payout status from Stripe (the server is the only thing allowed to set it).
@@ -79,7 +78,7 @@ export default async function FreelancerProfilePage(
 
       <section id="portfolio" className="card scroll-mt-24 p-7">
         <h2 className="font-serif text-2xl font-semibold">Portfolio</h2>
-        <p className="mt-1 text-sm text-muted">Show real work — projects, results, and links. Clients hire from portfolios.</p>
+        <p className="mt-1 text-sm text-muted">Show real work — projects, results, and links. Clients hire from portfolios. Project links are shown to a client once they book you.</p>
         {(items ?? []).length > 0 && (
           <ul className="mt-5 divide-y divide-line rounded-xl border border-line">
             {(items ?? []).map((it) => (

@@ -148,7 +148,14 @@ export default async function VeteranProfilePage(
     supabase.from('service_listings').select('id, title, category, price_cents, price_type, delivery, service_area').eq('profile_id', profile.id).eq('status', 'active').order('created_at', { ascending: false }),
     supabase.from('reviews').select('rating, body, created_at').eq('reviewee_id', profile.id).order('created_at', { ascending: false }).limit(5),
     supabase.from('freelancer_profiles').select('title, bio, hourly_rate, available, clearance_work, vosb, sdvosb').eq('profile_id', profile.id).maybeSingle(),
-    supabase.from('portfolio_items').select('id, title, description, url, image_url').eq('profile_id', profile.id).order('created_at', { ascending: false }).limit(6),
+    // Project links stay hidden from clients and hiring employers until a job is booked (the database decides).
+    Promise.all([
+      supabase.from('portfolio_items').select('id, title, description, image_url').eq('profile_id', profile.id).order('created_at', { ascending: false }).limit(6),
+      supabase.rpc('portfolio_links', { p: profile.id }),
+    ]).then(([items, links]) => {
+      const byId = new Map(((links.data ?? []) as { id: string; url: string | null }[]).map((l) => [l.id, l.url]));
+      return { data: (items.data ?? []).map((it) => ({ ...it, url: byId.get(it.id as string) ?? null, linkHidden: byId.has(it.id as string) && !byId.get(it.id as string) })) };
+    }),
     getFeed({ viewerId, authorId: profile.id, type: 'photos', limit: tab === 'photos' ? 48 : 6 }),
     // Row-level security counts only the posts this viewer is allowed to see.
     supabase.from('network_posts').select('id', { count: 'exact', head: true }).eq('author_id', profile.id).is('group_id', null),
@@ -414,6 +421,7 @@ export default async function VeteranProfilePage(
                           <p className="font-medium">{it.title as string}</p>
                           {it.description && <p className="mt-1 text-sm text-muted">{it.description as string}</p>}
                           {safeHref(it.url as string) && <a href={safeHref(it.url as string)} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-xs text-navy underline">View work ↗</a>}
+                          {it.linkHidden && <p className="mt-1 text-xs text-muted">Project link shared once the job is booked on LanceNest.</p>}
                           </div>
                         </li>
                       ))}

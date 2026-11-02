@@ -57,6 +57,73 @@ export async function bookingCheckoutUrl(contractId: string, payerId: string, em
   return session.url;
 }
 
+/**
+ * The booking fee follows what's actually invoiced (approved November 1, 2026): 5% of the larger of the booked price
+ * and everything invoiced on the job, still at least $4.99 and at most $249 in all. Returns what's still owed for a
+ * new invoice of this amount (0 if the fee already paid covers it). Void invoices don't count.
+ */
+export async function invoiceFeeDue(contractId: string, newAmountCents: number) {
+  const admin = createAdminClient();
+  const [{ data: k }, { data: invs }] = await Promise.all([
+    admin.from('contracts').select('booking_fee_cents').eq('id', contractId).maybeSingle(),
+    admin.from('contract_invoices').select('amount_cents, status, fee_paid_cents').eq('contract_id', contractId),
+  ]);
+  const live = (invs ?? []).filter((i) => i.status !== 'void');
+  const invoiced = live.reduce((a, i) => a + (i.amount_cents as number), 0) + newAmountCents;
+  const paid = ((k?.booking_fee_cents as number | null) ?? 0) + (invs ?? []).reduce((a, i) => a + ((i.fee_paid_cents as number | null) ?? 0), 0);
+  return Math.max(0, bookingFeeCents(invoiced) - paid);
+}
+
+/** Stripe Checkout for the booking-fee top-up on a held invoice. Only whoever pays this job's booking fee can open it. */
+export async function invoiceFeeCheckoutUrl(contractId: string, invoiceId: string, payerId: string, email: string | undefined) {
+  const admin = createAdminClient();
+  const [{ data: k }, { data: inv }] = await Promise.all([
+    admin.from('contracts').select('id, title, client_id, freelancer_id, booking_fee_payer').eq('id', contractId).maybeSingle(),
+    admin.from('contract_invoices').select('id, number, amount_cents, status, held, fee_due_cents').eq('id', invoiceId).eq('contract_id', contractId).maybeSingle(),
+  ]);
+  if (!k || !inv || !inv.held || inv.status === 'void' || !((inv.fee_due_cents as number) > 0)) return null;
+  const byFreelancer = k.booking_fee_payer === 'freelancer';
+  if ((byFreelancer ? k.freelancer_id : k.client_id) !== payerId) return null;
+  const company = byFreelancer ? null : await getMyCompany(payerId);
+  const meta = { kind: 'booking_topup', contract_id: k.id as string, invoice_id: inv.id as string, payer: byFreelancer ? 'freelancer' : 'client', ...(company ? { company_id: company.id } : {}) };
+  const session = await stripe().checkout.sessions.create({
+    mode: 'payment',
+    line_items: [{ quantity: 1, price_data: { currency: 'usd', unit_amount: inv.fee_due_cents as number, product_data: {
+      name: `LanceNest booking fee update: ${k.title as string}`.slice(0, 250),
+      description: `Invoice ${inv.number as string} (${usd(inv.amount_cents as number)}) brings this job past the amount its booking fee covered. The booking fee is 5% of the job, at most $249 in all. The invoice is sent as soon as this is paid.`,
+    } } }],
+    metadata: meta, payment_intent_data: { metadata: meta },
+    ...(company?.stripe_customer_id ? { customer: company.stripe_customer_id } : email ? { customer_email: email } : {}),
+    allow_promotion_codes: false,
+    success_url: `${SITE}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${SITE}/freelance/contracts/${k.id}#invoices`,
+  });
+  return session.url;
+}
+
+/** The top-up was paid: send the invoice. Called from the Stripe webhook and the success page; runs once per invoice. */
+export async function confirmInvoiceFeeFromSession(sessionId: string, invoiceId: string, amountPaid: number) {
+  const admin = createAdminClient();
+  const { data: inv } = await admin.from('contract_invoices').select('id, contract_id, number, amount_cents, held, fee_due_cents, client_id, freelancer_id').eq('id', invoiceId).maybeSingle();
+  if (!inv) return { ok: false as const };
+  if (inv.held && amountPaid < (inv.fee_due_cents as number)) {
+    const { data: admins } = await admin.from('profiles').select('id').eq('role', 'admin');
+    if (admins?.length) await admin.from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'dispute', title: `A booking fee update for invoice ${inv.number} was paid short (${usd(amountPaid)} of ${usd(inv.fee_due_cents as number)}). The invoice wasn’t sent.`, link: `/freelance/contracts/${inv.contract_id}` })));
+    return { ok: false as const };
+  }
+  const { data: released } = await admin.from('contract_invoices')
+    .update({ held: false, fee_paid_cents: amountPaid, fee_paid_at: new Date().toISOString(), fee_checkout_session_id: sessionId })
+    .eq('id', invoiceId).eq('held', true).select('id').maybeSingle();
+  if (released) {
+    const { data: k } = await admin.from('contracts').select('title, booking_fee_payer').eq('id', inv.contract_id).maybeSingle();
+    await notifyMember(inv.client_id as string, { type: 'invoice', link: `/freelance/contracts/${inv.contract_id}#invoices`, title: `New invoice ${inv.number} for “${k?.title ?? 'your job'}”: ${usd(inv.amount_cents as number)}.` });
+    if (k?.booking_fee_payer !== 'freelancer') {
+      await notifyMember(inv.freelancer_id as string, { type: 'invoice', link: `/freelance/contracts/${inv.contract_id}#invoices`, title: `Your client paid the booking fee update, so invoice ${inv.number} was sent.` });
+    }
+  }
+  return { ok: true as const, kind: 'booking_topup', contractId: inv.contract_id as string };
+}
+
 /** The freelancer covers the booking fee: tell them a client booked them and the fee is theirs to pay to confirm it. */
 export async function askFreelancerToPayBooking(k: { id: string; title: string; freelancer_id: string; booking_fee_cents: number }) {
   await notifyMember(k.freelancer_id, { type: 'contract', link: `/freelance/contracts/${k.id}`, title: `A client wants to book you for “${k.title}”. Pay the ${usd(k.booking_fee_cents)} booking fee to confirm.`,

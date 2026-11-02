@@ -190,6 +190,11 @@ export async function applyCheckoutSession(sessionId: string) {
     const { confirmBookingFromSession } = await import('@/lib/booking');
     return confirmBookingFromSession(s.id, s.metadata.contract_id, s.amount_total ?? 0);
   }
+  if (kind === 'booking_topup') {
+    if (s.payment_status !== 'paid' || !s.metadata?.invoice_id) return { ok: false as const };
+    const { confirmInvoiceFeeFromSession } = await import('@/lib/booking');
+    return confirmInvoiceFeeFromSession(s.id, s.metadata.invoice_id, s.amount_total ?? 0);
+  }
 
   if (s.mode === 'subscription' && s.subscription && typeof s.subscription !== 'string') {
     await syncSubscription(s.subscription);
