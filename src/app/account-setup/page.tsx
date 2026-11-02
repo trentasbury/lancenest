@@ -44,7 +44,7 @@ export default async function AccountSetupPage(props: { searchParams: Promise<{ 
             </fieldset>
             <label className="flex items-start gap-2.5 rounded-xl border border-line bg-white px-4 py-3 text-sm leading-relaxed text-ink/90">
               <input type="checkbox" name="terms" required className="mt-1 accent-navy" />
-              <span>Yes, I understand and agree to the LanceNest <a href="/terms" target="_blank" className="text-navy underline">Terms of Service</a>, including the <a href="/conduct" target="_blank" className="text-navy underline">Code of Conduct</a> and <a href="/privacy" target="_blank" className="text-navy underline">Privacy Policy</a>, and to book work I find on LanceNest through LanceNest.</span>
+              <span>Yes, I understand and agree to the LanceNest <a href="/terms" target="_blank" className="text-navy underline">Terms of Service</a>, including the <a href="/conduct" target="_blank" className="text-navy underline">Code of Conduct</a>, <a href="/privacy" target="_blank" className="text-navy underline">Privacy Policy</a>, and <a href="/terms#non-circumvention" target="_blank" className="text-navy underline">Non-Circumvention Policy</a>.</span>
             </label>
             <SubmitButton className="btn btn-primary w-full" pendingText="Setting up…">Continue</SubmitButton>
           </form>

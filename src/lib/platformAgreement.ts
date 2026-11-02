@@ -7,7 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
  * acceptance is kept with the wording version and time, as evidence if someone takes a client off the platform.
  * Messages also show reminders about keeping talk and bookings on LanceNest (components/messages/TosReminder).
  */
-export const TERMS_VERSION = 'terms-2026-11-02';
+export const TERMS_VERSION = 'terms-2026-11-02b'; // box names the Terms, Code of Conduct, Privacy Policy and Non-Circumvention Policy
 export const TERMS_FIELD = 'terms';
 export const TERMS_REQUIRED = 'Please tick the box to agree to the Terms of Service.';
 
