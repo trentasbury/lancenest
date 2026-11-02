@@ -187,10 +187,16 @@ export default async function ContractPage(
       )}
       {(isClient || isFreelancer) && contract.status !== 'cancelled' && <p className="text-sm"><Link href={`/freelance/contracts/${contract.id}/agreement`} className="text-navy underline">Print the job agreement</Link></p>}
       {searchParams.converted && <FormMessage message="Thanks — we’ll confirm the conversion and send any invoice by email." />}
-      {CONVERSION_FEES_ENABLED && isClient && profile.role === 'employer' && ['active', 'completed'].includes(contract.status) && (
-        <details className="card p-5 text-sm"><summary className="cursor-pointer font-medium text-navy">Hire this freelancer full-time</summary>
-          <p className="mt-2 text-muted">Converting a LanceNest contractor to a full-time employee within 12 months of your first contract carries a one-time fee of {Math.round(FREELANCE_FEES.conversionFee.firstYearPayRate * 100)}% of first-year base salary (minimum ${(FREELANCE_FEES.conversionFee.minimumCents / 100).toLocaleString()}). After 12 months, it’s free.</p>
-          <form action={requestConversion.bind(null, contract.id)} className="mt-3 flex flex-col gap-2 sm:flex-row"><input name="salary" required inputMode="decimal" placeholder="First-year base salary ($)" className="field" /><SubmitButton className="btn btn-primary shrink-0" pendingText="…">Request conversion</SubmitButton></form>
+      {CONVERSION_FEES_ENABLED && isClient && ['active', 'completed'].includes(contract.status) && (
+        <details className="card p-5 text-sm"><summary className="cursor-pointer font-medium text-navy">Hire this freelancer full-time, or keep working together outside LanceNest</summary>
+          <p className="mt-2 text-muted">Within {FREELANCE_FEES.conversionFee.waivedAfterMonths} months of meeting on LanceNest, moving the relationship off LanceNest has a one-time conversion fee: {(FREELANCE_FEES.conversionFee.rate * 100).toFixed(1)}% of what you expect to pay this freelancer over the next 12 months (first-year base salary for a full-time hire), less booking fees you paid on work with them in the last 12 months, at least ${(FREELANCE_FEES.conversionFee.minimumCents / 100).toLocaleString()}. After {FREELANCE_FEES.conversionFee.waivedAfterMonths} months, it’s free. LanceNest confirms it with both of you and sends the invoice.</p>
+          <form action={requestConversion.bind(null, contract.id)} className="mt-3 space-y-2">
+            <div className="flex flex-wrap gap-4">
+              <label className="flex items-center gap-2"><input type="radio" name="kind" value="full_time" defaultChecked className="accent-navy" />Hire full-time</label>
+              <label className="flex items-center gap-2"><input type="radio" name="kind" value="off_platform" className="accent-navy" />Keep working together outside LanceNest</label>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row"><input name="estimate" required inputMode="decimal" placeholder="Expected pay over the next 12 months ($)" className="field" /><SubmitButton className="btn btn-primary shrink-0" pendingText="…">Request conversion</SubmitButton></div>
+          </form>
         </details>
       )}
       {contract.status === 'completed' && (isClient || isFreelancer) && (

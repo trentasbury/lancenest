@@ -9,7 +9,11 @@ export const FREELANCE_FEES = {
   contractStartTiers: [[10000, 0], [100000, 499], [Infinity, 999]] as [number, number][],
   smallProjectCents: 0, // on projects under $200 (Fiverr charges $3.50)
   smallProjectUnderCents: 20000,
-  conversionFee: { minimumCents: 500000, firstYearPayRate: 0.15 }, // hiring a freelancer full-time
+  // Conversion fee, matching Upwork's (approved November 2, 2026): moving a relationship off LanceNest within 24 months
+  // of meeting here (a full-time hire, or working together outside LanceNest) costs 13.5% of the freelancer's expected
+  // earnings from that client over the next 12 months, less booking fees the client paid on work with them in the last
+  // 12 months, at least $1,000. No fee after 24 months. Off until CONVERSION_FEES_ENABLED (attorney review).
+  conversionFee: { rate: 0.135, minimumCents: 100000, waivedAfterMonths: 24 },
   // Booking fee: paid by the client to LanceNest when they hire (veterans pay nothing). Collected before the job is
   // booked and before contact details open, so it can't be skipped by paying the freelancer in cash. 5% of the agreed
   // price, at least $4.99 and at most $249 (approved October 31, 2026).

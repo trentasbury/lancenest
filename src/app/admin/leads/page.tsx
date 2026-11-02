@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: 'Call requests', robots: { index: fal
 
 export default async function LeadsPage() {
   await requireAdmin('/admin/leads');
-  const { data: conv } = await createAdminClient().from('conversion_requests').select('id, fee_cents, salary_cents, status, created_at, contract:contracts(title)').order('created_at', { ascending: false }).limit(50);
+  const { data: conv } = await createAdminClient().from('conversion_requests').select('id, kind, fee_cents, salary_cents, estimate_cents, discount_cents, status, created_at, contract:contracts(title)').order('created_at', { ascending: false }).limit(50);
   const { data } = await createAdminClient().from('sales_leads').select('*').order('created_at', { ascending: false }).limit(100);
   return (
     <div className="container-page max-w-4xl space-y-6 py-10">
@@ -15,7 +15,7 @@ export default async function LeadsPage() {
       <h1 className="font-serif text-4xl font-medium">Call requests</h1>
       {(conv ?? []).length > 0 && (
         <section className="card p-5 text-sm"><p className="eyebrow">Contract-to-hire conversions</p>
-          <ul className="mt-2 divide-y divide-line">{((conv ?? []) as unknown as { id: string; fee_cents: number; salary_cents: number; created_at: string; contract: { title: string } | null }[]).map((c) => <li key={c.id} className="flex justify-between py-2"><span>{c.contract?.title} · salary ${(c.salary_cents / 100).toLocaleString()}</span><strong>{c.fee_cents ? `Invoice $${(c.fee_cents / 100).toLocaleString()}` : 'No fee'}</strong></li>)}</ul>
+          <ul className="mt-2 divide-y divide-line">{((conv ?? []) as unknown as { id: string; kind: string; fee_cents: number; salary_cents: number | null; estimate_cents: number | null; discount_cents: number; created_at: string; contract: { title: string } | null }[]).map((c) => <li key={c.id} className="flex justify-between py-2"><span>{c.contract?.title} · {c.kind === 'off_platform' ? 'outside LanceNest' : 'full-time'} · expected ${(((c.estimate_cents ?? c.salary_cents) ?? 0) / 100).toLocaleString()}/yr{c.discount_cents ? ` · less $${(c.discount_cents / 100).toLocaleString()} fees paid` : ''}</span><strong>{c.fee_cents ? `Invoice $${(c.fee_cents / 100).toLocaleString()}` : 'No fee'}</strong></li>)}</ul>
         </section>
       )}
       {(data ?? []).length === 0 && <p className="card p-8 text-center text-muted">No call requests yet.</p>}

@@ -221,21 +221,51 @@ export async function declineContract(contractId: string) {
   redirect(`/freelance/contracts/${contractId}`);
 }
 
-/** Client converts a LanceNest contractor to a full-time hire: the conversion fee in lib/fees.ts (rate of first-year salary, with a minimum) within 12 months of their first contract; free after that. */
+/**
+ * Conversion, matching Upwork's (lib/fees.ts): within 24 months of meeting on LanceNest, a client can move the
+ * relationship off LanceNest, as a full-time hire or by working together outside LanceNest, for 13.5% of the
+ * freelancer's expected earnings from them over the next 12 months, less booking fees paid on work with this freelancer
+ * in the last 12 months, at least $1,000. No fee after 24 months. LanceNest confirms and invoices it.
+ */
 export async function requestConversion(contractId: string, formData: FormData) {
-  const { user } = await requireRole(['employer'], '/freelance');
+  const { user } = await requireRole(HIRER_ROLES, '/freelance');
   const admin = createAdminClient();
   const { data: c } = await admin.from('contracts').select('id, title, client_id, freelancer_id').eq('id', contractId).maybeSingle();
   if (!c || c.client_id !== user.id) redirect('/freelance');
-  const salary = Math.round(Number(String(formData.get('salary') ?? '').replace(/[$,\s]/g, '')) * 100);
-  if (!Number.isFinite(salary) || salary < 1000000) redirect(`/freelance/contracts/${contractId}?error=salary`);
-  const { data: first } = await admin.from('contracts').select('created_at').eq('client_id', c.client_id).eq('freelancer_id', c.freelancer_id).order('created_at').limit(1).maybeSingle();
-  const withinYear = first && Date.now() - Date.parse(first.created_at as string) < 365 * 86400000;
-  const { firstYearPayRate, minimumCents } = FREELANCE_FEES.conversionFee;
-  const fee = withinYear ? Math.max(Math.round(salary * firstYearPayRate), minimumCents) : 0;
-  await admin.from('conversion_requests').insert({ contract_id: c.id, client_id: c.client_id, freelancer_id: c.freelancer_id, salary_cents: salary, fee_cents: fee });
+  const kind = formData.get('kind') === 'off_platform' ? 'off_platform' : 'full_time';
+  const estimate = Math.round(Number(String(formData.get('estimate') ?? '').replace(/[$,\s]/g, '')) * 100);
+  if (!Number.isFinite(estimate) || estimate < (kind === 'full_time' ? 1000000 : 10000)) redirect(`/freelance/contracts/${contractId}?error=salary`);
+  const { rate, minimumCents, waivedAfterMonths } = FREELANCE_FEES.conversionFee;
+  // When the two first found each other here: their first proposal, booking or conversation.
+  const [{ data: firstK }, { data: firstP }, { data: myConvs }] = await Promise.all([
+    admin.from('contracts').select('created_at').eq('client_id', c.client_id).eq('freelancer_id', c.freelancer_id).order('created_at').limit(1).maybeSingle(),
+    admin.from('proposals').select('created_at, project:freelance_projects!inner(client_id)').eq('freelancer_id', c.freelancer_id).eq('project.client_id', c.client_id).order('created_at').limit(1).maybeSingle(),
+    admin.from('conversation_participants').select('conversation_id').eq('profile_id', c.client_id).limit(1000),
+  ]);
+  const ids = (myConvs ?? []).map((r) => r.conversation_id as string);
+  const { data: shared } = ids.length
+    ? await admin.from('conversation_participants').select('conversation:conversations(created_at)').eq('profile_id', c.freelancer_id).in('conversation_id', ids).limit(50)
+    : { data: [] };
+  const times = [firstK?.created_at, firstP?.created_at, ...((shared ?? []) as unknown as { conversation: { created_at: string } | null }[]).map((r) => r.conversation?.created_at)]
+    .filter((x): x is string => !!x).map((x) => Date.parse(x));
+  const met = times.length ? Math.min(...times) : Date.now();
+  const within = Date.now() - met < waivedAfterMonths * 30.44 * 86400000;
+  // Like Upwork: booking fees this client paid on work with this freelancer in the last 12 months count toward it.
+  const yearAgo = new Date(Date.now() - 365 * 86400000).toISOString();
+  const { data: paid } = await admin.from('contracts').select('id, booking_fee_cents, booking_status, booking_fee_payer')
+    .eq('client_id', c.client_id).eq('freelancer_id', c.freelancer_id).gte('created_at', yearAgo);
+  const paidIds = (paid ?? []).map((k) => k.id as string);
+  const { data: topups } = paidIds.length ? await admin.from('contract_invoices').select('fee_paid_cents').in('contract_id', paidIds) : { data: [] };
+  const discount = (paid ?? []).filter((k) => k.booking_status === 'paid' && k.booking_fee_payer !== 'freelancer').reduce((a, k) => a + ((k.booking_fee_cents as number | null) ?? 0), 0)
+    + (topups ?? []).reduce((a, i) => a + ((i.fee_paid_cents as number | null) ?? 0), 0);
+  const fee = within ? Math.max(Math.round(estimate * rate) - discount, minimumCents) : 0;
+  await admin.from('conversion_requests').insert({ contract_id: c.id, client_id: c.client_id, freelancer_id: c.freelancer_id, kind, estimate_cents: estimate,
+    salary_cents: kind === 'full_time' ? estimate : null, discount_cents: within ? discount : 0, fee_cents: fee });
+  const label = kind === 'full_time' ? 'Full-time hire' : 'Working together outside LanceNest';
   const { data: admins } = await admin.from('profiles').select('id').eq('role', 'admin');
-  if (admins?.length) await admin.from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'conversion', title: `Contract-to-hire on “${c.title}” — ${fee ? `invoice $${(fee / 100).toLocaleString()}` : 'no fee (12+ months on LanceNest)'}.`, link: '/admin/leads' })));
-  await notifyMember(c.freelancer_id as string, { type: 'contract', link: `/freelance/contracts/${c.id}`, title: `Congratulations — your client wants to hire you full-time from “${c.title}”.` });
+  if (admins?.length) await admin.from('notifications').insert(admins.map((a) => ({ profile_id: a.id, type: 'conversion', title: `${label} on “${c.title}” — ${fee ? `invoice $${(fee / 100).toLocaleString()}` : `no fee (${waivedAfterMonths}+ months since they met on LanceNest)`}.`, link: '/admin/leads' })));
+  await notifyMember(c.freelancer_id as string, { type: 'contract', link: `/freelance/contracts/${c.id}`, title: kind === 'full_time'
+    ? `Congratulations — your client wants to hire you full-time from “${c.title}”.`
+    : `Your client asked to keep working with you outside LanceNest after “${c.title}”. LanceNest will confirm it with both of you.` });
   redirect(`/freelance/contracts/${contractId}?converted=1`);
 }
