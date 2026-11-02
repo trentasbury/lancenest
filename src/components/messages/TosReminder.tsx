@@ -12,11 +12,11 @@ const HIDE_DAYS = 30;
 const COPY = {
   communication: {
     title: 'Keep the conversation on LanceNest until the job is booked.',
-    body: 'Sharing contact details, or arranging the work somewhere else before it’s booked here, goes against the Terms of Service.',
+    body: 'Sharing contact details, or arranging the work somewhere else before it’s booked here, goes against the Terms of Service. If someone asks you to, report it from the ⋯ menu.',
   },
   payment: {
     title: 'Book work you found here through LanceNest.',
-    body: 'For 24 months after you meet here, book this person for new work through LanceNest. Arranging it directly to skip the booking fee goes against the Terms of Service.',
+    body: 'For 24 months after you meet here, book this person for new work through LanceNest. Arranging it directly to skip the booking fee goes against the Terms of Service. If someone asks you to, report it from the ⋯ menu.',
   },
 } as const;
 

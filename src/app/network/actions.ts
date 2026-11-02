@@ -151,9 +151,15 @@ const REPORT_REASONS = ['spam', 'harassment', 'fraud', 'fake_job', 'fake_informa
 
 export async function reportContent(targetType: 'post' | 'comment' | 'profile' | 'message' | 'job' | 'rating', targetId: string, formData: FormData) {
   const uid = await me();
-  const reason = t(formData, 'reason', 30);
+  const picked = t(formData, 'reason', 30);
+  // "Asked me to work or pay outside LanceNest" (the Terms ask members to report it, like Upwork's): filed for review
+  // under Other, labeled so the team sees it first.
+  const offPlatform = picked === 'off_platform';
+  const reason = offPlatform ? 'other' : picked;
   if (!REPORT_REASONS.includes(reason)) return;
-  await (await createClient()).from('reports').insert({ reporter_id: uid, target_type: targetType, target_id: targetId, reason, details: t(formData, 'details', 1000) || null });
+  const details = t(formData, 'details', 1000);
+  await (await createClient()).from('reports').insert({ reporter_id: uid, target_type: targetType, target_id: targetId, reason,
+    details: offPlatform ? `Off-platform request: asked to work or pay outside LanceNest.${details ? ` ${details}` : ''}`.slice(0, 1000) : details || null });
   refresh();
 }
 
@@ -161,9 +167,13 @@ export async function reportContent(targetType: 'post' | 'comment' | 'profile' |
 export async function reportMember(targetId: string, username: string, formData: FormData) {
   const back = `/veterans/${encodeURIComponent(username)}`;
   const uid = await me(back);
-  const reason = t(formData, 'reason', 30);
+  const picked = t(formData, 'reason', 30);
+  const offPlatform = picked === 'off_platform';
+  const reason = offPlatform ? 'other' : picked;
   if (!REPORT_REASONS.includes(reason)) redirect(back);
-  const { error } = await (await createClient()).from('reports').insert({ reporter_id: uid, target_type: 'profile', target_id: targetId, reason, details: t(formData, 'details', 1000) || null });
+  const details = t(formData, 'details', 1000);
+  const { error } = await (await createClient()).from('reports').insert({ reporter_id: uid, target_type: 'profile', target_id: targetId, reason,
+    details: offPlatform ? `Off-platform request: asked to work or pay outside LanceNest.${details ? ` ${details}` : ''}`.slice(0, 1000) : details || null });
   if (error) console.error('reportMember failed:', error.message);
   redirect(`${back}?reported=${error ? 'error' : '1'}#notice`);
 }

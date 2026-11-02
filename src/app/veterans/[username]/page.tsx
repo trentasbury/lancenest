@@ -363,6 +363,7 @@ export default async function VeteranProfilePage(
                     <form action={reportMember.bind(null, profile.id, profile.username)} className="mt-2 flex flex-col gap-2 text-ink">
                       <select name="reason" required defaultValue="" className="field py-2 text-sm">
                         <option value="" disabled>Reason…</option>
+                        <option value="off_platform">Asked me to work or pay outside LanceNest</option>
                         <option value="harassment">Harassment or unprofessional conduct</option><option value="impersonation">Impersonation or false service claims</option>
                         <option value="fraud">Scam or fraud</option><option value="spam">Spam</option><option value="inappropriate">Inappropriate content</option><option value="sensitive_info">Shares SSN, personal info, or OPSEC-sensitive details</option><option value="other">Other</option>
                       </select>

@@ -95,6 +95,7 @@ export default async function ThreadPage(
                 <form action={reportContent.bind(null, 'profile', other.profile_id)} data-close data-reset data-done="Thanks. Your report was received, and our team will review it." className="space-y-2 p-2">
                   <select name="reason" required defaultValue="" className="field text-sm">
                     <option value="" disabled>Reason…</option>
+                    <option value="off_platform">Asked me to work or pay outside LanceNest</option>
                     <option value="harassment">Harassment</option><option value="spam">Spam</option><option value="fraud">Fraud</option>
                     <option value="impersonation">Impersonation</option><option value="inappropriate">Inappropriate</option><option value="sensitive_info">Shares SSN, personal info, or OPSEC-sensitive details</option><option value="other">Other</option>
                   </select>
