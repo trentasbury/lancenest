@@ -86,6 +86,7 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   if (isReservedName(fullName)) return { error: RESERVED_NAME_MESSAGE };
   if (!email) return { error: 'Enter your email address.' };
   if (password.length < 8) return { error: 'Use a password of at least 8 characters.' };
+  if (formData.get('terms') !== 'on') return { error: 'Please tick the box to agree to the Terms of Service.' };
 
   const home = role === 'employer' ? '/employer/dashboard' : role === 'client' ? '/freelance' : '/dashboard';
   const supabase = await createClient();
@@ -105,6 +106,9 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
     if (/rate limit/i.test(error.message)) return { error: 'Too many attempts. Please wait a few minutes and try again.' };
     return { error: 'We couldn’t create that account. Please check your details and try again.' };
   }
+
+  // Keep a record of the Terms box (wording version and time), like Upwork's sign-up agreement.
+  if (data.user) { const { recordTermsAcceptance } = await import('@/lib/platformAgreement'); await recordTermsAcceptance(data.user.id, role); }
 
   // Referral: remember who invited this member (credited when they're verified).
   const ref = field(formData, 'ref').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 60);

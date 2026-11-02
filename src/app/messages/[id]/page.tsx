@@ -12,6 +12,7 @@ import FormMessage from '@/components/FormMessage';
 import { CONTACT_BLOCKED_MESSAGE, EXPLICIT_BLOCKED } from '@/lib/contact';
 import { respondToRequest, sendMessage } from '../actions';
 import { blockUser, reportContent } from '@/app/network/actions';
+import TosReminder from '@/components/messages/TosReminder';
 
 export const metadata: Metadata = { title: 'Conversation' };
 
@@ -42,6 +43,25 @@ export default async function ThreadPage(
   const { data: employerCo } = other?.profile?.role === 'employer'
     ? ((await createAdminClient().rpc('company_for_user', { u: other.profile_id }).maybeSingle()) as { data: { name: string; is_verified: boolean } | null })
     : { data: null };
+
+  // Terms reminders (like Upwork's in Messages), only in freelance conversations: a client with a service member, or
+  // an employer with one who sent a proposal, asked for a service or was booked. Booked: keep bookings here.
+  // Not booked yet: keep the conversation here.
+  let reminder: 'communication' | 'payment' | null = null;
+  const myRole = (participants ?? []).find((p) => p.profile_id === user.id) as unknown as { profile: { role: string } | null } | undefined;
+  const roles = [myRole?.profile?.role, other?.profile?.role];
+  if (other && roles.includes('veteran') && (roles.includes('client') || roles.includes('employer'))) {
+    const vet = other.profile?.role === 'veteran' ? other.profile_id : user.id;
+    const hirer = vet === user.id ? other.profile_id : user.id;
+    const admin = createAdminClient();
+    const [{ data: deals }, { count: proposed }] = await Promise.all([
+      admin.from('contracts').select('booking_status, status').eq('client_id', hirer).eq('freelancer_id', vet).limit(20),
+      admin.from('proposals').select('id, project:freelance_projects!inner(client_id)', { count: 'exact', head: true }).eq('freelancer_id', vet).eq('project.client_id', hirer),
+    ]);
+    const booked = (deals ?? []).some((k) => ['paid', 'not_required'].includes(k.booking_status as string) && ['active', 'completed', 'disputed'].includes(k.status as string));
+    const freelance = roles.includes('client') || (deals ?? []).length > 0 || (proposed ?? 0) > 0;
+    if (freelance) reminder = booked ? 'payment' : 'communication';
+  }
 
   return (
     <div className="container-page flex max-w-3xl flex-col py-8">
@@ -85,6 +105,8 @@ export default async function ThreadPage(
           </details>
         )}
       </div>
+
+      {reminder && <TosReminder kind={reminder} />}
 
       <ul className="flex flex-col gap-3 py-6">
         {(messages ?? []).length === 0 && <li className="py-10 text-center text-sm text-muted">Say hello — this is the start of your conversation.</li>}

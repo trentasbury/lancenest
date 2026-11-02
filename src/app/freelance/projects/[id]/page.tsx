@@ -15,14 +15,11 @@ import Avatar from '@/components/network/Avatar';
 import { startConversation } from '@/app/messages/actions';
 import { adminCloseProject, setProjectStatus, setProposalStatus, submitProposal, withdrawProposal } from '../../actions';
 import { hireFreelancer } from '../../contracts/actions';
-import { agreeToBookOnPlatform } from '../../agreementActions';
-import AgreementBox from '@/components/freelance/AgreementBox';
-import { AGREEMENT_REQUIRED, hasAgreed } from '@/lib/platformAgreement';
 import { CONTACT_BLOCKED, EXPLICIT_BLOCKED } from '@/lib/contact';
 import { bookingFeeCents, bookingRequired, isOnSite, usd } from '@/lib/booking';
 
 export const metadata: Metadata = { title: 'Project' };
-const ERR: Record<string, string> = { agree: AGREEMENT_REQUIRED, contact: CONTACT_BLOCKED, explicit: EXPLICIT_BLOCKED, minimum: 'Jobs on LanceNest start at $25.', proposal: 'Add your price (at least $25) and a cover letter of at least 30 characters.', limit: `You’ve used your ${FREE_PROPOSALS_PER_MONTH} free proposals this month. Get 5 more for $5, or go Pro for unlimited proposals.`, closed: 'This project is no longer accepting proposals.', licensed: 'This is a licensed-trade project. Add your trade license under Dashboard → Licenses & certificates; once it’s verified you can send a proposal.', duplicate: 'You’ve already sent a proposal for this project.', save: 'Your proposal didn’t send — please try again.', pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' };
+const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, explicit: EXPLICIT_BLOCKED, minimum: 'Jobs on LanceNest start at $25.', proposal: 'Add your price (at least $25) and a cover letter of at least 30 characters.', limit: `You’ve used your ${FREE_PROPOSALS_PER_MONTH} free proposals this month. Get 5 more for $5, or go Pro for unlimited proposals.`, closed: 'This project is no longer accepting proposals.', licensed: 'This is a licensed-trade project. Add your trade license under Dashboard → Licenses & certificates; once it’s verified you can send a proposal.', duplicate: 'You’ve already sent a proposal for this project.', save: 'Your proposal didn’t send — please try again.', pii: 'That looks like a Social Security number. For your safety, LanceNest never allows SSNs to be shared — please remove it.' };
 
 type Proposal = { id: string; freelancer_id: string; cover_letter: string; bid_amount: number; timeline: string | null; status: string; created_at: string; covers_booking_fee?: boolean;
   freelancer: { full_name: string; username: string | null; headline: string | null; verified: boolean; service_summary: string | null } | null };
@@ -39,8 +36,6 @@ export default async function ProjectPage(
   const isOwner = project.client_id === user.id;
   const needsBooking = bookingRequired(isOnSite((project as unknown as { work_location?: string }).work_location));
   const isVet = profile.role === 'veteran';
-  // One-time "book it on LanceNest" agreement: freelancers before their first proposal, clients before their first hire.
-  const agreed = isVet ? await hasAgreed(user.id, 'freelancer') : isOwner ? await hasAgreed(user.id, 'client') : true;
   const company = project.company as { name: string; slug: string; is_verified: boolean } | null;
 
   const { data: proposalRows } = await supabase.from('proposals')
@@ -106,14 +101,6 @@ export default async function ProjectPage(
               <form action={setProjectStatus.bind(null, project.id, project.status === 'open' ? 'closed' : 'open')}><SubmitButton className="btn btn-ghost border border-line py-1.5 text-xs" pendingText="…">{project.status === 'open' ? 'Close to new proposals' : 'Reopen'}</SubmitButton></form>
             </div>
             {proposals.some(topProposal) && <p className="text-xs text-muted">Priority applicants are Career Accelerator or Federal members. Their proposals are listed first as a paid member perk; LanceNest doesn’t rank proposals by quality.</p>}
-            {searchParams.error && <FormMessage error={ERR[searchParams.error] ?? ERR.save} />}
-            {!agreed && project.status === 'open' && proposals.some((p) => ['submitted', 'shortlisted'].includes(p.status)) && (
-              <form action={agreeToBookOnPlatform.bind(null, 'client', `/freelance/projects/${project.id}`)} className="card space-y-3 p-5">
-                <p className="text-sm font-medium text-navy">Before you hire</p>
-                <AgreementBox side="client" />
-                <SubmitButton className="btn btn-primary py-1.5 text-sm" pendingText="Saving…">I agree</SubmitButton>
-              </form>
-            )}
             {proposals.length === 0 && <p className="card p-6 text-sm text-muted">No proposals yet. Verified service members are notified as they browse — most projects get proposals within a few days.</p>}
             {proposals.filter((p) => p.status !== 'withdrawn').map((p) => (
               <div key={p.id} className={`card p-5 ${p.status === 'shortlisted' ? 'border-brass' : ''}`}>
@@ -140,8 +127,7 @@ export default async function ProjectPage(
                   {p.status !== 'shortlisted' && p.status !== 'declined' && <form action={setProposalStatus.bind(null, p.id, project.id, 'shortlisted')}><SubmitButton className="btn btn-outline py-1.5 text-xs" pendingText="…">Shortlist</SubmitButton></form>}
                   {p.status !== 'declined' && <form action={setProposalStatus.bind(null, p.id, project.id, 'declined')}><SubmitButton className="btn btn-ghost py-1.5 text-xs" pendingText="…">Decline</SubmitButton></form>}
                   <form action={startConversation.bind(null, p.freelancer_id)}><SubmitButton className="btn btn-outline py-1.5 text-xs" pendingText="…">Message</SubmitButton></form>
-                  {['submitted', 'shortlisted'].includes(p.status) && project.status === 'open' && !agreed && <span className="self-center text-xs text-muted">Agree above to hire</span>}
-                  {['submitted', 'shortlisted'].includes(p.status) && project.status === 'open' && agreed && (
+                  {['submitted', 'shortlisted'].includes(p.status) && project.status === 'open' && (
                     <form action={hireFreelancer.bind(null, p.id)}><SubmitButton className="btn btn-primary py-1.5 text-xs" pendingText="Opening checkout…">Hire for ${p.bid_amount.toLocaleString()}</SubmitButton></form>
                   )}
                 </div>
@@ -194,7 +180,6 @@ export default async function ProjectPage(
             <p className="text-xs text-muted">{FREELANCE_PAYMENTS_ENABLED ? `You keep ${keepPercent(plan)}% of payments on this project.` : 'You keep 100% of what the client pays you. Clients pay LanceNest a small booking fee when they hire.'} Share contact details after you’re booked. {plan === 'free'
               ? `${freeLeft} of ${FREE_PROPOSALS_PER_MONTH} free proposals left this month${credits ? `, plus ${credits} extra` : ''}.`
               : 'Unlimited proposals.'}</p>
-            {!agreed && <AgreementBox side="freelancer" />}
             <SubmitButton className="btn btn-primary w-full" pendingText="Sending…">Send proposal</SubmitButton>
           </form>
         ))}

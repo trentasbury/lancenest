@@ -20,6 +20,8 @@ const OPTIONS = [
 export default function SignupForm() {
   const [role, setRole] = useState<'veteran' | 'spouse' | 'employer' | 'client'>('veteran');
   const [referral, setReferral] = useState<string | undefined>();
+  // Terms box, like Upwork's: required for email sign-up and for Google.
+  const [agree, setAgree] = useState(false);
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     if (p.get('role') === 'employer') setRole('employer');
@@ -68,7 +70,12 @@ export default function SignupForm() {
         </div>
       </fieldset>
 
-      <GoogleButton href={`/auth/google?role=${role}${referral ? `&ref=${encodeURIComponent(referral)}` : ''}`} />
+      <label className="flex items-start gap-2.5 rounded-xl border border-line bg-white px-4 py-3 text-sm leading-relaxed text-ink/90">
+        <input type="checkbox" name="terms" required checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-1 accent-navy" />
+        <span>Yes, I understand and agree to the LanceNest <Link href="/terms" target="_blank" className="text-navy underline">Terms of Service</Link>, including the <Link href="/conduct" target="_blank" className="text-navy underline">Code of Conduct</Link> and <Link href="/privacy" target="_blank" className="text-navy underline">Privacy Policy</Link>, and to book work I find on LanceNest through LanceNest.</span>
+      </label>
+
+      <GoogleButton disabled={!agree} href={`/auth/google?role=${role}&terms=1${referral ? `&ref=${encodeURIComponent(referral)}` : ''}`} />
 
       <div>
         <label htmlFor="full_name" className="field-label">{role === 'employer' ? 'Your full name' : 'Full name'}</label>
@@ -88,7 +95,7 @@ export default function SignupForm() {
       <FormMessage error={state.error} />
       <SubmitButton pendingText="Creating your account…">Create account</SubmitButton>
       <p className="text-center text-xs text-muted">
-        Members verify after signup to unlock jobs and the network. By creating an account, with email or Google, you agree to our <Link href="/terms" className="underline">Terms</Link>, <Link href="/conduct" className="underline">Code of Conduct</Link>, and <Link href="/privacy" className="underline">Privacy Policy</Link>.
+        Members verify after signup to unlock jobs and the network.
       </p>
       <p className="text-center text-sm text-muted">
         Already a member? <Link href="/login" className="text-navy underline decoration-brass underline-offset-4">Log in</Link>

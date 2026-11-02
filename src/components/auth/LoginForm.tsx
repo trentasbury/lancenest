@@ -37,7 +37,7 @@ export default function LoginForm() {
       {notice && <FormMessage message={notice} />}
       <input type="hidden" name="next" value={next ?? ''} />
       <GoogleButton href={`/auth/google${next ? `?next=${encodeURIComponent(next)}` : ''}`}
-        note={<>New here? Google creates a free account, and you agree to our <Link href="/terms" className="underline">Terms</Link> and <Link href="/privacy" className="underline">Privacy Policy</Link>.</>} />
+        note={<>New here? Google creates a free account; you’ll choose your account type and agree to the <Link href="/terms" className="underline">Terms</Link> next.</>} />
       <div>
         <label htmlFor="email" className="field-label">Email</label>
         <input id="email" name="email" type="email" autoComplete="email" required className="field" />

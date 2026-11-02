@@ -15,6 +15,8 @@ export async function GET(request: NextRequest) {
   if (role) back.set('role', role);
   if (next) back.set('next', next);
   if (ref) back.set('ref', ref);
+  // Ticked the Terms box on the sign-up page (recorded in the callback for a brand-new account).
+  if (p.get('terms') === '1') back.set('terms', '1');
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({

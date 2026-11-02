@@ -8,14 +8,11 @@ import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import CoverFeeBox from './CoverFeeBox';
 import { deleteService, saveService, setServiceCoversFee, setServicePublic, setServiceStatus } from '../actions';
-import { agreeToBookOnPlatform } from '../../agreementActions';
-import AgreementBox from '@/components/freelance/AgreementBox';
-import { AGREEMENT_REQUIRED, hasAgreed } from '@/lib/platformAgreement';
 import { CONTACT_BLOCKED, EXPLICIT_BLOCKED } from '@/lib/contact';
 import { FREELANCE_PAYMENTS_ENABLED, LICENSED_TRADES } from '@/lib/flags';
 
 export const metadata: Metadata = { title: 'Offer your services' };
-const ERR: Record<string, string> = { agree: AGREEMENT_REQUIRED, contact: CONTACT_BLOCKED, explicit: EXPLICIT_BLOCKED, licensed: 'That trade needs your verified license first. Add it under Licenses & certificates; once it’s verified you can list the service.', ack: 'Please confirm both acknowledgments.', required: 'Add a title, a description of at least 20 characters, and a price of at least $25.', scam: 'That listing contains wording we don’t allow.', package: 'Each package needs a name, a price of at least $25, a delivery time of 1–90 days, and what’s included.', save: 'That didn’t save — please try again.' };
+const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, explicit: EXPLICIT_BLOCKED, licensed: 'That trade needs your verified license first. Add it under Licenses & certificates; once it’s verified you can list the service.', ack: 'Please confirm both acknowledgments.', required: 'Add a title, a description of at least 20 characters, and a price of at least $25.', scam: 'That listing contains wording we don’t allow.', package: 'Each package needs a name, a price of at least $25, a delivery time of 1–90 days, and what’s included.', save: 'That didn’t save — please try again.' };
 
 export default async function MyServicesPage(props: { searchParams: Promise<{ error?: string; saved?: string }> }) {
   const searchParams = await props.searchParams;
@@ -23,8 +20,6 @@ export default async function MyServicesPage(props: { searchParams: Promise<{ er
   const supabase = await createClient();
   const { licensedTrades } = await import('@/lib/credentials');
   const trades = await licensedTrades(user.id);
-  // One-time "book it on LanceNest" agreement before a listing goes live.
-  const agreed = await hasAgreed(user.id, 'freelancer');
   const [{ data: services }, { data: fp }] = await Promise.all([
     supabase.from('service_listings').select('id, title, price_cents, price_type, status, public_listing, covers_booking_fee').eq('profile_id', user.id).order('created_at', { ascending: false }),
     supabase.from('freelancer_profiles').select('payouts_enabled').eq('profile_id', user.id).maybeSingle(),
@@ -37,13 +32,6 @@ export default async function MyServicesPage(props: { searchParams: Promise<{ er
       <p className="text-sm text-muted">Clients and verified employers can book you on LanceNest{FREELANCE_PAYMENTS_ENABLED ? ' and pay through the site' : '; they pay LanceNest a small booking fee, and you keep 100% of what they pay you'}. Services also appear on your profile. Keep contact details out of listings; you can share them once you’re booked.</p>
       {FREELANCE_PAYMENTS_ENABLED && !fp?.payouts_enabled && <p className="rounded-xl border border-brass bg-brass/10 p-4 text-sm">Before anyone can hire you, <Link href="/freelance/profile" className="font-medium text-navy underline">set up payouts</Link> (about 5 minutes with Stripe).</p>}
       {searchParams.error && <FormMessage error={ERR[searchParams.error] ?? ERR.save} />}
-      {!agreed && (services ?? []).some((s) => s.status !== 'active') && (
-        <form action={agreeToBookOnPlatform.bind(null, 'freelancer', '/freelance/services/mine')} className="card space-y-3 p-5">
-          <p className="text-sm font-medium text-navy">Before a paused listing can go live again</p>
-          <AgreementBox side="freelancer" />
-          <SubmitButton className="btn btn-primary py-1.5 text-sm" pendingText="Saving…">I agree</SubmitButton>
-        </form>
-      )}
       {searchParams.saved && <FormMessage message="Service listed." />}
       <p className="text-sm text-muted">Offer HVAC, electrical, plumbing, construction or roofing work? <Link href="/dashboard/credentials" className="text-navy underline">Add your trade license</Link> and those categories open once it’s verified.</p>
       <ul className="card divide-y divide-line">
@@ -89,7 +77,6 @@ export default async function MyServicesPage(props: { searchParams: Promise<{ er
         <CoverFeeBox />
         <label className="flex items-start gap-2 text-sm sm:col-span-2"><input type="checkbox" name="license_ack" required className="mt-1 accent-navy" />I hold any license, certification, or insurance this work legally requires where I perform it.</label>
         <label className="flex items-start gap-2 text-sm sm:col-span-2"><input type="checkbox" name="duty_ack" required className="mt-1 accent-navy" />If I’m currently serving, I have my command’s approval for off-duty employment where required, and I won’t use government time, equipment, or my rank or uniform to promote this work.</label>
-        {!agreed && <AgreementBox side="freelancer" className="sm:col-span-2" />}
         <div className="sm:col-span-2"><SubmitButton className="btn btn-primary" pendingText="Saving…">List service</SubmitButton></div>
       </form>
     </div>

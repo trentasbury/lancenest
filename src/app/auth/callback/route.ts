@@ -25,15 +25,18 @@ export async function GET(request: NextRequest) {
           const fresh = isFreshAccount(user.created_at);
           const chosen = searchParams.get('role');
           if (fresh) await applyReferral(user.id, searchParams.get('ref'));
+          const agreedToTerms = searchParams.get('terms') === '1';
           if (chosen === 'employer') await makeEmployerIfNew(user.id, user.created_at);
           if (chosen === 'client') await makeEmployerIfNew(user.id, user.created_at, 'client');
           if (chosen === 'spouse') await makeSpouseIfNew(user.id, user.created_at);
           const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
           const role = (profile?.role as Role | undefined) ?? null;
           navRole = role;
+          if (fresh && agreedToTerms) { const { recordTermsAcceptance } = await import('@/lib/platformAgreement'); await recordTermsAcceptance(user.id, role); }
           await recordLogin(user.id, user.email);
           // A brand-new Google account that didn't pick a type yet (it came from the login page): ask once.
-          dest = fresh && !chosen && role === 'veteran'
+          // New Google accounts that haven't ticked the Terms box (they came from the log-in page) do it on account setup.
+          dest = fresh && (!chosen || !agreedToTerms) && role === 'veteran'
             ? `/account-setup?choose=1${next ? `&next=${encodeURIComponent(next)}` : ''}`
             : next ?? roleHome(role);
         }
