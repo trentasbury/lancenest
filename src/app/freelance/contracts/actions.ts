@@ -10,6 +10,7 @@ import { SITE, notifyMember } from '@/lib/email';
 import { FREELANCE_FEES } from '@/lib/fees';
 import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
 import { askFreelancerToPayBooking, bookingCheckoutUrl, bookingFeeCents, bookingRequired, isOnSite, markHired, refundBooking } from '@/lib/booking';
+import { ensureAgreement } from '@/lib/platformAgreement';
 
 const t = (fd: FormData, k: string, max: number) => String(fd.get(k) ?? '').trim().slice(0, max);
 const back = (id: string, q = '') => redirect(`/freelance/contracts/${id}${q}`);
@@ -31,11 +32,13 @@ async function goPayBooking(contractId: string, clientId: string, email: string 
  * Client hires a freelancer from a proposal. The veteran's fee rate is locked in at this moment. When a booking fee
  * applies (see lib/booking.ts), the job is booked, and the freelancer told, only once the client pays it.
  */
-export async function hireFreelancer(proposalId: string) {
+export async function hireFreelancer(proposalId: string, formData?: FormData) {
   const { user } = await requireRole(HIRER_ROLES, '/freelance');
   const { data: p } = await (await createClient()).from('proposals').select('id, bid_amount, status, freelancer_id, covers_booking_fee, project:freelance_projects(id, title, client_id, status, work_location, budget_min)').eq('id', proposalId).maybeSingle();
   const proposal = p as unknown as { id: string; bid_amount: number; status: string; freelancer_id: string; covers_booking_fee: boolean; project: { id: string; title: string; client_id: string; status: string; work_location: string | null; budget_min: number | null } } | null;
   if (!proposal || proposal.project.client_id !== user.id) redirect('/freelance');
+  // One-time "book it on LanceNest" agreement before the first booking.
+  if (!(await ensureAgreement(user.id, 'client', formData))) redirect(`/freelance/projects/${proposal.project.id}?error=agree`);
   const admin = createAdminClient();
   // A booking already started for this proposal: finish paying for it instead of starting another.
   const { data: existing } = await admin.from('contracts').select('id, status, booking_status, booking_fee_payer').eq('proposal_id', proposal.id).maybeSingle();

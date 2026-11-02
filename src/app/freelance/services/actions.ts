@@ -11,6 +11,7 @@ import { scamSignals } from '@/lib/scam';
 import { getMyCompany } from '@/lib/employer';
 import { FREELANCE_PAYMENTS_ENABLED } from '@/lib/flags';
 import { askFreelancerToPayBooking, bookingCheckoutUrl, bookingFeeCents, bookingRequired, markHired } from '@/lib/booking';
+import { ensureAgreement } from '@/lib/platformAgreement';
 
 const t = (fd: FormData, k: string, max: number) => String(fd.get(k) ?? '').trim().slice(0, max);
 const dollars = (v: string) => Math.round(Number(v.replace(/[$,\s]/g, '')) * 100);
@@ -19,6 +20,7 @@ export async function saveService(formData: FormData) {
   const { user, profile } = await requireVerifiedMember('/freelance/services/mine');
   if (!['veteran', 'admin'].includes(profile.role)) redirect('/freelance');
   if (formData.get('license_ack') !== 'on' || formData.get('duty_ack') !== 'on') redirect('/freelance/services/mine?error=ack');
+  if (!(await ensureAgreement(user.id, 'freelancer', formData))) redirect('/freelance/services/mine?error=agree');
   const title = t(formData, 'title', 100), description = t(formData, 'description', 3000), category = t(formData, 'category', 60);
   const price = dollars(t(formData, 'price', 12));
   if (title.length < 4 || description.length < 20 || !Number.isFinite(price) || price < 2000) redirect('/freelance/services/mine?error=required');
@@ -40,7 +42,7 @@ export async function saveService(formData: FormData) {
   revalidatePath('/freelance/services/mine');
   revalidateTag('public-services', 'max');
   revalidatePath('/hire', 'layout');
-  redirect(`/freelance/services/mine?${error ? `error=${error.code === 'P0017' ? 'contact' : error.code === 'P0022' ? 'explicit' : error.code === 'P0018' ? 'licensed' : error.code === 'P0021' ? 'package' : 'save'}` : 'saved=1'}`);
+  redirect(`/freelance/services/mine?${error ? `error=${error.code === 'P0017' ? 'contact' : error.code === 'P0022' ? 'explicit' : error.code === 'P0018' ? 'licensed' : error.code === 'P0021' ? 'package' : error.code === 'P0026' ? 'agree' : 'save'}` : 'saved=1'}`);
 }
 
 export type ServicePackage = { name: string; price_cents: number; days: number; includes: string };
@@ -81,7 +83,9 @@ export async function setServiceCoversFee(id: string, on: boolean) {
 
 export async function setServiceStatus(id: string, status: 'active' | 'paused') {
   const { user } = await requireVerifiedMember('/freelance/services/mine');
-  await (await createClient()).from('service_listings').update({ status, updated_at: new Date().toISOString() }).eq('id', id).eq('profile_id', user.id);
+  const { error } = await (await createClient()).from('service_listings').update({ status, updated_at: new Date().toISOString() }).eq('id', id).eq('profile_id', user.id);
+  // Switching a listing back on needs the one-time "book it on LanceNest" agreement.
+  if (error?.code === 'P0026') redirect('/freelance/services/mine?error=agree');
   revalidatePath('/freelance/services/mine');
   revalidateTag('public-services', 'max');
 }
@@ -110,6 +114,7 @@ export async function requestService(serviceId: string, formData: FormData) {
   const note = t(formData, 'note', 2000);
   if (!Number.isFinite(amount) || amount < 2500) redirect(`/freelance/services/${serviceId}?error=amount`);
   if (note.length < 10) redirect(`/freelance/services/${serviceId}?error=note`);
+  if (!(await ensureAgreement(user.id, 'client', formData))) redirect(`/freelance/services/${serviceId}?error=agree`);
   const admin = createAdminClient();
   const [{ data: fp }, { data: vet }] = await Promise.all([
     admin.from('freelancer_profiles').select('payouts_enabled').eq('profile_id', s.profile_id).maybeSingle(),

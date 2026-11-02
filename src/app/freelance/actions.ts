@@ -108,12 +108,15 @@ export async function submitProposal(projectId: string, formData: FormData) {
   const bid = money(t(formData, 'bid_amount', 9));
   const cover = t(formData, 'cover_letter', 5000);
   if (!bid || bid < 25 || cover.length < 30) redirect(`/freelance/projects/${projectId}?error=proposal`);
+  // One-time "book it on LanceNest" agreement (the database refuses the proposal without it too).
+  const { ensureAgreement } = await import('@/lib/platformAgreement');
+  if (!(await ensureAgreement(user.id, 'freelancer', formData))) redirect(`/freelance/projects/${projectId}?error=agree`);
   const { error } = await (await createClient()).from('proposals').insert({
     project_id: projectId, freelancer_id: user.id, cover_letter: cover, bid_amount: bid, timeline: t(formData, 'timeline', 120) || null,
     covers_booking_fee: formData.get('covers_booking_fee') === 'on',
   });
   if (error) {
-    const code = error.code === 'P0009' ? 'pii' : error.code === 'P0017' ? 'contact' : error.code === 'P0022' ? 'explicit' : error.code === 'P0018' ? 'licensed' : error.code === 'P0006' ? 'limit' : error.code === 'P0005' ? 'closed' : error.code === '23505' ? 'duplicate' : 'save';
+    const code = error.code === 'P0009' ? 'pii' : error.code === 'P0017' ? 'contact' : error.code === 'P0022' ? 'explicit' : error.code === 'P0018' ? 'licensed' : error.code === 'P0006' ? 'limit' : error.code === 'P0005' ? 'closed' : error.code === '23505' ? 'duplicate' : error.code === 'P0026' ? 'agree' : 'save';
     redirect(`/freelance/projects/${projectId}?error=${code}`);
   }
   revalidatePath(`/freelance/projects/${projectId}`);

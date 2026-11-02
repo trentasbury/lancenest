@@ -9,11 +9,13 @@ import VerifiedMark from '@/components/VerifiedMark';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
 import { requestService } from '../actions';
+import AgreementBox from '@/components/freelance/AgreementBox';
+import { AGREEMENT_REQUIRED, hasAgreed } from '@/lib/platformAgreement';
 import { CONTACT_BLOCKED, EXPLICIT_BLOCKED } from '@/lib/contact';
 import { bookingFeeCents, bookingRequired, usd } from '@/lib/booking';
 
 export const metadata: Metadata = { title: 'Service' };
-const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, explicit: EXPLICIT_BLOCKED, booking: 'We couldn’t open checkout. Please try again in a minute.', amount: 'Enter an amount of at least $25.', note: 'Describe what you need (at least a sentence).', payouts: 'This member hasn’t finished payout setup yet, so they can’t be hired through LanceNest yet. Message them to let them know.', save: 'That didn’t go through — please try again.' };
+const ERR: Record<string, string> = { agree: AGREEMENT_REQUIRED, contact: CONTACT_BLOCKED, explicit: EXPLICIT_BLOCKED, booking: 'We couldn’t open checkout. Please try again in a minute.', amount: 'Enter an amount of at least $25.', note: 'Describe what you need (at least a sentence).', payouts: 'This member hasn’t finished payout setup yet, so they can’t be hired through LanceNest yet. Message them to let them know.', save: 'That didn’t go through — please try again.' };
 
 export default async function ServicePage(
   props: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; pkg?: string }> }
@@ -30,6 +32,7 @@ export default async function ServicePage(
   const { data: track } = await supabase.rpc('verified_work_summary', { ids: [s.profile_id] });
   const t = ((track ?? []) as { completed: number; avg_rating: number | null }[])[0];
   const own = s.profile_id === user.id;
+  const agreed = hirer && !own ? await hasAgreed(user.id, 'client') : true;
   const packages = Array.isArray(s.packages) ? s.packages : [];
   const chosen = packages.at(Number.parseInt(searchParams.pkg ?? '', 10) - 1);
   return (
@@ -68,6 +71,7 @@ export default async function ServicePage(
               {searchParams.error && <FormMessage error={ERR[searchParams.error] ?? ERR.save} />}
               <div><label className="field-label" htmlFor="amount">Agreed amount ($)</label><input key={chosen?.name ?? 'base'} id="amount" name="amount" required inputMode="decimal" defaultValue={((chosen?.price_cents ?? s.price_cents) / 100).toString()} className="field" /></div>
               <div><label className="field-label" htmlFor="note">What you need</label><textarea key={chosen?.name ?? 'base-note'} id="note" name="note" required rows={4} maxLength={2000} defaultValue={chosen ? `Package: ${chosen.name}. ` : undefined} placeholder={s.delivery === 'remote' ? 'Describe the work and your timeline' : 'Describe the work, the location, and when works for you'} className="field" /></div>
+              {!agreed && <AgreementBox side="client" />}
               <SubmitButton className="btn btn-primary w-full" pendingText="Sending…">Hire through LanceNest</SubmitButton>
               <p className="text-xs text-muted">{bookingRequired(s.delivery !== 'remote') && (s as { covers_booking_fee?: boolean }).covers_booking_fee
                 ? 'No booking fee: this member covers it. They confirm the booking by paying it, and contact details open once they do. You pay only what you agree with them.'
