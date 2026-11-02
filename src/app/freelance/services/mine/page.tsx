@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import FreelanceTabs from '@/components/freelance/FreelanceTabs';
 import { requireVerifiedMember } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { OPEN_CATEGORIES } from '@/lib/freelance';
@@ -10,7 +11,7 @@ import { deleteService, saveService, setServiceCoversFee, setServicePublic, setS
 import { CONTACT_BLOCKED, EXPLICIT_BLOCKED } from '@/lib/contact';
 import { FREELANCE_PAYMENTS_ENABLED, LICENSED_TRADES } from '@/lib/flags';
 
-export const metadata: Metadata = { title: 'My services' };
+export const metadata: Metadata = { title: 'Offer your services' };
 const ERR: Record<string, string> = { contact: CONTACT_BLOCKED, explicit: EXPLICIT_BLOCKED, licensed: 'That trade needs your verified license first. Add it under Licenses & certificates; once it’s verified you can list the service.', ack: 'Please confirm both acknowledgments.', required: 'Add a title, a description of at least 20 characters, and a price of at least $25.', scam: 'That listing contains wording we don’t allow.', package: 'Each package needs a name, a price of at least $25, a delivery time of 1–90 days, and what’s included.', save: 'That didn’t save — please try again.' };
 
 export default async function MyServicesPage(props: { searchParams: Promise<{ error?: string; saved?: string }> }) {
@@ -25,9 +26,10 @@ export default async function MyServicesPage(props: { searchParams: Promise<{ er
   ]);
   return (
     <div className="container-page max-w-3xl space-y-6 py-10">
-      <Link href="/freelance/services" className="text-sm text-muted hover:text-navy">← Services</Link>
-      <h1 className="font-serif text-4xl font-medium">My services</h1>
-      <p className="text-muted">List what you can do. Verified employers can book you on LanceNest{FREELANCE_PAYMENTS_ENABLED ? ' and pay through the site' : '; they pay LanceNest a small booking fee, and you keep 100% of what they pay you'}. Services also appear on your profile. Keep contact details out of listings; you can share them once you’re booked.</p>
+      <FreelanceTabs active="services" />
+      <h1 className="font-serif text-4xl font-medium">Offer your services</h1>
+      <p className="text-muted">List what you can do, from diesel repair to web design, so clients can find you and book you directly. Looking for posted projects instead? <Link href="/freelance#projects" className="text-navy underline">Find freelance work</Link>.</p>
+      <p className="text-sm text-muted">Clients and verified employers can book you on LanceNest{FREELANCE_PAYMENTS_ENABLED ? ' and pay through the site' : '; they pay LanceNest a small booking fee, and you keep 100% of what they pay you'}. Services also appear on your profile. Keep contact details out of listings; you can share them once you’re booked.</p>
       {FREELANCE_PAYMENTS_ENABLED && !fp?.payouts_enabled && <p className="rounded-xl border border-brass bg-brass/10 p-4 text-sm">Before anyone can hire you, <Link href="/freelance/profile" className="font-medium text-navy underline">set up payouts</Link> (about 5 minutes with Stripe).</p>}
       {searchParams.error && <FormMessage error={ERR[searchParams.error] ?? ERR.save} />}
       {searchParams.saved && <FormMessage message="Service listed." />}

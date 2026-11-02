@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import FreelanceTabs from '@/components/freelance/FreelanceTabs';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -41,7 +42,7 @@ export default async function EarningsPage(props: { searchParams: Promise<{ erro
   const card = (label: string, value: string, hint: string) => <div className="card p-5"><p className="eyebrow">{label}</p><p className="mt-2 font-serif text-3xl text-navy">{value}</p><p className="mt-1 text-xs text-muted">{hint}</p></div>;
   return (
     <div className="container-page max-w-4xl space-y-6 py-10">
-      <Link href="/freelance" className="text-sm text-muted hover:text-navy">← Freelance</Link>
+      <FreelanceTabs active="earnings" />
       <h1 className="font-serif text-4xl font-medium">Earnings</h1>
       {searchParams.error && <p className="text-sm text-signal">Stripe couldn’t open your payout dashboard just now — please try again.</p>}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

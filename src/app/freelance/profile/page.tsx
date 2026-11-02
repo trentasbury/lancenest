@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import FreelanceTabs from '@/components/freelance/FreelanceTabs';
 import { redirect } from 'next/navigation';
 import { requireVerifiedMember } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -38,7 +39,7 @@ export default async function FreelancerProfilePage(
 
   return (
     <div className="container-page max-w-3xl space-y-6 py-10">
-      <Link href="/freelance" className="text-sm text-muted hover:text-navy">← Freelance</Link>
+      <FreelanceTabs active="profile" />
       <h1 className="font-serif text-4xl font-medium">Your freelancer profile</h1>
       {searchParams.error && <FormMessage error={ERR[searchParams.error] ?? ERR.save} />}
       {searchParams.saved && <FormMessage message="Saved." />}
