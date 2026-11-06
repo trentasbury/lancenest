@@ -16,7 +16,7 @@ export function contractStartFeeCents(contractTotalCents: number) {
   return (FREELANCE_FEES.contractStartTiers.find(([under]) => contractTotalCents < under) ?? [0, FREELANCE_FEES.contractStartCents])[1];
 }
 
-/** The client's booking fee for a job of this price: 5% of it, at least $4.99 and at most $249. */
+/** The client's booking fee for a job of this price: 5% of it, at least $4.99 and at most $499. */
 export function bookingFeeCents(priceCents: number) {
   const { bookingRate, bookingMinCents, bookingMaxCents } = FREELANCE_FEES;
   return Math.min(Math.max(Math.round(Math.max(priceCents, 0) * bookingRate), bookingMinCents), bookingMaxCents);

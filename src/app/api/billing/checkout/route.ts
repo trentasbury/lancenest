@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getSessionProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { CATALOG, catalogLine, createCheckout, foundingCoupon, foundingFederalCoupon, foundingMemberCoupon, foundingStarterCoupon, keepProCoupon, publicSafetyCoupon, stripe, type ProductKey } from '@/lib/stripe';
+import { CATALOG, catalogLine, createCheckout, foundingCoupon, keepProCoupon, publicSafetyCoupon, stripe, type ProductKey } from '@/lib/stripe';
 import { foundingSpotsLeft } from '@/lib/billing';
 import { alreadyClaimed, domainKey } from '@/lib/identityClaims';
 
@@ -60,12 +60,6 @@ export async function POST(request: NextRequest) {
         admin.from('subscriptions').select('id', { count: 'exact', head: true }).eq('profile_id', session.user.id),
       ]);
       if (((grants ?? 0) + (partner ?? 0)) > 0 && !(paidBefore ?? 0) && until > Date.now() - 60 * 86400000 && until < Date.now() + 14 * 86400000) keepPro = await keepProCoupon();
-      // Founding Members (first 100 verified members): their first paid year of Pro is $99 (instead of $199), once.
-      // Better than Keep Pro, so it replaces it.
-      if (item.plan === 'veteran_pro' && !(paidBefore ?? 0)) {
-        const { isFoundingMember } = await import('@/lib/foundingMembers');
-        if (await isFoundingMember(session.user.id)) { keepPro = await foundingMemberCoupon(); (meta as Record<string, string>).founding_member = 'true'; }
-      }
     }
     const checkout = await createCheckout({
       mode: 'subscription', customer, ...(keepPro ? { discounts: [{ coupon: keepPro }] } : { allow_promotion_codes: true }),
@@ -83,6 +77,8 @@ export async function POST(request: NextRequest) {
   const { data: company } = await createAdminClient().from('companies').select('id, name, website, stripe_customer_id, is_verified, public_safety_status, training_listing_active').eq('owner_id', session.user.id).maybeSingle();
   if (!company) return NextResponse.redirect(`${site}/employer/dashboard?error=company`, 303);
   if (!company.is_verified) return NextResponse.redirect(`${site}/employer/dashboard?error=verify`, 303);
+  // Federal is sold annually ("from $9,990/year"); the monthly price isn't offered.
+  if (product === 'employer_federal_month') return NextResponse.redirect(`${site}/contact-sales?plan=federal`, 303);
 
   let jobId: string | null = null;
   if (item.kind === 'job_boost') {
@@ -164,20 +160,19 @@ export async function POST(request: NextRequest) {
     Object.assign(metadata, { event_title: title, event_starts_at: startsAt.toISOString(), event_url: url });
   }
 
-  // Founding Employer discount (first 12 months) while spots remain. Stripe applies it, then the
-  // subscription renews at the standard price automatically.
+  // Founding Employer discount (Professional only, first 12 months) while spots remain. Stripe applies it, then the
+  // subscription renews at the standard price automatically (approved November 6, 2026: one employer offer).
   let coupon: string | null = null;
   // Approved public-safety agencies get 30% off Professional/Federal (better than, and instead of, the Founding offer).
   if ((item.plan === 'professional' || item.plan === 'federal') && company.public_safety_status === 'approved') {
     coupon = await publicSafetyCoupon();
     metadata.public_safety = 'true';
-  } else if ((item.plan === 'starter' || item.plan === 'professional' || (item.plan === 'federal' && item.interval === 'year')) && item.interval && (await foundingSpotsLeft()) > 0
+  } else if (item.plan === 'professional' && item.interval && (await foundingSpotsLeft()) > 0
     // The Founding rate is once per company: cancelling and re-subscribing doesn't start another discounted year.
     && !(await createAdminClient().from('subscriptions').select('id', { count: 'exact', head: true }).eq('company_id', company.id).eq('founding', true)).count
     // ...and once per business: a new account for the same company website doesn't get it again.
     && !(await foundingClaimedByDomain(company.website as string | null))) {
-    coupon = item.plan === 'federal' ? await foundingFederalCoupon(item.interval)
-      : item.plan === 'starter' ? await foundingStarterCoupon(item.interval) : await foundingCoupon(item.interval);
+    coupon = await foundingCoupon(item.interval);
     metadata.founding = 'true';
   }
 

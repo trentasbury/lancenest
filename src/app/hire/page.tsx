@@ -34,7 +34,7 @@ export default async function HirePage() {
       <section className="border-b border-line bg-cream">
         <ol className="container-page grid gap-4 py-10 md:grid-cols-3">
           {[['1. Pick a service or post a project', 'Browse verified pros below, or describe the job and let them send proposals.'],
-            ['2. Book on LanceNest', 'Many pros cover the booking fee, so you pay nothing extra: look for “No booking fee”. Otherwise it’s a small one-time fee when you hire (5% of the job price, from $4.99 to $249).'],
+            ['2. Book on LanceNest', 'Many pros cover the booking fee, so you pay nothing extra: look for “No booking fee”. Otherwise it’s a small one-time fee when you hire (5% of the job price, from $4.99 to $499).'],
             ['3. Work together', 'Contact details open up once the job is booked. Licensed trades show a verified license.']].map(([h, b]) => (
             <li key={h} className="card p-5"><p className="font-semibold text-navy">{h}</p><p className="mt-1 text-sm text-muted">{b}</p></li>
           ))}

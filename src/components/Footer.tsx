@@ -15,9 +15,7 @@ export default function Footer() {
             <li><Link href="/open-jobs" className="hover:text-brass">Find jobs</Link></li>
             <li><Link href="/bases" className="hover:text-brass">Jobs near base</Link></li>
             <li><Link href="/fairs" className="hover:text-brass">Career fairs</Link></li>
-            <li><Link href="/pay" className="hover:text-brass">Pay insights</Link></li>
             <li><Link href="/newsletter" className="hover:text-brass">Weekly jobs newsletter</Link></li>
-            <li><Link href="/ambassadors" className="hover:text-brass">Become an ambassador</Link></li>
             <li><Link href="/resources" className="hover:text-brass">Translate your MOS</Link></li>
             <li><Link href="/careers" className="hover:text-brass">Military careers, translated</Link></li>
             <li><Link href="/guides" className="hover:text-brass">Transition guides</Link></li>

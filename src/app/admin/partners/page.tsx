@@ -24,16 +24,16 @@ export default async function PartnerCodes(props: { searchParams: Promise<{ erro
       <Link href="/admin" className="text-sm text-muted hover:text-navy">← Admin</Link>
       <h1 className="mt-3 font-serif text-4xl font-medium">Partner Pro cards</h1>
       <p className="mt-2 text-muted">
-        Give a base, transition office or veterans’ program a stack of one-time cards for free months of Pro. Every card has its own code and QR and works
-        once, so a card posted online is one free year, not everyone’s. Each verified member can use one card, ever; the months start the day it’s used
-        and don’t stack on other free months. Unused cards expire 6 months after you make them. Members without a card get the smaller offers
-        (Founding, Transition Pro, or 25% off their first year).
+        Give a base, transition office or veterans’ program a stack of one-time cards for the member offer: 6 months of Pro, free. Every card has its own
+        code and QR and works once, so a card posted online is one person’s 6 months, not everyone’s. It’s the same offer members get as one of the
+        first 500 or when they’re leaving the service, so it never stacks: someone who already had their free 6 months can’t use a card, and it stays
+        unused for someone else. Unused cards expire 6 months after you make them. Each partner’s numbers show how many cards were used.
       </p>
       {sp.error && <p role="alert" className="mt-4 text-sm text-signal">{ERRORS[sp.error] ?? ERRORS.save}</p>}
       <form action={createPartnerBatch} className="card mt-6 grid gap-3 p-5 sm:grid-cols-2">
         <div className="sm:col-span-2"><label htmlFor="pb-partner" className="field-label">Base, office or program</label><input id="pb-partner" name="partner" required maxLength={120} placeholder="Camp Lejeune Transition Readiness Program" className="field" /></div>
         <div><label htmlFor="pb-count" className="field-label">Number of cards</label><input id="pb-count" name="count" type="number" min={1} max={500} defaultValue={50} className="field" /></div>
-        <div><label htmlFor="pb-months" className="field-label">Months of Pro</label><input id="pb-months" name="months" type="number" min={1} max={12} defaultValue={12} className="field" /></div>
+        <div><p className="field-label">Each card gives</p><p className="py-2.5 text-sm text-ink">6 months of Pro, free</p></div>
         <p className="text-sm text-muted sm:col-span-2">Cards work for any verified service member, veteran or military spouse who’s handed one, transitioning or not. One use per card.</p>
         <div className="sm:col-span-2"><SubmitButton className="btn btn-primary" pendingText="Creating…">Create cards</SubmitButton></div>
       </form>

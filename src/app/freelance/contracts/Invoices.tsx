@@ -21,7 +21,7 @@ export default async function Invoices({ contractId, isFreelancer, isClient }: {
       <div>
         <h2 className="font-serif text-2xl font-semibold">Invoices</h2>
         <p className="mt-1 text-sm text-muted">{isFreelancer ? 'Bill your client for this job. They pay you directly, the way you agreed.' : 'Invoices from your freelancer. Pay them directly, the way you agreed, then mark them paid.'}</p>
-        <p className="mt-1 text-xs text-muted">LanceNest’s booking fee is 5% of the job, at most $249 in all. If invoices add up to more than the booked price, the difference in the fee is paid before the invoice is sent{k?.booking_fee_payer === 'freelancer' ? ' (by the freelancer, who covers this job’s fee)' : ' (by the client)'}.</p>
+        <p className="mt-1 text-xs text-muted">LanceNest’s booking fee is 5% of the job, at most $499 in all. If invoices add up to more than the booked price, the difference in the fee is paid before the invoice is sent{k?.booking_fee_payer === 'freelancer' ? ' (by the freelancer, who covers this job’s fee)' : ' (by the client)'}.</p>
       </div>
       {invoices.length > 0 && (
         <ul className="divide-y divide-line rounded-xl border border-line">

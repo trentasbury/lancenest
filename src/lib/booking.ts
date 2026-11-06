@@ -59,7 +59,7 @@ export async function bookingCheckoutUrl(contractId: string, payerId: string, em
 
 /**
  * The booking fee follows what's actually invoiced (approved November 1, 2026): 5% of the larger of the booked price
- * and everything invoiced on the job, still at least $4.99 and at most $249 in all. Returns what's still owed for a
+ * and everything invoiced on the job, still at least $4.99 and at most $499 in all. Returns what's still owed for a
  * new invoice of this amount (0 if the fee already paid covers it). Void invoices don't count.
  */
 export async function invoiceFeeDue(contractId: string, newAmountCents: number) {
@@ -90,7 +90,7 @@ export async function invoiceFeeCheckoutUrl(contractId: string, invoiceId: strin
     mode: 'payment',
     line_items: [{ quantity: 1, price_data: { currency: 'usd', unit_amount: inv.fee_due_cents as number, product_data: {
       name: `LanceNest booking fee update: ${k.title as string}`.slice(0, 250),
-      description: `Invoice ${inv.number as string} (${usd(inv.amount_cents as number)}) brings this job past the amount its booking fee covered. The booking fee is 5% of the job, at most $249 in all. The invoice is sent as soon as this is paid.`,
+      description: `Invoice ${inv.number as string} (${usd(inv.amount_cents as number)}) brings this job past the amount its booking fee covered. The booking fee is 5% of the job, at most $499 in all. The invoice is sent as soon as this is paid.`,
     } } }],
     metadata: meta, payment_intent_data: { metadata: meta },
     ...(company?.stripe_customer_id ? { customer: company.stripe_customer_id } : email ? { customer_email: email } : {}),

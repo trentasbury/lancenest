@@ -1,15 +1,22 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { MIN_COMPANIES, MIN_JOBS, payInsights, type PayGroup } from '@/lib/payInsights';
+import { MIN_COMPANIES, MIN_JOBS, PAY_INSIGHTS_MIN_GROUPS, payInsights, type PayGroup } from '@/lib/payInsights';
 import { CANONICAL_ORIGIN } from '@/lib/seo';
 
 export const revalidate = 86400;
 
-export const metadata: Metadata = {
-  title: 'Pay for veteran and cleared jobs',
-  description: 'What employers hiring veterans pay, by type of role and by security clearance, from the pay ranges verified employers post on LanceNest.',
-  alternates: { canonical: `${CANONICAL_ORIGIN}/pay` },
-};
+// Paused until there's real data (approved November 6, 2026): not in the menu or sitemap, and not indexed, until
+// enough groups qualify.
+export async function generateMetadata(): Promise<Metadata> {
+  const { families, clearance } = await payInsights();
+  const ready = families.length + clearance.length >= PAY_INSIGHTS_MIN_GROUPS;
+  return {
+    title: 'Pay for veteran and cleared jobs',
+    description: 'What employers hiring veterans pay, by type of role and by security clearance, from the pay ranges verified employers post on LanceNest.',
+    alternates: { canonical: `${CANONICAL_ORIGIN}/pay` },
+    ...(ready ? {} : { robots: { index: false, follow: true } }),
+  };
+}
 
 const k = (n: number) => `$${Math.round(n / 1000)}K`;
 
@@ -45,7 +52,7 @@ function Table({ title, groups, label }: { title: string; groups: PayGroup[]; la
 
 export default async function PayPage() {
   const { families, clearance, total } = await payInsights();
-  const enough = families.length > 0 || clearance.length > 0;
+  const enough = families.length + clearance.length >= PAY_INSIGHTS_MIN_GROUPS;
   return (
     <div className="container-page max-w-4xl py-12">
       <p className="eyebrow">Pay insights</p>
@@ -56,8 +63,8 @@ export default async function PayPage() {
 
       {!enough ? (
         <div className="card mt-10 p-8">
-          <p className="font-semibold text-ink">Pay insights are growing.</p>
-          <p className="mt-2 text-sm text-muted">A group appears once at least {MIN_JOBS} jobs from {MIN_COMPANIES} or more employers have posted pay, so no single employer’s pay can be identified. {total > 0 ? `${total} jobs with posted pay so far.` : ''}</p>
+          <p className="font-semibold text-ink">Coming soon.</p>
+          <p className="mt-2 text-sm text-muted">Pay insights open once enough verified employers have posted pay. Each group needs at least {MIN_JOBS} jobs from {MIN_COMPANIES} or more employers, so no single employer’s pay can be identified. Until then, every job on LanceNest shows its pay range.</p>
           <div className="mt-5 flex flex-wrap gap-2"><Link href="/open-jobs" className="btn btn-primary">See open jobs</Link><Link href="/careers" className="btn btn-outline">Translate your MOS</Link></div>
         </div>
       ) : (

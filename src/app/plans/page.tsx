@@ -43,12 +43,10 @@ export default async function PlansPage(props: { searchParams: Promise<{ code?: 
           <p className="mx-auto mt-5 max-w-2xl text-cream/80">
             Your profile, verification, and every job on LanceNest cost nothing. Upgrade anytime; cancel anytime from your billing page.
           </p>
-          {foundingSeats > 0 && (
-            <p className="mx-auto mt-5 block max-w-2xl rounded-xl border border-brass bg-brass/10 px-4 py-2.5 text-sm font-medium text-brass-light">
-              Founding Members: the first 100 verified members get 6 months of Pro free, then $99 for their first year (annual, normally $199). {foundingSeats} of 100 seats left.
-            </p>
-          )}
-          <p className="mx-auto mt-4 inline-block rounded-full border border-brass/60 px-4 py-1.5 text-sm text-brass-light">Separating within a year? Verified members get 6 months of Pro free. <a href="/transition#confirm-date" className="underline">Confirm your date</a></p>
+          <p className="mx-auto mt-5 block max-w-2xl rounded-xl border border-brass bg-brass/10 px-4 py-2.5 text-sm font-medium text-brass-light">
+            6 months of Pro, free, once: for {foundingSeats > 0 ? <>the first 500 verified members ({foundingSeats} spots left), </> : null}anyone leaving the service within a year
+            {' '}(<a href="/transition#confirm-date" className="underline">confirm your date</a>), or anyone handed a partner card. No card needed, and it doesn’t stack.
+          </p>
         </div>
       </section>
 

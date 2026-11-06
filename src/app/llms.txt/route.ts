@@ -14,7 +14,6 @@ export function GET() {
 - [Military careers, translated](${o}/careers): 1,469 military jobs (MOS, ratings, AFSCs) mapped to civilian roles, with matching open jobs.
 - [Jobs near military bases](${o}/bases)
 - [Hire a veteran freelancer](${o}/hire): opt-in public service listings from verified members.
-- [Pay insights](${o}/pay): typical posted pay by role and clearance, shown only when 5+ jobs from 3+ employers report it.
 - [Virtual career fairs](${o}/fairs)
 - [Transition guides](${o}/guides)
 

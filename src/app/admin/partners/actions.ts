@@ -10,7 +10,7 @@ export async function createPartnerCode(formData: FormData) {
   const { user } = await requireAdmin('/admin/partners');
   const code = String(formData.get('code') ?? '').trim().toUpperCase().replace(/\s+/g, '-');
   const partner = String(formData.get('partner') ?? '').trim().slice(0, 120);
-  const months = Math.min(12, Math.max(1, Number.parseInt(String(formData.get('months') ?? '6'), 10) || 6));
+  const months = 6; // every card is the one member offer: 6 months of Pro, once (approved November 6, 2026)
   const maxUses = Number.parseInt(String(formData.get('max_uses') ?? ''), 10);
   const expires = String(formData.get('expires') ?? '');
   if (!/^[A-Z0-9-]{4,32}$/.test(code) || partner.length < 2) redirect('/admin/partners?error=input');
@@ -40,13 +40,13 @@ function cardCode() {
 
 /**
  * A batch of one-time cards for one base, transition office or program. Each card has its own code and works once
- * (a leaked card is one free year, not everyone's). Unused cards expire 6 months after the batch is made.
+ * (a leaked card is one person's 6 months, not everyone's). Unused cards expire 6 months after the batch is made.
  */
 export async function createPartnerBatch(formData: FormData) {
   const { user } = await requireAdmin('/admin/partners');
   const partner = String(formData.get('partner') ?? '').trim().slice(0, 120);
   const count = Math.min(500, Math.max(1, Number.parseInt(String(formData.get('count') ?? '50'), 10) || 50));
-  const months = Math.min(12, Math.max(1, Number.parseInt(String(formData.get('months') ?? '12'), 10) || 12));
+  const months = 6; // every card is the one member offer: 6 months of Pro, once (approved November 6, 2026)
   // Cards work for any verified member who's handed one, transitioning or not (approved October 31, 2026); one use each.
   const transitionOnly = false;
   if (partner.length < 2) redirect('/admin/partners?error=input');

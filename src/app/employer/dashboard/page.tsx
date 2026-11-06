@@ -172,7 +172,7 @@ export default async function EmployerDashboard(
                   <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="employer_professional_month" /><button className="btn btn-primary">Upgrade to Professional · $249/mo</button></form>
                 )}
                 {company.plan === 'professional' && (
-                  <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value="employer_federal_month" /><button className="btn btn-primary">Upgrade to Federal · $999/mo</button></form>
+                  <Link href="/contact-sales?plan=federal" className="btn btn-primary">Talk to us about Federal</Link>
                 )}
                 <Link href="/settings/account" className="btn btn-ghost border border-line">Account</Link>
                 {(company as unknown as { isOwner: boolean }).isOwner && company.stripe_customer_id && (

@@ -98,7 +98,7 @@ export async function acceptSpouseInvite(spouseId: string, token: string | undef
       paragraphs: [`${check.firstName} confirmed you on LanceNest, so your account is verified. Jobs, the Network, messaging, and freelance work are all unlocked.`,
         'Next step: fill in your profile. Remote and portable roles are easiest to find from the Jobs page with “Remote” selected.'],
       cta: { label: 'Go to your dashboard', url: `${SITE}/dashboard` } } });
-  // One of the first 100 verified members? Founding Member: 6 months of Pro free, then $99 for the first year.
+  // One of the first 500 verified members? Founding Member: 6 months of Pro free (the one member offer).
   const { grantFoundingMember } = await import('@/lib/foundingMembers');
   await grantFoundingMember(spouseId);
   return 'ok';

@@ -43,7 +43,7 @@ export async function recomputeCompany(companyId: string) {
 
   // After any downgrade, apply the new plan's limits. Jobs over the limit are paused (newest stay open; nothing is
   // deleted). Teammates over the seat limit lose access (earliest added stay); the owner can add them back after upgrading.
-  const jobCap = plan === 'free' ? 3 : plan === 'starter' ? 10 : plan === 'professional' ? 25 : null;
+  const jobCap = plan === 'free' ? 2 : plan === 'starter' ? 10 : plan === 'professional' ? 25 : null;
   if (jobCap !== null) {
     const { data: open } = await admin.from('jobs').select('id').eq('company_id', companyId).eq('status', 'open').neq('employment_type', 'skillbridge').order('posted_at', { ascending: false });
     const extra = (open ?? []).slice(jobCap + slots).map((j) => j.id as string);

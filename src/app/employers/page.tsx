@@ -11,26 +11,24 @@ const spotsLeftForDisplay = unstable_cache(() => foundingSpotsLeft().catch(() =>
 // Pre-built and served from the location nearest each visitor; refreshed every 5 minutes.
 export const revalidate = 300;
 
-// Founding Employer prices (first 50 companies, once each; see FOUNDING_* in lib/stripe.ts).
+// Founding Employer price (first 50 companies, once each, Professional only; see FOUNDING in lib/stripe.ts).
 const FOUNDING_NOTE: Record<string, string> = {
-  Starter: '$69/mo for your first 12 months ($690 first year on annual)',
   Professional: '$149/mo for your first 12 months ($1,490 first year on annual)',
-  Federal: '$7,500 for your first year, paid up front',
 };
 
 export const metadata: Metadata = { alternates: { canonical: '/employers' },
   title: 'Hire Veterans',
-  description: 'Recruit verified service members and veterans. Plans for every size of hiring team.',
+  description: 'Verified veteran talent for defense contractors, federal primes and veteran-owned firms. Post jobs free, no placement fees.',
 };
 
 const PLANS = [
   { name: 'Free', price: '$0', note: 'To get started', cta: 'Create a free account',
-    features: ['No placement fees on job-post hires', 'Company recruiting page', '3 open job posts', 'Applicant pipeline with résumés and verified work', 'Message applicants to your jobs'] },
+    features: ['No placement fees on job-post hires', 'Company recruiting page', '2 open job posts', 'Applicant pipeline with résumés and verified work', 'Message applicants to your jobs'] },
   { name: 'Starter', price: '$99', note: 'per month · or $990/year paid up front (2 months free)', cta: 'Start with Starter',
     features: ['10 open job posts (extra slots $39/mo)', 'Company recruiting page', 'Applicant pipeline with résumés and verified work', 'Message applicants to your jobs', 'Import and daily sync from Greenhouse, Lever or Ashby', '2 team seats', 'Talent search is on Professional'] },
   { name: 'Professional', price: '$249', note: 'per month · or $2,490/year paid up front (2 months free)', cta: 'Start with Professional', featured: true,
     features: ['25 open job posts (extra slots $39/mo)', 'Search every verified member’s full profile', 'Transitioning talent search (separating in 12 months)', 'Hiring analytics: views, applicants, conversion', '5 featured jobs a month, included', 'Talent pools: save candidates to lists with private notes', 'Saved searches with daily new-match emails', '3 team seats', '100 new conversations a month with any verified member (10 more for $59)', 'Branded company page: cover photo and “Why veterans work here”', 'Applicant export (CSV)'] },
-  { name: 'Federal', price: '$999', note: 'per month · or $9,990/year paid up front (2 months free)', cta: 'Start with Federal',
+  { name: 'Federal', price: 'Talk to us', note: 'from $9,990/year, paid annually · fits a government purchase card', cta: 'Talk to us',
     features: ['Everything in Professional', 'Built for primes, subs, and GovCon small businesses', 'Search by self-reported clearance level (you confirm eligibility in official systems)', 'Cleared talent spotlight', 'One-click yearly veteran outreach report for VEVRAA records', '5 team seats', 'Unlimited featured jobs', 'Virtual career fair booths included', 'Priority support from the founder'] },
   { name: 'Enterprise', price: 'Custom', note: 'from $15,000/year', cta: 'Talk to us',
     features: ['Everything in Federal', 'Volume pricing for multiple hiring teams', 'Invoice billing', 'Dedicated support'] },
@@ -56,7 +54,7 @@ export default async function EmployersPage() {
           <p className="mx-auto mt-6 inline-block rounded-full border border-brass bg-brass/15 px-5 py-2 text-sm font-semibold text-brass">No placement fees on hires you make through job posts — ever.</p>
           {spotsLeft > 0 && (
             <div className="mx-auto mt-5 max-w-2xl rounded-2xl border border-brass/60 bg-navy/60 p-4 text-sm text-cream">
-              <strong className="text-brass">Founding Employer offer · {spotsLeft} of 50 spots left.</strong> Professional for <strong>$1,490 your first year</strong> (save $1,000), or Federal for <strong>$7,500 your first year</strong> (regularly $11,988). Paid up front. Your launch price covers your first year; after that the plan renews at its regular price, locked for as long as you stay subscribed.
+              <strong className="text-brass">Founding Employer offer · {spotsLeft} of 50 spots left.</strong> Professional for <strong>$149/month for your first 12 months</strong>, or <strong>$1,490 for your first year</strong> paid up front (regularly $249/month). After that it renews at the regular price, locked for as long as you stay subscribed.
             </div>
           )}
           <div className="mt-6 flex flex-wrap justify-center gap-3">
@@ -93,7 +91,14 @@ export default async function EmployersPage() {
               </ul>
               {/* Signed-in employers see checkout; everyone else sees sign-up. Both are in the pre-built page and
                   the menu hint shows the right one before first paint (.nav-employer / .nav-not-employer). */}
-              {CHECKOUT[plan.name] && (
+              {plan.name === 'Federal' && (
+                <div className="mt-8 space-y-2">
+                  <Link href="/contact-sales?plan=federal" className="btn btn-outline w-full" data-track="cta_federal_talk">Talk to us</Link>
+                  <form action="/api/billing/checkout" method="post" className="nav-employer"><input type="hidden" name="product" value="employer_federal_year" /><button className="w-full text-center text-sm text-navy underline decoration-brass underline-offset-4">or buy online · $9,990/year</button></form>
+                  <p className="nav-employer text-center text-xs text-muted">Agencies can pay by purchase card; we can also invoice.</p>
+                </div>
+              )}
+              {CHECKOUT[plan.name] && plan.name !== 'Federal' && (
                 <div className="nav-employer mt-8 space-y-2">
                   <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value={`${CHECKOUT[plan.name]}_month`} /><button className={`btn w-full ${plan.featured ? 'btn-primary' : 'btn-outline'}`}>Choose monthly</button></form>
                   <form action="/api/billing/checkout" method="post"><input type="hidden" name="product" value={`${CHECKOUT[plan.name]}_year`} /><button className="btn btn-ghost w-full border border-line">Choose annual · 2 months free</button></form>
@@ -103,10 +108,11 @@ export default async function EmployersPage() {
               {plan.name === 'Free' && (
                 <Link href="/employer/dashboard" className="nav-employer btn btn-outline mt-8">Go to dashboard</Link>
               )}
-              <Link href={plan.name === 'Enterprise' ? '/contact-sales?plan=enterprise' : '/signup?role=employer'} className={`${CHECKOUT[plan.name] || plan.name === 'Free' ? 'nav-not-employer ' : ''}btn mt-8 ${plan.featured ? 'btn-primary' : 'btn-outline'}`}>
-                {plan.name === 'Enterprise' ? 'Book a call' : plan.cta}
-              </Link>
-              {plan.name === 'Federal' && <Link href="/contact-sales?plan=federal" className="mt-2 block text-center text-sm text-navy underline decoration-brass underline-offset-4">or book a call</Link>}
+              {plan.name !== 'Federal' && (
+                <Link href={plan.name === 'Enterprise' ? '/contact-sales?plan=enterprise' : '/signup?role=employer'} className={`${CHECKOUT[plan.name] || plan.name === 'Free' ? 'nav-not-employer ' : ''}btn mt-8 ${plan.featured ? 'btn-primary' : 'btn-outline'}`}>
+                  {plan.name === 'Enterprise' ? 'Book a call' : plan.cta}
+                </Link>
+              )}
             </div>
           ))}
         </div>
@@ -117,7 +123,7 @@ export default async function EmployersPage() {
               <tbody className="divide-y divide-line">
                 <tr><td className="p-3 font-medium">Verified company page</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
                 <tr><td className="p-3 font-medium">Team seats</td><td className="p-3">1</td><td className="p-3">2</td><td className="p-3">3</td><td className="p-3">5</td><td className="p-3">Custom</td></tr>
-                <tr><td className="p-3 font-medium">Open jobs</td><td className="p-3">3</td><td className="p-3">10</td><td className="p-3">25</td><td className="p-3">Unlimited</td><td className="p-3">Unlimited</td></tr>
+                <tr><td className="p-3 font-medium">Open jobs</td><td className="p-3">2</td><td className="p-3">10</td><td className="p-3">25</td><td className="p-3">Unlimited</td><td className="p-3">Unlimited</td></tr>
                 <tr><td className="p-3 font-medium">Screening questions and applicant pipeline</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
                 <tr><td className="p-3 font-medium">Message applicants</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td><td className="p-3">✓</td></tr>
                 <tr><td className="p-3 font-medium">Search all verified members</td><td className="p-3">—</td><td className="p-3">—</td><td className="p-3">✓</td><td className="p-3">✓ + clearance filters</td><td className="p-3">✓</td></tr>

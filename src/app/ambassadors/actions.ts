@@ -5,10 +5,11 @@ import { redirect } from 'next/navigation';
 import { requireAdmin, requireVerifiedMember } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { notifyMember } from '@/lib/email';
+import { AMBASSADORS_OPEN } from '@/lib/flags';
 
 export async function applyAmbassador(formData: FormData) {
   const { user, profile } = await requireVerifiedMember('/ambassadors');
-  if (profile.role !== 'veteran') redirect('/ambassadors');
+  if (profile.role !== 'veteran' || !AMBASSADORS_OPEN) redirect('/ambassadors');
   const installation = String(formData.get('installation') ?? '').trim().slice(0, 120);
   const note = String(formData.get('role_note') ?? '').trim().slice(0, 300) || null;
   if (installation.length < 2 || formData.get('rules') !== 'on') redirect('/ambassadors?error=1#apply');

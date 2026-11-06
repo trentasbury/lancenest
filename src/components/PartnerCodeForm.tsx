@@ -10,7 +10,7 @@ export default function PartnerCodeForm({ back, result, prefill }: { back: '/pla
       <div className="flex-1">
         <label htmlFor="partner-code" className="field-label">{prefill ? 'Your partner code is ready' : 'Have a partner code?'}</label>
         <input id="partner-code" name="code" defaultValue={prefill} required maxLength={32} placeholder="e.g. TAP-LEJEUNE" className="field uppercase" />
-        <p className="mt-1 text-xs text-muted">From a transition office, veterans’ group or nonprofit. Adds free months of Pro to a verified account.</p>
+        <p className="mt-1 text-xs text-muted">From a base, transition office, veterans’ group or nonprofit. Gives a verified account 6 months of Pro, free, if you haven’t had your free 6 months yet.</p>
         {msg && <p role="status" className={`mt-2 text-sm ${result === 'ok' ? 'text-olive' : 'text-signal'}`}>{msg}</p>}
       </div>
       <SubmitButton className="btn btn-outline shrink-0" pendingText="Checking…">Apply code</SubmitButton>

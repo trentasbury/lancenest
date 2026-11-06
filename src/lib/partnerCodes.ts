@@ -1,14 +1,15 @@
 import 'server-only';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { SITE, notifyMember } from '@/lib/email';
-import { alreadyClaimed, claimPerk, identityKey } from '@/lib/identityClaims';
+import { alreadyClaimed, claimPerk, identityKey, releasePerk } from '@/lib/identityClaims';
+import { hadFreePro } from '@/lib/freePro';
 
 /**
- * Partner Pro codes: transition offices, veterans' groups and nonprofits hand these out, the way LinkedIn gives its
- * free year of Premium through Hire Heroes USA and others. One code per verified member, ever.
+ * Partner Pro cards: bases, transition offices, veterans' groups and nonprofits hand these out. A card is one way into
+ * the single member offer, 6 months of Pro free, once per person (approved November 6, 2026). One card per member, ever.
  */
 const DAY = 86400000;
-export type RedeemResult = 'ok' | 'invalid' | 'used_up' | 'already' | 'too_many' | 'unverified' | 'not_transitioning' | 'error';
+export type RedeemResult = 'ok' | 'invalid' | 'used_up' | 'already' | 'had_free_pro' | 'too_many' | 'unverified' | 'not_transitioning' | 'error';
 
 const REASONS: Record<number, RedeemResult> = { [-1]: 'too_many', [-2]: 'already', [-3]: 'invalid', [-4]: 'used_up' };
 
@@ -33,6 +34,18 @@ export async function redeemPartnerCode(profileId: string, raw: string): Promise
   // One partner card per person, ever (a new account for the same verified person can't use a second card).
   const key = await identityKey(profileId);
   if (await alreadyClaimed(key, 'partner_code')) return 'already';
+  // Already had the free 6 months another way? The card stays unused for someone else. One exception, so partners
+  // still see their people: a Founding seat from the last 14 days (the member was verified before entering the card)
+  // is swapped for the card. The seat goes back for someone else, and the free period's end date doesn't move.
+  let swapSeat = false;
+  if (await hadFreePro(profileId)) {
+    const [{ data: seat }, { count: grant }] = await Promise.all([
+      admin.from('founding_members').select('granted_at').eq('profile_id', profileId).maybeSingle(),
+      admin.from('member_grants').select('profile_id', { count: 'exact', head: true }).eq('profile_id', profileId).eq('kind', 'transition_pro'),
+    ]);
+    swapSeat = !!seat && Date.parse(seat.granted_at as string) > Date.now() - 14 * DAY && !grant && !(await alreadyClaimed(key, 'transition_pro'));
+    if (!swapSeat) return 'had_free_pro';
+  }
   const { data, error } = await admin.rpc('redeem_partner_code', { p_profile: profileId, p_code: code });
   if (error) return error.code === '23505' ? 'already' : 'error';
   const months = Number(data);
@@ -42,7 +55,13 @@ export async function redeemPartnerCode(profileId: string, raw: string): Promise
   // whichever ends later wins (approved October 31, 2026).
   const now = Date.now();
   const active = v.granted_plan && v.pro_granted_until && Date.parse(v.pro_granted_until as string) > now;
-  const until = Math.max(active ? Date.parse(v.pro_granted_until as string) : 0, now + Number(months) * 30 * DAY);
+  const until = swapSeat && active
+    ? Date.parse(v.pro_granted_until as string)
+    : Math.max(active ? Date.parse(v.pro_granted_until as string) : 0, now + Math.min(Number(months), 6) * 30 * DAY);
+  if (swapSeat) {
+    await admin.from('founding_members').delete().eq('profile_id', profileId);
+    await releasePerk(key, 'founding_member');
+  }
   await admin.from('veteran_profiles').update({
     granted_plan: active ? v.granted_plan : 'pro',
     pro_granted_until: new Date(until).toISOString(),
@@ -59,6 +78,7 @@ export const REDEEM_MESSAGES: Record<RedeemResult, string> = {
   invalid: 'That code isn’t valid or has expired. Check it with the organization that gave it to you.',
   used_up: 'That code has already been used. Each card works once.',
   already: 'Your account has already used a partner code.',
+  had_free_pro: 'You’ve already had your free 6 months of Pro, so this card wasn’t used. Pass it on to someone who hasn’t.',
   too_many: 'Too many tries today. Please try again tomorrow.',
   unverified: 'Partner codes work once your service is verified.',
   not_transitioning: 'This code is for members leaving the service within the next 12 months. Confirm your separation date in the Transition Hub (orders, an LES or a DD-214), then apply the code again. It isn’t used up.',

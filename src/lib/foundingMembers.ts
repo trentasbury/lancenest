@@ -3,10 +3,11 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { SITE, notifyMember } from '@/lib/email';
 import { FOUNDING_MEMBER } from '@/lib/stripe';
 import { claimPerk, identityKey, releasePerk } from '@/lib/identityClaims';
+import { hadFreePro } from '@/lib/freePro';
 
 const DAY = 86400000;
 
-/** How many of the 100 Founding Member seats are still open. */
+/** How many of the 500 Founding Member seats are still open. */
 export async function foundingMemberSeatsLeft() {
   const { count } = await createAdminClient().from('founding_members').select('profile_id', { count: 'exact', head: true });
   return Math.max(FOUNDING_MEMBER.spots - (count ?? 0), 0);
@@ -18,10 +19,11 @@ export async function isFoundingMember(profileId: string) {
 }
 
 /**
- * The first 100 verified members (service members, veterans and spouses) become Founding Members: 6 months of Pro
- * free, then $99 for their first year of Pro on the annual plan. Called when a member is verified. Safe to call any
- * time: it does nothing for anyone unverified, anyone who already has a seat, or once the 100 seats are gone
- * (the database refuses a 101st seat even if two approvals happen at once).
+ * The first 500 verified members (service members, veterans and spouses) become Founding Members: 6 months of Pro
+ * free. It's the one member offer, so someone who already had free Pro another way (a partner card, Transition Pro)
+ * doesn't take a seat. Called when a member is verified. Safe to call any time: it does nothing for anyone
+ * unverified, anyone who already has a seat, or once the seats are gone (the database refuses an extra seat even
+ * if two approvals happen at once).
  */
 export async function grantFoundingMember(profileId: string): Promise<boolean> {
   const admin = createAdminClient();
@@ -29,6 +31,7 @@ export async function grantFoundingMember(profileId: string): Promise<boolean> {
   if (!v || v.verification_status !== 'verified') return false;
   if (await isFoundingMember(profileId)) return false;
   if ((await foundingMemberSeatsLeft()) <= 0) return false;
+  if (await hadFreePro(profileId)) return false;
   // Once per person: someone who deletes their account and joins again doesn't get a second seat.
   const key = await identityKey(profileId);
   if (!(await claimPerk(key, 'founding_member', profileId))) return false;
@@ -62,13 +65,13 @@ export async function grantFoundingMember(profileId: string): Promise<boolean> {
   await recomputeVeteran(profileId);
   await notifyMember(profileId, {
     type: 'plan', link: '/plans',
-    title: `You’re Founding Member #${seat}: 6 months of LanceNest Pro free, then $99 for your first year.`,
+    title: `You’re Founding Member #${seat}: 6 months of LanceNest Pro, free.`,
     email: {
-      subject: `Founding Member #${seat}: 6 months of Pro, on us`, preheader: 'One of the first 100 verified members on LanceNest.', tone: 'success', badge: 'Founding Member',
+      subject: `Founding Member #${seat}: 6 months of Pro, on us`, preheader: 'One of the first 500 verified members on LanceNest.', tone: 'success', badge: 'Founding Member',
       heading: `Welcome aboard, Founding Member #${seat}.`,
       paragraphs: [
-        'You’re one of the first 100 verified members on LanceNest, so Pro is on us for 6 months. No card needed.',
-        'When it ends, you can keep Pro for $99 for your first year on the annual plan (normally $199). After that it renews at the standard price, and you can cancel anytime.',
+        'You’re one of the first 500 verified members on LanceNest, so Pro is on us for 6 months. No card needed, nothing to cancel.',
+        'When it ends you go back to the Free plan, and you can keep Pro anytime from your Plans page.',
         'Built by veterans, for veterans. Thank you for helping us build it.',
       ],
       cta: { label: 'See what Pro includes', url: `${SITE}/plans` },

@@ -175,7 +175,7 @@ export default async function ProjectPage(
             <div><label className="field-label" htmlFor="cover_letter">Why you</label><textarea id="cover_letter" name="cover_letter" required rows={6} minLength={30} className="field" /></div>
             {needsBooking && (
               <label className="flex items-start gap-2 text-sm text-ink/85"><input type="checkbox" name="covers_booking_fee" defaultChecked={isOnSite((project as unknown as { work_location?: string }).work_location)} className="mt-1 accent-navy" />
-                <span>I’ll cover the booking fee. The client sees “No booking fee” on your proposal, and you pay LanceNest’s booking fee (5% of the job, $4.99 to $249) only if you’re hired, before contact details open. No lead fees, ever. You can’t switch this off after sending.</span></label>
+                <span>I’ll cover the booking fee. The client sees “No booking fee” on your proposal, and you pay LanceNest’s booking fee (5% of the job, $4.99 to $499) only if you’re hired, before contact details open. No lead fees, ever. You can’t switch this off after sending.</span></label>
             )}
             <p className="text-xs text-muted">{FREELANCE_PAYMENTS_ENABLED ? `You keep ${keepPercent(plan)}% of payments on this project.` : 'You keep 100% of what the client pays you. Clients pay LanceNest a small booking fee when they hire.'} Share contact details after you’re booked. {plan === 'free'
               ? `${freeLeft} of ${FREE_PROPOSALS_PER_MONTH} free proposals left this month${credits ? `, plus ${credits} extra` : ''}.`

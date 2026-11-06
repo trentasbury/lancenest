@@ -48,7 +48,7 @@ export default async function PublicServicePage(props: { params: Promise<{ id: s
           <p className="text-xs text-muted">Anyone can book: homeowners, small businesses and companies. It takes a minute and you come straight back here.</p>
           {s.noBookingFee
             ? <p className="text-xs text-muted"><strong className="text-olive">No booking fee.</strong> This pro covers LanceNest’s booking fee, so you pay only what you agree with them. Contact details open up once you’re booked.</p>
-            : <p className="text-xs text-muted">You pay a small booking fee when you hire (5% of the job price, from $4.99 to $249), refunded if the pro declines within 48 hours. Contact details open up once you’re booked.</p>}
+            : <p className="text-xs text-muted">You pay a small booking fee when you hire (5% of the job price, from $4.99 to $499), refunded if the pro declines within 48 hours. Contact details open up once you’re booked.</p>}
         </div>
       </aside>
     </div>

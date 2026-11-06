@@ -9,7 +9,7 @@ import { ARRANGEMENT_LABELS, formatSalary } from '@/lib/format';
 
 const FEATURES = [
   { icon: '☆', title: 'Veteran Focused', body: 'Built by veterans, for veterans. Your record is read as an asset, never a gap.' },
-  { icon: '◇', title: 'Top Opportunities', body: 'Employers here are looking for military talent on purpose — not by accident.' },
+  { icon: '◇', title: 'Top Opportunities', body: 'Defense contractors, federal primes and veteran-owned firms looking for military talent on purpose.' },
   { icon: '✧', title: 'Career Resources', body: 'Translate your MOS, rating, or AFSC into the civilian roles it prepares you for.' },
   { icon: '❖', title: 'A Stronger Community', body: 'Active duty, National Guard, Reserve, transitioning, and veteran members in one professional network.' },
 ];
@@ -106,7 +106,7 @@ export default async function HomePage() {
               The professional network for people who served.
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-cream/80">
-              Jobs, freelance work, mentors, and a network of verified service members and veterans, plus the employers who want to hire them.
+              Jobs with defense contractors, federal primes and veteran-owned firms, freelance work anyone can hire you for, and a network of verified service members and veterans.
             </p>
 
             <form action="/open-jobs" method="get" className="mt-9 flex w-full max-w-2xl flex-col gap-2 rounded-2xl bg-ivory p-2 shadow-lift sm:flex-row sm:rounded-full">

@@ -16,8 +16,8 @@ export const FREELANCE_FEES = {
   conversionFee: { rate: 0.135, minimumCents: 100000, waivedAfterMonths: 24 },
   // Booking fee: paid by the client to LanceNest when they hire (veterans pay nothing). Collected before the job is
   // booked and before contact details open, so it can't be skipped by paying the freelancer in cash. 5% of the agreed
-  // price, at least $4.99 and at most $249 (approved October 31, 2026).
+  // price, at least $4.99 and at most $499 (approved October 31, 2026; cap raised from $249 on November 6, 2026).
   bookingRate: 0.05,
   bookingMinCents: 499,
-  bookingMaxCents: 24900,
+  bookingMaxCents: 49900,
 };

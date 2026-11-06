@@ -10,3 +10,6 @@ export const FREELANCE_PAYMENTS_ENABLED = false;
 export const GOOGLE_SIGNIN = process.env.NEXT_PUBLIC_GOOGLE_SIGNIN === '1';
 // Trades that require a state/local license: hidden until license verification ships.
 export const LICENSED_TRADES = ['HVAC & refrigeration', 'Electrical', 'Plumbing', 'Construction & remodeling', 'Roofing & exteriors'];
+// Paused until there's real data (approved November 6, 2026). Pay insights come back once enough verified employers
+// post pay (see PAY_INSIGHTS_MIN_GROUPS in lib/payInsights.ts); the Ambassador program reopens at about 500 members.
+export const AMBASSADORS_OPEN = false;

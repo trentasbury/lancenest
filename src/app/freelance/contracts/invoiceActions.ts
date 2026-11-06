@@ -53,7 +53,7 @@ export async function createInvoice(contractId: string, formData: FormData) {
     email: { subject: `Invoice ready: ${k.title}`, preheader: `A ${usd(feeDue)} booking fee update comes first.`, tone: 'notice', badge: 'Invoice',
       heading: 'Your freelancer sent an invoice.',
       paragraphs: [`Invoice ${number} for “${k.title}” is ${usd(amount)}. With it, this job is now more than your booking fee covered.`,
-        `LanceNest’s booking fee is 5% of the job, at most $249 in all. Pay the ${usd(feeDue)} difference and the invoice opens right away.`],
+        `LanceNest’s booking fee is 5% of the job, at most $499 in all. Pay the ${usd(feeDue)} difference and the invoice opens right away.`],
       cta: { label: 'Open the invoice', url: `${SITE}${page(k.id, '#invoices')}` } } });
   redirect(page(contractId, '?invoiced=held#invoices'));
 }

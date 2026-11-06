@@ -9,7 +9,7 @@ export const PAID: Plan[] = ['professional', 'federal', 'enterprise'];
 /** Plans whose job feeds re-sync every day. */
 export const FEED_SYNC: Plan[] = ['starter', 'professional', 'federal', 'enterprise'];
 /** Open-job cap by plan (null = unlimited). Matches private.enforce_job_limit. */
-export const JOB_CAP: Record<Plan, number | null> = { free: 3, starter: 10, professional: 25, federal: null, enterprise: null };
+export const JOB_CAP: Record<Plan, number | null> = { free: 2, starter: 10, professional: 25, federal: null, enterprise: null };
 /** New conversations an employer team may start each month with members who haven't applied (matches the cap in messages/actions). */
 export const CONTACTS_PER_MONTH: Record<Plan, number> = { free: 0, starter: 0, professional: 100, federal: 500, enterprise: 2000 };
 export const CLEARANCE_SEARCH: Plan[] = ['federal', 'enterprise'];

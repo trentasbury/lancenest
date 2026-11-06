@@ -6,11 +6,13 @@ import { ambassadorStatus } from '@/lib/ambassadors';
 import { SITE } from '@/lib/email';
 import SubmitButton from '@/components/SubmitButton';
 import FormMessage from '@/components/FormMessage';
+import { AMBASSADORS_OPEN } from '@/lib/flags';
 import { applyAmbassador } from './actions';
 
 export const metadata: Metadata = {
   title: 'LanceNest Ambassadors',
   description: 'Help service members on your base find their next job, and earn free months of LanceNest Pro for every verified member you bring.',
+  ...(AMBASSADORS_OPEN ? {} : { robots: { index: false, follow: true } }),
 };
 
 const RULES = [
@@ -38,6 +40,21 @@ export default async function AmbassadorsPage(props: { searchParams: Promise<{ a
     stats = { joined: joined ?? 0, earned: earned ?? 0 };
   }
   const link = session?.profile?.username ? `${SITE}/signup?ref=${session.profile.username}` : null;
+
+  // Paused until about 500 members (approved November 6, 2026). Anyone already active keeps their page.
+  if (!AMBASSADORS_OPEN && !active) {
+    return (
+      <div className="container-page max-w-2xl py-16 text-center">
+        <p className="eyebrow">Ambassadors</p>
+        <h1 className="mt-3 font-serif text-4xl font-medium">The Ambassador program opens later.</h1>
+        <p className="mx-auto mt-4 max-w-xl text-muted">We’ll open it once LanceNest has more members. Until then, you can still invite people you served with: verified members have a personal invite link on their dashboard.</p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Link href={isMember ? '/dashboard' : '/signup?role=veteran'} className="btn btn-primary">{isMember ? 'Go to your dashboard' : 'Join free'}</Link>
+          <Link href="/open-jobs" className="btn btn-outline">See open jobs</Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

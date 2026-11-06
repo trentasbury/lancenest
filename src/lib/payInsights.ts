@@ -8,6 +8,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
  */
 export const MIN_JOBS = 5;
 export const MIN_COMPANIES = 3;
+/** The page is listed and indexed only once this many role or clearance groups have enough data. */
+export const PAY_INSIGHTS_MIN_GROUPS = 3;
 
 const FAMILIES: [string, RegExp][] = [
   ['Cybersecurity', /\b(cyber|security analyst|soc\b|infosec|information security|isso|issm|penetration|red team|blue team|threat)/i],
