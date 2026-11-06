@@ -44,7 +44,8 @@ export default async function PublicServicePage(props: { params: Promise<{ id: s
         <div className="card sticky top-24 space-y-3 p-6">
           <p className="font-serif text-3xl text-navy">${(s.price_cents / 100).toLocaleString()}<span className="text-base text-muted">{PRICE_LABEL[s.price_type]}</span></p>
           <Link href={book} className="btn btn-primary w-full">Book on LanceNest</Link>
-          <Link href="/signup?role=client" className="btn btn-outline w-full">Create a free client account</Link>
+          <Link href={`/signup?role=client&next=${encodeURIComponent(`/freelance/services/${s.id}`)}`} className="btn btn-outline w-full">New here? Create a free account to book</Link>
+          <p className="text-xs text-muted">Anyone can book: homeowners, small businesses and companies. It takes a minute and you come straight back here.</p>
           {s.noBookingFee
             ? <p className="text-xs text-muted"><strong className="text-olive">No booking fee.</strong> This pro covers LanceNest’s booking fee, so you pay only what you agree with them. Contact details open up once you’re booked.</p>
             : <p className="text-xs text-muted">You pay a small booking fee when you hire (5% of the job price, from $4.99 to $249), refunded if the pro declines within 48 hours. Contact details open up once you’re booked.</p>}

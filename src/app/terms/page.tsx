@@ -85,7 +85,7 @@ export default function TermsPage() {
         <p><strong>Partner codes and free Pro.</strong> Partner codes from transition offices, veterans’ groups and nonprofits add free months of Pro to a verified account. Each member can use one partner code, codes have no cash value, and we may end a code that is shared publicly or misused. When free Pro ends you return to the Free plan unless you choose to pay; any first-year discount offered then is shown at checkout.</p>
         <p><strong>Proposals returned.</strong> On the Free plan, a proposal is returned to you as a proposal credit when the client closes the project without hiring, or hires without opening your proposal.</p>
         <p><strong>Public service pages and badges.</strong> If you show a freelance service publicly, we display your first name and last initial, city and state, and the service. Employer badges (such as response time, the Guard &amp; Reserve pledge and Military Spouse Employment Partnership) describe what we measure or what the employer told us, and are not endorsements or guarantees.</p>
-        <p><strong>Refunds.</strong> Except where the law requires a refund, subscription payments are non-refundable, featured-job boosts are non-refundable once the job is featured, and proposal packs are non-refundable once added to your account. If you believe you were charged in error, twice, or without your permission, contact us within 30 days and we will make it right.</p>
+        <p id="refunds"><strong>No refunds.</strong> All payments to LanceNest are final and non-refundable, except where the law requires a refund. That includes subscriptions (monthly or yearly, including unused time after you cancel), featured-job boosts, proposal packs, booth and event fees, and booking fees, except for the two cases these Terms list: a booking fee is refunded when the freelancer declines within 48 hours as described above, and a charge made in error, twice, or without your permission is corrected if you contact us within 30 days. Money a client pays into a contract for a freelancer is not a LanceNest fee; it is released or returned under the contract and dispute rules above.</p>
       </section>
       <section>
         <h2>No guarantees</h2>
@@ -97,7 +97,8 @@ export default function TermsPage() {
       </section>
       <section>
         <h2>Ending your use</h2>
-        <p>You may delete your account at any time in Account settings, or ask us to by email. We may suspend or end access for violations of these Terms or to protect members and the service.</p>
+        <p>You may delete your account at any time in Account settings, or ask us to by email.</p>
+        <p id="suspension"><strong>Suspension and removal.</strong> LanceNest may suspend, limit, or close any account, and remove any profile, listing, job, group, post, or other content, at any time and for any reason LanceNest decides in its sole discretion, including a violation of these Terms or the Code of Conduct, a safety, fraud, or security concern, or to protect members and the service. We may do so with or without notice. If we suspend or close your account, you won’t receive a refund of any fee or subscription payment, including any unused time, except where the law requires one. Money held for an open contract is not kept by LanceNest; it is released or returned under the contract and dispute rules. Unpaid amounts you owe stay due.</p>
       </section>
       <section>
         <h2>Changes, law, and contact</h2>

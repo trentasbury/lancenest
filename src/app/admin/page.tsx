@@ -15,6 +15,7 @@ const DELETE_MSG: Record<string, string> = { ok: 'Member deleted.', notfound: 'N
 export default async function AdminPage(props: { searchParams: Promise<{ deleted?: string }> }) {
   const searchParams = await props.searchParams;
   const { count: pendingCompanies } = await createAdminClient().from('companies').select('id', { count: 'exact', head: true }).eq('verification_status', 'pending');
+  const { count: pendingGroups } = await createAdminClient().from('groups').select('id', { count: 'exact', head: true }).eq('status', 'pending');
   // Server-side role check FIRST — only then use the service-role client.
   await requireAdmin('/admin');
   const admin = createAdminClient();
@@ -100,6 +101,9 @@ export default async function AdminPage(props: { searchParams: Promise<{ deleted
           </Link>
           <Link href="/admin/reports" className="transition-opacity hover:opacity-80">
             <StatCard label="Open reports →" value={openReports} hint="Open the moderation queue" />
+          </Link>
+          <Link href="/admin/groups" className="transition-opacity hover:opacity-80">
+            <StatCard label="Group requests →" value={pendingGroups ?? 0} hint="Member-started groups waiting for review" />
           </Link>
           <Link href="/admin/feedback" className="transition-opacity hover:opacity-80">
             <StatCard label="Help & feedback →" value={newFeedback} hint="New help requests, bug reports, and ideas" />

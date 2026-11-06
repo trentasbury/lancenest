@@ -88,7 +88,7 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   if (password.length < 8) return { error: 'Use a password of at least 8 characters.' };
   if (formData.get('terms') !== 'on') return { error: 'Please tick the box to agree to the Terms of Service.' };
 
-  const home = role === 'employer' ? '/employer/dashboard' : role === 'client' ? '/freelance' : '/dashboard';
+  const home = safeNextPath(formData.get('next')) ?? (role === 'employer' ? '/employer/dashboard' : role === 'client' ? '/freelance' : '/dashboard');
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,

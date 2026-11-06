@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { BASES, baseBySlug } from '@/lib/bases';
 import { allPublicJobs, type IndexedJob } from '@/lib/publicJobs';
-import { locatedIn } from '@/lib/place';
+import { locatedIn, stateOf } from '@/lib/place';
+import { fairPlace, fairWhen, formatLabel } from '@/lib/fairs';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { CANONICAL_ORIGIN } from '@/lib/seo';
 import { ARRANGEMENT_LABELS, formatSalary, postedAgo } from '@/lib/format';
@@ -40,8 +41,14 @@ export default async function BasePage(props: { params: Promise<{ slug: string }
   const d = await nearby((await props.params).slug);
   if (!d) notFound();
   const { base, local, remote, skillbridge, employers } = d;
-  const { data: fairs } = await createAdminClient().from('career_fairs').select('id, title, starts_at').gt('ends_at', new Date().toISOString()).order('starts_at').limit(3);
-  const stateParam = base.states[0];
+  // Fairs: in-person pop-ups at or near this base first, then virtual fairs anyone can join.
+  const { data: fairRows } = await createAdminClient().from('career_fairs').select('id, slug, title, starts_at, format, venue_name, city, state, base_slug, timezone')
+    .gt('ends_at', new Date().toISOString()).order('starts_at').limit(40);
+  type F = { id: string; slug: string; title: string; starts_at: string; format: string; venue_name: string | null; city: string | null; state: string | null; base_slug: string | null; timezone: string };
+  const all = (fairRows ?? []) as F[];
+  const nearBase = (f: F) => f.format !== 'virtual' && (f.base_slug === base.slug || (!!f.state && base.states.includes(f.state)));
+  const fairs = [...all.filter(nearBase), ...all.filter((f) => f.format !== 'in_person' && !nearBase(f))].slice(0, 4);
+  const stateParam = stateOf(base.states[0]) ? base.states[0] : null;
   return (
     <>
       <section className="bg-navy-deep text-ivory">
@@ -74,7 +81,7 @@ export default async function BasePage(props: { params: Promise<{ slug: string }
               </ul>
             )}
             <div className="mt-4 flex flex-wrap gap-3 text-sm">
-              <Link href={`/open-jobs?where=${stateParam}`} className="text-navy underline decoration-brass underline-offset-4">All jobs in {stateParam} →</Link>
+              {stateParam && <Link href={`/open-jobs?where=${stateParam}`} className="text-navy underline decoration-brass underline-offset-4">All jobs in {stateParam} →</Link>}
               <Link href="/open-jobs?pcs=1" className="text-navy underline decoration-brass underline-offset-4">Jobs that keep through a PCS →</Link>
             </div>
           </section>
@@ -85,11 +92,15 @@ export default async function BasePage(props: { params: Promise<{ slug: string }
               <p className="mt-3 text-xs text-muted">SkillBridge needs your command’s approval. <Link href="/guides/how-to-use-dod-skillbridge" className="text-navy underline">How SkillBridge works</Link></p>
             </section>
           )}
+          <p className="text-xs text-muted">{base.name} is named here only to describe where these jobs are. LanceNest is an independent company and isn’t affiliated with or endorsed by the Department of Defense, the Department of Homeland Security, the {base.branch.includes('Coast Guard') ? 'U.S. Coast Guard' : 'military branches'}, or this installation.</p>
         </div>
         <aside className="space-y-4">
           <div className="card p-6"><p className="eyebrow">Getting out?</p><p className="mt-2 text-sm text-muted">Translate your MOS, rating or AFSC into civilian roles, then apply with a verified profile.</p><Link href="/resources" className="btn btn-outline mt-4 w-full">Translate your MOS</Link><Link href="/signup?role=veteran" className="btn btn-primary mt-2 w-full">Join free</Link></div>
-          {(fairs ?? []).length > 0 && (
-            <div className="card p-6"><p className="eyebrow">Upcoming virtual fairs</p><ul className="mt-2 space-y-2 text-sm">{(fairs ?? []).map((f) => <li key={f.id as string}><Link href="/fairs" className="text-navy hover:underline">{f.title as string}</Link><span className="block text-xs text-muted">{new Date(f.starts_at as string).toLocaleDateString('en-US', { dateStyle: 'medium' })}</span></li>)}</ul></div>
+          {fairs.length > 0 && (
+            <div className="card p-6"><p className="eyebrow">Upcoming career fairs</p><ul className="mt-2 space-y-3 text-sm">{fairs.map((f) => (
+              <li key={f.id}><Link href={`/fairs/${f.slug}`} className="text-navy hover:underline">{f.title}</Link>
+                <span className="block text-xs text-muted">{fairWhen(f.starts_at, f.timezone, 'medium')} · {f.format === 'virtual' ? 'Online' : `${formatLabel(f.format)} · ${fairPlace(f)}`}</span></li>
+            ))}</ul></div>
           )}
           <div className="card p-6"><p className="eyebrow">Hiring near {base.name}?</p><p className="mt-2 text-sm text-muted">Post jobs free and reach verified service members and spouses here.</p><Link href="/employers" className="btn btn-outline mt-3 w-full">For employers</Link></div>
         </aside>

@@ -24,9 +24,9 @@ const TOOLS = [
   { href: '/dashboard/resume-builder', label: 'Résumé builder', hint: 'Turn your service into a civilian résumé' },
   { href: '/dashboard/resume-writer', label: 'AI résumé writer', hint: 'Your MOS and evals in civilian words' },
   { href: '/training', label: 'Training & certifications', hint: 'Programs for GI Bill and SkillBridge' },
-  { href: '/groups', label: 'Groups', hint: 'Connect by branch, field, and location' },
+  { href: '/groups', label: 'Groups', hint: 'Your branch, unit, faith, friends and more' },
   { href: '/mentors', label: 'Mentors', hint: 'Advice from members who’ve made the move' },
-  { href: '/fairs', label: 'Career fairs', hint: 'Virtual hiring events' },
+  { href: '/fairs', label: 'Career fairs', hint: 'Virtual and in-person hiring events' },
   { href: '/freelance/earnings', label: 'Freelance earnings', hint: 'Contracts and payouts' },
   { href: '/dashboard/credentials', label: 'Licenses & certificates', hint: 'Verified badges; unlock trade work' },
 ];

@@ -7,6 +7,8 @@ import Composer from '@/components/network/Composer';
 import PostCard from '@/components/network/PostCard';
 import SuggestionList from '@/components/network/SuggestionList';
 import ProfileMini from '@/components/network/ProfileMini';
+import YourGroups from '@/components/network/YourGroups';
+import { myGroupsAndSuggestions } from '@/lib/groups';
 
 export const metadata: Metadata = { title: 'Network' };
 
@@ -18,6 +20,7 @@ export default async function NetworkPage(
   const supabase = await createClient();
   // Suggestions don't depend on anything below — start them now so they load alongside the feed.
   const suggestionsPromise = getSuggestions(user.id);
+  const groupsPromise = myGroupsAndSuggestions(supabase, user.id);
   const [{ count: followingCount }, { count: followerCount }] = await Promise.all([
     supabase.from('user_follows').select('*', { count: 'exact', head: true }).eq('follower_id', user.id),
     supabase.from('user_follows').select('*', { count: 'exact', head: true }).eq('following_id', user.id),
@@ -27,9 +30,10 @@ export default async function NetworkPage(
   // Prioritize people you follow; fall back to the whole network until you follow someone.
   const scope = searchParams.scope === 'everyone' || !followingCount ? 'everyone' : searchParams.scope === 'following' ? 'following' : 'following';
   const type = FEED_FILTERS.some(([v]) => v === searchParams.type) ? searchParams.type : undefined;
-  const [{ posts, nextCursor }, suggestions] = await Promise.all([
+  const [{ posts, nextCursor }, suggestions, groups] = await Promise.all([
     getFeed({ viewerId: user.id, scope: saved ? 'everyone' : scope, type, cursor: searchParams.cursor, savedOnly: saved }),
     suggestionsPromise,
+    groupsPromise,
   ]);
 
   const qs = (patch: Record<string, string | undefined>) => {
@@ -58,6 +62,16 @@ export default async function NetworkPage(
               milestonesByType={MILESTONES_BY_TYPE}
               visibility={VISIBILITY}
             />
+          )}
+
+          {!saved && (
+            <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 lg:hidden">
+              <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.12em] text-muted">Groups</span>
+              {groups.joined.map((g) => (
+                <Link key={g.id} href={`/groups/${g.slug}`} className="whitespace-nowrap rounded-full border border-line bg-ivory px-3 py-1 text-sm text-ink hover:border-brass">{g.name}</Link>
+              ))}
+              <Link href="/groups" className="whitespace-nowrap rounded-full border border-dashed border-line px-3 py-1 text-sm text-navy">{groups.joined.length ? 'All groups' : 'Find your groups'}</Link>
+            </div>
           )}
 
           {!saved && (
@@ -113,6 +127,7 @@ export default async function NetworkPage(
           <div className="xl:hidden">
             <ProfileMini profile={profile} followers={followerCount ?? 0} following={followingCount ?? 0} saved={saved} />
           </div>
+          <YourGroups joined={groups.joined} suggested={groups.suggested} requested={groups.requested} />
           <div id="grow" className="card scroll-mt-24 p-6">
             <h2 className="font-sans text-base font-semibold text-ink">Grow your network</h2>
             <div className="mt-4"><SuggestionList people={suggestions} /></div>

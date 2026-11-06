@@ -20,6 +20,8 @@ const OPTIONS = [
 export default function SignupForm() {
   const [role, setRole] = useState<'veteran' | 'spouse' | 'employer' | 'client'>('veteran');
   const [referral, setReferral] = useState<string | undefined>();
+  // Where to land after sign-up (e.g. the service a visitor picked on the public Hire page). Same-site paths only.
+  const [next, setNext] = useState<string | undefined>();
   // Terms box, like Upwork's: required for email sign-up and for Google.
   const [agree, setAgree] = useState(false);
   useEffect(() => {
@@ -29,6 +31,8 @@ export default function SignupForm() {
     if (p.get('role') === 'client') setRole('client');
     const ref = p.get('ref');
     if (ref) setReferral(ref.slice(0, 80));
+    const n = p.get('next');
+    if (n && /^\/(?![/\\])/.test(n)) setNext(n.slice(0, 200));
   }, []);
   const [state, action] = useActionState<FormState, FormData>(signUp, {});
 
@@ -45,6 +49,7 @@ export default function SignupForm() {
   return (
     <form action={action} className="space-y-5">
       {referral && <input type="hidden" name="ref" value={referral} />}
+      {next && <input type="hidden" name="next" value={next} />}
       <fieldset>
         <legend className="field-label">How will you use LanceNest?</legend>
         <div className="grid gap-2.5">
@@ -75,7 +80,7 @@ export default function SignupForm() {
         <span>Yes, I understand and agree to the LanceNest <Link href="/terms" target="_blank" className="text-navy underline">Terms of Service</Link>, including the <Link href="/conduct" target="_blank" className="text-navy underline">Code of Conduct</Link>, <Link href="/privacy" target="_blank" className="text-navy underline">Privacy Policy</Link>, and <Link href="/terms#non-circumvention" target="_blank" className="text-navy underline">Non-Circumvention Policy</Link>.</span>
       </label>
 
-      <GoogleButton disabled={!agree} href={`/auth/google?role=${role}&terms=1${referral ? `&ref=${encodeURIComponent(referral)}` : ''}`} />
+      <GoogleButton disabled={!agree} href={`/auth/google?role=${role}&terms=1${referral ? `&ref=${encodeURIComponent(referral)}` : ''}${next ? `&next=${encodeURIComponent(next)}` : ''}`} />
 
       <div>
         <label htmlFor="full_name" className="field-label">{role === 'employer' ? 'Your full name' : 'Full name'}</label>

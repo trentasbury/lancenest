@@ -139,8 +139,10 @@ export async function POST(request: NextRequest) {
   }
   if (item.kind === 'fair_booth') {
     const fairId = String(form.get('fair_id') ?? '');
-    const { data: fair } = await createAdminClient().from('career_fairs').select('id, slug, starts_at').eq('id', fairId).maybeSingle();
+    const { data: fair } = await createAdminClient().from('career_fairs').select('id, slug, starts_at, format').eq('id', fairId).maybeSingle();
     if (!fair || Date.parse(fair.starts_at as string) < Date.now()) return NextResponse.redirect(`${site}/fairs`, 303);
+    // Tables at in-person-only pop-ups are booked with the team, not through checkout (no price set yet).
+    if (fair.format === 'in_person') return NextResponse.redirect(`${site}/fairs/${fair.slug}`, 303);
     const { data: owned } = await createAdminClient().from('fair_booths').select('id').eq('fair_id', fairId).eq('company_id', company.id).maybeSingle();
     if (owned) return NextResponse.redirect(`${site}/fairs/${fair.slug}`, 303);
     const video = String(form.get('video_url') ?? '').trim().slice(0, 300);

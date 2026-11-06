@@ -73,7 +73,7 @@ export default async function MyServicesPage(props: { searchParams: Promise<{ er
             </div>
           ))}
         </fieldset>
-        <label className="flex items-start gap-2 text-sm sm:col-span-2"><input type="checkbox" name="public_listing" className="mt-1 accent-navy" /><span>Show this service on the public Hire page. It shows your first name and last initial, your city, and the service, never your photo or contact details. Clients sign in to book.</span></label>
+        <label className="flex items-start gap-2 text-sm sm:col-span-2"><input type="checkbox" name="public_listing" defaultChecked className="mt-1 accent-navy" /><span><strong>Let anyone book you (recommended).</strong> Shows this service on the public Hire page, where homeowners, small businesses and companies can find you, not just members. It shows your first name and last initial, your city and the service; never your photo, full profile or contact details. Clients make a free account and book through LanceNest before your contact details open. Untick to show it to members and employers only.</span></label>
         <CoverFeeBox />
         <label className="flex items-start gap-2 text-sm sm:col-span-2"><input type="checkbox" name="license_ack" required className="mt-1 accent-navy" />I hold any license, certification, or insurance this work legally requires where I perform it.</label>
         <label className="flex items-start gap-2 text-sm sm:col-span-2"><input type="checkbox" name="duty_ack" required className="mt-1 accent-navy" />If I’m currently serving, I have my command’s approval for off-duty employment where required, and I won’t use government time, equipment, or my rank or uniform to promote this work.</label>
